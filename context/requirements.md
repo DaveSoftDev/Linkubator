@@ -119,20 +119,37 @@ Se mostrarán 15 enlaces por página.
 
 ## 10. SEO
 
+El SEO se abordará por fases. Las decisiones que afectan al dominio, las rutas, la visibilidad y el HTML se definirán desde el principio. El refinamiento y la auditoría SEO se completarán posteriormente, antes de cerrar el MVP0.
+
+### Fundamentos desde el inicio
+
 Las páginas públicas de colección deberán tener:
 
-- URL amigable.
+- URL amigable con el formato `/user-alias/collections/collection-slug`.
 - HTML renderizado en servidor.
 - `title`.
 - `meta description`.
 - Un único `h1`.
 - Encabezados semánticos.
-- URL canonical.
-- Open Graph.
-- `robots.txt`.
-- `sitemap.xml`.
+- URL canonical básica.
+- Exclusión de colecciones privadas.
+- Exclusión de enlaces no publicados.
+- Respuestas `404` para recursos públicos inexistentes o no accesibles.
+- Paginación estable.
 
 Los enlaces individuales no tendrán páginas indexables propias.
+
+### Refinamiento posterior
+
+Antes de dar por terminado el MVP0 se completarán y revisarán:
+
+- Open Graph.
+- Twitter Cards, si procede.
+- `robots.txt`.
+- `sitemap.xml`.
+- Datos estructurados, si aportan valor.
+- Política definitiva de paginación indexable.
+- Auditoría de títulos, descripciones, canonical y rastreabilidad.
 
 ## 11. Accesibilidad
 

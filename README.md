@@ -24,6 +24,7 @@ Las colecciones podrán ser públicas o privadas. Dentro de una colección públ
 - [Decisiones confirmadas y pendientes](context/decisions.md)
 - [Roadmap del MVP0](context/roadmap.md)
 - [Guía para agentes y colaboradores](AGENTS.md)
+- [Skill de revisión de requisitos](skills/requirements-review/SKILL.md)
 
 ## Alcance tecnológico previsto
 

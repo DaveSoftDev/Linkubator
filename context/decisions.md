@@ -64,6 +64,13 @@
 - Grafana, Kibana y plataformas similares quedan fuera por ahora.
 - La aplicación deberá ser accesible y compatible con navegadores actuales.
 
+### SEO
+
+- El SEO se abordará por fases y no se dejará completamente para el final.
+- Las rutas, el alias de usuario, el slug de colección, la visibilidad, el SSR y el HTML semántico se definirán desde el inicio.
+- Solo las colecciones públicas serán indexables.
+- El refinamiento de Open Graph, Twitter Cards, sitemap, robots, datos estructurados y auditoría de rastreabilidad se completará en una fase posterior.
+
 ## Pendientes
 
 - Reglas exactas de normalización de URL.
@@ -76,6 +83,7 @@
 - Tipos de contenido aceptados.
 - Estrategia de despliegue.
 - Detalles finales de sitemap y paginación indexable.
+- Alcance de datos estructurados y Twitter Cards.
 
 ## Fuera de alcance del MVP0
 

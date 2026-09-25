@@ -16,6 +16,14 @@ La documentación funcional vive en `context/`:
 
 Si una conversación cambia una decisión, actualiza primero la documentación afectada y mantén consistencia entre estos documentos.
 
+## Skills de Linkubator
+
+Las skills específicas del proyecto viven en `skills/`. Cada una contiene un `SKILL.md` con su procedimiento y debe utilizarse cuando la tarea corresponda a su propósito.
+
+- [requirements-review](skills/requirements-review/SKILL.md): revisar y sincronizar los documentos de requisitos, modelo de dominio, arquitectura, decisiones y roadmap. Detecta contradicciones, omisiones, deriva del alcance del MVP0 y supuestos no documentados. No genera código.
+
+Cuando se cree una nueva skill de Linkubator, debe añadirse aquí con su nombre, enlace y propósito principal.
+
 ## Reglas de producto
 
 - El producto está preparado conceptualmente para múltiples usuarios.

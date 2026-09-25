@@ -1,0 +1,170 @@
+---
+name: requirements-review
+description: "Use when reviewing or synchronizing Linkubator requirements, domain model, architecture, decisions, or roadmap. Detect contradictions, stale decisions, missing cross-document updates, MVP0 scope drift, and undocumented assumptions before implementation."
+---
+
+# Requirements Review
+
+## Purpose
+
+Mantener coherente la documentación de Linkubator durante la fase de análisis de requisitos y antes de iniciar la implementación.
+
+Esta skill revisa documentación. No genera código, proyectos .NET, SQL ejecutable, paquetes, migraciones ni configuración de despliegue.
+
+## When to use
+
+Usa esta skill cuando:
+
+- Se añade o modifica un requisito.
+- Se cambia una decisión de producto o arquitectura.
+- Se pide revisar la documentación completa.
+- Se incorporan entidades, propiedades, relaciones o reglas de negocio.
+- Se necesita comprobar si una funcionalidad pertenece al MVP0.
+- Se prepara el paso desde análisis hacia implementación.
+
+No la uses para:
+
+- Implementar funcionalidades.
+- Resolver errores de código.
+- Diseñar una API concreta.
+- Optimizar consultas ya implementadas.
+- Crear una solución .NET.
+
+## Source of truth
+
+Revisa estos documentos en este orden:
+
+1. `context/requirements.md`
+2. `context/domain-model.md`
+3. `context/architecture.md`
+4. `context/decisions.md`
+5. `context/roadmap.md`
+6. `AGENTS.md`
+
+`context/decisions.md` distingue decisiones confirmadas, pendientes y fuera de alcance. `AGENTS.md` contiene las restricciones de trabajo del repositorio.
+
+Si falta alguno de estos archivos, informa de ello como hallazgo. No inventes su contenido sin indicarlo.
+
+## Review workflow
+
+### 1. Gather context
+
+Lee los documentos de la fuente de verdad y localiza:
+
+- Alcance del MVP0.
+- Entidades y propiedades.
+- Relaciones e invariantes.
+- Reglas de propiedad por usuario.
+- Reglas de visibilidad y publicación.
+- Decisiones confirmadas y pendientes.
+- Tecnologías planificadas.
+- Funcionalidades fuera de alcance.
+
+No empieces editando. Primero formula una hipótesis concreta sobre la posible incoherencia y una comprobación que pueda confirmarla o descartarla.
+
+### 2. Build a consistency matrix
+
+Comprueba como mínimo:
+
+| Área | Comprobación |
+| --- | --- |
+| Terminología | Los nombres de entidades, propiedades y estados son consistentes. |
+| Alcance | Ningún documento introduce funcionalidades fuera del MVP0 como si estuvieran confirmadas. |
+| Usuario | Toda lectura o escritura privada está limitada al usuario actual. |
+| Alias | `UserAlias` tiene las mismas reglas, longitud, unicidad y palabras reservadas en todos los documentos. |
+| Colecciones | El slug es único dentro del usuario y no se trata como global. |
+| URLs | La URL original y la normalizada no se confunden. |
+| Duplicados | La unicidad se aplica al usuario correcto. |
+| Visibilidad | Una colección privada nunca expone enlaces. |
+| Publicación | En una colección pública, cada enlace necesita publicación explícita. |
+| Transiciones | Al volver pública una colección, sus enlaces siguen sin publicarse. |
+| Búsqueda | La búsqueda nunca devuelve enlaces de otro usuario. |
+| Etiquetas | La relación entre enlaces y tags está documentada de forma consistente. |
+| Persistencia | Dapper, SQL explícito, SQLite y FTS5 no se mezclan con EF Core. |
+| Scraping | Los reintentos, SSRF y estados de metadatos coinciden entre documentos. |
+| SEO | Solo las colecciones públicas tienen páginas indexables. |
+| Accesibilidad | Los requisitos de teclado, foco, labels, errores y contraste no se contradicen. |
+| Roadmap | Las fases reflejan las decisiones y pendientes actuales. |
+
+### 3. Classify findings
+
+Clasifica cada hallazgo como:
+
+- `Contradicción`: dos documentos establecen reglas incompatibles.
+- `Omisión`: una decisión necesaria no aparece en un documento que debería recogerla.
+- `Deriva de alcance`: se introduce una capacidad fuera del MVP0.
+- `Ambigüedad`: una regla admite interpretaciones relevantes.
+- `Terminología`: se usan nombres distintos para el mismo concepto.
+- `Riesgo`: la documentación es compatible, pero puede producir un problema durante la implementación.
+
+Ordena los hallazgos por impacto:
+
+1. Seguridad o privacidad.
+2. Integridad de datos.
+3. Alcance del producto.
+4. Arquitectura.
+5. SEO y accesibilidad.
+6. Claridad editorial.
+
+### 4. Report before editing
+
+Devuelve primero un informe con:
+
+- Estado general: `coherente`, `coherente con observaciones` o `requiere decisiones`.
+- Hallazgos ordenados por prioridad.
+- Documentos afectados.
+- Decisión o aclaración necesaria.
+- Recomendación concreta.
+- Preguntas abiertas que bloquean la implementación.
+
+No presentes una propuesta como decisión confirmada.
+
+### 5. Apply synchronized documentation changes
+
+Solo edita documentos si el usuario lo pide explícitamente o si la tarea consiste en actualizar la documentación tras una decisión ya confirmada.
+
+Cuando edites:
+
+- Actualiza todos los documentos afectados en la misma tarea.
+- Mantén castellano.
+- Conserva la separación entre confirmado, pendiente y fuera de alcance.
+- No añadas código ni instrucciones de implementación ejecutables.
+- No borres decisiones históricas relevantes; resume la decisión actual y su razón.
+- Evita reformatear secciones no relacionadas.
+
+## Linkubator invariants
+
+Estas invariantes deben verificarse siempre:
+
+- Un usuario tiene un `UserAlias` único globalmente.
+- El alias usa solo caracteres ASCII básicos, minúsculas, números y guiones, mide entre 10 y 25 caracteres, no cambia y no puede ser `collections`, `users` ni `tags`.
+- Un enlace pertenece a un único usuario y una única colección.
+- Una colección pertenece a un único usuario.
+- Un tag pertenece a un único usuario.
+- Un slug de colección es único dentro de su usuario.
+- Una URL normalizada es única dentro de su usuario.
+- La visibilidad efectiva de un enlace es `Collection.IsPublic && Link.IsPublished`.
+- Una colección privada no es accesible públicamente.
+- Volver pública una colección no publica automáticamente sus enlaces.
+- La búsqueda está limitada al usuario actual.
+- La URL original se conserva aunque exista una URL normalizada auxiliar.
+- Un fallo de scraping no impide conservar el enlace.
+
+## Expected output
+
+Usa este formato breve:
+
+```text
+Estado: [coherente | coherente con observaciones | requiere decisiones]
+
+Hallazgos:
+- [Prioridad] [Tipo] Descripción. Documentos afectados: ...
+
+Decisiones necesarias:
+- ...
+
+Cambios documentales aplicados:
+- Ninguno, si solo se solicitó revisión.
+```
+
+Si no encuentras problemas, indícalo claramente y menciona los riesgos residuales o decisiones pendientes.

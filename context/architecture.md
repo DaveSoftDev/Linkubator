@@ -85,6 +85,29 @@ Responsabilidades:
 - Resolución del usuario actual.
 - Presentación de errores y estados accesibles.
 
+## SEO por fases
+
+El SEO no se pospondrá por completo hasta el final porque algunas decisiones afectan a la arquitectura y al modelo de publicación.
+
+Desde el inicio deben quedar definidos:
+
+- Rutas públicas con `UserAlias` y slug de colección.
+- Renderizado SSR mediante Razor Pages.
+- Separación entre colecciones públicas y privadas.
+- Publicación individual de enlaces dentro de colecciones públicas.
+- Exclusión de enlaces no publicados.
+- HTML semántico con títulos, descripciones, encabezados y canonical básica.
+- Respuestas `404` para recursos públicos inexistentes o no accesibles.
+- Paginación estable de 15 enlaces.
+
+En una fase posterior se completarán:
+
+- Open Graph y Twitter Cards.
+- `robots.txt`.
+- `sitemap.xml`.
+- Datos estructurados, si procede.
+- Revisión de rastreabilidad, paginación indexable y metadatos reales.
+
 ## Persistencia
 
 SQLite se utilizará mediante `Microsoft.Data.Sqlite` y Dapper.

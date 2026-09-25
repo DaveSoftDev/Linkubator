@@ -14,13 +14,13 @@ Entregables:
 
 Estado: en progreso.
 
-## Fase 1: Cierre de decisiones
+## Fase 1: Cierre de decisiones estructurales
 
 Pendientes principales:
 
 - Reglas exactas de normalización de URLs.
 - Límites del scraper.
-- Detalles de SEO y sitemap.
+- Fundamentos SEO que afectan a rutas, visibilidad y HTML.
 - Estrategia de despliegue, sin abordarla todavía en profundidad.
 
 Criterio de finalización:
@@ -93,7 +93,7 @@ Criterio de finalización:
 
 - El usuario fijo puede completar el flujo completo de gestión sin acceder a datos fuera de su contexto.
 
-## Fase 6: Área pública y SEO
+## Fase 6: Área pública y fundamentos SEO
 
 Objetivos:
 
@@ -102,8 +102,9 @@ Objetivos:
 - Mostrar solo enlaces publicados.
 - Ordenar por fecha descendente.
 - Paginar a 15 enlaces.
-- Añadir title, description, canonical y Open Graph.
-- Añadir sitemap y robots.
+- Añadir title, description y canonical básica.
+- Mantener HTML semántico y SSR.
+- Definir correctamente respuestas 404 y exclusiones de contenido privado.
 
 Criterio de finalización:
 
@@ -111,7 +112,23 @@ Criterio de finalización:
 - Los enlaces no publicados no aparecen.
 - El HTML público se renderiza desde servidor y es rastreable.
 
-## Fase 7: Calidad
+## Fase 7: Refinamiento SEO
+
+Objetivos:
+
+- Añadir Open Graph.
+- Añadir Twitter Cards, si procede.
+- Generar `sitemap.xml`.
+- Generar `robots.txt`.
+- Revisar datos estructurados, si aportan valor.
+- Auditar canonical, títulos, descripciones, paginación y rastreabilidad.
+
+Criterio de finalización:
+
+- Las páginas públicas tienen metadatos coherentes y no se ofrecen rutas indexables para contenido privado o no publicado.
+- La estrategia de sitemap y paginación está documentada.
+
+## Fase 8: Calidad
 
 Objetivos:
 
