@@ -59,6 +59,9 @@ Criterio de finalización:
 - Las operaciones de enlaces, colecciones y tags son atómicas.
 - La búsqueda respeta siempre el usuario actual.
 - FTS5 se mantiene sincronizado con altas, cambios y borrados.
+- Las transacciones son breves y no contienen operaciones externas.
+- WAL, `busy_timeout` y claves foráneas están configurados.
+- Las escrituras no mantienen conexiones ni transacciones abiertas más tiempo del necesario.
 
 ## Fase 4: Scraping (aplazada)
 

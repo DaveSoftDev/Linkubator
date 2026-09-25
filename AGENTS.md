@@ -40,6 +40,8 @@ Cuando se cree una nueva skill de Linkubator, debe añadirse aquí con su nombre
 - La URL de un enlace es inmutable después de su creación.
 - Al mover un enlace de colección, queda despublicado y requiere publicación explícita.
 - `LinkTag` y FTS5 se actualizan dentro de la misma transacción que las operaciones de escritura o borrado relacionadas.
+- Las transacciones deben ser breves: abrir, ejecutar lo imprescindible, confirmar o revertir y liberar.
+- Nunca realizar scraping, llamadas HTTP ni esperas de usuario dentro de una transacción.
 
 ## Reglas de documentación
 
@@ -59,6 +61,7 @@ Cuando se cree una nueva skill de Linkubator, debe añadirse aquí con su nombre
 - Unit of Work ligero con transacciones.
 - Clean Architecture, SOLID, DRY, YAGNI y patrón Result.
 - FTS5 para búsqueda textual; SQL e índices convencionales para filtros estructurados.
+- SQLite con WAL, `busy_timeout` y claves foráneas activadas.
 
 ## Restricciones de edición actuales
 

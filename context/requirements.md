@@ -188,6 +188,10 @@ La interfaz inicial estará en castellano y deberá soportar los navegadores act
 
 Se generarán logs agnósticos desde el inicio para operaciones relevantes, errores de persistencia, fallos y reintentos del scraper, validaciones, SSRF y operaciones de publicación. No deberán incluir secretos, contraseñas, hashes innecesarios ni credenciales contenidas en URLs.
 
+Las operaciones de base de datos deberán ser breves y explícitas: abrir conexión, ejecutar la unidad mínima de trabajo, confirmar o revertir y liberar recursos. No se mantendrán transacciones abiertas mientras se espera al usuario o se realizan operaciones externas.
+
+SQLite se configurará para permitir lecturas concurrentes durante escrituras y para tolerar bloqueos transitorios breves, sin ocultar errores persistentes.
+
 Grafana, Kibana y otras plataformas de observabilidad quedan fuera del MVP0.
 
 ## 13. Fuera de alcance

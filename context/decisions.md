@@ -65,6 +65,10 @@
 - No habrá importación ni exportación en el MVP0.
 - `LinkTag` y la proyección FTS5 se actualizarán dentro de la misma transacción que cada operación de escritura o borrado relacionada.
 - FTS5 se utilizará para búsqueda textual; los filtros estructurados usarán SQL e índices convencionales.
+- Las operaciones de SQLite seguirán un ciclo breve: abrir conexión, ejecutar lo imprescindible, confirmar o revertir y liberar recursos.
+- No habrá llamadas HTTP, scraping, esperas de usuario ni reintentos externos dentro de transacciones.
+- SQLite se configurará con WAL, `busy_timeout` y claves foráneas activadas.
+- Las consultas y transacciones se optimizarán para minimizar la duración del bloqueo de escritura.
 
 ### Listados y operación
 

@@ -121,6 +121,29 @@ SQLite se utilizará mediante `Microsoft.Data.Sqlite` y Dapper.
 
 El Unit of Work será ligero y gestionará una conexión y una transacción explícita. Las operaciones que afecten a varias tablas deberán ejecutarse de forma atómica.
 
+### Reglas operativas de acceso a datos
+
+La interacción con SQLite seguirá siempre este ciclo:
+
+1. Abrir la conexión.
+2. Iniciar la transacción solo cuando sea necesaria.
+3. Ejecutar las operaciones mínimas de la unidad de trabajo.
+4. Confirmar o revertir inmediatamente.
+5. Liberar la transacción, la conexión y los recursos asociados.
+
+Reglas obligatorias:
+
+- Las transacciones serán lo más cortas posible.
+- No se esperará al usuario dentro de una transacción.
+- No se harán llamadas HTTP, scraping ni operaciones externas dentro de una transacción.
+- No se esperarán reintentos ni intervalos de tiempo dentro de una transacción.
+- `LinkTag` y FTS5 se actualizarán dentro de la misma transacción que el cambio de datos relacionado.
+- Las operaciones de lectura no mantendrán transacciones abiertas innecesariamente.
+- Las consultas paginadas no cargarán en memoria más datos de los necesarios.
+- Las restricciones únicas de SQLite serán la garantía final frente a duplicados y colisiones.
+
+SQLite se configurará para el escenario local mediante WAL, `busy_timeout` y claves foráneas activadas. Los reintentos por bloqueo serán limitados y solo se aplicarán a errores transitorios identificados.
+
 Las migraciones se resolverán mediante scripts SQL versionados o una herramienta ligera equivalente. No se introducirá EF Core para resolver este problema.
 
 Restricciones e índices previstos:
