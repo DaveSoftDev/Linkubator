@@ -35,6 +35,11 @@ Cuando se cree una nueva skill de Linkubator, debe añadirse aquí con su nombre
 - Al volver pública una colección privada, sus enlaces siguen sin publicarse.
 - Los enlaces individuales no tendrán páginas indexables.
 - Solo las colecciones públicas tendrán páginas indexables.
+- El MVP0 se ejecuta únicamente en local.
+- Una colección con enlaces no se puede borrar.
+- La URL de un enlace es inmutable después de su creación.
+- Al mover un enlace de colección, queda despublicado y requiere publicación explícita.
+- `LinkTag` y FTS5 se actualizan dentro de la misma transacción que las operaciones de escritura o borrado relacionadas.
 
 ## Reglas de documentación
 
@@ -53,6 +58,7 @@ Cuando se cree una nueva skill de Linkubator, debe añadirse aquí con su nombre
 - Dapper y SQL explícito; no Entity Framework Core.
 - Unit of Work ligero con transacciones.
 - Clean Architecture, SOLID, DRY, YAGNI y patrón Result.
+- FTS5 para búsqueda textual; SQL e índices convencionales para filtros estructurados.
 
 ## Restricciones de edición actuales
 

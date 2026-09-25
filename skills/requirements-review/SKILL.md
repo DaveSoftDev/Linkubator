@@ -142,13 +142,18 @@ Estas invariantes deben verificarse siempre:
 - Una colección pertenece a un único usuario.
 - Un tag pertenece a un único usuario.
 - Un slug de colección es único dentro de su usuario.
+- Un slug de colección sigue las reglas del alias y admite hasta 50 caracteres; puede cambiarse si conserva su unicidad.
 - Una URL normalizada es única dentro de su usuario.
+- Una colección con enlaces no puede eliminarse.
+- La URL original de un enlace es inmutable.
+- Al mover un enlace, queda despublicado y requiere publicación explícita.
 - La visibilidad efectiva de un enlace es `Collection.IsPublic && Link.IsPublished`.
 - Una colección privada no es accesible públicamente.
 - Volver pública una colección no publica automáticamente sus enlaces.
 - La búsqueda está limitada al usuario actual.
 - La URL original se conserva aunque exista una URL normalizada auxiliar.
 - Un fallo de scraping no impide conservar el enlace.
+- `LinkTag` y FTS5 se mantienen en la misma transacción que las operaciones de escritura o borrado relacionadas.
 
 ## Expected output
 

@@ -19,9 +19,9 @@ Estado: en progreso.
 Pendientes principales:
 
 - Reglas exactas de normalización de URLs.
-- Límites del scraper.
+- Diseño detallado del scraper, aplazado hasta una revisión específica.
 - Fundamentos SEO que afectan a rutas, visibilidad y HTML.
-- Estrategia de despliegue, sin abordarla todavía en profundidad.
+- Estrategia de despliegue, que queda fuera del MVP0 local.
 
 Criterio de finalización:
 
@@ -60,9 +60,9 @@ Criterio de finalización:
 - La búsqueda respeta siempre el usuario actual.
 - FTS5 se mantiene sincronizado con altas, cambios y borrados.
 
-## Fase 4: Scraping
+## Fase 4: Scraping (aplazada)
 
-Objetivos:
+Objetivos futuros, no incluidos en la implementación actual:
 
 - Validar URLs.
 - Implementar protección SSRF.
@@ -76,6 +76,8 @@ Criterio de finalización:
 - Un fallo de scraping no impide guardar el enlace.
 - Los reintentos se ejecutan con el intervalo definido.
 - No se puede acceder a destinos internos o no permitidos.
+
+Esta fase permanecerá pendiente hasta cerrar una política específica de scraping y SSRF.
 
 ## Fase 5: Interfaz privada
 
@@ -112,7 +114,7 @@ Criterio de finalización:
 - Los enlaces no publicados no aparecen.
 - El HTML público se renderiza desde servidor y es rastreable.
 
-## Fase 7: Refinamiento SEO
+## SEO avanzado posterior al MVP0
 
 Objetivos:
 
@@ -123,12 +125,12 @@ Objetivos:
 - Revisar datos estructurados, si aportan valor.
 - Auditar canonical, títulos, descripciones, paginación y rastreabilidad.
 
-Criterio de finalización:
+Este trabajo queda fuera del MVP0. Si se retoma, tendrá como criterio de finalización:
 
 - Las páginas públicas tienen metadatos coherentes y no se ofrecen rutas indexables para contenido privado o no publicado.
 - La estrategia de sitemap y paginación está documentada.
 
-## Fase 8: Calidad
+## Fase 7: Calidad
 
 Objetivos:
 
@@ -140,7 +142,6 @@ Objetivos:
 - Tests de transacciones.
 - Tests de FTS5.
 - Tests de propiedad entre usuarios.
-- Tests de scraping y SSRF.
 - Tests de accesibilidad.
 - Pruebas en navegadores actuales.
 
@@ -151,6 +152,8 @@ Criterio de finalización:
 - El orden de foco es lógico.
 - Los formularios anuncian correctamente sus errores.
 - Los logs relevantes están disponibles.
+
+Las pruebas de scraping y SSRF se incorporarán cuando se reactive y cierre esa fase.
 
 ## Fuera de este roadmap
 
@@ -163,3 +166,4 @@ Criterio de finalización:
 - Crawling completo.
 - Integraciones externas.
 - Despliegue definitivo.
+- SEO avanzado.

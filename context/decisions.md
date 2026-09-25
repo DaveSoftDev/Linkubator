@@ -8,6 +8,8 @@
 - El producto está preparado conceptualmente para múltiples usuarios.
 - El MVP0 no tendrá registro, login ni autenticación.
 - Se utilizará un usuario fijo configurable.
+- El MVP0 se ejecutará únicamente en local.
+- Las páginas públicas conservarán fundamentos SEO verificables localmente, pero no podrán ser rastreadas por buscadores hasta un despliegue público posterior.
 - La interfaz inicial estará en castellano.
 
 ### Usuario
@@ -25,12 +27,18 @@
 - Cada enlace pertenece a una única colección.
 - Las colecciones serán públicas o privadas.
 - El slug será único dentro del usuario, nunca global.
+- El slug seguirá las reglas del alias, con una longitud máxima de 50 caracteres.
+- El slug podrá cambiarse si el nuevo valor sigue siendo válido y único dentro del usuario.
 - Las colecciones no tendrán `UpdatedAt`.
+- Una colección con enlaces no podrá eliminarse; solo se eliminarán colecciones vacías.
 - La visibilidad de un enlace depende de la colección y de su publicación individual.
 - Un enlace no publicado no aparece en una colección pública.
 - Un enlace de una colección privada nunca aparece públicamente.
 - Una colección privada que vuelva a ser pública no publicará automáticamente sus enlaces.
 - El usuario decidirá individualmente qué enlaces publica.
+- Al mover un enlace entre colecciones, se establecerá `IsPublished = false` y será necesaria una nueva publicación explícita.
+- La URL del enlace será inmutable; para cambiarla se eliminará el enlace y se creará otro.
+- Solo se podrán editar los metadatos y el estado de publicación del enlace.
 - Los enlaces individuales no tendrán páginas indexables.
 - Solo las páginas públicas de colección serán indexables.
 
@@ -55,6 +63,8 @@
 - Se utilizarán Repository, Unit of Work y Result.
 - El borrado será físico.
 - No habrá importación ni exportación en el MVP0.
+- `LinkTag` y la proyección FTS5 se actualizarán dentro de la misma transacción que cada operación de escritura o borrado relacionada.
+- FTS5 se utilizará para búsqueda textual; los filtros estructurados usarán SQL e índices convencionales.
 
 ### Listados y operación
 
@@ -63,6 +73,7 @@
 - Se generarán logs desde el inicio.
 - Grafana, Kibana y plataformas similares quedan fuera por ahora.
 - La aplicación deberá ser accesible y compatible con navegadores actuales.
+- Los logs serán agnósticos y no incluirán secretos, contraseñas, hashes innecesarios ni credenciales contenidas en URLs.
 
 ### SEO
 
@@ -82,8 +93,7 @@
 - Tamaño máximo de respuesta.
 - Tipos de contenido aceptados.
 - Estrategia de despliegue.
-- Detalles finales de sitemap y paginación indexable.
-- Alcance de datos estructurados y Twitter Cards.
+- Diseño detallado del scraping y su contrato de ejecución en segundo plano.
 
 ## Fuera de alcance del MVP0
 
@@ -100,3 +110,4 @@
 - Sincronización con servicios externos.
 - Analítica avanzada.
 - Plataforma externa de observabilidad.
+- SEO avanzado.

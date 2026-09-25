@@ -10,6 +10,8 @@
 - SQLite.
 - Dapper.
 
+El MVP0 se ejecutará únicamente en local. La protección del panel privado se basa en el límite de confianza del entorno local y en el contexto de usuario fijo; no se diseñará todavía una solución de autenticación para exposición pública.
+
 La estrategia de despliegue se decidirá más adelante.
 
 ## Capas
@@ -41,9 +43,10 @@ Responsabilidades:
 
 Casos de uso iniciales:
 
-- Crear, editar y eliminar colecciones.
+- Crear y editar colecciones.
+- Eliminar una colección solo cuando no tenga enlaces.
 - Cambiar la visibilidad de una colección.
-- Crear, editar y eliminar enlaces.
+- Crear enlaces y editar únicamente sus metadatos y publicación.
 - Comprobar duplicados.
 - Publicar y despublicar enlaces.
 - Mover enlaces entre colecciones.
@@ -52,6 +55,8 @@ Casos de uso iniciales:
 - Buscar enlaces.
 - Procesar metadatos.
 - Reintentar scraping.
+
+Los casos de uso de scraping quedan documentados como capacidad futura y no forman parte de la primera implementación mientras el diseño permanezca aplazado.
 
 ### Infrastructure
 
@@ -68,6 +73,8 @@ Responsabilidades:
 - Scraper HTTP.
 - Trabajos persistidos o estado equivalente para scraping.
 - Implementación del usuario fijo del MVP0.
+
+El diseño detallado del scraping queda aplazado y no debe considerarse cerrado hasta definir su contrato, límites y protección SSRF.
 
 No se utilizará Entity Framework Core.
 
@@ -136,7 +143,11 @@ El índice de búsqueda será una proyección desnormalizada que podrá incluir:
 
 La actualización del índice deberá ser transaccional con las operaciones de alta, edición, movimiento, etiquetado y borrado físico.
 
+Cada operación de escritura o borrado de base de datos que afecte a enlaces, colecciones o tags deberá actualizar también la proyección FTS5 y las relaciones `LinkTag` que correspondan, dentro de la misma transacción.
+
 La consulta de búsqueda siempre aplicará el usuario actual. FTS5 no debe convertirse en una vía para devolver resultados de otro usuario.
+
+La proyección contendrá `UserId` asociado a cada entrada y la consulta combinará `MATCH` con el filtro obligatorio del usuario actual. FTS5 se reservará para texto libre; los filtros por colección, tag, publicación y fechas usarán SQL e índices.
 
 La implementación deberá contemplar:
 
@@ -147,6 +158,8 @@ La implementación deberá contemplar:
 - Reconstrucción o reparación del índice.
 
 ## Scraping
+
+El diseño detallado de esta parte queda aplazado. Los requisitos funcionales conservan la intención de obtener los metadatos del enlace, pero no se implementará ni se cerrará su contrato hasta una revisión específica.
 
 El scraping se ejecutará fuera de la petición principal mediante `BackgroundService` y trabajos persistidos o un mecanismo equivalente.
 
@@ -183,6 +196,8 @@ La resolución debe comprobar:
 4. Que la colección es pública.
 5. Que el enlace está publicado antes de mostrarlo.
 
+Una colección privada y una colección inexistente producirán la misma respuesta pública `404`, sin revelar si la colección privada existe.
+
 ## Calidad y accesibilidad
 
 La interfaz deberá ser accesible desde el diseño:
@@ -201,6 +216,6 @@ La interfaz deberá ser accesible desde el diseño:
 
 ## Logs
 
-Se registrarán logs para operaciones relevantes, errores de persistencia, scraping, reintentos, SSRF, validación, búsqueda y publicación.
+Se registrarán logs agnósticos para operaciones relevantes, errores de persistencia, scraping, reintentos, SSRF, validación, búsqueda y publicación. Se evitará registrar secretos, contraseñas, hashes innecesarios y credenciales incluidas en URLs.
 
 No se añadirá todavía una plataforma como Grafana o Kibana.

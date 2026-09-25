@@ -9,9 +9,10 @@ Linkubator será una aplicación web para que cada usuario gestione sus enlaces 
 El usuario podrá:
 
 - Definir un usuario con nombre, email, alias y contraseña hasheada.
-- Crear, editar y eliminar colecciones.
+- Crear y editar colecciones.
+- Eliminar colecciones únicamente cuando no tengan enlaces.
 - Marcar una colección como pública o privada.
-- Crear, editar y eliminar enlaces.
+- Crear enlaces y editar únicamente sus metadatos y estado de publicación.
 - Asignar cada enlace a una única colección.
 - Asociar varios tags a un enlace.
 - Publicar o retirar individualmente un enlace dentro de una colección pública.
@@ -20,7 +21,9 @@ El usuario podrá:
 - Obtener `title`, `description` y `og:image` de la URL.
 - Consultar páginas públicas de colecciones.
 
-El MVP0 no tendrá registro, login ni autenticación. Se usará un usuario fijo configurable, pero el modelo quedará preparado para futuros usuarios.
+El MVP0 será una aplicación local. No tendrá registro, login ni autenticación. Se usará un usuario fijo configurable, pero el modelo quedará preparado para futuros usuarios.
+
+Las páginas públicas y sus fundamentos SEO podrán verificarse localmente, pero no serán rastreables por buscadores mientras la aplicación no tenga un despliegue público. El despliegue queda fuera del MVP0.
 
 ## 3. Usuario y alias
 
@@ -43,6 +46,8 @@ Una colección tendrá nombre, slug, descripción, propietario, visibilidad y fe
 
 El slug será único dentro del usuario, pero no será global.
 
+Sus reglas serán las mismas que las del alias, excepto la longitud máxima, que será de 50 caracteres. El slug podrá cambiarse, siempre que el nuevo valor siga siendo válido y continúe siendo único dentro del usuario.
+
 Las colecciones públicas tendrán una URL con este formato:
 
 ```text
@@ -50,6 +55,8 @@ Las colecciones públicas tendrán una URL con este formato:
 ```
 
 Las colecciones privadas no serán accesibles desde fuera.
+
+Una colección privada y una colección inexistente responderán de la misma forma desde el exterior: `404`.
 
 ## 5. Visibilidad de enlaces
 
@@ -68,6 +75,8 @@ Reglas:
 - Un enlace movido a una colección privada quedará privado/no publicado.
 - Si después vuelve a una colección pública, seguirá sin publicarse hasta una decisión explícita.
 
+Al mover un enlace entre colecciones, `IsPublished` pasará a `false`. El usuario tendrá que publicarlo explícitamente en su nueva colección, aunque también sea pública.
+
 ## 6. Enlaces
 
 Se conservará la URL original introducida por el usuario.
@@ -78,19 +87,21 @@ No se seguirán redirecciones para decidir si una URL está duplicada.
 
 La misma URL normalizada no podrá guardarse dos veces dentro del mismo usuario. El sistema debe avisar antes de crear un duplicado.
 
+La URL del enlace será inmutable después de su creación. Si el usuario quiere guardar otra URL, deberá eliminar el enlace y crear uno nuevo.
+
 ## 7. Metadatos
 
-Al crear un enlace se intentará obtener:
+La aplicación podrá obtener posteriormente los siguientes metadatos de la URL:
 
 - HTML `title`.
 - Meta description.
 - Meta property `og:image`.
 
-El intento inicial se realizará al introducir la URL. Si falla, habrá hasta dos reintentos adicionales separados aproximadamente 20 segundos.
+El comportamiento del intento inicial, los reintentos y su ejecución en segundo plano queda aplazado hasta cerrar el diseño específico del scraping.
 
 Si no se encuentran metadatos, el enlace se conservará y esos campos quedarán vacíos.
 
-El scraping deberá incorporar protección SSRF, validación de protocolos, timeout, límites de respuesta, control de redirecciones y validación del tipo de contenido.
+El diseño detallado del scraping queda aplazado. Antes de implementarlo deberán definirse protección SSRF, validación de protocolos, timeout, límites de respuesta, control de redirecciones, validación del tipo de contenido y el contrato exacto del procesamiento en segundo plano.
 
 ## 8. Búsqueda
 
@@ -106,6 +117,8 @@ Podrá buscar sobre:
 
 La búsqueda siempre estará limitada al usuario actual. Nunca podrá devolver enlaces de otro usuario.
 
+FTS5 se utilizará para la búsqueda textual. Los filtros estructurados por colección, tag, publicación o fechas se resolverán mediante SQL e índices convencionales.
+
 ## 9. Listados públicos
 
 Las colecciones públicas mostrarán solo enlaces publicados.
@@ -119,7 +132,7 @@ Se mostrarán 15 enlaces por página.
 
 ## 10. SEO
 
-El SEO se abordará por fases. Las decisiones que afectan al dominio, las rutas, la visibilidad y el HTML se definirán desde el principio. El refinamiento y la auditoría SEO se completarán posteriormente, antes de cerrar el MVP0.
+El SEO se abordará por fases. Las decisiones que afectan al dominio, las rutas, la visibilidad y el HTML se definirán desde el principio. El refinamiento y la auditoría SEO avanzada quedan fuera del MVP0.
 
 ### Fundamentos desde el inicio
 
@@ -139,9 +152,9 @@ Las páginas públicas de colección deberán tener:
 
 Los enlaces individuales no tendrán páginas indexables propias.
 
-### Refinamiento posterior
+### SEO avanzado posterior al MVP0
 
-Antes de dar por terminado el MVP0 se completarán y revisarán:
+Queda fuera del MVP0 y podrá abordarse posteriormente:
 
 - Open Graph.
 - Twitter Cards, si procede.
@@ -173,7 +186,7 @@ La interfaz inicial estará en castellano y deberá soportar los navegadores act
 
 ## 12. Operación
 
-Se generarán logs desde el inicio para operaciones relevantes, errores de persistencia, fallos y reintentos del scraper, validaciones, SSRF y operaciones de publicación.
+Se generarán logs agnósticos desde el inicio para operaciones relevantes, errores de persistencia, fallos y reintentos del scraper, validaciones, SSRF y operaciones de publicación. No deberán incluir secretos, contraseñas, hashes innecesarios ni credenciales contenidas en URLs.
 
 Grafana, Kibana y otras plataformas de observabilidad quedan fuera del MVP0.
 
@@ -190,3 +203,4 @@ Grafana, Kibana y otras plataformas de observabilidad quedan fuera del MVP0.
 - Crawling completo.
 - Sincronización con servicios externos.
 - Analítica avanzada.
+- SEO avanzado.

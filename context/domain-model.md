@@ -40,8 +40,12 @@ Reglas:
 
 - Pertenece a un único usuario.
 - `Slug` es único dentro del usuario.
+- `Slug` sigue las reglas del alias, con una longitud máxima de 50 caracteres.
+- `Slug` puede cambiarse si el nuevo valor es válido y único dentro del usuario.
 - No tiene `UpdatedAt`.
 - Una colección privada no es accesible públicamente.
+
+Si contiene uno o más enlaces, no podrá eliminarse. Solo podrá eliminarse físicamente cuando no tenga enlaces.
 
 ### Link
 
@@ -70,6 +74,9 @@ Reglas:
 - La URL normalizada solo sirve para detectar duplicados.
 - No puede existir la misma URL normalizada dos veces para el mismo usuario.
 - `IsPublished` no puede hacer público un enlace de una colección privada.
+- La URL es inmutable después de crear el enlace.
+- Solo podrán editarse los metadatos (`Title`, `Description`, `OgImage`) y `IsPublished`.
+- Al moverlo a otra colección, `IsPublished` se establecerá en `false`.
 - El borrado será físico.
 
 No se incluirán inicialmente notas, favicon, favoritos, archivado ni `UpdatedAt`.
@@ -102,6 +109,7 @@ Propiedades:
 Regla:
 
 - La pareja `LinkId + TagId` es única.
+- Las altas, cambios y borrados de esta relación se realizarán dentro de la misma unidad transaccional que la operación principal.
 
 ## Relaciones
 
@@ -136,6 +144,8 @@ Cuando una colección privada vuelve a ser pública, los enlaces no se publican 
 - `UserId + Link.NormalizedUrl`.
 - `UserId + Tag.Slug`.
 - `LinkId + TagId`.
+
+La eliminación de un enlace eliminará también sus relaciones `LinkTag` y su proyección de búsqueda de forma atómica. La eliminación de un tag eliminará sus relaciones `LinkTag` dentro de la misma transacción.
 
 ## Estados del scraping
 
