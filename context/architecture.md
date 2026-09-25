@@ -1,4 +1,4 @@
-# Arquitectura prevista
+# Arquitectura prevista para Linkubator
 
 ## Plataforma
 
@@ -7,7 +7,7 @@
 - ASP.NET Core Razor Pages.
 - Renderizado del lado servidor.
 - Tailwind CSS.
-- SQLite.
+- SQLite con FTS5.
 - Dapper.
 
 El MVP0 se ejecutará únicamente en local. La protección del panel privado se basa en el límite de confianza del entorno local y en el contexto de usuario fijo; no se diseñará todavía una solución de autenticación para exposición pública.
@@ -25,6 +25,7 @@ Responsabilidades:
 - Invariantes.
 - Reglas de negocio.
 - Errores de dominio.
+- Enumeradores.
 
 No conocerá SQLite, Dapper, HTTP, Razor Pages ni detalles de infraestructura.
 
@@ -92,9 +93,9 @@ Responsabilidades:
 - Resolución del usuario actual.
 - Presentación de errores y estados accesibles.
 
-## SEO por fases
+## SEO
 
-El SEO no se pospondrá por completo hasta el final porque algunas decisiones afectan a la arquitectura y al modelo de publicación.
+La aplicación del SEO se hará por fases porque algunas decisiones afectan a la arquitectura y al modelo de publicación.
 
 Desde el inicio deben quedar definidos:
 

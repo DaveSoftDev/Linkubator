@@ -1,4 +1,4 @@
-# Modelo de dominio
+# Modelo de dominio de Linkubator
 
 ## Entidades
 
@@ -11,12 +11,15 @@ Propiedades previstas:
 - `Id`
 - `Name`
 - `Email`
-- `UserAlias`
-- `PasswordHash`
+- `Alias`
+- `Password`
+- `CreatedAt`
+- `LastLoginAt`
 
 Reglas:
 
-- `UserAlias` es obligatorio y único globalmente.
+- `Alias` es obligatorio y único globalmente.
+- El `Name`, `Email` y `Password` son obligatorios.
 - El alias tiene entre 10 y 25 caracteres.
 - El alias usa minúsculas, números y guiones.
 - El alias no puede cambiarse.
@@ -39,10 +42,10 @@ Propiedades previstas:
 Reglas:
 
 - Pertenece a un único usuario.
+- El `Name` y el `Slug` es obligatorio.
 - `Slug` es único dentro del usuario.
-- `Slug` sigue las reglas del alias, con una longitud máxima de 50 caracteres.
+- `Slug` sigue las reglas del alias de usuario, con una longitud máxima de 50 caracteres.
 - `Slug` puede cambiarse si el nuevo valor es válido y único dentro del usuario.
-- No tiene `UpdatedAt`.
 - Una colección privada no es accesible públicamente.
 
 Si contiene uno o más enlaces, no podrá eliminarse. Solo podrá eliminarse físicamente cuando no tenga enlaces.
@@ -56,15 +59,15 @@ Propiedades previstas:
 - `Id`
 - `UserId`
 - `CollectionId`
-- `OriginalUrl`
-- `NormalizedUrl`
-- `IsPublished`
+- `UrlOriginal`
+- `UrlNormalized`
 - `Title`
+- `IsPublic`
 - `Description`
-- `OgImage`
-- Estado del scraping.
-- Número de intentos.
-- Fecha del próximo intento.
+- `Image`
+- `ScrapingStatus`
+- `Retries`
+- `NextTry`
 - `CreatedAt`
 
 Reglas:
@@ -73,13 +76,11 @@ Reglas:
 - La URL original se conserva.
 - La URL normalizada solo sirve para detectar duplicados.
 - No puede existir la misma URL normalizada dos veces para el mismo usuario.
-- `IsPublished` no puede hacer público un enlace de una colección privada.
+- `IsPublic` no puede hacer público un enlace de una colección privada.
 - La URL es inmutable después de crear el enlace.
-- Solo podrán editarse los metadatos (`Title`, `Description`, `OgImage`) y `IsPublished`.
-- Al moverlo a otra colección, `IsPublished` se establecerá en `false`.
+- Solo podrán editarse los metadatos (`Title`, `Description`, `Image`) y `IsPublic`.
+- Al moverlo a otra colección, `IsPublic` se establecerá en `false`.
 - El borrado será físico.
-
-No se incluirán inicialmente notas, favicon, favoritos, archivado ni `UpdatedAt`.
 
 ### Tag
 
@@ -125,27 +126,27 @@ Link N ---- N Tag
 
 Toda consulta privada debe filtrarse por el usuario actual. Los identificadores recibidos desde la interfaz no son suficientes para autorizar una operación.
 
-Una operación privada debe verificar conjuntamente la propiedad del recurso y sus relaciones. Por ejemplo, un enlace solo podrá asociarse a una colección y a un tag del mismo usuario.
+Una operación privada debe verificar conjuntamente la propiedad del recurso y sus relaciones. Por ejemplo, un enlace solo podrá asociarse a una colección, anque pueda tener varios un tags del mismo usuario.
 
 ## Visibilidad efectiva
 
 ```text
-Collection.IsPublic && Link.IsPublished
+Collection.IsPublic && Link.IsPublic
 ```
 
 Una colección privada bloquea siempre la visibilidad de sus enlaces.
 
-Cuando una colección privada vuelve a ser pública, los enlaces no se publican automáticamente.
+Cuando una colección privada vuelve a ser pública, a los enlaces no se le cambia la visibilidad automáticamente.
 
 ## Restricciones de unicidad
 
 - `User.UserAlias`.
-- `UserId + Collection.Slug`.
-- `UserId + Link.NormalizedUrl`.
-- `UserId + Tag.Slug`.
-- `LinkId + TagId`.
+- `User.UserId + Collection.Slug`.
+- `User.UserId + Link.NormalizedUrl`.
+- `User.UserId + Tag.Slug`.
+- `Link.LinkId + Tag.TagId`.
 
-La eliminación de un enlace eliminará también sus relaciones `LinkTag` y su proyección de búsqueda de forma atómica. La eliminación de un tag eliminará sus relaciones `LinkTag` dentro de la misma transacción.
+La eliminación de un enlace eliminará también sus relaciones `LinkTag` y su proyección de búsqueda de forma atómica. La eliminación de un tag eliminará sus relaciones `LinkTag` dentro de la misma transacción. Esta eliminación se hará de forma manual desde la aplicación, nunca de forma automática desde la base de datos.
 
 ## Estados del scraping
 

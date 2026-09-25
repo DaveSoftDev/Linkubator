@@ -1,4 +1,4 @@
-# Requisitos del producto
+# Requisitos de Linkubator
 
 ## 1. Propósito
 
@@ -8,17 +8,17 @@ Linkubator será una aplicación web para que cada usuario gestione sus enlaces 
 
 El usuario podrá:
 
-- Definir un usuario con nombre, email, alias y contraseña hasheada.
+- Definir un usuario con nombre, email, alias y contraseña.
 - Crear y editar colecciones.
 - Eliminar colecciones únicamente cuando no tengan enlaces.
 - Marcar una colección como pública o privada.
-- Crear enlaces y editar únicamente sus metadatos y estado de publicación.
+- Crear enlaces y editar únicamente sus metadatos y estado de publicación (Público o privado).
 - Asignar cada enlace a una única colección.
 - Asociar varios tags a un enlace.
 - Publicar o retirar individualmente un enlace dentro de una colección pública.
 - Buscar sus propios enlaces.
-- Ver enlaces por colección o tag.
-- Obtener `title`, `description` y `og:image` de la URL.
+- Ver sus enlaces por colección o por tag.
+- Obtener los meta `title`, `description` y `og:image` de la URL.
 - Consultar páginas públicas de colecciones.
 
 El MVP0 será una aplicación local. No tendrá registro, login ni autenticación. Se usará un usuario fijo configurable, pero el modelo quedará preparado para futuros usuarios.
@@ -33,10 +33,9 @@ Reglas del alias:
 
 - Longitud entre 10 y 25 caracteres.
 - Solo caracteres ASCII básicos: letras minúsculas, números y guiones.
-- Se almacenará en minúsculas.
 - No se permiten acentos, `ñ`, `ç`, espacios, guiones bajos ni otros caracteres especiales.
 - No podrá cambiarse posteriormente.
-- Palabras reservadas: `collections`, `users` y `tags`.
+- Palabras reservadas: `collections`, `collections`, `user`, `users`, `tag` y `tags`.
 
 La contraseña se almacenará únicamente como hash seguro. Nunca se guardará en texto claro.
 
@@ -69,10 +68,10 @@ Collection.IsPublic && Link.IsPublished
 Reglas:
 
 - Un enlace de una colección privada nunca será público.
-- En una colección pública, el usuario decidirá individualmente qué enlaces publica.
+- En una colección pública, el usuario decidirá individualmente qué enlaces publica (Hace visibles).
 - Al hacer privada una colección pública, ninguno de sus enlaces será accesible públicamente.
-- Al volver pública una colección privada, sus enlaces permanecerán privados/no publicados.
-- Un enlace movido a una colección privada quedará privado/no publicado.
+- Al volver pública una colección privada, sus enlaces permanecerán privados (No visibles).
+- Un enlace movido a una colección privada quedará privado (No visible).
 - Si después vuelve a una colección pública, seguirá sin publicarse hasta una decisión explícita.
 
 Al mover un enlace entre colecciones, `IsPublished` pasará a `false`. El usuario tendrá que publicarlo explícitamente en su nueva colección, aunque también sea pública.
@@ -87,19 +86,19 @@ No se seguirán redirecciones para decidir si una URL está duplicada.
 
 La misma URL normalizada no podrá guardarse dos veces dentro del mismo usuario. El sistema debe avisar antes de crear un duplicado.
 
-La URL del enlace será inmutable después de su creación. Si el usuario quiere guardar otra URL, deberá eliminar el enlace y crear uno nuevo.
+La URL del enlace será inmutable después de su creación. Si el usuario quiere guardar otra vaz la misma URL, deberá eliminar el enlace y crear uno nuevo.
 
 ## 7. Metadatos
 
 La aplicación podrá obtener posteriormente los siguientes metadatos de la URL:
 
-- HTML `title`.
+- Meta title.
 - Meta description.
 - Meta property `og:image`.
 
-El comportamiento del intento inicial, los reintentos y su ejecución en segundo plano queda aplazado hasta cerrar el diseño específico del scraping.
+Una vez el usuario haya introducido el enlace y abandone ese campo, se lanzará el proceso de scrap para obtener los metadatos de la URL introducida. Al encontrarlos se auto rellenarán los campos de metadatos. Si no los encuentra en ese momento, deberá marcarlos para volver a intentarlo pasados 5 minutos, este sería el segundo intento; si los encuentra actualizará los datos de metadatos y ya no volverá a procesarlos más. Si en esta ocasión tampoco los encuentra se realizará un tercer y último intento.
 
-Si no se encuentran metadatos, el enlace se conservará y esos campos quedarán vacíos.
+Si no se encuentran metadatos en cualquiera de los intentos, el enlace se conservará y esos campos quedarán vacíos.
 
 El diseño detallado del scraping queda aplazado. Antes de implementarlo deberán definirse protección SSRF, validación de protocolos, timeout, límites de respuesta, control de redirecciones, validación del tipo de contenido y el contrato exacto del procesamiento en segundo plano.
 
@@ -117,7 +116,7 @@ Podrá buscar sobre:
 
 La búsqueda siempre estará limitada al usuario actual. Nunca podrá devolver enlaces de otro usuario.
 
-FTS5 se utilizará para la búsqueda textual. Los filtros estructurados por colección, tag, publicación o fechas se resolverán mediante SQL e índices convencionales.
+FTS5 se utilizará para la búsqueda textual. Los filtros estructurados por colección, tag, publicación se resolverán mediante SQL e índices convencionales.
 
 ## 9. Listados públicos
 
@@ -140,7 +139,7 @@ Las páginas públicas de colección deberán tener:
 
 - URL amigable con el formato `/user-alias/collections/collection-slug`.
 - HTML renderizado en servidor.
-- `title`.
+- `meta.title`.
 - `meta description`.
 - Un único `h1`.
 - Encabezados semánticos.
@@ -174,7 +173,7 @@ Requisitos iniciales:
 - Foco visible.
 - Primer campo lógico enfocable al entrar en formularios.
 - Labels asociados a los campos.
-- Mensajes de error junto al campo y anunciables.
+- Mensajes de error junto al campo y anunciables. Si por falta de espacio puede ser debajo del campo, no hay problema. Pero el campo debe también quedar marcado de forma visual con error.
 - Navegación para saltar al contenido principal.
 - Landmarks y encabezados semánticos.
 - Contraste suficiente.
@@ -188,7 +187,7 @@ La interfaz inicial estará en castellano y deberá soportar los navegadores act
 
 Se generarán logs agnósticos desde el inicio para operaciones relevantes, errores de persistencia, fallos y reintentos del scraper, validaciones, SSRF y operaciones de publicación. No deberán incluir secretos, contraseñas, hashes innecesarios ni credenciales contenidas en URLs.
 
-Las operaciones de base de datos deberán ser breves y explícitas: abrir conexión, ejecutar la unidad mínima de trabajo, confirmar o revertir y liberar recursos. No se mantendrán transacciones abiertas mientras se espera al usuario o se realizan operaciones externas.
+Las operaciones de base de datos deberán ser breves, explícitas y quirurgicas: abrir conexión, ejecutar la unidad mínima de trabajo, confirmar o revertir y liberar recursos. No se mantendrán transacciones abiertas mientras se espera al usuario o se realizan operaciones externas.
 
 SQLite se configurará para permitir lecturas concurrentes durante escrituras y para tolerar bloqueos transitorios breves, sin ocultar errores persistentes.
 

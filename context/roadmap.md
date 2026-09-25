@@ -117,7 +117,7 @@ Criterio de finalización:
 - Los enlaces no publicados no aparecen.
 - El HTML público se renderiza desde servidor y es rastreable.
 
-## SEO avanzado posterior al MVP0
+### SEO avanzado posterior al MVP0
 
 Objetivos:
 
