@@ -42,22 +42,26 @@ Responsabilidades:
 - Abstracción del usuario actual.
 - Abstracción del scraper.
 
+La generación de `User.Alias`, `Collection.Slug` y `Tag.Slug` se tratará como una regla compartida del dominio, no como lógica duplicada en cada caso de uso.
+
+La generación de `Link.UrlNormalized` será una regla técnica independiente: producirá una clave plana para detectar duplicados y no una URL reconstruible.
+
 Casos de uso iniciales:
 
 - Crear y editar colecciones.
 - Eliminar una colección solo cuando no tenga enlaces.
 - Cambiar la visibilidad de una colección.
-- Crear enlaces y editar únicamente sus metadatos y publicación.
+- Crear enlaces, siempre privados inicialmente, y editar únicamente sus metadatos y publicación.
 - Comprobar duplicados.
 - Publicar y despublicar enlaces.
 - Mover enlaces entre colecciones.
-- Crear, editar y eliminar tags.
-- Asociar y desasociar tags.
+- Crear, editar y eliminar etiquetas mediante la entidad técnica `Tag`.
+- Asociar y desasociar etiquetas mediante `LinkTag`.
 - Buscar enlaces.
 - Procesar metadatos.
 - Reintentar scraping.
 
-Los casos de uso de scraping quedan documentados como capacidad futura y no forman parte de la primera implementación mientras el diseño permanezca aplazado.
+Los casos de uso de scraping forman parte del MVP0, pero se implementarán en una fase posterior cuando se cierre su diseño técnico.
 
 ### Infrastructure
 
@@ -99,7 +103,7 @@ La aplicación del SEO se hará por fases porque algunas decisiones afectan a la
 
 Desde el inicio deben quedar definidos:
 
-- Rutas públicas con `UserAlias` y slug de colección.
+- Rutas públicas con `Alias` y slug de colección.
 - Renderizado SSR mediante Razor Pages.
 - Separación entre colecciones públicas y privadas.
 - Publicación individual de enlaces dentro de colecciones públicas.
@@ -151,7 +155,9 @@ Restricciones e índices previstos:
 
 - Alias único global.
 - Slug único por usuario.
+- Slug de etiqueta único dentro del usuario.
 - URL normalizada única por usuario.
+- `UrlNormalized` se calculará después de validar la URL original, aplicar `UrlDecode`, eliminar esquema, fragmento y marketing, ordenar parámetros, tratar puertos y aplanar la cadena.
 - Índices por usuario, colección, publicación y fecha.
 - Relación `LinkTag` con pareja única.
 
@@ -163,15 +169,15 @@ El índice de búsqueda será una proyección desnormalizada que podrá incluir:
 - Título.
 - Descripción.
 - Nombre de colección.
-- Nombres de tags.
+	- Nombres de etiquetas.
 
 La actualización del índice deberá ser transaccional con las operaciones de alta, edición, movimiento, etiquetado y borrado físico.
 
-Cada operación de escritura o borrado de base de datos que afecte a enlaces, colecciones o tags deberá actualizar también la proyección FTS5 y las relaciones `LinkTag` que correspondan, dentro de la misma transacción.
+Cada operación de escritura o borrado de base de datos que afecte a enlaces, colecciones o etiquetas deberá actualizar también la proyección FTS5 y las relaciones `LinkTag` que correspondan, dentro de la misma transacción.
 
 La consulta de búsqueda siempre aplicará el usuario actual. FTS5 no debe convertirse en una vía para devolver resultados de otro usuario.
 
-La proyección contendrá `UserId` asociado a cada entrada y la consulta combinará `MATCH` con el filtro obligatorio del usuario actual. FTS5 se reservará para texto libre; los filtros por colección, tag, publicación y fechas usarán SQL e índices.
+La proyección contendrá `UserId` asociado a cada entrada y la consulta combinará `MATCH` con el filtro obligatorio del usuario actual. FTS5 se reservará para texto libre; los filtros por colección, etiqueta, publicación y fechas usarán SQL e índices.
 
 La implementación deberá contemplar:
 
@@ -183,15 +189,15 @@ La implementación deberá contemplar:
 
 ## Scraping
 
-El diseño detallado de esta parte queda aplazado. Los requisitos funcionales conservan la intención de obtener los metadatos del enlace, pero no se implementará ni se cerrará su contrato hasta una revisión específica.
+El scraping forma parte del MVP0, pero se implementará en una fase posterior. El flujo documentado es provisional y podrá cambiar tras la revisión técnica específica.
 
 El scraping se ejecutará fuera de la petición principal mediante `BackgroundService` y trabajos persistidos o un mecanismo equivalente.
 
 Plan de reintentos:
 
-- Intento inicial.
-- Hasta dos reintentos adicionales.
-- Aproximadamente 20 segundos entre intentos.
+- Intento inicial al terminar de introducir la URL el usuario.
+- Hasta dos reintentos adicionales en silencio.
+- Aproximadamente 5 minutos entre intentos.
 
 Medidas obligatorias:
 

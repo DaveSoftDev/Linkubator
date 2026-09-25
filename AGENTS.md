@@ -29,16 +29,22 @@ Cuando se cree una nueva skill de Linkubator, debe añadirse aquí con su nombre
 - El producto está preparado conceptualmente para múltiples usuarios.
 - El MVP0 usa un usuario fijo configurable y no implementa registro, login ni autenticación.
 - Toda lectura o modificación privada debe quedar limitada al usuario actual.
-- Nunca se debe confiar en un `UserId` enviado por el cliente.
+- Nunca se debe confiar en un `UserId` o `Alias` enviado por el cliente.
 - Una colección privada nunca expone sus enlaces.
-- En una colección pública, cada enlace requiere publicación explícita.
+- Todo enlace nuevo comienza como privado (`IsPublic = false`) y requiere publicación explícita.
 - Al volver pública una colección privada, sus enlaces siguen sin publicarse.
 - Los enlaces individuales no tendrán páginas indexables.
 - Solo las colecciones públicas tendrán páginas indexables.
+- El alias del usuario es visible, mutable y único globalmente.
+- `User.Alias`, `Collection.Slug` y `Tag.Slug` se generan con la misma transformación de minúsculas, eliminación de acentos, sustitución de `ç`/`ñ`, espacios a guiones y eliminación del resto de caracteres.
+- El slug de colección se genera desde el nombre, es invisible e inmutable y es único dentro del usuario.
+- El scraping forma parte del MVP0, pero se implementa en una fase posterior con flujo provisional de intento inicial y reintentos a 5 minutos.
+- En la documentación funcional se usa “etiqueta”; `Tag` y `LinkTag` son nombres técnicos.
 - El MVP0 se ejecuta únicamente en local.
 - Una colección con enlaces no se puede borrar.
 - La URL de un enlace es inmutable después de su creación.
 - Al mover un enlace de colección, queda despublicado y requiere publicación explícita.
+- `UrlNormalized` es una clave plana de comparación, no una URL reconstruible; se calcula con `UrlDecode`, eliminación de marketing, ordenación de parámetros y eliminación de separadores.
 - `LinkTag` y FTS5 se actualizan dentro de la misma transacción que las operaciones de escritura o borrado relacionadas.
 - Las transacciones deben ser breves: abrir, ejecutar lo imprescindible, confirmar o revertir y liberar.
 - Nunca realizar scraping, llamadas HTTP ni esperas de usuario dentro de una transacción.

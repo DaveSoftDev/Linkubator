@@ -18,7 +18,6 @@ Estado: en progreso.
 
 Pendientes principales:
 
-- Reglas exactas de normalización de URLs.
 - Diseño detallado del scraper, aplazado hasta una revisión específica.
 - Fundamentos SEO que afectan a rutas, visibilidad y HTML.
 - Estrategia de despliegue, que queda fuera del MVP0 local.
@@ -32,7 +31,7 @@ Criterio de finalización:
 Objetivos:
 
 - Definir entidades e invariantes.
-- Definir reglas de alias, slug, propiedad y visibilidad.
+- Definir la regla común de generación de alias y slugs, además de propiedad y visibilidad.
 - Definir casos de uso.
 - Definir contratos `Result`.
 - Definir contexto de usuario fijo.
@@ -56,47 +55,43 @@ Objetivos:
 
 Criterio de finalización:
 
-- Las operaciones de enlaces, colecciones y tags son atómicas.
+- Las operaciones de enlaces, colecciones y etiquetas son atómicas.
 - La búsqueda respeta siempre el usuario actual.
 - FTS5 se mantiene sincronizado con altas, cambios y borrados.
 - Las transacciones son breves y no contienen operaciones externas.
 - WAL, `busy_timeout` y claves foráneas están configurados.
 - Las escrituras no mantienen conexiones ni transacciones abiertas más tiempo del necesario.
 
-## Fase 4: Scraping (aplazada)
-
-Objetivos futuros, no incluidos en la implementación actual:
-
-- Validar URLs.
-- Implementar protección SSRF.
-- Obtener title, description y og:image.
-- Implementar intento inicial y dos reintentos.
-- Procesar trabajos en segundo plano.
-- Registrar logs operativos.
-
-Criterio de finalización:
-
-- Un fallo de scraping no impide guardar el enlace.
-- Los reintentos se ejecutan con el intervalo definido.
-- No se puede acceder a destinos internos o no permitidos.
-
-Esta fase permanecerá pendiente hasta cerrar una política específica de scraping y SSRF.
-
-## Fase 5: Interfaz privada
+## Fase 4: Interfaz privada y gestión básica
 
 Objetivos:
 
-- Crear panel de gestión con Razor Pages.
-- Gestionar colecciones.
-- Gestionar enlaces.
-- Gestionar tags.
-- Publicar y despublicar enlaces.
-- Buscar y filtrar enlaces.
-- Mostrar estados vacíos y errores accesibles.
+- Completar la interfaz privada de gestión.
+- Validar estados vacíos y errores accesibles.
 
 Criterio de finalización:
 
-- El usuario fijo puede completar el flujo completo de gestión sin acceder a datos fuera de su contexto.
+- El usuario fijo puede gestionar colecciones, enlaces y etiquetas.
+- Todo enlace nuevo aparece inicialmente como privado.
+
+## Fase 5: Scraping del MVP0
+
+El scraping forma parte del MVP0, pero se implementará después de la gestión básica. El flujo descrito es provisional y podrá cambiar tras la revisión técnica específica.
+
+Objetivos:
+
+- Obtener `meta.title`, `meta.description` y `og.image` de la URL introducida por el usuario.
+- Ejecutar el intento inicial al abandonar el campo URL.
+- Programar un segundo intento silencioso a los 5 minutos.
+- Programar un tercer y último intento silencioso 5 minutos después.
+- Procesar los trabajos fuera de las transacciones de SQLite.
+- Definir e implementar la protección SSRF y los límites operativos.
+
+Criterio de finalización:
+
+- El enlace se conserva aunque no haya metadatos.
+- Los reintentos no bloquean las operaciones de base de datos.
+- Los detalles provisionales quedan revisados y documentados.
 
 ## Fase 6: Área pública y fundamentos SEO
 
@@ -117,7 +112,7 @@ Criterio de finalización:
 - Los enlaces no publicados no aparecen.
 - El HTML público se renderiza desde servidor y es rastreable.
 
-### SEO avanzado posterior al MVP0
+## SEO avanzado posterior al MVP0
 
 Objetivos:
 
@@ -139,12 +134,16 @@ Objetivos:
 
 - Tests de dominio.
 - Tests de duplicados.
-- Tests de alias único.
-- Tests de slug por usuario.
+- Tests de `UrlNormalized`: `UrlDecode`, marketing, ordenación de parámetros, puertos, clave plana y colisiones aceptadas.
+- Tests de alias único y mutable.
+- Tests de generación común para alias, slug de colección y slug de etiqueta.
+- Tests de slug autogenerado, invisible e inmutable.
 - Tests de visibilidad.
 - Tests de transacciones.
 - Tests de FTS5.
 - Tests de propiedad entre usuarios.
+- Tests de visibilidad privada inicial de nuevos enlaces.
+- Tests del flujo de scraping, sus reintentos y SSRF.
 - Tests de accesibilidad.
 - Pruebas en navegadores actuales.
 
@@ -156,7 +155,6 @@ Criterio de finalización:
 - Los formularios anuncian correctamente sus errores.
 - Los logs relevantes están disponibles.
 
-Las pruebas de scraping y SSRF se incorporarán cuando se reactive y cierre esa fase.
 
 ## Fuera de este roadmap
 
