@@ -10,7 +10,7 @@
 - SQLite con FTS5.
 - Dapper.
 
-El MVP0 se ejecutará únicamente en local. La protección del panel privado se basa en el límite de confianza del entorno local y en el contexto de usuario fijo; no se diseñará todavía una solución de autenticación para exposición pública.
+El MVP0 se ejecutará únicamente en local. La autenticación se resolverá localmente; no se requiere conexión a servidores externos. La protección del panel privado se basa en la identidad del usuario autenticado.
 
 La estrategia de despliegue se decidirá más adelante.
 
@@ -18,7 +18,7 @@ La estrategia de despliegue se decidirá más adelante.
 
 ### Domain
 
-Responsabilidades:
+**Responsabilidades**:
 
 - Entidades.
 - Value Objects.
@@ -31,7 +31,7 @@ No conocerá SQLite, Dapper, HTTP, Razor Pages ni detalles de infraestructura.
 
 ### Application
 
-Responsabilidades:
+**Responsabilidades**:
 
 - Casos de uso.
 - DTOs.
@@ -46,26 +46,30 @@ La generación de `User.Alias`, `Collection.Slug` y `Tag.Slug` se tratará como 
 
 La generación de `Link.UrlNormalized` será una regla técnica independiente: producirá una clave plana para detectar duplicados y no una URL reconstruible.
 
-Casos de uso iniciales:
+**Casos de uso iniciales**:
 
-- Crear y editar colecciones.
+- Registro de usuario (Nombre, email, alias y contraseña).
+- Identificarse como usuario (Email y contraseña).
+- Editar usuario (Sólo puede editar los datos de su usuario), con cambio de contraseña incluido.
+- Recuperar contraseña (cuando el usuario ha olvidado su contraseña).
+- Crear, editar y eliminar colecciones (nombre y visibilidad).
+- Crear, editar y eliminar etiquetas mediante la entidad técnica `Tag` (nombre).
 - Eliminar una colección solo cuando no tenga enlaces.
+- Eliminar una etiqueta solo cuando no tenga enlaces.
 - Cambiar la visibilidad de una colección.
 - Crear enlaces, siempre privados inicialmente, y editar únicamente sus metadatos y publicación.
 - Comprobar duplicados.
 - Publicar y despublicar enlaces.
 - Mover enlaces entre colecciones.
-- Crear, editar y eliminar etiquetas mediante la entidad técnica `Tag`.
 - Asociar y desasociar etiquetas mediante `LinkTag`.
 - Buscar enlaces.
 - Procesar metadatos.
-- Reintentar scraping.
 
 Los casos de uso de scraping forman parte del MVP0, pero se implementarán en una fase posterior cuando se cierre su diseño técnico.
 
 ### Infrastructure
 
-Responsabilidades:
+**Responsabilidades**:
 
 - Implementación de repositorios con Dapper.
 - SQL explícito.
@@ -77,7 +81,6 @@ Responsabilidades:
 - SQLite FTS5.
 - Scraper HTTP.
 - Trabajos persistidos o estado equivalente para scraping.
-- Implementación del usuario fijo del MVP0.
 
 El diseño detallado del scraping queda aplazado y no debe considerarse cerrado hasta definir su contrato, límites y protección SSRF.
 
@@ -85,7 +88,7 @@ No se utilizará Entity Framework Core.
 
 ### Web
 
-Responsabilidades:
+**Responsabilidades**:
 
 - Razor Pages.
 - Tailwind.
@@ -101,7 +104,7 @@ Responsabilidades:
 
 La aplicación del SEO se hará por fases porque algunas decisiones afectan a la arquitectura y al modelo de publicación.
 
-Desde el inicio deben quedar definidos:
+**Desde el inicio deben quedar definidos**:
 
 - Rutas públicas con `Alias` y slug de colección.
 - Renderizado SSR mediante Razor Pages.
@@ -112,7 +115,7 @@ Desde el inicio deben quedar definidos:
 - Respuestas `404` para recursos públicos inexistentes o no accesibles.
 - Paginación estable de 15 enlaces.
 
-En una fase posterior se completarán:
+**En una fase posterior se completarán**:
 
 - Open Graph y Twitter Cards.
 - `robots.txt`.
@@ -136,7 +139,7 @@ La interacción con SQLite seguirá siempre este ciclo:
 4. Confirmar o revertir inmediatamente.
 5. Liberar la transacción, la conexión y los recursos asociados.
 
-Reglas obligatorias:
+**Reglas obligatorias**:
 
 - Las transacciones serán lo más cortas posible.
 - No se esperará al usuario dentro de una transacción.
@@ -151,13 +154,13 @@ SQLite se configurará para el escenario local mediante WAL, `busy_timeout` y cl
 
 Las migraciones se resolverán mediante scripts SQL versionados o una herramienta ligera equivalente. No se introducirá EF Core para resolver este problema.
 
-Restricciones e índices previstos:
+**Restricciones e índices previstos**:
 
 - Alias único global.
-- Slug único por usuario.
-- Slug de etiqueta único dentro del usuario.
+- Email único global.
+- Slug de colección único por usuario.
+- Slug de etiqueta único por usuario.
 - URL normalizada única por usuario.
-- `UrlNormalized` se calculará después de validar la URL original, aplicar `UrlDecode`, eliminar esquema, fragmento y marketing, ordenar parámetros, tratar puertos y aplanar la cadena.
 - Índices por usuario, colección, publicación y fecha.
 - Relación `LinkTag` con pareja única.
 
@@ -169,7 +172,7 @@ El índice de búsqueda será una proyección desnormalizada que podrá incluir:
 - Título.
 - Descripción.
 - Nombre de colección.
-	- Nombres de etiquetas.
+- Nombres de etiquetas.
 
 La actualización del índice deberá ser transaccional con las operaciones de alta, edición, movimiento, etiquetado y borrado físico.
 
@@ -197,7 +200,7 @@ Plan de reintentos:
 
 - Intento inicial al terminar de introducir la URL el usuario.
 - Hasta dos reintentos adicionales en silencio.
-- Aproximadamente 5 minutos entre intentos.
+- 5 minutos entre intentos.
 
 Medidas obligatorias:
 
@@ -209,8 +212,34 @@ Medidas obligatorias:
 - Tipos de contenido permitidos.
 - No sustituir la URL original por una redirección.
 - Sanitizar metadatos extraídos.
+- El scraper solo rellena campos vacíos (`Title`, `Description`, `Image`); nunca sobrescribe valores ya informados. El scraping se considera completado cuando los tres campos están informados.
 
 ## Rutas públicas
+
+Detallamos cuales serán las rutas públicas a las que podrán acceder los buscadores.
+
+### Ruta pública del usuario
+
+Formato:
+
+```text
+/user-alias/
+```
+
+La resolución debe comprobar:
+
+1. Que el alias existe.
+2. Que las colecciones son públicas.
+
+¿Qué se visualizará?
+
+- Una la lista de las colecciones públicas de ese usuario.
+- Cada colección tendrá un enlace para acceder a ella.
+
+Un usuario inexistente producirá una respuesta pública `404`.
+Un usuario sin colecciones públicas también producirá una respuesta pública `404`, sin revelar si tiene colecciones privadas.
+
+### Ruta pública de las coleciones del usuario
 
 Formato:
 
@@ -221,10 +250,14 @@ Formato:
 La resolución debe comprobar:
 
 1. Que el alias existe.
-2. Que la colección pertenece a ese usuario.
-3. Que el slug coincide dentro de ese usuario.
-4. Que la colección es pública.
-5. Que el enlace está publicado antes de mostrarlo.
+2. Que el slug coincide dentro de ese usuario.
+3. Que la colección es pública.
+4. Que el enlace está publicado antes de mostrarlo.
+
+¿Qué se visualizará?
+
+- Una la lista de los enlaces públicos (Visibles) de ese usuario.
+- Cada enlace mostrará la URL original para poder acceder al enlace.
 
 Una colección privada y una colección inexistente producirán la misma respuesta pública `404`, sin revelar si la colección privada existe.
 
@@ -238,10 +271,10 @@ La interfaz deberá ser accesible desde el diseño:
 - Foco visible.
 - Errores asociados y anunciables.
 - Contraste suficiente.
-- No depender solo del color.
+- Usar colores bien contrastados.
 - Navegación por teclado.
 - Soporte para lectores de pantalla.
-- `prefers-reduced-motion`.
+- Se detectará si el usuario tiene la característica `prefers-reduced-motion` activada. Dado que algunas animaciones pueden provocar molestias a las personas con trastornos vestibulares relacionados con el movimiento.
 - Pruebas en navegadores actuales.
 
 ## Logs

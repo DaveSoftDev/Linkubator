@@ -1,4 +1,4 @@
-# Roadmap del MVP0
+# Roadmap del MVP0 de Linkubator
 
 ## Fase 0: Documentación
 
@@ -12,15 +12,30 @@ Entregables:
 - Decisiones confirmadas y pendientes.
 - Roadmap.
 
-Estado: en progreso.
+Estado: Cerrada.
 
 ## Fase 1: Cierre de decisiones estructurales
 
-Pendientes principales:
+Estado: Cerrada.
 
-- Diseño detallado del scraper, aplazado hasta una revisión específica.
-- Fundamentos SEO que afectan a rutas, visibilidad y HTML.
+Diferido a fases posteriores (no bloquea el cierre, no son ambigüedades del modelo ni de los casos de uso):
+
+- Diseño detallado del scraper, aplazado hasta una revisión específica (timeout, redirecciones, límite de bytes, tipos de contenido, contrato de background). Se retoma en la Fase 5.
 - Estrategia de despliegue, que queda fuera del MVP0 local.
+
+Resueltos:
+
+- Reglas de visibilidad al alternar colección privada↔pública (todos los enlaces pasan a `IsPublic = false`).
+- Orden de resultados de búsqueda (rank FTS5 → `CreatedAt` DESC → Id DESC).
+- Orden de listados privados (igual que públicos).
+- Comportamiento del scraper frente a metadatos ya informados (no sobrescribe).
+- `Tag.CreatedAt` añadido al modelo.
+- Pantalla de edición de usuario incluida en el ámbito del MVP0.
+- `Name` de colecciones y etiquetas es único por usuario (consecuencia de la unicidad de `Slug`).
+- Una colección o un tag pueden existir sin enlaces asociados.
+- `Title`, `Description` e `Image` del enlace son nullable.
+- `User.CreatedAt` es solo informativo/auditoría.
+- Semántica de `Link.Retries` (intentos realizados, máx. 3) y `Link.NextTry` (fecha del siguiente intento, `null` al agotarse).
 
 Criterio de finalización:
 
@@ -34,7 +49,7 @@ Objetivos:
 - Definir la regla común de generación de alias y slugs, además de propiedad y visibilidad.
 - Definir casos de uso.
 - Definir contratos `Result`.
-- Definir contexto de usuario fijo.
+- Definir contexto de usuario autenticado.
 - Definir interfaces de repositorios y Unit of Work.
 
 Criterio de finalización:
@@ -66,12 +81,14 @@ Criterio de finalización:
 
 Objetivos:
 
+- Registrar e identificar usuarios (login).
+- Editar la configuración del usuario (nombre, email, alias, contraseña).
 - Completar la interfaz privada de gestión.
 - Validar estados vacíos y errores accesibles.
 
 Criterio de finalización:
 
-- El usuario fijo puede gestionar colecciones, enlaces y etiquetas.
+- El usuario autenticado puede gestionar colecciones, enlaces y etiquetas.
 - Todo enlace nuevo aparece inicialmente como privado.
 
 ## Fase 5: Scraping del MVP0
@@ -97,7 +114,8 @@ Criterio de finalización:
 
 Objetivos:
 
-- Crear rutas con alias y slug.
+- Crear rutas con alias para la página de usuario.
+- Crear rutas con alias y slug para la página de colecciones.
 - Mostrar colecciones públicas.
 - Mostrar solo enlaces publicados.
 - Ordenar por fecha descendente.
@@ -112,7 +130,7 @@ Criterio de finalización:
 - Los enlaces no publicados no aparecen.
 - El HTML público se renderiza desde servidor y es rastreable.
 
-## SEO avanzado posterior al MVP0
+### SEO avanzado posterior al MVP0
 
 Objetivos:
 
@@ -134,7 +152,7 @@ Objetivos:
 
 - Tests de dominio.
 - Tests de duplicados.
-- Tests de `UrlNormalized`: `UrlDecode`, marketing, ordenación de parámetros, puertos, clave plana y colisiones aceptadas.
+- Tests de `UrlNormalized`.
 - Tests de alias único y mutable.
 - Tests de generación común para alias, slug de colección y slug de etiqueta.
 - Tests de slug autogenerado, invisible e inmutable.
@@ -155,12 +173,9 @@ Criterio de finalización:
 - Los formularios anuncian correctamente sus errores.
 - Los logs relevantes están disponibles.
 
-
 ## Fuera de este roadmap
 
-- Registro de usuarios.
-- Autenticación funcional.
-- Importación y exportación.
+- Importación y exportación de enlaces.
 - Extensión de navegador.
 - Colaboración.
 - Recomendaciones.

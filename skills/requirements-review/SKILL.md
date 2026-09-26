@@ -74,7 +74,6 @@ Comprueba como mínimo:
 | Alias | `Alias` tiene las mismas reglas de generación, longitud, mutabilidad, unicidad y palabras reservadas en todos los documentos. |
 | Colecciones | El slug se genera con la regla común, es único dentro del usuario y no se trata como global. |
 | URLs | La URL original se conserva y `UrlNormalized` se trata como clave plana de comparación, no como URL reconstruible. |
-| UrlNormalized | Se valida la URL, se aplica `UrlDecode`, se elimina esquema/fragmento/marketing, se ordenan parámetros, se tratan puertos y se eliminan separadores. |
 | Duplicados | La unicidad se aplica al usuario correcto. |
 | Visibilidad | Una colección privada nunca expone enlaces. |
 | Publicación | En una colección pública, cada enlace necesita publicación explícita. |
@@ -127,7 +126,7 @@ Solo edita documentos si el usuario lo pide explícitamente o si la tarea consis
 Cuando edites:
 
 - Actualiza todos los documentos afectados en la misma tarea.
-- Mantén castellano.
+- Mantén el castellano.
 - Conserva la separación entre confirmado, pendiente y fuera de alcance.
 - No añadas código ni instrucciones de implementación ejecutables.
 - No borres decisiones históricas relevantes; resume la decisión actual y su razón.
@@ -142,12 +141,12 @@ Estas invariantes deben verificarse siempre:
 - Un enlace pertenece a un único usuario y una única colección.
 - Una colección pertenece a un único usuario.
 - Una etiqueta técnica `Tag` pertenece a un único usuario.
-- Un slug de colección es único dentro de su usuario.
-- Un slug de colección se genera desde el nombre, es invisible e inmutable, sigue las reglas de caracteres del alias, admite hasta 50 caracteres y es único por usuario.
-- `User.Alias`, `Collection.Slug` y `Tag.Slug` comparten la misma generación: minúsculas, eliminación de acentos, `ç`/`ñ` a `c`/`n`, espacios a guiones y eliminación del resto de caracteres.
+- El slug de colección y de etiqueta es único dentro de su usuario.
+- El slug de colección y de etiqueta se genera desde el nombre, tiene las mismas reglas de generación, longitud, mutabilidad, unicidad y palabras reservadas en todos los documentos. Admite desde 1 hasta 50 caracteres y es único por usuario. El algoritmo para su generación se explica en decisions.md (Generación de alias y slugs).
+- `User.Alias`, `Collection.Slug` y `Tag.Slug` comparten el mismo método de generación, especificado en decisions.md (Generación de alias y slugs).
 - La generación rechaza resultados vacíos y respeta la unicidad correspondiente de alias, slug de colección y slug de etiqueta.
 - Una URL normalizada es única dentro de su usuario.
-- `UrlNormalized` se calcula tras validar la URL, aplicar `UrlDecode`, eliminar esquema, fragmento y marketing, ordenar parámetros y aplanar la cadena.
+- `UrlNormalized` se auto calcula según las reglas especificadas en decisions.md (Normalización de URLs para duplicados).
 - Se aceptan conscientemente colisiones de `UrlNormalized` derivadas de eliminar separadores.
 - En HTTP se eliminan los puertos `80` y `8080`; en HTTPS se elimina el puerto `443`; los demás se conservan.
 - Todo enlace nuevo se crea con `IsPublic = false`.
@@ -158,7 +157,7 @@ Estas invariantes deben verificarse siempre:
 - Una colección privada no es accesible públicamente.
 - Volver pública una colección no publica automáticamente sus enlaces.
 - La búsqueda está limitada al usuario actual.
-- La URL original se conserva aunque exista una URL normalizada auxiliar.
+- La URL original siempre se conserva aunque exista una URL normalizada auxiliar.
 - Un fallo de scraping no impide conservar el enlace.
 - `LinkTag` y FTS5 se mantienen en la misma transacción que las operaciones de escritura o borrado relacionadas.
 
