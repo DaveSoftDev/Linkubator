@@ -64,6 +64,14 @@ Slugs:
 - Se regeneran automáticamente cuando cambia el nombre.
 - La colección por defecto «Bandeja de entrada» tiene el slug `bandeja-de-entrada`.
 
+## Etiquetas
+
+### Colisión al crear desde el formulario de un enlace
+
+- Cuando el usuario crea una etiqueta desde el formulario de un enlace (escribiendo un nombre nuevo en el campo de etiquetas), si el slug resultante coincide con el de una etiqueta ya existente del mismo usuario, se asocia la etiqueta existente en lugar de rechazar la operación.
+- Esto permite al usuario reutilizar etiquetas sin necesidad de saber si ya las había creado previamente.
+- La regla de unicidad del slug dentro del usuario se mantiene: no se crea una etiqueta duplicada, se reutiliza la existente.
+
 ## Email
 
 - Se guarda y se compara sin espacios al principio ni al final y en minúsculas: `Ana@Example.com` y `ana@example.com` son el mismo email.
@@ -221,7 +229,7 @@ Argon2id con la configuración mínima de OWASP (Password Storage Cheat Sheet):
 
 ## Sesión
 
-- Una sesión dura como máximo 30 días desde el login.
+- Una sesión dura como máximo 30 días desde el login tal y como lo especifica **NIST para el nivel AAL1**.
 - «Recordarme»: si no se marca, la sesión termina al cerrar el navegador; si se marca, se mantiene hasta ese máximo de 30 días. Está sujeto al límite de implementación de decisions.md → Producto y alcance; si pasa a MVP1, todas las sesiones terminarán al cerrar el navegador.
 - Cambiar la contraseña mantiene la sesión actual y cierra todas las demás. Restablecerla y eliminar la cuenta cierran todas.
 - La zona privada muestra en todas sus páginas un botón para cerrar sesión.
@@ -376,11 +384,13 @@ Flujo provisional, cuando exista el scraping (los pendientes están en decisions
 | Enlaces (privados y de una colección pública) | `Link.CreatedAt` descendente y `Link.Id` descendente como desempate |
 | Colecciones del usuario (privado) | `Slug` ascendente |
 | Etiquetas del usuario (privado) | `Slug` ascendente |
-| Colecciones de la página pública de usuario | `Slug` ascendente |
+| Colecciones públicas del usuario (página de colecciones) | `Slug` ascendente |
+| 5 últimas colecciones (públicas) del usuario | `CreatedAt` descendente y `Id` descendente como desempate |
+| 5 últimos enlaces (públicos y de colecciones públicas) del usuario | `CreatedAt` descendente y `Id` descendente como desempate |
 
 - Todos los listados paginados y los resultados de búsqueda muestran 15 elementos por página.
 - Una página fuera de rango responde `404`.
-- `Link.CreatedAt` solo se usa para ordenar. `Collection.CreatedAt` no se usa para ordenar.
+- `Link.CreatedAt` se usa para ordenar en los listados de enlaces privados y públicos.
 
 ## Páginas públicas
 
@@ -404,15 +414,15 @@ Flujo provisional, cuando exista el scraping (los pendientes están en decisions
 
 ### Página de usuario
 
-- Muestra las 5 últimas colecciones públicas del usuario con su nombre, su descripción y un enlace a cada una. Si tiene menos de 5, se muestran las que sean.
-- Muestra los 5 últimos enlaces públicos del usuario, de entre los enlaces de sus colecciones públicas, ordenados por `CreatedAt` descendente. Si tiene menos de 5, se muestran los que sean. Cada enlace muestra su título (o la URL si no tiene), su descripción y su imagen si las tiene, y enlaza a `UrlOriginal` con `rel="nofollow ugc noopener noreferrer"`. Un enlace privado o un enlace de una colección privada nunca aparece aquí.
+- Muestra las 5 últimas colecciones públicas del usuario con su nombre, su descripción y un enlace a cada una. Si tiene menos de 5, se muestran las que tenga. Si el usuario no tiene colecciones públicas, la página responde `404` (ver decisions.md → Producto y alcance).
+- Muestra los 5 últimos enlaces públicos del usuario, de entre los enlaces de sus colecciones públicas, ordenados por `CreatedAt` descendente. Si tiene menos de 5, se muestran los que tenga. Si no tiene enlaces a mostrar, se muestra el texto "Aún no tiene enlaces públicos". Cada enlace muestra su título (o la URL si no tiene), su descripción y su imagen si las tiene, y enlaza a `UrlOriginal` con `rel="nofollow ugc noopener noreferrer"`. Un enlace privado o un enlace de una colección privada nunca aparece aquí.
 - El `h1` y el `meta title` son el alias. No muestra el nombre ni el email del usuario.
-- Responde `404` si el alias no existe (incluido un alias antiguo tras un cambio) o si el usuario no tiene colecciones públicas, sin revelar si tiene colecciones privadas.
+- Responde `404` si el alias no existe (incluido un alias antiguo tras un cambio), sin revelar si tiene colecciones privadas.
 
 ### Página de colecciones
 
 - Muestra todas las colecciones públicas del usuario con su nombre, su descripción y un enlace a cada una.
-- El `h1` y el `meta title` son un texto fijo. No muestra el nombre ni el email del usuario.
+- El `h1` y el `meta title` son un texto fijo. No muestra ningún dato privado del usuario.
 - Responde `404` si el alias no existe (incluido un alias antiguo tras un cambio) o si el usuario no tiene colecciones públicas, sin revelar si tiene colecciones privadas.
 
 ### Página de colección

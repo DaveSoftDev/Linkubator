@@ -101,7 +101,7 @@ Una búsqueda nunca devuelve enlaces de otro usuario. El orden y la paginación 
 Cualquier visitante, sin iniciar sesión, podrá consultar:
 
 - La landing, que explica qué es Linkubator y da acceso al registro y al login.
-- La página pública de un usuario, con sus 5 últimas colecciones públicas y sus 5 últimos enlaces públicos (de colecciones públicas).
+- La página pública de un usuario, con sus últimas colecciones públicas y sus últimos enlaces públicos (ver specifications.md → Páginas públicas).
 - La página pública de colecciones, con todas las colecciones públicas del usuario.
 - La página pública de una colección, con sus enlaces públicos.
 

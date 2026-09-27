@@ -60,7 +60,7 @@ Invariantes:
 - Una colección puede no tener enlaces.
 - Una colección con enlaces no se puede eliminar, ni tampoco la última colección del usuario. El borrado es físico.
 - `IsPublic` es `false` al crearla, salvo que el usuario la marque como pública en ese momento (ver «Público y privado»).
-- `CreatedAt` es solo informativo, para auditoría; no participa en ninguna regla ni se usa para ordenar.
+- `CreatedAt` es solo informativo, para auditoría; no se usa para ordenar en los listados privados, pero sí en la página de usuario para mostrar las últimas colecciones públicas (ver specifications.md → Páginas públicas).
 
 ## Link
 
@@ -94,7 +94,7 @@ Invariantes:
 - `ScrapingStatus` es `null` mientras no se ha solicitado scraping (ver «Estados del scraping»).
 - `ScrapingAttempts` cuenta los intentos de scraping ya realizados.
 - `NextScrapingAt` es la fecha y hora del siguiente intento programado; es `null` cuando no queda ninguno.
-- `CreatedAt` solo se usa para ordenar.
+- `Link.CreatedAt` solo se usa para ordenar: en los listados de enlaces (privados, de una colección pública y en la página de usuario).
 - El borrado es físico y elimina también sus relaciones `LinkTag` y su entrada en el índice de búsqueda.
 
 ## Tag
@@ -155,17 +155,6 @@ Invariantes:
 - `NewEmail` solo se informa en los tokens de cambio de email, y es el único sitio donde se guarda el email pendiente: `User.Email` no cambia hasta confirmarlo.
 - Al emitir un token, se invalidan los anteriores sin usar del mismo usuario y propósito. Al cambiar o restablecer la contraseña, se invalidan también los tokens de restablecimiento y de cambio de email pendientes.
 - El formato y las caducidades están en specifications.md → Correo y tokens → Tokens.
-
-## Relaciones
-
-```text
-User 1 ---- 1..N Collection
-User 1 ---- N Link
-User 1 ---- N Tag
-User 1 ---- N UserToken
-Collection 1 ---- N Link
-Link N ---- N Tag (mediante LinkTag)
-```
 
 ## Propiedad de los datos
 

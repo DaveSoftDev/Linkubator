@@ -94,7 +94,7 @@ Criterio de finalización:
 
 Objetivos:
 
-- Crear la landing, la página de usuario, la página de colecciones y la página de colección según specifications.md → Páginas públicas.
+- Crear la landing, la página de usuario (con sus últimas colecciones públicas y sus últimos enlaces públicos), la página de colecciones y la página de colección según specifications.md → Páginas públicas.
 
 Criterio de finalización:
 
@@ -131,7 +131,7 @@ Especificaciones:
 - Tests de etiquetas creadas desde el formulario del enlace, incluida la asociación de una existente.
 - Tests de búsqueda: usuario identificado, sin distinguir acentos, filtros combinados y resultado más relevante primero.
 - Tests de listados: orden, tamaño de página y `404` fuera de rango.
-- Tests de páginas públicas: contenido, `404` de alias, slugs antiguos, usuario sin colecciones públicas y colección sin enlaces públicos, `rel` de los enlaces externos, canonical y barra final, 5 últimas colecciones y 5 últimos enlaces públicos, ausencia de enlaces privados y de colecciones privadas.
+- Tests de páginas públicas: contenido, `404` de alias, slugs antiguos, usuario sin colecciones públicas y colección sin enlaces públicos, `rel` de los enlaces externos, canonical y barra final, últimas colecciones públicas y últimos enlaces públicos (estos de entre los enlaces de sus colecciones públicas), ausencia de enlaces privados y de colecciones privadas.
 - Tests de errores: formularios con errores de validación y `404` idéntico para recursos inexistentes y de otro usuario en `/app`.
 - Test del comando de reconstrucción del índice FTS5.
 - Tests del flujo de scraping, sus reintentos, el estado `ReintentosCompletados` cuando se agotan los intentos sin fallo del proceso, y la protección SSRF.

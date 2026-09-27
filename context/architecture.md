@@ -20,7 +20,7 @@ El MVP0 se ejecuta únicamente en local. La estrategia de despliegue queda fuera
 ### Domain
 
 - Entidades, value objects, invariantes, reglas de negocio, errores de dominio y enumeradores.
-- La generación de `User.Alias`, `Collection.Slug` y `Tag.Slug` es una regla compartida del dominio, no lógica duplicada en cada caso de uso.
+- La generación de `User.Alias`, `Collection.Slug` y `Tag.Slug` es una regla compartida del dominio (ver specifications.md → Generación de alias y slugs).
 - No conoce SQLite, Dapper, HTTP, Razor Pages ni detalles de infraestructura.
 
 ### Application
@@ -28,7 +28,7 @@ El MVP0 se ejecuta únicamente en local. La estrategia de despliegue queda fuera
 - Casos de uso, DTOs, validadores y patrón `Result`.
 - Interfaces de repositorios y de Unit of Work.
 - Abstracciones del usuario identificado, del scraper, del hashing de contraseñas (`IPasswordHasher`) y del envío de correo (`IEmailSender`).
-- La generación de `Link.UrlNormalized` es una regla técnica independiente: produce una clave plana para detectar duplicados, no una URL reconstruible.
+- La generación de `Link.UrlNormalized` es una regla técnica independiente (ver specifications.md → Normalización para duplicados).
 
 ### Infrastructure
 
@@ -68,7 +68,7 @@ Gestión:
 
 Público (anónimo y de solo lectura):
 
-- Consultar la landing, la página de un usuario y la de una colección pública.
+- Consultar la landing, la página de un usuario, la página de colecciones y la de una colección pública.
 
 El comportamiento de cada caso de uso está en specifications.md y sus invariantes, en domain-model.md.
 
@@ -137,12 +137,23 @@ Restricciones e índices previstos:
 - Índices por usuario, colección, estado público y fecha.
 - Índice de `UserToken` por usuario y propósito.
 
+### Relaciones
+
+```text
+User 1 ---- 1..N Collection
+User 1 ---- N Link
+User 1 ---- N Tag
+User 1 ---- N UserToken
+Collection 1 ---- N Link
+Link N ---- N Tag (mediante LinkTag)
+```
+
 ## FTS5
 
 - El índice de búsqueda es una proyección desnormalizada con la URL original, el título, la descripción, el nombre de la colección y los nombres de las etiquetas, más el `UserId` de cada entrada.
 - La consulta combina siempre `MATCH` con el filtro obligatorio del usuario identificado; FTS5 nunca puede devolver resultados de otro usuario.
 - FTS5 se reserva para el texto libre. Los filtros por colección, etiqueta, estado público y fecha usan SQL e índices convencionales.
-- Tokenizador `unicode61` con `remove_diacritics 2` y sin stemming.
+- Tokenizador `unicode61` con `remove_diacritics 2` iguala «canción» y «cancion», y trata la `ñ` como `n`, igual que los slugs. FTS5 no incluye stemming para castellano.
 - Los términos de consulta se escapan.
 - El orden por relevancia usa `ORDER BY rank` ascendente: en FTS5, `rank` (`bm25()`) es más bajo cuanto mejor es la coincidencia, así que `ORDER BY rank DESC` devolvería primero los menos relevantes.
 - La paginación es estable, con los desempates de specifications.md → Búsqueda y filtros.

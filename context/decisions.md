@@ -19,7 +19,8 @@ Este documento recoge qué se ha decidido y por qué, qué riesgos se aceptan, q
 - **Al cambiar un alias o renombrar una colección, la URL anterior responde `404`.** Las redirecciones `301` quedan fuera del MVP0.
 - **La página de un usuario sin colecciones públicas responde `404`.** Así no revela si tiene colecciones privadas.
 - **Una colección pública sin enlaces públicos responde `404`.** Así los buscadores desindexarán esa página.
-- **Las colecciones se ordenan por slug.** `Collection.CreatedAt` es solo de auditoría y no participa en ninguna regla.
+- **Las colecciones se ordenan por Slug** en los listados privados del usuario y en la página pública de colecciones (`/{alias}/colecciones/`).
+- **Las colecciones se ordenan por CreatedAt** en la página pública del usuario (`/{alias}/`), donde se muestran las últimas colecciones públicas y los últimos enlaces públicos.
 - **Las páginas públicas no muestran el nombre ni el email del usuario; su título es el alias.** El alias ya es público; el resto son datos personales.
 - **Barra final solo en las rutas que tienen páginas por debajo.** Distingue las rutas contenedoras (`/{alias}/`) de las finales (`/{alias}/colecciones/{slug}`) y hace predecible la forma canónica de cada URL (ver specifications.md → Rutas).
 - **El SEO se aborda por fases.** Lo que afecta al dominio, a las rutas y al HTML se define desde el MVP0; el SEO avanzado queda fuera.
@@ -70,7 +71,7 @@ Este documento recoge qué se ha decidido y por qué, qué riesgos se aceptan, q
 - **Identificadores `INTEGER PRIMARY KEY`.** Es el `rowid` que usa FTS5 y da sentido al desempate por `Id`.
 - **Fechas en UTC.**
 - **El índice FTS5 se reconstruye con un comando manual.** En el MVP0 local basta con poder regenerarlo a mano si se desincroniza; una reparación automática añadiría complejidad sin necesidad (ver architecture.md → FTS5).
-- **La búsqueda no distingue acentos y no aplica stemming.** El tokenizador `unicode61` con `remove_diacritics 2` iguala «canción» y «cancion», y trata la `ñ` como `n`, igual que los slugs. FTS5 no incluye stemming para castellano.
+- **La búsqueda no distingue acentos y no aplica stemming.** (ver architecture.md → FTS5). 
 
 ### Tecnología
 
@@ -105,7 +106,7 @@ Diseño detallado del scraping y de su ejecución en segundo plano. No es bloque
 3. Tamaño máximo de respuesta del scraper.
 4. Tipos de contenido aceptados por el scraper.
 5. Relación entre el intento lanzado al abandonar el campo URL, cuando el enlace aún no está guardado, y el enlace persistido (`ScrapingAttempts`, `NextScrapingAt`), incluido qué ocurre si el usuario guarda antes de que termine.
-7. Si los enlaces creados antes de la etapa de scraping (`ScrapingStatus = null`) se procesarán después.
+6. Si los enlaces creados antes de la etapa de scraping (`ScrapingStatus = null`) se procesarán después.
 
 ## Fuera de alcance del MVP0
 
