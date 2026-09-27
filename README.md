@@ -1,6 +1,6 @@
 # Linkubator
 
-Aplicación web para la gestión de enlaces, colecciones y etiquetas.
+Aplicación web para la gestión de enlaces en colecciones y etiquetas.
 
 ## Estado del proyecto
 
@@ -8,7 +8,7 @@ Actualmente el repositorio contiene únicamente la documentación inicial del pr
 
 ## Visión
 
-Linkubator permitirá que cada usuario gestione sus propios enlaces, los organice en colecciones y etiquetas, y obtenga automáticamente sus metadatos principales:
+Linkubator permitirá que cada usuario gestione sus propios enlaces, los organice en colecciones y etiquetas, y obtenga automáticamente los metadatos principales de sus enlaces:
 
 - Título.
 - Descripción.
@@ -20,9 +20,10 @@ Las colecciones podrán ser públicas o privadas. Dentro de una colección públ
 
 - [Requisitos de Linkubator](context/requirements.md)
 - [Modelo de dominio de Linkubator](context/domain-model.md)
-- [Arquitectura prevista en Linkubator](context/architecture.md)
-- [Decisiones confirmadas y pendientes](context/decisions.md)
-- [Roadmap del MVP0 de Linkubator](context/roadmap.md)
+- [Especificaciones de Linkubator](context/specifications.md)
+- [Arquitectura prevista para Linkubator](context/architecture.md)
+- [Decisiones, riesgos, pendientes y fuera de alcance](context/decisions.md)
+- [Roadmap de Linkubator](context/roadmap.md)
 - [Guía para agentes y colaboradores](AGENTS.md)
 - [Skill de revisión de requisitos](skills/requirements-review/SKILL.md)
 
@@ -32,11 +33,13 @@ Las colecciones podrán ser públicas o privadas. Dentro de una colección públ
 - ASP.NET Core Razor Pages.
 - Tailwind CSS.
 - SQLite con FTS5.
-- Dapper, sin Entity Framework Core.
+- Dapper como micro ORM (Object-Relational Mapper).
+- Argon2id para el hashing de contraseñas.
+- MailKit y smtp4dev (local) para el correo.
 - Clean Architecture.
 
 La estrategia de despliegue se decidirá más adelante.
 
-## Enlaces para Brice Moure
+## Enlaces para Brais Moure
 - 
-- 
+-  

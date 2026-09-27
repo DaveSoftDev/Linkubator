@@ -1,330 +1,125 @@
-# Decisiones acerca de Linkubator
+# Decisiones de Linkubator
+
+Este documento recoge qué se ha decidido y por qué, qué riesgos se aceptan, qué queda pendiente y qué queda fuera del MVP0. No repite las reglas: cada decisión enlaza al documento donde se especifica.
 
 ## Confirmadas
 
-### Producto
+### Producto y alcance
 
-- Linkubator gestionará enlaces, colecciones y etiquetas.
-- `Tag` y `LinkTag` se reservarán para nombres técnicos.
-- El producto debe estar preparado para múltiples usuarios.
-- El MVP0 se ejecutará únicamente en local.
-- Las páginas públicas conservarán fundamentos SEO verificables localmente, pero no podrán ser rastreadas por buscadores hasta un despliegue público posterior.
-- La interfaz inicial estará en castellano.
+- **Linkubator gestiona enlaces, colecciones y etiquetas, preparado para varios usuarios.** En la documentación funcional se denomina «etiqueta»; `Tag` y `LinkTag` se reservan para los nombres técnicos.
+- **El MVP0 se ejecuta únicamente en local.** El despliegue y el envío de correo real quedan para más adelante.
+- **La interfaz está en castellano.** Por eso la colección por defecto se llama «Bandeja de entrada» y el segmento de las rutas públicas es `colecciones`.
+- **Toda la zona privada y de cuenta cuelga de `/app`.** Así la raíz queda libre para las páginas públicas con alias, sin colisiones (ver architecture.md → Enrutamiento).
+- **La raíz `/` muestra una landing pública.** Explica qué es Linkubator y da acceso al registro y al login.
+- **Las páginas públicas se pueden verificar en local, pero no serán rastreables hasta un despliegue público.**
+- **Cada usuario recibe al registrarse una colección privada «Bandeja de entrada».** Así puede guardar sus primeros enlaces sin tener que crear una colección. Es una colección normal: se puede renombrar.
+- **Un usuario conserva siempre al menos una colección.** No se puede borrar la última, esté o no vacía, para que siempre haya dónde guardar un enlace nuevo.
+- **Solo se borran colecciones y etiquetas vacías, y el borrado es siempre físico.**
+- **Hacer algo público es siempre una acción explícita del usuario.** Colecciones y enlaces nacen privados, y mover un enlace o volver a hacer pública una colección nunca publica enlaces por su cuenta (ver domain-model.md → Público y privado).
+- **Al cambiar un alias o renombrar una colección, la URL anterior responde `404`.** Las redirecciones `301` quedan fuera del MVP0.
+- **La página de un usuario sin colecciones públicas responde `404`.** Así no revela si tiene colecciones privadas.
+- **Una colección pública sin enlaces públicos responde `404`.** Así los buscadores desindexarán esa página.
+- **Las colecciones se ordenan por slug.** `Collection.CreatedAt` es solo de auditoría y no participa en ninguna regla.
+- **Las páginas públicas no muestran el nombre ni el email del usuario; su título es el alias.** El alias ya es público; el resto son datos personales.
+- **Barra final solo en las rutas que tienen páginas por debajo.** Distingue las rutas contenedoras (`/{alias}/`) de las finales (`/{alias}/colecciones/{slug}`) y hace predecible la forma canónica de cada URL (ver specifications.md → Rutas).
+- **El SEO se aborda por fases.** Lo que afecta al dominio, a las rutas y al HTML se define desde el MVP0; el SEO avanzado queda fuera.
+- **El scraping forma parte del MVP0, pero se implementa en una fase posterior.** Hasta entonces, el usuario rellena los metadatos a mano (ver specifications.md → Metadatos y scraping).
+- **Una etiqueta escrita en el formulario del enlace cuyo nombre ya existe se asocia en lugar de rechazarse.** El usuario no tiene por qué saber si ya la había creado.
+- **«Mostrar contraseña» y «Recordarme» tienen un límite de implementación de 1 hora cada uno.** Si superan ese tiempo, pasan al backlog de MVP1.
+- **Se respeta `prefers-reduced-motion`.** Algunas animaciones pueden provocar molestias a personas con trastornos vestibulares.
 
-### Usuario
+### Cuenta y seguridad
 
-- El usuario tendrá nombre, alias, email, contraseña hasheada y fecha de creación.
-- El email será único globalmente.
-- El alias será visible, mutable y único globalmente.
-- El alias tendrá entre 10 y 25 caracteres después de su generación.
-- Las palabras reservadas serán:
-  - `collection`
-  - `collections`
-  - `user`
-  - `users`
-  - `tag`
-  - `tags`
-- Si el alias cambia, su alias antiguo devolverá `404` en el MVP0.
-- Las redirecciones de alias `301` quedan como propuesta futura fuera de éste MVP0.
-- Deberá existir una página para editar la configuración del usuario (nombre, email, alias y contraseña).
-- El cambio de contraseña se realizará desde esa pantalla mediante un botón que lleva a otra página con tres campos enmascarados (actual, nueva y confirmación de la nueva).
-- La contraseña tendrá entre 10 y 50 caracteres, con texto libre (cualquier carácter, incluidos espacios, acentos y símbolos), sin exigir una combinación obligatoria de mayúsculas, minúsculas, números o símbolos. El usuario es responsable de la fortaleza de la contraseña elegida.
-- Se deberá de permitir al usuario recuperar la contraseña, por si la ha olvidado. Para éste MVP0, se le enviará directamente a una pantalla dónde podrá introducir su email y su nueva contraseña dos veces (Para asegurar que la ha escrito correctamente).
+- **Las contraseñas siguen la guía NIST SP 800-63B-4 desde el MVP0** (ver specifications.md → Contraseñas).
+  - No se exigen reglas de composición porque los usuarios tienden a cumplirlas de forma predecible (una mayúscula al principio y un número o símbolo al final), lo que apenas mejora la seguridad.
+  - El bloqueo tras intentos fallidos es más estricto que el máximo de 100 que fija NIST.
+  - El usuario es el único responsable de la fortaleza de la contraseña que elija.
+- **Argon2id desde el primer día, con la configuración mínima de OWASP.** Así se evita tener que migrar hashes más adelante. Los parámetros van dentro del hash (formato PHC), de modo que se pueden endurecer sin invalidar los existentes (ver specifications.md → Hash de la contraseña).
+- **No se puede iniciar sesión sin verificar el email.**
+- **Las respuestas nunca revelan si un email tiene cuenta, ni por su contenido ni por su tipo de respuesta.** Por eso el login calcula un hash aunque el email no exista y los correos se envían en segundo plano.
+- **El alias ocupado sí se indica en el registro.** El alias es público, así que decirlo no revela nada privado, y la respuesta no dice nada sobre el email.
+- **Una cuenta sin verificar con el token caducado se puede sustituir por un nuevo registro con el mismo email o alias.** Así nadie puede retener un email o un alias ajeno.
+- **Restablecer la contraseña también verifica el email.** Usar el enlace demuestra la titularidad de la dirección.
+- **Cambiar el email exige la contraseña actual.** Con una sesión robada bastaría cambiar el email y pedir la recuperación para quedarse con la cuenta.
+- **El nuevo email se comprueba al pedir el cambio y otra vez al confirmarlo.** Otra cuenta puede haberlo registrado entretanto.
+- **Cambiar o restablecer la contraseña invalida también los cambios de email pendientes.** Quien restablece su contraseña porque sospecha de un acceso ajeno no debe dejar vivo un cambio de email iniciado por otro.
+- **En `/app`, un recurso inexistente y uno de otro usuario responden igual (`404`).** Así no se revela que existen datos de otros usuarios (ver specifications.md → Errores y recursos no disponibles).
+- **El límite de correos por minuto solo se aplica a los correos que se pueden pedir; los avisos de seguridad se envían siempre.** Si se limitaran, un restablecimiento hecho justo después de pedirlo se quedaría sin aviso (ver specifications.md → Correos que envía la aplicación).
+- **Los tokens de correo se guardan como hash SHA-256, no con Argon2.** Al ser aleatorios de 256 bits, no necesitan un algoritmo lento.
+- **La duración máxima de la sesión es la que fija NIST para el nivel AAL1** (ver specifications.md → Sesión).
+- **Autenticación por cookies de ASP.NET Core, sin ASP.NET Core Identity.** Los almacenes por defecto de Identity dependen de Entity Framework Core, que no se usa.
+- **Solo cookies técnicas.** Al estar exentas de consentimiento, no hace falta banner de cookies.
+- **HTTPS también en local.** Lo exige la cookie `__Host-`, que lleva `Secure`.
+- **`ReturnUrl` solo acepta URLs locales.** Evita las redirecciones abiertas.
+- **Cabeceras de seguridad mínimas (`nosniff` y `frame-ancestors 'none'`).** Impiden interpretar respuestas con otro tipo de contenido y que la aplicación se incruste en otra página. Una CSP completa queda fuera del MVP0.
+- **Los enlaces a URLs de usuarios llevan `rel="nofollow ugc noopener noreferrer"`.** Son URLs de terceros elegidas por los usuarios: no deben transmitir reputación SEO ni acceso a la página de origen.
+- **MailKit para el correo y smtp4dev en local.** Microsoft recomienda MailKit frente a `System.Net.Mail.SmtpClient` para desarrollos nuevos. En MVP1 bastará con cambiar la configuración SMTP a un proveedor real.
 
-### Generación de alias y slugs
+### Datos, URLs y búsqueda
 
-`User.Alias`, `Collection.Slug` y `Tag.Slug` se generarán mediante la misma transformación:
+- **Solo se aceptan URLs `http` y `https`.** Descarta esquemas peligrosos como `javascript:` o `data:`. Se aceptan `localhost` y direcciones IP; que el scraper pueda o no descargarlas es otra cuestión, resuelta por la protección SSRF.
+- **La URL que guarda el usuario no se transforma más allá del ajuste, y nunca se sustituye por la de una redirección.** Es la que se usa para navegar.
+- **Los duplicados se detectan con una clave plana (`UrlNormalized`), no con una URL reconstruible.** Se aceptan conscientemente colisiones derivadas de eliminar separadores. El fragmento y los parámetros se identifican sobre la URL analizada, antes de decodificar, para que un carácter estructural codificado (`%23`, `%26`) no cambie la estructura de la URL; el resto del texto se decodifica después y se aplana (ver specifications.md → Normalización para duplicados).
+- **No se siguen redirecciones para detectar duplicados.**
+- **Un duplicado se rechaza indicando en qué colección está el enlace existente.**
+- **Lo que introduce el usuario por encima del máximo se rechaza; lo que obtiene el scraper se trunca.** El usuario puede corregir su texto; el de una página externa no.
+- **Los textos se recortan de espacios, salvo la contraseña.** En una contraseña, los espacios son caracteres válidos.
+- **Del email solo se valida la sintaxis mínima.** La validación real es el correo de verificación; una validación sintáctica estricta rechazaría direcciones válidas sin aportar seguridad.
+- **Alias y slugs solo usan ASCII, y un resultado fuera de rango se rechaza en lugar de truncarse.**
+- **Palabras reservadas para el alias.** Evitan suplantar al servicio (lista en specifications.md → Generación de alias y slugs).
+- **Identificadores `INTEGER PRIMARY KEY`.** Es el `rowid` que usa FTS5 y da sentido al desempate por `Id`.
+- **Fechas en UTC.**
+- **El índice FTS5 se reconstruye con un comando manual.** En el MVP0 local basta con poder regenerarlo a mano si se desincroniza; una reparación automática añadiría complejidad sin necesidad (ver architecture.md → FTS5).
+- **La búsqueda no distingue acentos y no aplica stemming.** El tokenizador `unicode61` con `remove_diacritics 2` iguala «canción» y «cancion», y trata la `ñ` como `n`, igual que los slugs. FTS5 no incluye stemming para castellano.
 
-1. Convertir el texto a minúsculas.
-2. Eliminar los acentos de las vocales, conservando la letra base: `Generación` se convierte en `generacion`.
-3. Sustituir `ç` por `c` y `ñ` por `n`: `caça` se convierte en `caca` y `España` en `espana`.
-4. Sustituir los espacios por guiones medios.
-5. Conservar letras, números y guiones medios.
-6. Eliminar cualquier otro carácter.
-7. Eliminar guiones medios duplicados.
-8. Eliminar guiones medios al principio y al final.
+### Tecnología
 
-Ejemplos:
+- **Razor Pages con renderizado en servidor.** Las páginas públicas deben llegar a los buscadores con HTML semántico ya renderizado.
+- **SQLite con FTS5 para la búsqueda.**
+  - Frente a `LIKE`: índice invertido en lugar de recorrer todas las filas, ranking por relevancia (BM25) y consultas booleanas, de frase y de prefijo.
+  - Frente a MySQL o PostgreSQL: no hay servidor que arrancar ni mantener, ni conexiones de red, y la base de datos y el índice viven en un único archivo, así que la copia de seguridad es copiar ese archivo.
+  - Límites aceptados: sin stemming por defecto, un único escritor a la vez y sin búsqueda difusa ni vectorial. Si alguno se volviera necesario, habría que pasar a PostgreSQL.
+- **Dapper en lugar de Entity Framework Core.**
+  - Es un micro-ORM sobre ADO.NET: el SQL se escribe explícitamente y se controla por completo, sin change tracking ni traducción de LINQ.
+  - En un proyecto de pocas tablas, EF Core aporta sobre todo funciones que no se usarían.
+  - Su curva de aprendizaje es mínima: quien sabe SQL sabe usar Dapper, sin conceptos como `DbContext` o el ciclo de vida del tracking.
+  - Consume menos: sin `DbContext`, `IQueryable` ni identity map en memoria, hay menos objetos y menos trabajo para el recolector de basura.
+  - Se renuncia a las migraciones automáticas (bastan scripts SQL versionados), al change tracking, a las propiedades de navegación y a LINQ sobre la base de datos.
+- **`Konscious.Security.Cryptography.Argon2` y MailKit son excepciones justificadas a la filosofía de mínimas dependencias.** Son librerías pequeñas y de propósito único, no abstracciones pesadas como EF Core.
+- **Clean Architecture, SOLID, DRY y YAGNI, con los patrones Repository, Unit of Work y Result.**
 
-```text
-Saltó la raña al charço!!! I luego, croo
--> salto-la-rana-al-charco-i-luego-croo
-```
+## Riesgos aceptados
 
-Si el resultado de la transformación queda vacío, la operación se rechazará.
-
-### Colecciones, etiquetas y enlaces
-
-- Cada enlace pertenece a una única colección.
-- Las colecciones serán públicas o privadas.
-- El slug de la colección será único dentro del usuario, nunca global.
-- El slug de la colección se autogenerará desde el nombre.
-- El slug de la colección seguirá las reglas comunes de generación.
-- El slug de la colección tendrá entre 1 y 50 caracteres después de su generación.
-- El slug de la colección será invisible para el usuario.
-- El slug de la colección será inmutable.
-- Si el slug generado colisiona dentro del usuario, la operación se rechazará.
-- No se añadirán sufijos ni prefijos automáticamente para resolver colisiones.
-- El `Name` de una colección es único dentro del usuario, como consecuencia directa de la unicidad de su `Slug` generado.
-- Una colección puede existir sin tener enlaces asociados.
-- Una colección con enlaces no podrá eliminarse, sólo se podrán eliminar colecciones vacías.
-- El slug técnico de las etiquetas seguirá las mismas reglas de generación que el slug de colección: automático desde el nombre, invisible, inmutable y con longitud entre 1 y 50 caracteres. También será único dentro del usuario y se rechazará cualquier slug de etiqueta vacío o duplicado.
-- El `Name` de una etiqueta es único dentro del usuario, como consecuencia directa de la unicidad de su `Slug` generado.
-- Una etiqueta puede existir sin tener enlaces asociados.
-- Una etiqueta con enlaces no podrá eliminarse, sólo se podrán eliminar etiquetas vacías.
-- La visibilidad de un enlace depende de su publicación individual y de la visibilidad de su colección.
-- Un enlace no publicado no aparece en una colección pública.
-- Un enlace de una colección privada nunca aparece públicamente.
-- Un enlace dentro de una colección privada no podrá cambiar su estado a público.
-- Al hacer privada una colección pública, todos los enlaces de la colección pasan a `IsPublic = false`.
-- Una colección privada que vuelva a ser pública no publicará automáticamente sus enlaces.
-- Todo enlace nuevo se creará con `IsPublic = false`, independientemente de la visibilidad de la colección.
-- El usuario decidirá individualmente qué enlaces publica.
-- Al mover un enlace entre colecciones, se establecerá `IsPublic = false`.
-- Después de mover un enlace, será necesaria una nueva publicación explícita por parte del usuario.
-- La URL del enlace será inmutable.
-- Para cambiar la URL, el usuario deberá eliminar el enlace y crear uno nuevo.
-- Solo se podrán editar los metadatos y el estado de publicación del enlace.
-- Los enlaces individuales no tendrán páginas indexables.
-- Solo la página de usuario y las páginas de colecciones públicas serán indexables.
-
-### Visibilidad efectiva
-
-La visibilidad pública efectiva de un enlace será:
-
-```text
-Collection.IsPublic && Link.IsPublic
-```
-
-### URLs
-
-- Se conservará la URL original introducida por el usuario.
-- La URL original nunca será sustituida por una URL redireccionada.
-- No se seguirán redirecciones para detectar duplicados.
-- Se almacenará una representación auxiliar llamada `UrlNormalized`.
-- `UrlNormalized` no será visible para el usuario.
-- `UrlNormalized` no será una URL válida.
-- `UrlNormalized` será una clave plana utilizada exclusivamente para detectar duplicados.
-- No se permitirá la misma `UrlNormalized` dos veces dentro del mismo usuario.
-- Se aceptan conscientemente posibles colisiones derivadas de la eliminación de separadores.
-- La URL original estará disponible para consultar las diferencias entre enlaces que hayan producido la misma clave.
-
-### Normalización de URLs para duplicados
-
-Proceso de generación:
-
-1. Comprobar que la URL original tenga una sintaxis válida.
-2. Aplicar `UrlDecode` sobre la cadena completa para obtener el valor real de secuencias como `%20` o `+`.
-3. Eliminar el esquema `http` o `https`, ya que ambos se consideran equivalentes.
-4. Tratar el puerto: eliminarlo si es `80` u `8080` en HTTP, o `443` en HTTPS; conservar cualquier otro puerto. Los dos puntos del puerto desaparecerán más adelante, al aplicar la transformación a minúsculas y aplanado.
-5. Ignorar el fragmento de la URL.
-6. Eliminar los parámetros de marketing conocidos.
-7. Ordenar alfabéticamente los parámetros restantes por nombre y valor.
-8. Conservar los parámetros repetidos.
-9. Convertir todo el contenido a minúsculas.
-10. Eliminar los acentos conservando la letra base.
-11. Sustituir `ç` por `c`.
-12. Sustituir `ñ` por `n`.
-13. Convertir los espacios en guiones medios.
-14. Conservar únicamente letras, números y guiones medios.
-15. Eliminar cualquier otro carácter, incluidos:
-    - `.`
-    - `:`
-    - `/`
-    - `?`
-    - `&`
-    - `=`
-16. Eliminar guiones medios duplicados.
-17. Eliminar guiones medios al principio y al final.
-
-La aplicación de `UrlDecode` sobre la cadena completa es intencionada. Por tanto, valores codificados que representen caracteres estructurales podrán participar posteriormente en la transformación plana.
-
-#### Parámetros de marketing eliminados
-
-Se eliminarán estos parámetros, sin distinguir mayúsculas y minúsculas:
-
-- `utm_source`
-- `utm_medium`
-- `utm_campaign`
-- `utm_term`
-- `utm_content`
-- `gclid`
-- `wbraid`
-- `gbraid`
-- `fbclid`
-- `msclkid`
-- `ttclid`
-- `epik`
-- `gad_source`
-- `gad_campaignid`
-- `srsltid`
-- `gcs`
-- `gcd`
-- `at_medium`
-- `at_campaign`
-- `at_platform`
-- `at_creation`
-- `at_term`
-
-#### Ejemplos
-
-```text
-HTTPS://Example.COM/Generación de datos/?utm_source=google&id=10
--> examplecomgeneracion-de-datosid10
-```
-
-```text
-http://example.com:4587/Artículo número 2?b=2&a=1
--> examplecom4587articulo-numero-2a1b2
-```
-
-Como la barra `/` se elimina junto con el resto de separadores, estas URLs producirán la misma clave:
-
-```text
-example.com/articulo
-example.com/articulo/
--> examplecomarticulo
-```
-
-También se aceptan colisiones como esta:
-
-```text
-example.com:4587/articulo-numero-2/?a=1&b=2
-example.com:4587/articulo-numero-2/a/?$=1&b=2
--> examplecom4587articulo-numero-2a1b2
-```
-
-### Datos y tecnología
-
-- .NET 10.
-- C#.
-- ASP.NET Core Razor Pages.
-- Tailwind CSS.
-- SQLite con FTS5.
-- Dapper.
-- No se utilizará Entity Framework Core.
-- Se aplicarán Clean Architecture, SOLID, DRY y YAGNI.
-- Se utilizarán los patrones Repository, Unit of Work y Result.
-- El borrado será físico.
-- No habrá importación ni exportación en el MVP0.
-- El scraping estará incluido en el MVP0, pero se implementará en una fase posterior.
-- El flujo provisional de scraping será:
-  - Intento al abandonar el campo perteneciente a la URL que acaba de introducir el usuario.
-  - Segundo intento silencioso a los 5 minutos.
-  - Tercer y último intento silencioso 5 minutos después.
-  - `Link.Retries` cuenta los intentos de scraping ya realizados (máximo 3). `Link.NextTry` es la fecha y hora del siguiente intento programado; será `null` cuando los reintentos se agoten.
-  - El scraper solo rellena campos vacíos; nunca sobrescribe metadatos ya informados por scraping o edición manual. El scraping se considera completado cuando `Title`, `Description` e `Image` están todos informados.
-- `LinkTag` y la proyección FTS5 se actualizarán dentro de la misma transacción que cada operación de escritura o borrado relacionada.
-- Los filtros estructurados usarán SQL e índices convencionales.
-- Los resultados de búsqueda se ordenan por relevancia (rank de FTS5, si existe), con `CreatedAt` de enlace descendente e `Id` de enlace descendente como desempates estables.
-- Las operaciones de SQLite seguirán un ciclo breve:
-  1. Abrir conexión.
-  2. Ejecutar lo imprescindible.
-  3. Confirmar o revertir.
-  4. Liberar recursos.
-- No habrá llamadas HTTP, scraping, esperas de usuario ni reintentos externos dentro de transacciones.
-- SQLite se configurará con WAL, `busy_timeout` y claves foráneas activadas.
-- Las consultas y transacciones se optimizarán para minimizar la duración del bloqueo de escritura.
-
-#### SQLite FTS5 frente a SQLite, MySql o Postgress
-
-para un proyecto pequeño, las ventajas de **FTS5** se entienden en dos frentes:
-
-| | `LIKE` | FTS5 |
-|---|---|---|
-| Índice | Escanea **todas** las filas | Índice invertido, acceso directo |
-| Ranking | No hay | **BM25** nativo (relevancia) |
-| Consultas | Solo subcadena | Booleanas (`AND`, `OR`, `NOT`), frases, prefijos (`word*`), proximidad |
-| 10k filas | ~50-100 ms | ~1-5 ms |
-
-Es la diferencia entre "buscar en un texto plano" y "buscar en un motor de búsqueda". Y esto nos vendrá como anillo al dedo para la búsqueda abierta.
-
-**Frente a MySQL / PostgreSQL**
-
-Aquí no es una cuestión de *capacidad* (Postgres FTS es más rico: stemming, parson, `pg_trgm`, etc.), sino de **infraestructura**:
-
-- **Cero servidor.** No hay proceso que arrancar, no hay conexión TCP, no hay pool de conexiones, no hay `pg_hba.conf`. El "motor de búsqueda" es la misma librería que ya tienes en memoria.
-- **Un solo archivo.** Tu BD y tu índice FTS viven en el mismo `.db`. Backup = copiar un archivo. Deploy = copiar un archivo.
-- **Sin red.** La query de búsqueda no hace un hop de red. En benchmarks con datasets pequeños (< 1M filas), FTS5 es **competitivo o más rápido** que Postgres FTS (4 ms vs 32 ms en un caso reportado en Stack Overflow, aunque con connection pool la diferencia se reduce a ~10%).
-- **WASM / cliente.** Puedes correr FTS5 en el navegador, en una app móvil, en un edge device. Postgres no va a ningún sitio.
-- **Sin ops.** No hay que actualizar el servidor, no hay que monitorizar un proceso, no hay que gestionar permisos de red.
-
-**Cuándo FTS5 **no** es suficiente**
-
-- **Stemming / lematización** → FTS5 no lo hace por defecto (Postgres sí con `to_tsvector`). Puedes añadir un tokenizer custom, pero es trabajo extra.
-- **Volumen muy alto + escritura concurrente** → SQLite es single-writer. Si tienes miles de escrituras/segundo, necesitas Postgres.
-- **Búsquedas complejas multi-idioma, fuzzy, vectorial** → Postgres con `pg_trgm` + `pgvector` va mucho más allá.
-
-**FTS5 te da un motor de búsqueda real sin añadir un solo componente más al stack**. No tienes que "graduar" a Postgres, no tienes que montar Elasticsearch, no tienes que gestionar un servicio aparte. Es la opción de menor fricción posible para búsqueda a escala de miles o decenas de miles de documentos.
-
-#### Dapper frente a Entity Framework
-
-Se decide usar Dapper por el tamaño de Linkubator. Y por:
-
-**1. Rendimiento sin overhead**
-Dapper es un *micro-ORM*: una capa finísima sobre ADO.NET. Sin change tracking, sin lazy loading, sin traducción LINQ→SQL. En benchmarks suele ser **5–10× más rápido** que EF Core en materialización de resultados. En un proyecto pequeño con pocas tablas y queries simples, esa diferencia es casi imperceptible, pero el *techo* de rendimiento es mucho más alto.
-
-**2. Menos "maquinaria" que gestionar**
-EF Core arrastra consigo: `DbContext`, `IQueryable`, change tracking, migrations, `SaveChanges()`, navigation properties, identity map… En un proyecto pequeño, gran parte de eso es **complejidad que no vas a usar**. Dapper es un solo NuGet package y unas extension methods sobre `IDbConnection`. No hay nada que configurar, no hay "modo de usarlo" que puedas hacer mal.
-
-**3. Control total del SQL**
-Escribes el SQL exacto que se ejecuta. No hay sorpresas de N+1, no hay queries generadas que no entiendes. En un proyecto pequeño con 3-4 tablas, escribir `SELECT` directamente es más transparente que componer una expresión LINQ.
-
-**4. Curva de aprendizaje mínima**
-Si sabes SQL, ya sabes Dapper. No necesitas entender el concepto de `DbContext`, ni el ciclo de vida de tracking, ni cómo funciona `migrations`. Para un proyecto pequeño donde el equipo es reducido (o eres tú solo), esto se traduce en **velocidad de desarrollo real**.
-
-**5. Footprint mínimo**
-Sin `DbContext` que mantener, sin `IQueryable` que resolver, sin identity map en memoria. Menos objetos, menos GC, menos memoria.
-
-**Lo que pierdes (y en un proyecto pequeño suele dar igual):**
-
-| Lo que no tienes | Por qué da igual en un proyecto pequeño |
-|---|---|
-| Migrations automáticas | Con 3 tablas, un script SQL basta |
-| Change tracking / `SaveChanges()` | Haces `INSERT`/`UPDATE` directo |
-| Navigation properties / lazy loading | Con pocas entidades, un `JOIN` resuelve |
-| LINQ sobre la BD | SQL directo es más simple para queries simples |
-| Abstracción de proveedor | Si usas SQL Server o PostgreSQL, no necesitas abstraer |
-
-**En resumen:** en un proyecto pequeño, EF Core te da 80% de features que no vas a usar y 20% de productividad en CRUD básico. Dapper te da el 100% de lo que necesitas (ejecutar SQL y mapear a objetos) con la mínima fricción.
-
-### Listados y operación
-
-- Las colecciones públicas se ordenarán por `CreatedAt` descendente e `Id` de enlace descendente como desempates estables.
-- Se mostrarán 15 enlaces por página.
-- Los listados privados seguirán el mismo orden que los públicos: `CreatedAt` descendente e `Id` de enlace descendente como desempates estables.
-- La fecha se utilizará únicamente para ordenación.
-- Se generarán logs desde el inicio.
-- Los logs serán agnósticos.
-- Los logs no incluirán secretos, contraseñas, hashes innecesarios ni credenciales contenidas en URLs.
-- Grafana, Kibana y plataformas similares quedan fuera de ámbito por ahora.
-- La aplicación deberá ser accesible y compatible con los navegadores actuales.
-
-### SEO
-
-- El SEO se abordará por fases.
-- Las rutas, el alias de usuario, el slug de colección, la visibilidad, el SSR y el HTML semántico se definirán e implementarán desde el inicio.
-- Solo las páginas públicas de colección y la página de usuario serán indexables por buscadores.
-- El refinamiento de Open Graph, Twitter Cards, sitemap, robots, datos estructurados y auditoría de rastreabilidad queda fuera del MVP0.
+- **Bloqueos provocados por terceros.** Quien conozca el email de una cuenta puede provocar bloqueos temporales.
+- **Reutilización de alias liberados.** Un alias liberado (por cambio de alias, eliminación de cuenta o sustitución de una cuenta sin verificar) puede ocuparlo otro usuario, que heredaría las URLs públicas que circulaban del anterior. En local, sin buscadores ni enlaces compartidos, el impacto es nulo.
+- **Pérdida de correos en cola.** Si la aplicación se detiene con correos pendientes de enviar, se pierden y el usuario tendrá que volver a pedirlos.
+- **Colisiones de `UrlNormalized`.** Dos URLs distintas pueden producir la misma clave al eliminar separadores; el usuario verá el enlace existente y podrá comparar sus URLs originales.
 
 ## Pendientes
 
-- Diseño detallado del scraping y su contrato de ejecución en segundo plano. Se abordarán cuando se tenga que interactuar con el scraping; mientras no entremos en esa fase no es bloqueante.
-  1. Timeout exacto del scraper.
-  2. Redirecciones permitidas durante el scraping.
-  3. Tamaño máximo de respuesta del scraper.
-  4. Tipos de contenido aceptados por el scraper.
+### Scraping
+Diseño detallado del scraping y de su ejecución en segundo plano. No es bloqueante hasta que se aborde la etapa de scraping.
+
+1. Timeout exacto del scraper.
+2. Redirecciones permitidas durante el scraping.
+3. Tamaño máximo de respuesta del scraper.
+4. Tipos de contenido aceptados por el scraper.
+5. Relación entre el intento lanzado al abandonar el campo URL, cuando el enlace aún no está guardado, y el enlace persistido (`ScrapingAttempts`, `NextScrapingAt`), incluido qué ocurre si el usuario guarda antes de que termine.
+7. Si los enlaces creados antes de la etapa de scraping (`ScrapingStatus = null`) se procesarán después.
 
 ## Fuera de alcance del MVP0
 
-- Validación de contraseñas comprometidas: **NIST SP 800-63B** recomienda comparar la contraseña elegida contra una lista de contraseñas filtradas/comunes conocidas, en vez de (o además de) exigir reglas de composición. Servicio sugerido: *Pwned Passwords, de Have I Been Pwned* (https://haveibeenpwned.com/API/v3#PwnedPasswords), vía su endpoint de k-anonimato (`https://api.pwnedpasswords.com/range/{5 primeros caracteres del hash SHA-1}`), gratuito y sin necesidad de enviar la contraseña en claro. No forma parte del MVP0; queda como mejora futura para cuando exista exposición pública real.
-- Redirecciones de alias.
-- Importación de marcadores.
-- Exportación de marcadores.
+- **Consulta online de contraseñas comprometidas.** NIST SP 800-63B-4 exige comparar la contraseña con una lista de contraseñas prohibidas, y en el MVP0 se cumple con la lista local. Como complemento futuro se sugiere *Pwned Passwords*, de Have I Been Pwned (https://haveibeenpwned.com/API/v3#PwnedPasswords), mediante su endpoint de k-anonimato (`https://api.pwnedpasswords.com/range/{5 primeros caracteres del hash SHA-1}`), gratuito y sin enviar la contraseña en claro. Tiene sentido cuando haya exposición pública real.
+- Envío de correo mediante un proveedor real.
+- Redirecciones `301` de alias y de slug de colección.
+- Reserva temporal de los alias liberados.
+- Importación de enlaces (por ejemplo, desde los marcadores del navegador).
+- Exportación de enlaces.
 - Extensión de navegador.
 - Colaboración entre usuarios.
 - Sincronización con servicios externos.
 - Analítica avanzada.
-- Plataforma externa de observabilidad.
-- SEO avanzado.
+- Plataforma externa de observabilidad (Grafana, Kibana o similares).
+- SEO avanzado: Open Graph, Twitter Cards, `robots.txt`, `sitemap.xml`, datos estructurados, política definitiva de paginación indexable y auditoría de títulos, descripciones, canonical y rastreabilidad.
+- Content-Security-Policy completa; en el MVP0 solo se usa `frame-ancestors`.
 - Estrategia de despliegue.

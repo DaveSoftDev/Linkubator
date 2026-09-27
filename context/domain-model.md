@@ -1,39 +1,47 @@
 # Modelo de dominio de Linkubator
 
-## Entidades
+Este documento describe las entidades, sus propiedades, sus relaciones y las invariantes que el dominio garantiza siempre. Los valores exactos (longitudes, algoritmos, límites, caducidades) están en specifications.md; los detalles de persistencia, en architecture.md.
 
-### User
+## User
 
 Representa al propietario de los datos.
 
-Propiedades previstas:
+Propiedades:
 
 - `Id`
 - `Email`
 - `Name`
 - `Alias`
 - `Password`
+- `EmailConfirmedAt`
+- `SecurityStamp`
+- `FailedLoginAttempts`
+- `LockoutEnd`
+- `LastEmailSentAt`
 - `CreatedAt`
 
-Reglas:
+Invariantes:
 
-- `Email` es obligatorio y único globalmente.
-- `Alias` es obligatorio y único globalmente.
-- El `Name` es también obligatorio.
-- El `Alias` tiene cómo máximo 25 caracteres.
-- El `Alias` se genera aplicando las reglas comunes de generación especificadas en decisions.md (Generación de alias y slugs).
-- El `Alias` puede cambiarse si el nuevo valor es válido y único globalmente.
-- Si el usuario no proporciona un `Alias` que después de su generación tenga una longitud menor que 10 caracteres, la operación se rechaza.
-- No se almacenan contraseñas en claro.
-- `Password` tiene setter privado; solo se muta a través de un método propio de la entidad (p. ej. `CambiarContraseña`) que verifica la contraseña actual antes de aceptar y hashear la nueva.
-- La contraseña en claro debe tener entre 10 y 50 caracteres antes de hashearse; se acepta cualquier carácter válido, sin exigir combinación obligatoria de tipos. Existe una sugerencia del porqué explicado en `Validación de contraseñas comprometidas` de la sección `Fuera de alcance del MVP0` de decisions.md.
-- `CreatedAt` es únicamente informativo, para auditoría; no participa en ninguna regla de negocio ni caso de uso.
+- `Email` es obligatorio y único en todo el sistema, normalizado y validado según specifications.md → Email.
+- `Name` es obligatorio y no necesita ser único.
+- `Alias` es obligatorio, público, mutable y único en todo el sistema. Se genera según specifications.md → Generación de alias y slugs.
+- `Password` guarda solo el hash de la contraseña, nunca la contraseña en claro. El dominio no calcula hashes: recibe el hash ya calculado por el servicio de hashing (ver architecture.md → Capas).
+- `Password` solo cambia por tres vías: el registro (contraseña inicial), el cambio de contraseña (tras verificar la actual) y el restablecimiento con un token de recuperación válido.
+- `EmailConfirmedAt` es `null` mientras el email no está verificado. Sin email verificado no se puede iniciar sesión. Restablecer la contraseña con un token válido también fija `EmailConfirmedAt` si era `null`.
+- Cambiar `Email` no lo sustituye de inmediato: el nuevo valor solo se aplica al verificarlo con un token de cambio de email. Solicitar el cambio exige verificar la contraseña actual, y el nuevo email debe ser único al solicitarlo y de nuevo al confirmarlo.
+- `FailedLoginAttempts` cuenta los intentos fallidos consecutivos de verificar la contraseña. Empieza en 0 y es un único contador por cuenta, compartido por todas las operaciones que verifican la contraseña. Al llegar al máximo se fija `LockoutEnd` y el contador vuelve a 0; también vuelve a 0 al acertar. Mientras `LockoutEnd` está en el futuro, no se verifica la contraseña ni se cuentan intentos. Los valores están en specifications.md → Bloqueo por intentos fallidos.
+- `LastEmailSentAt` guarda el momento del último correo con límite enviado a la cuenta (ver specifications.md → Correos que envía la aplicación).
+- `SecurityStamp` es un valor aleatorio que se genera al crear el usuario y se regenera al cambiar o restablecer la contraseña. Las sesiones emitidas con un sello anterior dejan de ser válidas.
+- `CreatedAt` es solo informativo, para auditoría; no participa en ninguna regla.
+- Un usuario tiene siempre al menos una colección: al crearlo se crea su colección privada «Bandeja de entrada», y no puede borrar la última que le quede.
+- Eliminar un usuario elimina todos sus datos: colecciones, enlaces, etiquetas, relaciones `LinkTag`, su índice de búsqueda y sus tokens.
+- Una cuenta sin verificar cuyo token de verificación ha caducado puede ser sustituida por un nuevo registro con el mismo email o el mismo alias; al sustituirla se eliminan todos sus datos.
 
-### Collection
+## Collection
 
 Representa una agrupación de enlaces.
 
-Propiedades previstas:
+Propiedades:
 
 - `Id`
 - `UserId`
@@ -43,27 +51,22 @@ Propiedades previstas:
 - `IsPublic`
 - `CreatedAt`
 
-Reglas:
+Invariantes:
 
-- El `Name` y el `Slug` son obligatorios.
-- `Name` es único dentro del usuario, como consecuencia directa de la unicidad de `Slug`.
-- Si el `Name` no produce ningún carácter válido, la operación se rechaza.
-- `Slug` es único dentro del usuario.
-- `Slug` es invisible para el usuario y no puede cambiarse.
-- `Slug` se genera automáticamente y de forma determinista a partir de `Name`; aplicando las reglas comunes de generación especificadas en decisions.md (Generación de alias y slugs).
-- Si el slug generado colisiona dentro del usuario, la operación se rechaza.
-- Una colección puede existir sin tener ningún enlace asociado.
-- Una colección privada no es accesible públicamente.
-- El borrado de una colección es físico.
-- `CreatedAt` es únicamente informativo, para auditoría; no participa en ninguna regla de negocio ni caso de uso.
+- `Name` y `Slug` son obligatorios. `Description` es opcional.
+- `Slug` se genera a partir de `Name` según specifications.md → Generación de alias y slugs, y se regenera cada vez que cambia `Name`.
+- `Slug` es único dentro del usuario, nunca en todo el sistema. Como consecuencia, `Name` también es único dentro del usuario.
+- Si `Name` no produce un slug válido o el slug colisiona dentro del usuario, al crear o al renombrar, la operación se rechaza.
+- Una colección puede no tener enlaces.
+- Una colección con enlaces no se puede eliminar, ni tampoco la última colección del usuario. El borrado es físico.
+- `IsPublic` es `false` al crearla, salvo que el usuario la marque como pública en ese momento (ver «Público y privado»).
+- `CreatedAt` es solo informativo, para auditoría; no participa en ninguna regla ni se usa para ordenar.
 
-Si contiene uno o más enlaces, no podrá eliminarse. Solo podrá eliminarse físicamente cuando no tenga enlaces.
-
-### Link
+## Link
 
 Representa un enlace guardado por el usuario.
 
-Propiedades previstas:
+Propiedades:
 
 - `Id`
 - `UserId`
@@ -71,36 +74,34 @@ Propiedades previstas:
 - `UrlOriginal`
 - `UrlNormalized`
 - `Title`
-- `IsPublic`
 - `Description`
 - `Image`
+- `IsPublic`
 - `ScrapingStatus`
-- `Retries`
-- `NextTry`
+- `ScrapingAttempts`
+- `NextScrapingAt`
 - `CreatedAt`
 
-Reglas:
+Invariantes:
 
-- Pertenece a un único usuario y una única colección.
-- La URL original se conserva y es inmutable después de crear el enlace.
-- `UrlNormalized` es único para el mismo usuario.
-- `UrlNormalized` es una clave plana, no una URL válida, y solo sirve para detectar duplicados.
-- `UrlNormalized` se calcula aplicando la normalización documentada en decisions.md (Normalización de URLs para duplicados).
-- Todo enlace nuevo se crea con `IsPublic = false`.
-- `IsPublic` no puede hacerse público en un enlace de una colección privada.
-- Solo podrán editarse los metadatos (`Title`, `Description`, `Image`) e `IsPublic`.
-- `Title`, `Description` e `Image` son nullable: permanecen sin valor si el scraping no obtiene datos y el usuario no los edita manualmente.
-- `ScrapingStatus` estado de la acción de scraping (Pendiente, Procesando, Completado, Fallido).
-- `Retries` cuenta los intentos de scraping ya realizados, con un máximo de 3. 
-- `NextTry` es la fecha y hora programada del siguiente intento; será `null` cuando los reintentos se hayan agotado.
-- Al moverlo a otra colección, `IsPublic` se establecerá en `false`.
-- El borrado será físico.
+- Pertenece a un único usuario y a una única colección.
+- `UrlOriginal` guarda la URL ajustada y validada según specifications.md → Ajuste y validación. Es inmutable: para cambiar la URL hay que eliminar el enlace y crear otro.
+- `UrlNormalized` es único dentro del usuario.
+- `UrlNormalized` se calcula a partir de `UrlOriginal` según specifications.md → Normalización para duplicados. Es una clave plana, no una URL válida, y solo sirve para detectar duplicados.
+- `Title`, `Description` e `Image` son opcionales. `Image`, si existe, cumple las mismas reglas de ajuste y validación que `UrlOriginal`.
+- De sus propiedades, solo se pueden editar `Title`, `Description`, `Image` e `IsPublic`. Además, se pueden cambiar sus etiquetas (`LinkTag`) y moverlo a otra colección (`CollectionId`).
+- `IsPublic` es `false` al crearlo, salvo que el usuario lo marque como público en ese momento y su colección sea pública (ver «Público y privado»).
+- `ScrapingStatus` es `null` mientras no se ha solicitado scraping (ver «Estados del scraping»).
+- `ScrapingAttempts` cuenta los intentos de scraping ya realizados.
+- `NextScrapingAt` es la fecha y hora del siguiente intento programado; es `null` cuando no queda ninguno.
+- `CreatedAt` solo se usa para ordenar.
+- El borrado es físico y elimina también sus relaciones `LinkTag` y su entrada en el índice de búsqueda.
 
-### Tag
+## Tag
 
-Representa técnicamente una etiqueta del usuario.
+Representa técnicamente una etiqueta del usuario. En la documentación funcional se llama «etiqueta».
 
-Propiedades previstas:
+Propiedades:
 
 - `Id`
 - `UserId`
@@ -108,61 +109,85 @@ Propiedades previstas:
 - `Slug`
 - `CreatedAt`
 
-Reglas:
+Invariantes:
 
-- El `Name` y el `Slug` son obligatorios.
-- `Name` es único dentro del usuario, como consecuencia directa de la unicidad de `Slug`.
-- Si el `Name` no produce ningún carácter válido, la operación se rechaza.
-- `Slug` es único dentro del usuario.
-- `Slug` es invisible para el usuario y no puede cambiarse.
-- `Slug` se genera automáticamente y de forma determinista a partir de `Name`; aplicando las reglas comunes de generación especificadas en decisions.md (Generación de alias y slugs).
-- Si el slug generado colisiona dentro del usuario, la operación se rechaza.
-- Un tag puede existir sin tener ningún enlace asociado.
-- Su relación con los enlaces se gestiona mediante `LinkTag`.
-- Solo se podrán eliminar etiquetas vacías (sin enlaces asociados). El borrado es físico; como salvaguarda, si un tag tuviera relaciones `LinkTag`, se eliminarían de forma atómica en la misma transacción.
-- `CreatedAt` es únicamente informativo, para auditoría; no participa en ninguna regla de negocio ni caso de uso.
+- `Name` y `Slug` son obligatorios.
+- `Slug` se genera a partir de `Name` según specifications.md → Generación de alias y slugs, y se regenera cada vez que cambia `Name`.
+- `Slug` es único dentro del usuario, nunca en todo el sistema. Como consecuencia, `Name` también es único dentro del usuario.
+- Si `Name` no produce un slug válido o el slug colisiona dentro del usuario, al crear o al renombrar, la operación se rechaza. Excepción: al crear una etiqueta desde el formulario de un enlace, si su slug coincide con el de una etiqueta existente, se asocia esa etiqueta en lugar de rechazar la operación.
+- Una etiqueta puede no tener enlaces.
+- Solo se puede eliminar una etiqueta sin enlaces asociados. El borrado es físico.
+- `CreatedAt` es solo informativo, para auditoría; no participa en ninguna regla.
 
-### LinkTag
+## LinkTag
 
-Relación muchos a muchos entre enlaces y tags.
+Relación muchos a muchos entre enlaces y etiquetas.
 
 Propiedades:
 
 - `LinkId`
 - `TagId`
 
-Regla:
+Invariantes:
 
-- La pareja `LinkId + TagId` es única.
-- Las altas, cambios y borrados de esta relación se realizarán dentro de la misma unidad transaccional que la operación principal.
+- La pareja `LinkId + TagId` es única y es su clave: `LinkTag` no tiene `Id` propio.
+
+## UserToken
+
+Representa un token de un solo uso enviado por correo.
+
+Propiedades:
+
+- `Id`
+- `UserId`
+- `Purpose`
+- `TokenHash`
+- `NewEmail`
+- `ExpiresAt`
+- `UsedAt`
+- `CreatedAt`
+
+Invariantes:
+
+- `Purpose` indica el uso del token: verificación de email, restablecimiento de contraseña o cambio de email.
+- Solo se guarda el hash del token (`TokenHash`), que es único.
+- Un token es válido si no ha caducado (`ExpiresAt`) y no se ha usado (`UsedAt` es `null`).
+- `NewEmail` solo se informa en los tokens de cambio de email, y es el único sitio donde se guarda el email pendiente: `User.Email` no cambia hasta confirmarlo.
+- Al emitir un token, se invalidan los anteriores sin usar del mismo usuario y propósito. Al cambiar o restablecer la contraseña, se invalidan también los tokens de restablecimiento y de cambio de email pendientes.
+- El formato y las caducidades están en specifications.md → Correo y tokens → Tokens.
 
 ## Relaciones
 
 ```text
-User 1 ---- N Collection
+User 1 ---- 1..N Collection
 User 1 ---- N Link
 User 1 ---- N Tag
+User 1 ---- N UserToken
 Collection 1 ---- N Link
-Link N ---- N Tag
+Link N ---- N Tag (mediante LinkTag)
 ```
 
-## Reglas de propiedad
+## Propiedad de los datos
 
-Toda consulta privada debe filtrarse por el usuario actual. 
+- Toda lectura y escritura privada se limita al usuario identificado.
+- Los identificadores recibidos desde la interfaz no bastan para autorizar una operación: se comprueba siempre la propiedad del recurso y la de sus relaciones.
+- Se cumple siempre que `Link.UserId` es igual al `UserId` de su colección y al de cada etiqueta asociada mediante `LinkTag`. Un enlace nunca puede estar en una colección ni tener una etiqueta de otro usuario.
 
-Los identificadores recibidos desde la interfaz no son suficientes para autorizar una operación.
+## Público y privado
 
-Una operación privada debe verificar conjuntamente la propiedad del recurso y sus relaciones. Por ejemplo, un enlace solo podrá asociarse a una colección, aunque pueda tener varias etiquetas del mismo usuario, nunca de otro usuario.
+`IsPublic` significa lo mismo en colecciones y en enlaces: el elemento se muestra en la parte pública, dentro de su contenedor. Solo hay dos estados: público (`IsPublic = true`) o privado (`IsPublic = false`).
 
-## Visibilidad efectiva
+- Una colección pública aparece en la página pública del usuario y tiene su propia página pública. Una colección privada no aparece en ninguna página pública.
+- Un enlace público aparece en la página pública de su colección. Un enlace privado no aparece.
+- Un enlace se muestra en la parte pública solo si se cumple `Collection.IsPublic && Link.IsPublic`.
 
-```text
-Collection.IsPublic && Link.IsPublic
-```
+Invariantes:
 
-Una colección privada bloquea siempre la visibilidad de sus enlaces.
-
-Al hacer privada una colección pública, todos los enlaces de esa colección pasan a `IsPublic = false`. Al volver a pública una colección privada, los enlaces permanecen sin publicar; el usuario deberá publicar los enlaces explícitamente.
+- Toda colección y todo enlace nuevos son privados, salvo que el usuario los marque como públicos al crearlos.
+- Un enlace de una colección privada nunca puede ser público.
+- Al hacer privada una colección, todos sus enlaces pasan a ser privados.
+- Al hacer pública una colección, sus enlaces siguen privados; el usuario tiene que hacerlos públicos uno a uno.
+- Al mover un enlace a otra colección, pasa a ser privado, sea la nueva colección pública o privada.
 
 ## Restricciones de unicidad
 
@@ -172,17 +197,17 @@ Al hacer privada una colección pública, todos los enlaces de esa colección pa
 - `UserId + Link.UrlNormalized`.
 - `UserId + Tag.Slug`.
 - `LinkId + TagId`.
-
-La eliminación de un enlace eliminará también sus relaciones `LinkTag` dentro de la misma transacción y su proyección de búsqueda de forma atómica. Solo se podrán eliminar etiquetas vacías (sin enlaces asociados); como salvaguarda, si un tag tuviera relaciones `LinkTag`, se eliminarían de forma atómica en la misma transacción. Esta eliminación se hará de forma manual desde la aplicación, nunca de forma automática desde la base de datos.
+- `UserToken.TokenHash`.
 
 ## Estados del scraping
 
-La implementación deberá definir un estado equivalente a:
+`ScrapingStatus` toma uno de estos valores:
 
+- `null`: no se ha solicitado scraping, como en los enlaces creados antes de la etapa de scraping.
 - Pendiente.
 - Procesando.
 - Completado.
 - Fallido.
+- ReintentosCompletados.
 
 El enlace se conserva aunque el scraping termine sin metadatos.
-

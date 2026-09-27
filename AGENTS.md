@@ -2,72 +2,75 @@
 
 ## Estado actual
 
-Este repositorio se encuentra en fase de definición de requisitos. Hasta que se indique expresamente lo contrario, el trabajo debe centrarse en documentación y análisis, sin generar código de aplicación.
+El repositorio está en fase de definición de requisitos. Hasta que se indique expresamente lo contrario, el trabajo se centra en documentación y análisis, sin generar código de aplicación.
 
-## Fuente de verdad
+## Dónde vive cada cosa
 
-La documentación funcional vive en `context/`:
+La documentación funcional vive en `context/`. Cada documento responde a una sola pregunta:
 
-- `requirements.md`: requisitos funcionales y no funcionales.
-- `domain-model.md`: entidades, propiedades, relaciones e invariantes.
-- `architecture.md`: arquitectura técnica prevista y límites entre capas.
-- `decisions.md`: decisiones confirmadas, pendientes y fuera de alcance.
-- `roadmap.md`: fases de entrega y criterios de finalización.
+| Documento | Responde a | No contiene |
+|---|---|---|
+| `requirements.md` | Qué hace el producto y para quién | Valores exactos, SQL, cabeceras, nombres de clases |
+| `domain-model.md` | Entidades, propiedades, relaciones e invariantes | Capas, formatos de almacenamiento, SEO |
+| `specifications.md` | Reglas exactas: algoritmos, límites, valores, mensajes y respuestas | Justificaciones |
+| `architecture.md` | Cómo se construye: plataforma, capas, persistencia, seguridad técnica | Reglas de negocio |
+| `decisions.md` | Qué se decidió y por qué, riesgos aceptados, pendientes y fuera de alcance | Especificaciones ni copias de reglas |
+| `roadmap.md` | En qué orden se construye y cuándo termina cada etapa, checklist de calidad y backlog de MVP1 | Reglas ni historial de decisiones |
 
-Si una conversación cambia una decisión, actualiza primero la documentación afectada y mantén consistencia entre estos documentos.
+Principio de fuente única: **cada regla se escribe en un único documento, y los demás la enlazan sin repetirla.** Antes de añadir una regla, busca si ya existe. Si cambia una decisión, actualiza su documento propietario y revisa que los enlaces sigan siendo válidos.
+
+### Dónde va cada texto
+
+Antes de escribir cualquier texto, clasifícalo. **Si no encaja en el documento que estás editando, no se escribe ahí:** se escribe en su documento propietario y, si hace falta, se enlaza desde el actual.
+
+| Si el texto es… | Va en |
+|---|---|
+| Algo que el usuario puede hacer, ver o esperar del producto | `requirements.md` |
+| Una entidad, una propiedad, una relación o una regla que los datos cumplen siempre | `domain-model.md` |
+| Un valor, un límite, un algoritmo, un formato, una lista cerrada, un mensaje, un código de respuesta o el paso a paso de un flujo | `specifications.md` |
+| Una tecnología, una capa, una transacción, una configuración o una medida técnica | `architecture.md` |
+| El porqué de algo, una alternativa descartada, un riesgo aceptado, algo pendiente o algo fuera de alcance | `decisions.md` |
+| Una etapa, su orden, su criterio de finalización, un test de la checklist o un candidato para MVP1 | `roadmap.md` |
+
+Señales de que un texto está en el documento equivocado:
+
+- Una lista de propiedades de una entidad fuera de `domain-model.md`. Nombrar una entidad o una propiedad para enlazarla sí está permitido.
+- Un número, una lista cerrada o un código de respuesta fuera de `specifications.md`.
+- Un «porque», un «así se evita» o un «para que» que justifica una decisión, fuera de `decisions.md`. Describir qué casos cubre una regla o qué consigue un mecanismo técnico sí está permitido.
+- Una capa, una tabla, una transacción o una librería en `requirements.md` o en `domain-model.md`.
+- Qué puede hacer el usuario o cuándo algo es público escrito como regla en `architecture.md`.
+- Una regla completa en `decisions.md` o en `roadmap.md`, en lugar de un enlace a ella.
+
+Este mismo criterio se aplica a `AGENTS.md` y a las skills: no copian reglas del producto, salvo las invariantes críticas de la sección siguiente.
 
 ## Skills de Linkubator
 
-Las skills específicas del proyecto viven en `skills/`. Cada una contiene un `SKILL.md` con su procedimiento y debe utilizarse cuando la tarea corresponda a su propósito.
+Las skills del proyecto viven en `skills/`. Cada una contiene un `SKILL.md` con su procedimiento y debe usarse cuando la tarea corresponda a su propósito.
 
-- [requirements-review](skills/requirements-review/SKILL.md): revisar y sincronizar los documentos de requisitos, modelo de dominio, arquitectura, decisiones y roadmap. Detecta contradicciones, omisiones, deriva del alcance del MVP0 y supuestos no documentados. No genera código.
+- [requirements-review](skills/requirements-review/SKILL.md): revisa y sincroniza la documentación. Detecta contradicciones, duplicados, textos en el documento equivocado, omisiones, deriva del alcance del MVP0 y supuestos no documentados, y genera bajo demanda la ficha de una entidad. No genera código.
 
-Cuando se cree una nueva skill de Linkubator, debe añadirse aquí con su nombre, enlace y propósito principal.
+Cuando se cree una nueva skill de Linkubator, añádela aquí con su nombre, enlace y propósito.
 
-## Reglas de producto
+## Invariantes críticas
 
-- El producto está preparado conceptualmente para múltiples usuarios.
-- Se debe implementar un registro de usuarios, login y autenticación.
-- Toda lectura o modificación privada debe quedar limitada al usuario actual.
-- Nunca se debe confiar en un `UserId` o `Alias` enviado por el cliente.
-- Una colección privada nunca expone sus enlaces.
-- Todo enlace nuevo comienza como privado (`IsPublic = false`) y requiere publicación explícita por parte del usuario.
-- Al volver pública una colección privada, sus enlaces siguen sin publicarse.
-- Los enlaces individuales no tendrán páginas indexables.
-- Solo la página de usuario y las páginas de colecciones públicas serán indexables.
-- El alias del usuario es visible, mutable y único globalmente.
-- `User.Alias`, `Collection.Slug` y `Tag.Slug` se generan con la misma transformación explicada en decisions.md (Generación de alias y slugs).
-- El slug de colección y el de etiqueta se genera desde el nombre, es invisible e inmutable y es único dentro del usuario.
-- El scraping forma parte del MVP0, pero se implementa en una fase posterior con flujo provisional de intento inicial y reintentos a 5 minutos.
-- En la documentación funcional se usa “etiqueta”; `Tag` y `LinkTag` son nombres técnicos.
-- El MVP0 se ejecuta únicamente en local.
-- Una colección con enlaces no se puede borrar.
-- La URL de un enlace es inmutable después de su creación.
-- Al mover un enlace de colección, queda despublicado y requiere publicación explícita por parte del usuario.
-- `UrlNormalized` es una clave plana de comparación.
-- `LinkTag` y FTS5 se actualizan dentro de la misma transacción que las operaciones de escritura o borrado relacionadas.
-- Las transacciones deben ser breves: abrir, ejecutar lo imprescindible, confirmar o revertir y liberar.
-- Nunca realizar scraping, llamadas HTTP ni esperas de usuario dentro de una transacción.
+Estas reglas no se pueden romper nunca, ni en la documentación ni en el código. Su detalle está en los documentos enlazados.
+
+- Toda lectura o modificación privada se limita al usuario identificado, y nunca se confía en un `UserId`, `Alias` o `Slug` enviado por el cliente (domain-model.md → Propiedad de los datos).
+- Una colección privada nunca expone sus enlaces, y nada se hace público sin una acción explícita del usuario (domain-model.md → Público y privado).
+- Las respuestas de login, registro y recuperación no revelan si una cuenta existe, ni por su contenido ni por su tipo de respuesta (specifications.md → Respuestas que no revelan si una cuenta existe).
+- Contraseñas y tokens nunca se guardan ni se registran en claro (specifications.md → Contraseñas y Correo y tokens).
+- Dentro de una transacción de base de datos nunca se espera al usuario, ni se hacen llamadas HTTP, scraping o envíos de correo (architecture.md → Persistencia).
 
 ## Reglas de documentación
 
 - Escribir en castellano.
+- Respetar el principio de fuente única.
 - Separar decisiones confirmadas de propuestas y preguntas abiertas.
 - No presentar una tecnología como implementada si solo está planificada.
 - Conservar las razones de las decisiones que afecten al alcance.
 - No añadir funcionalidades fuera del MVP0 sin registrarlas como propuesta.
-
-## Restricciones técnicas previstas
-
-- .NET 10 y C#.
-- ASP.NET Core Razor Pages con renderizado del lado servidor.
-- Tailwind CSS.
-- SQLite con FTS5.
-- Dapper y SQL explícito; no Entity Framework Core.
-- Unit of Work ligero con transacciones.
-- Clean Architecture, SOLID, DRY, YAGNI y patrón Result.
-- FTS5 para búsqueda textual; SQL e índices convencionales para filtros estructurados.
-- SQLite con WAL, `busy_timeout` y claves foráneas activadas.
+- Vocabulario de lo público: colecciones y enlaces solo son «públicos» o «privados», y las acciones son «hacer público» y «hacer privado». «Visible» e «invisible» solo se usan para la interfaz de usuario.
+- En la documentación funcional se dice «etiqueta»; `Tag` y `LinkTag` son nombres técnicos.
 
 ## Restricciones de edición actuales
 
@@ -80,4 +83,4 @@ No crear todavía:
 - Frontend funcional.
 - Configuración de despliegue.
 
-La siguiente etapa de implementación debe comenzar solo después de revisar y aceptar la documentación del MVP0.
+La implementación empieza solo después de revisar y aceptar la documentación del MVP0. La pila técnica prevista está en architecture.md → Plataforma.

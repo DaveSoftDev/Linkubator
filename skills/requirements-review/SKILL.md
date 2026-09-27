@@ -1,6 +1,6 @@
 ---
 name: requirements-review
-description: "Use when reviewing or synchronizing Linkubator requirements, domain model, architecture, decisions, or roadmap. Detect contradictions, stale decisions, missing cross-document updates, MVP0 scope drift, and undocumented assumptions before implementation."
+description: "Use when reviewing, synchronizing or writing Linkubator requirements, domain model, specifications, architecture, decisions, or roadmap. Detect contradictions, duplicated rules, content written in the wrong document, missing cross-references, MVP0 scope drift, and undocumented assumptions before implementation. Also builds on-demand entity sheets that gather every rule about one entity across documents."
 ---
 
 # Requirements Review
@@ -15,33 +15,26 @@ Esta skill revisa documentación. No genera código, proyectos .NET, SQL ejecuta
 
 Usa esta skill cuando:
 
-- Se añade o modifica un requisito.
-- Se cambia una decisión de producto o arquitectura.
+- Se añade o modifica un requisito, una regla o una decisión. Úsala antes de escribir, para decidir en qué documento va el texto.
 - Se pide revisar la documentación completa.
 - Se incorporan entidades, propiedades, relaciones o reglas de negocio.
 - Se necesita comprobar si una funcionalidad pertenece al MVP0.
 - Se prepara el paso desde análisis hacia implementación.
+- Se pide la ficha de una entidad (por ejemplo, «ficha de `User`»). Ver «Entity sheet».
 
-No la uses para:
-
-- Implementar funcionalidades.
-- Resolver errores de código.
-- Diseñar una API concreta.
-- Optimizar consultas ya implementadas.
-- Crear una solución .NET.
+No la uses para implementar funcionalidades, resolver errores de código, diseñar una API concreta ni crear una solución .NET.
 
 ## Source of truth
 
-Revisa estos documentos en este orden:
+Documentos y su responsabilidad (la tabla completa está en `AGENTS.md` → Dónde vive cada cosa):
 
-1. `context/requirements.md`
-2. `context/domain-model.md`
-3. `context/architecture.md`
-4. `context/decisions.md`
-5. `context/roadmap.md`
-6. `AGENTS.md`
-
-`context/decisions.md` distingue decisiones confirmadas, pendientes y fuera de alcance. `AGENTS.md` contiene las restricciones de trabajo del repositorio.
+1. `context/requirements.md`: qué hace el producto y para quién.
+2. `context/domain-model.md`: entidades, propiedades, relaciones e invariantes.
+3. `context/specifications.md`: reglas exactas (algoritmos, límites, valores, mensajes y respuestas).
+4. `context/architecture.md`: cómo se construye.
+5. `context/decisions.md`: qué se decidió y por qué, riesgos aceptados, pendientes y fuera de alcance.
+6. `context/roadmap.md`: orden de construcción, checklist de calidad y backlog.
+7. `AGENTS.md`: reglas de trabajo e invariantes críticas.
 
 Si falta alguno de estos archivos, informa de ello como hallazgo. No inventes su contenido sin indicarlo.
 
@@ -49,53 +42,65 @@ Si falta alguno de estos archivos, informa de ello como hallazgo. No inventes su
 
 ### 1. Gather context
 
-Lee los documentos de la fuente de verdad y localiza:
-
-- Alcance del MVP0.
-- Entidades y propiedades.
-- Relaciones e invariantes.
-- Reglas de propiedad por usuario.
-- Reglas de visibilidad y publicación.
-- Decisiones confirmadas y pendientes.
-- Tecnologías planificadas.
-- Funcionalidades fuera de alcance.
+Lee completos los documentos de la fuente de verdad. No te fíes de fragmentos de búsqueda para dar una regla por comprobada.
 
 No empieces editando. Primero formula una hipótesis concreta sobre la posible incoherencia y una comprobación que pueda confirmarla o descartarla.
 
-### 2. Build a consistency matrix
+### 2. Check placement
+
+Recorre cada documento párrafo a párrafo y viñeta a viñeta:
+
+- Clasifica cada texto con la tabla de `AGENTS.md` → Dónde va cada texto.
+- Si su tipo no corresponde al documento en el que está, es un hallazgo de tipo `Ubicación incorrecta`, aunque el texto sea correcto y no esté repetido. Indica el documento de destino.
+- Aplica las señales de `AGENTS.md` → Dónde va cada texto. Las más habituales:
+  - `requirements.md`: valores exactos, nombres de clases o propiedades usados como regla, SQL, cabeceras HTTP, capas o librerías.
+  - `domain-model.md`: capas, transacciones, índices, formatos de almacenamiento, rutas, SEO o comportamiento de la interfaz.
+  - `specifications.md`: justificaciones de por qué se decidió algo, tecnologías o capas.
+  - `architecture.md`: listas de propiedades de entidades, reglas de negocio (qué puede hacer el usuario, cuándo algo es público) o valores del producto.
+  - `decisions.md`: reglas completas, algoritmos o tablas de valores, en lugar de un enlace.
+  - `roadmap.md`: reglas, valores o historial de decisiones.
+  - `AGENTS.md` y skills: reglas del producto, salvo las invariantes críticas de `AGENTS.md`.
+- No son hallazgo: nombrar una entidad o propiedad para enlazarla, un resumen sin valores que remite a su fuente, ni describir qué casos cubre una regla o qué consigue un mecanismo técnico.
+
+### 3. Check single source
+
+Para cada regla, valor o algoritmo:
+
+- Identifica su documento propietario según la tabla de responsabilidades.
+- Comprueba que solo está escrito ahí. En los demás documentos solo puede aparecer un enlace o un resumen sin valores.
+- Si aparece un valor (un número, una lista, un código de respuesta, un nombre de parámetro) fuera de su documento propietario, es un hallazgo de tipo `Duplicado`, aunque hoy coincida.
+- Comprueba que cada enlace (`documento.md → Sección`) apunta a una sección que existe.
+
+### 4. Build a consistency matrix
 
 Comprueba como mínimo:
 
 | Área | Comprobación |
 | --- | --- |
-| Terminología | Los nombres de entidades, propiedades y estados son consistentes. |
-| Alcance | Ningún documento introduce funcionalidades fuera del MVP0 como si estuvieran confirmadas. |
-| Usuario | Toda lectura o escritura privada está limitada al usuario actual. |
-| Alias | `Alias` tiene las mismas reglas de generación, longitud, mutabilidad, unicidad y palabras reservadas en todos los documentos. |
-| Colecciones | El slug se genera con la regla común, es único dentro del usuario y no se trata como global. |
-| URLs | La URL original se conserva y `UrlNormalized` se trata como clave plana de comparación, no como URL reconstruible. |
-| Duplicados | La unicidad se aplica al usuario correcto. |
-| Visibilidad | Una colección privada nunca expone enlaces. |
-| Publicación | En una colección pública, cada enlace necesita publicación explícita. |
-| Transiciones | Al volver pública una colección, sus enlaces siguen sin publicarse. |
-| Búsqueda | La búsqueda nunca devuelve enlaces de otro usuario. |
-| Etiquetas | La documentación usa “etiqueta” funcionalmente y `Tag`/`LinkTag` como nombres técnicos. |
-| Persistencia | Dapper, SQL explícito, SQLite y FTS5 no se mezclan con EF Core. |
-| Scraping | El scraping está dentro del MVP0, en fase posterior, con flujo provisional y reintentos a 5 minutos. |
-| SEO | Solo las colecciones públicas tienen páginas indexables. |
-| Accesibilidad | Los requisitos de teclado, foco, labels, errores y contraste no se contradicen. |
-| Roadmap | Las fases reflejan las decisiones y pendientes actuales. |
+| Responsabilidades | Cada documento contiene solo lo que le corresponde según `AGENTS.md`. |
+| Terminología | Nombres de entidades, propiedades y estados consistentes. Vocabulario de lo público según `AGENTS.md` → Reglas de documentación. |
+| Alcance | Ningún documento presenta como confirmada una funcionalidad fuera del MVP0. |
+| Propiedad | Toda lectura o escritura privada está limitada al usuario identificado, y la invariante de `UserId` entre enlace, colección y etiquetas se respeta en casos de uso y rutas. |
+| Público y privado | Las invariantes de domain-model.md → Público y privado se respetan en requisitos, especificaciones de páginas públicas y casos de uso. |
+| Cuenta y seguridad | Los flujos de specifications.md → Cuenta, Contraseñas, Correo y tokens y Sesión son coherentes entre sí: qué correo sale en cada flujo, qué tokens se invalidan, qué sesiones se cierran y qué respuestas son genéricas. |
+| URLs | El ajuste, la validación y la normalización se aplican donde corresponde (enlaces e `Image`) y `UrlNormalized` se trata como clave plana. |
+| Listados y búsqueda | Orden, paginación y alcance por usuario coinciden entre specifications.md y architecture.md → FTS5. |
+| Páginas públicas | Rutas, indexabilidad y respuestas coinciden entre specifications.md, architecture.md → Enrutamiento y requirements.md. |
+| Persistencia | Las operaciones que deben ser atómicas están en architecture.md → Persistencia, y no hay operaciones externas dentro de transacciones. |
+| Scraping | El flujo funcional (specifications.md), las medidas técnicas (architecture.md) y los pendientes (decisions.md) no se contradicen. |
+| Decisiones | Cada decisión de decisions.md enlaza a su regla y tiene motivo cuando no es obvio. |
+| Roadmap | Las etapas y la checklist cubren todas las reglas y reflejan los pendientes actuales. |
 
-### 3. Classify findings
-
-Clasifica cada hallazgo como:
+### 5. Classify findings
 
 - `Contradicción`: dos documentos establecen reglas incompatibles.
-- `Omisión`: una decisión necesaria no aparece en un documento que debería recogerla.
+- `Duplicado`: una regla o un valor aparece fuera de su documento propietario.
+- `Ubicación incorrecta`: un texto está en un documento que no le corresponde, aunque no esté repetido.
+- `Omisión`: falta una regla necesaria, o un enlace a ella donde se usa.
 - `Deriva de alcance`: se introduce una capacidad fuera del MVP0.
 - `Ambigüedad`: una regla admite interpretaciones relevantes.
 - `Terminología`: se usan nombres distintos para el mismo concepto.
-- `Riesgo`: la documentación es compatible, pero puede producir un problema durante la implementación.
+- `Riesgo`: la documentación es coherente, pero puede producir un problema al implementar.
 
 Ordena los hallazgos por impacto:
 
@@ -106,70 +111,50 @@ Ordena los hallazgos por impacto:
 5. SEO y accesibilidad.
 6. Claridad editorial.
 
-### 4. Report before editing
+### 6. Report before editing
 
 Devuelve primero un informe con:
 
 - Estado general: `coherente`, `coherente con observaciones` o `requiere decisiones`.
-- Hallazgos ordenados por prioridad.
-- Documentos afectados.
+- Hallazgos ordenados por prioridad, con archivo y línea de cada lugar implicado.
 - Decisión o aclaración necesaria.
 - Recomendación concreta.
 - Preguntas abiertas que bloquean la implementación.
 
 No presentes una propuesta como decisión confirmada.
 
-### 5. Apply synchronized documentation changes
+### 7. Apply synchronized documentation changes
 
 Solo edita documentos si el usuario lo pide explícitamente o si la tarea consiste en actualizar la documentación tras una decisión ya confirmada.
 
 Cuando edites:
 
-- Actualiza todos los documentos afectados en la misma tarea.
-- Mantén el castellano.
-- Conserva la separación entre confirmado, pendiente y fuera de alcance.
+- Antes de escribir, clasifica cada texto con `AGENTS.md` → Dónde va cada texto. Si no encaja en el documento que estás editando, escríbelo en su propietario; nunca lo dejes «de momento» donde no corresponde.
+- Escribe la regla solo en su documento propietario y enlázala desde los demás.
+- Si la decisión tiene un motivo, añádelo en decisions.md.
+- Si la regla necesita un test, añádelo a la checklist de roadmap.md.
+- Mantén el castellano y la separación entre confirmado, pendiente y fuera de alcance.
 - No añadas código ni instrucciones de implementación ejecutables.
-- No borres decisiones históricas relevantes; resume la decisión actual y su razón.
 - Evita reformatear secciones no relacionadas.
 
-## Linkubator invariants
+## Entity sheet
 
-Estas invariantes deben verificarse siempre:
+Cuando se pida la ficha de una entidad (`User`, `Collection`, `Link`, `Tag`, `LinkTag`, `UserToken`):
 
-- Un usuario tiene un `Alias` único globalmente.
-- El alias es visible, mutable, único globalmente, usa solo caracteres ASCII básicos, minúsculas, números y guiones, mide entre 10 y 25 caracteres y no puede ser `collection`, `collections`, `user`, `users`, `tag` ni `tags`.
-- Un enlace pertenece a un único usuario y una única colección.
-- Una colección pertenece a un único usuario.
-- Una etiqueta técnica `Tag` pertenece a un único usuario.
-- El slug de colección y de etiqueta es único dentro de su usuario.
-- El slug de colección y de etiqueta se genera desde el nombre, tiene las mismas reglas de generación, longitud, mutabilidad, unicidad y palabras reservadas en todos los documentos. Admite desde 1 hasta 50 caracteres y es único por usuario. El algoritmo para su generación se explica en decisions.md (Generación de alias y slugs).
-- `User.Alias`, `Collection.Slug` y `Tag.Slug` comparten el mismo método de generación, especificado en decisions.md (Generación de alias y slugs).
-- La generación rechaza resultados vacíos y respeta la unicidad correspondiente de alias, slug de colección y slug de etiqueta.
-- Una URL normalizada es única dentro de su usuario.
-- `UrlNormalized` se auto calcula según las reglas especificadas en decisions.md (Normalización de URLs para duplicados).
-- Se aceptan conscientemente colisiones de `UrlNormalized` derivadas de eliminar separadores.
-- En HTTP se eliminan los puertos `80` y `8080`; en HTTPS se elimina el puerto `443`; los demás se conservan.
-- Todo enlace nuevo se crea con `IsPublic = false`.
-- Una colección con enlaces no puede eliminarse.
-- La URL original de un enlace es inmutable.
-- Al mover un enlace, queda despublicado y requiere publicación explícita.
-- La visibilidad efectiva de un enlace es `Collection.IsPublic && Link.IsPublic`.
-- Una colección privada no es accesible públicamente.
-- Volver pública una colección no publica automáticamente sus enlaces.
-- La búsqueda está limitada al usuario actual.
-- La URL original siempre se conserva aunque exista una URL normalizada auxiliar.
-- Un fallo de scraping no impide conservar el enlace.
-- `LinkTag` y FTS5 se mantienen en la misma transacción que las operaciones de escritura o borrado relacionadas.
+1. Busca en todos los documentos de la fuente de verdad cada regla, propiedad, caso de uso, ruta, límite, test de la checklist y elemento fuera de alcance que afecte a esa entidad, incluidas sus menciones funcionales («usuario», «colección», «enlace», «etiqueta»).
+2. Agrúpalas por tema: propiedades, generación y validación, público y privado, ciclo de vida (alta, cambios, borrado), rutas y páginas, seguridad, pendientes y fuera de alcance.
+3. Enlaza cada regla con su fuente (`archivo#Lnn`).
+4. Señala al final las contradicciones, duplicados u omisiones que detectes.
+
+La ficha es una vista generada bajo demanda: devuélvela en la conversación y no la guardes en ningún archivo, para que no se desincronice de la documentación.
 
 ## Expected output
-
-Usa este formato breve:
 
 ```text
 Estado: [coherente | coherente con observaciones | requiere decisiones]
 
 Hallazgos:
-- [Prioridad] [Tipo] Descripción. Documentos afectados: ...
+- [Prioridad] [Tipo] Descripción. Lugares: archivo#Lnn, archivo#Lnn. Destino (si es Ubicación incorrecta o Duplicado): documento → sección. Recomendación: ...
 
 Decisiones necesarias:
 - ...
@@ -178,4 +163,4 @@ Cambios documentales aplicados:
 - Ninguno, si solo se solicitó revisión.
 ```
 
-Si no encuentras problemas, indícalo claramente y menciona los riesgos residuales o decisiones pendientes.
+Si no encuentras problemas, indícalo claramente y menciona los riesgos residuales y las decisiones pendientes.

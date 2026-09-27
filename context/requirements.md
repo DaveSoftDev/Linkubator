@@ -1,263 +1,141 @@
 # Requisitos de Linkubator
 
+Este documento describe qué hace Linkubator y para quién, en lenguaje de producto. Las reglas exactas (valores, algoritmos, mensajes y códigos de respuesta) están en specifications.md; las entidades y sus invariantes, en domain-model.md; las razones de cada decisión, en decisions.md.
+
 ## 1. Propósito
 
-Linkubator será una aplicación web para que cada usuario gestione sus enlaces favoritos, los organice mediante colecciones y etiquetas, y pueda publicar selectivamente parte de ese contenido.
+Linkubator es una aplicación web para que cada usuario guarde sus enlaces favoritos, los organice en colecciones y etiquetas, y haga pública, de forma selectiva, parte de ese contenido.
 
-## 2. Alcance del MVP0
+## 2. Contexto del MVP0
+
+- El MVP0 se ejecuta únicamente en local. No depende de servicios externos: la autenticación es local y los correos los captura un servidor SMTP local de desarrollo.
+- El producto está preparado para varios usuarios, y cada uno solo ve y modifica sus propios datos.
+- La interfaz está en castellano y funciona en los navegadores actuales.
+- Toda la zona privada y de cuenta (registro, login, panel de gestión y configuración) cuelga de `/app`. La raíz queda para las páginas públicas.
+- Las páginas públicas y sus fundamentos SEO se pueden verificar en local, pero no serán rastreables por buscadores mientras no haya un despliegue público.
+
+## 3. Cuenta de usuario
 
 El usuario podrá:
 
-- Registrar un usuario con nombre, email, alias y contraseña.
-- Identificarse en el sistema.
-- Editar su configuración de usuario (nombre, email, alias).
-- Cambiar su contraseña.
-- Recuperar su contraseña si la ha olvidado.
-- Crear y editar colecciones.
-- Eliminar colecciones únicamente cuando no tengan enlaces.
-- Marcar una colección como pública o privada.
-- Crear enlaces y editar únicamente sus metadatos y estado de publicación (Público o privado).
-- Asignar cada enlace a una única colección.
-- Mover enlaces entre colecciones. Al mover un enlace, `IsPublic` pasa a `false` y el usuario deberá publicarlo explícitamente en su nueva colección.
-- Crear, editar y eliminar etiquetas. Las etiquetas vacías (sin enlaces asociados) se pueden eliminar.
-- Asociar varias etiquetas a un enlace.
-- Publicar o retirar individualmente un enlace dentro de una colección pública, cambiando la visibilidad de dicho enlace.
-- Buscar sus propios enlaces.
-- Ver sus enlaces por colección o por etiqueta.
-- Obtener los meta `title`, `description` y `og:image` de la URL.
-- Consultar páginas públicas de colecciones.
+- Registrarse con nombre, email, alias y contraseña. Tras el registro dispone de una colección privada llamada «Bandeja de entrada» para guardar sus primeros enlaces sin tener que crear una colección.
+- Verificar su email mediante un enlace. No podrá iniciar sesión sin haberlo verificado.
+- Iniciar sesión, con la opción «Recordarme».
+- Cerrar sesión desde cualquier página de la zona privada.
+- Editar su configuración: nombre, alias, email y contraseña. Cambiar el email exige su contraseña y verificar la nueva dirección.
+- Recuperar su contraseña mediante un enlace enviado a su email.
+- Eliminar su cuenta y todos sus datos, reintroduciendo su contraseña.
 
-El MVP0 será una aplicación local con registro de usuario, login y autenticación. Las credenciales se gestionarán localmente; no se requiere conexión a servidores externos para la autenticación.
+Garantías para el usuario:
 
-Las páginas públicas y sus fundamentos SEO podrán verificarse localmente, pero no serán rastreables por buscadores mientras la aplicación no tenga un despliegue público. El despliegue queda fuera del MVP0.
+- El alias es público y forma parte de las direcciones de sus páginas públicas. Se le muestra cómo quedará antes de guardarlo.
+- Las respuestas de login, registro y recuperación nunca revelan si un email tiene cuenta.
+- La contraseña sigue la guía NIST SP 800-63B-4: frases largas, sin reglas de composición y con protección frente a intentos repetidos. El usuario es el único responsable de la fortaleza de la contraseña que elija.
+- Recibirá un aviso por correo cuando cambie su contraseña o su email, y cuando elimine su cuenta.
 
-## 3. Usuario y alias
-
-Cada usuario tendrá un nombre, un email único globalmente y un alias público único también globalmente. El nombre es obligatorio y no necesita ser único.
-
-Reglas específicas del alias:
-
-- Se generará aplicando las mismas reglas comunes de generación especificadas en decisions.md (Generación de alias y slugs).
-- Longitud entre 10 y 25 caracteres.
-- Podrá cambiarse posteriormente si el nuevo valor es válido y único globalmente.
-- Palabras reservadas: `collection`, `collections`, `user`, `users`, `tag` y `tags`.
-
-Si el alias cambia, las rutas públicas asociadas al anterior alias devolverán `404` en el MVP0.
-
-La contraseña se almacenará únicamente como hash seguro. Nunca se guardará en texto claro.
-
-La contraseña tendrá entre 10 y 50 caracteres, con texto libre: se acepta cualquier carácter (letras con o sin acentos, mayúsculas, minúsculas, números, símbolos y espacio), sin exigir una combinación obligatoria de tipos de carácters; ya que la normativa NIST SP 800-63B recomienda no forzar al usuario a incluirlos, debido a que estos siempre los incluian al final. El usuario es el único responsable de la fortaleza de la contraseña que elija.
-
-La página de usuario será también indexable por los buscadores, pero obviamente no mostrará datos del usurio
+El comportamiento exacto de cada operación está en specifications.md → Cuenta, Contraseñas, Correo y tokens y Sesión.
 
 ## 4. Colecciones
 
-Una colección tendrá nombre, slug, descripción, propietario, visibilidad y fecha de creación.
+El usuario podrá:
 
-El slug será único dentro del usuario, pero no será global.
+- Crear y editar colecciones, con nombre y descripción.
+- Hacer pública o privada una colección.
+- Eliminar una colección solo si no tiene enlaces y no es la última que le queda.
+- Renombrar la «Bandeja de entrada» como cualquier otra colección.
 
-El slug se generará automáticamente desde el nombre de la colección mediante las reglas comunes de generación. Tendrá una longitud mínima de 1 carácter y una máxima de 50 caracteres, será invisible para el usuario y no podrá cambiarse.
+El nombre de una colección es único dentro del usuario. Si el nombre no es válido o coincide con el de otra colección suya, se rechaza y debe elegir otro.
 
-Si el nombre no produce ningún carácter, o si genera una colisión, la operación se rechazará y el usuario deberá elegir otro nombre; no se añadirán sufijos ni prefijos automáticamente.
-
-Las colecciones públicas tendrán una URL con este formato:
-
-```text
-/user-alias/collections/collection-slug
-```
-
-Las colecciones privadas no serán accesibles desde fuera.
-
-Una colección privada y una colección inexistente responderán de la misma forma desde el exterior: `404`.
+Una colección pública aparece en la página pública del usuario y tiene su propia página pública. Si se renombra, su dirección pública anterior deja de existir.
 
 ## 5. Etiquetas
 
-Una etiqueta tendrá nombre, slug y fecha de creación.
+El usuario podrá:
 
-El slug será único dentro del usuario, pero no será global.
+- Crear, editar y eliminar etiquetas. Solo se pueden eliminar las etiquetas sin enlaces.
+- Asociar varias etiquetas a un enlace, eligiendo las existentes o creando una nueva desde el propio formulario del enlace.
 
-El slug se generará automáticamente desde el nombre de la etiqueta mediante las reglas comunes de generación. Tendrá una longitud mínima de 1 carácter y una máxima de 50 caracteres, será invisible para el usuario y no podrá cambiarse.
+El nombre de una etiqueta es único dentro del usuario.
 
-Si el nombre no produce ningún carácter, o si genera una colisión, la operación se rechazará y el usuario deberá elegir otro nombre; no se añadirán sufijos ni prefijos automáticamente.
+## 6. Enlaces
 
-## 6. Visibilidad de enlaces
+El usuario podrá:
 
-La visibilidad pública efectiva de un enlace será:
+- Crear un enlace a partir de una URL, asignándolo a una única colección. La URL se ajusta y valida antes de guardarse, y solo se aceptan direcciones web (`http` y `https`).
+- Editar su título, su descripción, su imagen, si es público o privado y sus etiquetas.
+- Mover un enlace a otra colección.
+- Eliminar un enlace.
 
-```text
-Collection.IsPublic && Link.IsPublic
-```
+Reglas visibles para el usuario:
 
-Al crear un enlace, `IsPublic` será siempre `false`, independientemente de la visibilidad de su colección. El usuario tendrá que publicarlo explícitamente si desea hacerlo visible.
+- La URL de un enlace no se puede cambiar. Para cambiarla, hay que eliminar el enlace y crearlo de nuevo.
+- No se puede guardar dos veces el mismo enlace. Si ya existe, se le indica en qué colección está.
+- Hasta la etapa de scraping, el usuario rellena el título, la descripción y la imagen, o los deja vacíos. Después, la aplicación intentará obtenerlos automáticamente de la página, sin sobrescribir nunca lo que ya esté informado.
 
-Al mover un enlace entre colecciones, `IsPublic` pasará a `false`; independientemente de si la colección es pública o privada. El usuario tendrá que publicarlo explícitamente en su nueva colección, aunque también sea pública.
+Las reglas exactas están en specifications.md → URLs de los enlaces y Metadatos y scraping.
 
-Reglas:
+## 7. Público y privado
 
-- Al crear / editar un enlace de una colección privada, no deberemos permitir cambiar la visibilidad `IsPublic`, manteniendo el `false`.
-- Un enlace de una colección privada nunca será público.
-- En una colección pública, el usuario decidirá individualmente qué enlaces hace visibles. Lo puede hacer al editar o directamente al crear el enlace.
-- Al hacer privada una colección pública, todos los enlaces de la colección pasan a `IsPublic = false` (No visibles).
-- Al hacer pública una colección privada, sus enlaces permanecerán privados (No visibles), el sistema no alterará la visibilidad de los enlaces de forma automática como si hace a la inversa.
-- Un enlace movido a una colección privada o pública quedará privado (No visible).
-- Si después, ese mismo enlace, vuelve a una colección pública, seguirá sin publicarse hasta que el usuario así lo indique.
+Cada colección y cada enlace es público o privado. Una colección pública aparece en la página pública del usuario; un enlace público aparece en la página pública de su colección. Un enlace solo se ve en público si él y su colección son públicos.
 
-## 7. Enlaces
+Hacer algo público es siempre una acción explícita del usuario:
 
-Se conservará intacta la URL original introducida por el usuario. Ya que esta es la que utilizaremos para navegar.
+- Al crear una colección o un enlace, la casilla «Pública» o «Público» aparece desmarcada, y el usuario puede marcarla antes de guardar.
+- En un enlace de una colección privada, la casilla no se puede marcar.
+- Al hacer privada una colección, todos sus enlaces pasan a privados. Al volver a hacerla pública, sus enlaces siguen privados.
+- Al mover un enlace a otra colección, pasa a privado.
 
-Se calculará `UrlNormalized` únicamente para detectar duplicados. `UrlNormalized` será una clave plana, no una URL válida, y no se mostrará al usuario.
+Las invariantes completas están en domain-model.md → Público y privado.
 
-No se seguirán redirecciones para decidir si una URL está duplicada.
+## 8. Búsqueda y filtros
 
-La misma `UrlNormalized` no podrá guardarse dos veces dentro del mismo usuario. El sistema debe avisar antes de crear un duplicado.
+El usuario podrá:
 
-La URL del enlace será inmutable después de su creación. Si el usuario quiere modificar la URL, deberá eliminar el enlace y crearlo de nuevo.
+- Buscar texto en sus propios enlaces: URL, título, descripción, nombre de la colección y nombres de las etiquetas. La búsqueda no distingue acentos.
+- Filtrar sus enlaces por una colección y/o una etiqueta, y combinar esos filtros con la búsqueda.
 
-El algoritmo exacto, paso a paso, para la generación de `UrlNormalized` está definido en decisions.md ("Normalización de URLs para duplicados"); esta sección solo describe el criterio funcional.
+Una búsqueda nunca devuelve enlaces de otro usuario. El orden y la paginación están en specifications.md → Búsqueda y filtros y Listados.
 
-Se aceptan conscientemente posibles colisiones derivadas de eliminar separadores como `.`, `:`, `/`, `?`, `&` y `=`.
+## 9. Páginas públicas
 
-## 8. Metadatos de los enlaces de usuario
+Cualquier visitante, sin iniciar sesión, podrá consultar:
 
-La aplicación podrá obtener posteriormente los siguientes metadatos de la URL original mediante un sistema de scraping. El mapeo correcto es el siguiente:
+- La landing, que explica qué es Linkubator y da acceso al registro y al login.
+- La página pública de un usuario, con sus 5 últimas colecciones públicas y sus 5 últimos enlaces públicos (de colecciones públicas).
+- La página pública de colecciones, con todas las colecciones públicas del usuario.
+- La página pública de una colección, con sus enlaces públicos.
 
-- Meta title, si la URL original no tiene el meta title, entonces recuperemos el tag HTML title y lo almacenaremos en nuestra propiedad `Title`.
-- Meta description, almacenado en la propiedad `Description`.
-- Meta property `og:image`, almacenado en la propiedad `Image`.
+Solo estas páginas son indexables. Un enlace nunca tiene página propia. Las páginas públicas no muestran el nombre ni el email del usuario, y una colección o un enlace privados nunca aparecen en ellas.
 
-Si no se encuentran metadatos, el enlace se conservará y los campos que permanezcan vacíos quedarán sin valor.
+El contenido de cada página, sus rutas y sus respuestas están en specifications.md → Páginas públicas.
 
-Una vez el usuario haya introducido la URL y abandone ese campo, se lanzará el proceso de scraping para obtener los metadatos. El scraper solo rellenará los campos que estén vacíos; **nunca sobrescribirá** valores ya informados, ya sea por un intento anterior de scraping o por edición manual del usuario. Una vez que los tres campos (`Title`, `Description` e `Image`) están informados, el scraping se considera completado y no se reintenta.
+## 10. SEO
 
-Si en un intento no se encuentran metadatos, se programará un segundo intento silencioso 5 minutos después. Si tampoco se encuentran, se realizará un tercer y último intento 5 minutos después del segundo. En este caso, el scraper completará solo los campos que sigan vacíos.
+El SEO se aborda por fases. Lo que afecta al dominio, a las rutas, a la distinción entre público y privado y al HTML se define desde el MVP0: páginas públicas legibles por los buscadores, con títulos, descripciones, URL canonical y respuestas `404` para lo que no existe o no es público (ver specifications.md → Páginas públicas). El SEO avanzado queda fuera del MVP0 (ver decisions.md → Fuera de alcance del MVP0).
 
-El diseño detallado del scraping queda aplazado hasta que se aborde su fase de uso. Antes de implementarlo deberán definirse protección SSRF, validación de protocolos, timeout, límites de respuesta, control de redirecciones, validación del tipo de contenido y el contrato exacto del procesamiento en segundo plano.
+## 11. Accesibilidad
 
-## 9. Filtros y búsqueda
-
-Una búsqueda siempre estará limitada al usuario actual. Nunca podrá devolver enlaces de otro usuario.
-
-La búsqueda textual usará SQLite FTS5.
-
-Podrá buscar sobre:
-
-- URL original.
-- Título.
-- Descripción.
-- Nombre de colección.
-- Nombre de las etiquetas.
-
-Los filtros estructurados por colección y etiqueta se resolverán mediante SQL e índices convencionales.
-
-El orden de resultados (tanto para los filtros estructurados como la búequeda textual) será:
-
-1. Relevancia (rank de FTS5) descendente. Sólo aplicable a la búsqueda textual.
-2. `CreatedAt` descendente como desempate.
-3. Identificador del enlace descendente como desempate final.
-
-## 10. Listados públicos
-
-Las colecciones públicas mostrarán solo enlaces con `IsPublic = true`.
-
-El orden será:
-
-1. `CreatedAt` descendente.
-2. Identificador del enlace descendente como desempate estable.
-
-Los listados se mostrarán paginado y limitados a 15 enlaces por página.
-
-Los listados privados seguirán el mismo orden que los públicos: `CreatedAt` descendente, con identificador del enlace descendente como desempate estable.
-
-## 11. SEO
-
-El SEO se abordará por fases. Las decisiones que afectan al dominio, las rutas, la visibilidad y el HTML se definirán desde el principio. El refinamiento y la auditoría SEO avanzada quedan fuera del MVP0.
-
-La página pública de usuario deberán tener:
-
-- URL amigable con el formato `/user-alias/`.
-- HTML renderizado en servidor.
-- `meta title`.
-- `meta description`.
-- Un único `h1`.
-- Encabezados semánticos.
-- URL canonical básica.
-- Exclusión de colecciones privadas.
-- Exclusión de enlaces no publicados.
-- Respuestas `404` para recursos públicos inexistentes o no accesibles.
-- Paginación estable.
-
-### Fundamentos desde el inicio
-
-Las páginas públicas de colección deberán tener:
-
-- URL amigable con el formato `/user-alias/collections/collection-slug`.
-- HTML renderizado en servidor.
-- `meta title`.
-- `meta description`.
-- Un único `h1`.
-- Encabezados semánticos.
-- URL canonical básica.
-- Exclusión de colecciones privadas.
-- Exclusión de enlaces no publicados.
-- Respuestas `404` para recursos públicos inexistentes o no accesibles.
-- Paginación estable.
-
-Los enlaces individuales no tendrán páginas indexables propias.
-
-### SEO avanzado posterior al MVP0
-
-Queda fuera del MVP0 y podrá abordarse posteriormente:
-
-- Open Graph.
-- Twitter Cards, si procede.
-- `robots.txt`.
-- `sitemap.xml`.
-- Datos estructurados, si aportan valor.
-- Política definitiva de paginación indexable.
-- Auditoría de títulos, descripciones, canonical y rastreabilidad.
-
-## 12. Accesibilidad
-
-La aplicación deberá ser usable con teclado y tecnologías de asistencia.
-
-Requisitos iniciales:
+La aplicación será usable con teclado y con tecnologías de asistencia:
 
 - Orden de tabulación lógico y coincidente con el orden visual.
 - Foco visible.
-- Primer campo lógico enfocable al entrar en formularios.
+- Primer campo lógico enfocado al entrar en un formulario.
 - Labels asociados a los campos.
-- Mensajes de error junto al campo y anunciables. Si por falta de espacio puede ser debajo del campo, no hay problema. Pero el campo debe también quedar marcado de forma visual con error.
+- Mensajes de error junto al campo (o debajo, si falta espacio) y anunciables por tecnologías de asistencia. El campo con error también queda marcado visualmente.
+- Idioma de la página declarado con `lang="es"`.
 - Navegación para saltar al contenido principal.
 - Landmarks y encabezados semánticos.
 - Contraste suficiente.
 - No depender únicamente del color.
 - Nombres accesibles para enlaces y botones.
-- Soporte de `prefers-reduced-motion`.
+- Respeto de `prefers-reduced-motion` para evitar molestias a personas con trastornos vestibulares.
+- Soporte para lectores de pantalla.
 
-La interfaz inicial estará en castellano y deberá soportar los navegadores actuales.
+## 12. Operación
 
-## 13. Operación
+- La aplicación registra desde el inicio los eventos relevantes, sin datos sensibles (ver specifications.md → Registro de eventos).
+- La aplicación responde sin quedarse bloqueada esperando al usuario ni a servicios externos (ver architecture.md → Persistencia).
 
-Se generarán logs agnósticos desde el inicio para operaciones relevantes, errores de persistencia, fallos y reintentos del scraper, validaciones, SSRF y operaciones de publicación. No deberán incluir secretos, contraseñas, hashes innecesarios ni credenciales contenidas en URLs.
+## 13. Fuera de alcance
 
-Las operaciones de base de datos deberán ser breves, explícitas y quirurgicas: abrir conexión, ejecutar la unidad mínima de trabajo, confirmar o revertir y liberar recursos. No se mantendrán transacciones abiertas mientras se espera al usuario o se realizan operaciones externas.
-
-SQLite se configurará para permitir lecturas concurrentes durante escrituras y para tolerar bloqueos transitorios breves, sin ocultar errores persistentes.
-
-Grafana, Kibana y otras plataformas de observabilidad quedan fuera del MVP0.
-
-## 14. Fuera de alcance
-
-- Validación de contraseñas comprometidas.
-- Redirecciones de alias.
-- Importación de marcadores.
-- Exportación de marcadores.
-- Extensión de navegador.
-- Colaboración entre usuarios.
-- Sincronización con servicios externos.
-- Analítica avanzada.
-- Plataforma externa de observabilidad.
-- SEO avanzado.
-- Estrategia de despliegue.
-
+Ver decisions.md → Fuera de alcance del MVP0.
