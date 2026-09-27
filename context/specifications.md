@@ -64,14 +64,6 @@ Slugs:
 - Se regeneran automáticamente cuando cambia el nombre.
 - La colección por defecto «Bandeja de entrada» tiene el slug `bandeja-de-entrada`.
 
-## Etiquetas
-
-### Colisión al crear desde el formulario de un enlace
-
-- Cuando el usuario crea una etiqueta desde el formulario de un enlace (escribiendo un nombre nuevo en el campo de etiquetas), si el slug resultante coincide con el de una etiqueta ya existente del mismo usuario, se asocia la etiqueta existente en lugar de rechazar la operación.
-- Esto permite al usuario reutilizar etiquetas sin necesidad de saber si ya las había creado previamente.
-- La regla de unicidad del slug dentro del usuario se mantiene: no se crea una etiqueta duplicada, se reutiliza la existente.
-
 ## Email
 
 - Se guarda y se compara sin espacios al principio ni al final y en minúsculas: `Ana@Example.com` y `ana@example.com` son el mismo email.
@@ -390,7 +382,7 @@ Flujo provisional, cuando exista el scraping (los pendientes están en decisions
 
 - Todos los listados paginados y los resultados de búsqueda muestran 15 elementos por página.
 - Una página fuera de rango responde `404`.
-- `Link.CreatedAt` se usa para ordenar en los listados de enlaces privados y públicos.
+- `Link.CreatedAt` se usa para ordenar en los listados de enlaces (privados, de una colección pública y los últimos de la página de usuario).
 
 ## Páginas públicas
 

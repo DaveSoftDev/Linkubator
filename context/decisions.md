@@ -19,8 +19,8 @@ Este documento recoge qué se ha decidido y por qué, qué riesgos se aceptan, q
 - **Al cambiar un alias o renombrar una colección, la URL anterior responde `404`.** Las redirecciones `301` quedan fuera del MVP0.
 - **La página de un usuario sin colecciones públicas responde `404`.** Así no revela si tiene colecciones privadas.
 - **Una colección pública sin enlaces públicos responde `404`.** Así los buscadores desindexarán esa página.
-- **Las colecciones se ordenan por Slug** en los listados privados del usuario y en la página pública de colecciones (`/{alias}/colecciones/`).
-- **Las colecciones se ordenan por CreatedAt** en la página pública del usuario (`/{alias}/`), donde se muestran las últimas colecciones públicas y los últimos enlaces públicos.
+- **Las colecciones se ordenan por Slug** en los listados privados del usuario y en la página pública de colecciones (`/{alias}/colecciones/`) (ver specifications.md → Listados y Páginas públicas).
+- **Las colecciones se ordenan por CreatedAt** en la página pública del usuario (`/{alias}/`) donde se muestran las últimas colecciones públicas y los últimos enlaces públicos (ver specifications.md → Listados y Páginas públicas).
 - **Las páginas públicas no muestran el nombre ni el email del usuario; su título es el alias.** El alias ya es público; el resto son datos personales.
 - **Barra final solo en las rutas que tienen páginas por debajo.** Distingue las rutas contenedoras (`/{alias}/`) de las finales (`/{alias}/colecciones/{slug}`) y hace predecible la forma canónica de cada URL (ver specifications.md → Rutas).
 - **El SEO se aborda por fases.** Lo que afecta al dominio, a las rutas y al HTML se define desde el MVP0; el SEO avanzado queda fuera.
