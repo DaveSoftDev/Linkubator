@@ -23,19 +23,19 @@ Propiedades:
 Invariantes:
 
 - `Email` es obligatorio y único en todo el sistema, normalizado y validado según specifications.md → Email.
-- `Name` es obligatorio y no necesita ser único.
-- `Alias` es obligatorio, público, mutable y único en todo el sistema. Se genera según specifications.md → Generación de alias y slugs.
+- `EmailConfirmedAt` es `null` mientras el registro está sin completar. Un registro sin completar solo contiene el email: `Name`, `Alias` y `Password` son `null`, no tiene colecciones y no puede iniciar sesión. Al completar el registro se fijan los cuatro valores a la vez y, desde entonces, `Name`, `Alias` y `Password` son obligatorios.
+- Volver a registrarse con el email de un registro sin completar no crea otra cuenta: reenvía el correo de completar registro (ver specifications.md → Registro).
+- `Name` no necesita ser único.
+- `Alias` es público, mutable y único en todo el sistema. Se genera según specifications.md → Generación de alias y slugs.
 - `Password` guarda solo el hash de la contraseña, nunca la contraseña en claro. El dominio no calcula hashes: recibe el hash ya calculado por el servicio de hashing (ver architecture.md → Capas).
-- `Password` solo cambia por tres vías: el registro (contraseña inicial), el cambio de contraseña (tras verificar la actual) y el restablecimiento con un token de recuperación válido.
-- `EmailConfirmedAt` es `null` mientras el email no está verificado. Sin email verificado no se puede iniciar sesión. Restablecer la contraseña con un token válido también fija `EmailConfirmedAt` si era `null`.
-- Cambiar `Email` no lo sustituye de inmediato: el nuevo valor solo se aplica al verificarlo con un token de cambio de email. Solicitar el cambio exige verificar la contraseña actual, y el nuevo email debe ser único al solicitarlo y de nuevo al confirmarlo.
-- `FailedLoginAttempts` cuenta los intentos fallidos consecutivos de verificar la contraseña. Empieza en 0 y es un único contador por cuenta, compartido por todas las operaciones que verifican la contraseña. Al llegar al máximo se fija `LockoutEnd` y el contador vuelve a 0; también vuelve a 0 al acertar. Mientras `LockoutEnd` está en el futuro, no se verifica la contraseña ni se cuentan intentos. Los valores están en specifications.md → Bloqueo por intentos fallidos.
+- `Password` solo cambia por tres vías: completar el registro (contraseña inicial), el cambio de contraseña (tras verificar la actual) y el restablecimiento con un token de recuperación válido.
+- Cambiar `Email` no lo sustituye de inmediato: el nuevo valor solo se aplica al verificarlo con un token de cambio de email. Solicitar el cambio exige verificar la contraseña actual. Solo se emite el token si el nuevo email está libre al solicitarlo, y solo se aplica si sigue libre al confirmarlo (ver specifications.md → Cambio de email).
+- `FailedLoginAttempts` cuenta los intentos fallidos consecutivos de verificar la contraseña. Es un único contador por cuenta, compartido por todas las operaciones que verifican la contraseña. Al llegar al máximo se fija `LockoutEnd`; mientras `LockoutEnd` está en el futuro, no se verifica la contraseña. Cuándo se reinicia el contador y los valores están en specifications.md → Bloqueo por intentos fallidos.
 - `LastEmailSentAt` guarda el momento del último correo con límite enviado a la cuenta (ver specifications.md → Correos que envía la aplicación).
-- `SecurityStamp` es un valor aleatorio que se genera al crear el usuario y se regenera al cambiar o restablecer la contraseña. Las sesiones emitidas con un sello anterior dejan de ser válidas.
+- `SecurityStamp` es un valor aleatorio que se genera al crear el usuario y se regenera al cambiar o restablecer la contraseña y al confirmar un cambio de email. Las sesiones emitidas con un sello anterior dejan de ser válidas.
 - `CreatedAt` es solo informativo, para auditoría; no participa en ninguna regla.
-- Un usuario tiene siempre al menos una colección: al crearlo se crea su colección privada «Bandeja de entrada», y no puede borrar la última que le quede.
+- Un usuario con el registro completado tiene siempre al menos una colección: al completar el registro se crea su colección privada «Bandeja de entrada», y no puede borrar la última que le quede.
 - Eliminar un usuario elimina todos sus datos: colecciones, enlaces, etiquetas, relaciones `LinkTag`, su índice de búsqueda y sus tokens.
-- Una cuenta sin verificar cuyo token de verificación ha caducado puede ser sustituida por un nuevo registro con el mismo email o el mismo alias; al sustituirla se eliminan todos sus datos.
 
 ## Collection
 
@@ -60,7 +60,7 @@ Invariantes:
 - Una colección puede no tener enlaces.
 - Una colección con enlaces no se puede eliminar, ni tampoco la última colección del usuario. El borrado es físico.
 - `IsPublic` es `false` al crearla, salvo que el usuario la marque como pública en ese momento (ver «Público y privado»).
-- `CreatedAt` es solo informativo, para auditoría; no se usa para ordenar en los listados privados, pero sí en la página de usuario para mostrar las últimas colecciones públicas (ver specifications.md → Páginas públicas).
+- `CreatedAt` solo se usa para ordenar en la página de usuario (ver specifications.md → Listados); no participa en los listados privados.
 
 ## Link
 
@@ -88,13 +88,13 @@ Invariantes:
 - `UrlOriginal` guarda la URL ajustada y validada según specifications.md → Ajuste y validación. Es inmutable: para cambiar la URL hay que eliminar el enlace y crear otro.
 - `UrlNormalized` es único dentro del usuario.
 - `UrlNormalized` se calcula a partir de `UrlOriginal` según specifications.md → Normalización para duplicados. Es una clave plana, no una URL válida, y solo sirve para detectar duplicados.
-- `Title`, `Description` e `Image` son opcionales. `Image`, si existe, cumple las mismas reglas de ajuste y validación que `UrlOriginal`.
+- `Title`, `Description` e `Image` son opcionales. `Image`, si existe, cumple las reglas de ajuste y validación de `UrlOriginal` y las de specifications.md → Reglas adicionales para `Image`.
 - De sus propiedades, solo se pueden editar `Title`, `Description`, `Image` e `IsPublic`. Además, se pueden cambiar sus etiquetas (`LinkTag`) y moverlo a otra colección (`CollectionId`).
 - `IsPublic` es `false` al crearlo, salvo que el usuario lo marque como público en ese momento y su colección sea pública (ver «Público y privado»).
-- `ScrapingStatus` es `null` mientras no se ha solicitado scraping (ver «Estados del scraping»).
+- `ScrapingStatus` es `null` mientras no se ha solicitado scraping (ver specifications.md → Estados del scraping).
 - `ScrapingAttempts` cuenta los intentos de scraping ya realizados.
 - `NextScrapingAt` es la fecha y hora del siguiente intento programado; es `null` cuando no queda ninguno.
-- `Link.CreatedAt` solo se usa para ordenar: en los listados de enlaces (privados, de una colección pública y en la página de usuario).
+- `Link.CreatedAt` solo se usa para ordenar (ver specifications.md → Listados).
 - El borrado es físico y elimina también sus relaciones `LinkTag` y su entrada en el índice de búsqueda.
 
 ## Tag
@@ -149,12 +149,23 @@ Propiedades:
 
 Invariantes:
 
-- `Purpose` indica el uso del token: verificación de email, restablecimiento de contraseña o cambio de email.
+- `Purpose` indica el uso del token: completar el registro, restablecer la contraseña o cambiar el email.
 - Solo se guarda el hash del token (`TokenHash`), que es único.
 - Un token es válido si no ha caducado (`ExpiresAt`) y no se ha usado (`UsedAt` es `null`).
 - `NewEmail` solo se informa en los tokens de cambio de email, y es el único sitio donde se guarda el email pendiente: `User.Email` no cambia hasta confirmarlo.
-- Al emitir un token, se invalidan los anteriores sin usar del mismo usuario y propósito. Al cambiar o restablecer la contraseña, se invalidan también los tokens de restablecimiento y de cambio de email pendientes.
+- Un token deja de ser válido cuando se usa, cuando caduca o cuando lo invalida otra operación de la cuenta (ver specifications.md → Tokens).
 - El formato y las caducidades están en specifications.md → Correo y tokens → Tokens.
+
+## Relaciones
+
+```text
+User 1 ---- 0..N Collection   (1..N una vez completado el registro)
+User 1 ---- 0..N Link
+User 1 ---- 0..N Tag
+User 1 ---- 0..N UserToken
+Collection 1 ---- 0..N Link
+Link 0..N ---- 0..N Tag (mediante LinkTag)
+```
 
 ## Propiedad de los datos
 
@@ -166,7 +177,7 @@ Invariantes:
 
 `IsPublic` significa lo mismo en colecciones y en enlaces: el elemento se muestra en la parte pública, dentro de su contenedor. Solo hay dos estados: público (`IsPublic = true`) o privado (`IsPublic = false`).
 
-- Una colección pública aparece en la página pública del usuario y tiene su propia página pública. Una colección privada no aparece en ninguna página pública.
+- Una colección se muestra en las páginas públicas solo si es pública y tiene al menos un enlace público. Una colección que se muestra tiene su propia página pública y aparece en la página de colecciones del usuario. Una colección privada, o una pública sin enlaces públicos, no aparece en ninguna página pública.
 - Un enlace público aparece en la página pública de su colección. Un enlace privado no aparece.
 - Un enlace se muestra en la parte pública solo si se cumple `Collection.IsPublic && Link.IsPublic`.
 
@@ -187,16 +198,3 @@ Invariantes:
 - `UserId + Tag.Slug`.
 - `LinkId + TagId`.
 - `UserToken.TokenHash`.
-
-## Estados del scraping
-
-`ScrapingStatus` toma uno de estos valores:
-
-- `null`: no se ha solicitado scraping, como en los enlaces creados antes de la etapa de scraping.
-- Pendiente.
-- Procesando.
-- Completado.
-- Fallido.
-- ReintentosCompletados.
-
-El enlace se conserva aunque el scraping termine sin metadatos.

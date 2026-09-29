@@ -57,7 +57,7 @@ Estas reglas no se pueden romper nunca, ni en la documentación ni en el código
 
 - Toda lectura o modificación privada se limita al usuario identificado, y nunca se confía en un `UserId`, `Alias` o `Slug` enviado por el cliente (domain-model.md → Propiedad de los datos).
 - Una colección privada nunca expone sus enlaces, y nada se hace público sin una acción explícita del usuario (domain-model.md → Público y privado).
-- Las respuestas de login, registro y recuperación no revelan si una cuenta existe, ni por su contenido ni por su tipo de respuesta (specifications.md → Respuestas que no revelan si una cuenta existe).
+- Las respuestas de login, registro, recuperación y cambio de email no revelan si una cuenta existe, ni por su contenido ni por su tipo de respuesta (specifications.md → Respuestas que no revelan si una cuenta existe).
 - Contraseñas y tokens nunca se guardan ni se registran en claro (specifications.md → Contraseñas y Correo y tokens).
 - Dentro de una transacción de base de datos nunca se espera al usuario, ni se hacen llamadas HTTP, scraping o envíos de correo (architecture.md → Persistencia).
 
@@ -70,7 +70,8 @@ Estas reglas no se pueden romper nunca, ni en la documentación ni en el código
 - Conservar las razones de las decisiones que afecten al alcance.
 - No añadir funcionalidades fuera del MVP0 sin registrarlas como propuesta.
 - Vocabulario de lo público: colecciones y enlaces solo son «públicos» o «privados», y las acciones son «hacer público» y «hacer privado». «Visible» e «invisible» solo se usan para la interfaz de usuario.
-- En la documentación funcional se dice «etiqueta»; `Tag` y `LinkTag` son nombres técnicos.
+- En la documentación funcional se nombra «colección»; `Collection` es un nombre técnico.
+- En la documentación funcional se nombra «etiqueta»; `Tag` y `LinkTag` son nombres técnicos.
 
 ## Restricciones de edición actuales
 

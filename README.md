@@ -29,17 +29,4 @@ Las colecciones podrán ser públicas o privadas. Dentro de una colección públ
 
 ## Alcance tecnológico previsto
 
-- .NET 10 y C#.
-- ASP.NET Core Razor Pages.
-- Tailwind CSS.
-- SQLite con FTS5.
-- Dapper como micro ORM (Object-Relational Mapper).
-- Argon2id para el hashing de contraseñas.
-- MailKit y smtp4dev (local) para el correo.
-- Clean Architecture.
-
-La estrategia de despliegue se decidirá más adelante.
-
-## Enlaces para Brais Moure
-- 
--  
+La pila técnica prevista está en [architecture.md → Plataforma](context/architecture.md#plataforma). La estrategia de despliegue se decidirá más adelante.

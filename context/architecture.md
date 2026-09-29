@@ -20,7 +20,7 @@ El MVP0 se ejecuta únicamente en local. La estrategia de despliegue queda fuera
 ### Domain
 
 - Entidades, value objects, invariantes, reglas de negocio, errores de dominio y enumeradores.
-- La generación de `User.Alias`, `Collection.Slug` y `Tag.Slug` es una regla compartida del dominio (ver specifications.md → Generación de alias y slugs).
+- La generación de `User.Alias`, `Collection.Slug` y `Tag.Slug` es una regla compartida del dominio (ver specifications.md → Generación de alias y slugs), y la de `Link.UrlNormalized` también vive aquí (ver specifications.md → Normalización para duplicados): ambas son transformaciones de texto sin dependencias de infraestructura.
 - No conoce SQLite, Dapper, HTTP, Razor Pages ni detalles de infraestructura.
 
 ### Application
@@ -28,7 +28,6 @@ El MVP0 se ejecuta únicamente en local. La estrategia de despliegue queda fuera
 - Casos de uso, DTOs, validadores y patrón `Result`.
 - Interfaces de repositorios y de Unit of Work.
 - Abstracciones del usuario identificado, del scraper, del hashing de contraseñas (`IPasswordHasher`) y del envío de correo (`IEmailSender`).
-- La generación de `Link.UrlNormalized` es una regla técnica independiente (ver specifications.md → Normalización para duplicados).
 
 ### Infrastructure
 
@@ -50,7 +49,7 @@ El MVP0 se ejecuta únicamente en local. La estrategia de despliegue queda fuera
 
 Cuenta:
 
-- Registrarse, verificar el email y reenviar la verificación.
+- Registrarse con el email y completar el registro desde el enlace del correo.
 - Iniciar y cerrar sesión.
 - Editar la configuración, cambiar la contraseña y cambiar el email.
 - Solicitar la recuperación de contraseña y restablecerla.
@@ -60,7 +59,7 @@ Gestión:
 
 - Colecciones: Crear, editar, eliminar y hacerlas públicas o privadas.
 - Etiquetas: crear, editar y eliminar.
-- Enlaces: crear, editar, eliminar, hacerlos públicos o privados y moverlos entre colecciones (Pública a Pública, Pública a Privada y Privada a Pública).
+- Enlaces: crear, editar, eliminar, hacerlos públicos o privados y moverlos entre colecciones.
 - Asociar y desasociar etiquetas, incluida la creación de una etiqueta desde el formulario del enlace.
 - Listar las colecciones y las etiquetas del usuario.
 - Buscar enlaces y filtrarlos por colección y/o etiqueta.
@@ -76,11 +75,12 @@ El comportamiento de cada caso de uso está en specifications.md y sus invariant
 
 - La aplicación se sirve por HTTPS también en local, con el certificado de desarrollo de .NET, y las peticiones HTTP se redirigen a HTTPS.
 - La cookie de autenticación usa el prefijo `__Host-`, `Path=/`, `HttpOnly`, `Secure` y `SameSite=Lax`, y solo contiene un ticket cifrado sin datos personales en claro.
-- En cada petición autenticada se comprueba el `SecurityStamp` del ticket contra el del usuario; si no coincide, la sesión deja de ser válida. Al cambiar la contraseña, se vuelve a emitir la cookie de la sesión actual con el nuevo sello.
+- En cada petición autenticada se comprueba el `SecurityStamp` del ticket contra el del usuario; si no coincide, la sesión deja de ser válida. Al cambiar la contraseña y al confirmar un cambio de email con sesión abierta, se vuelve a emitir la cookie de la sesión actual con el nuevo sello, copiando del ticket anterior su fecha de caducidad y su persistencia.
+- El ticket de autenticación lleva una caducidad absoluta calculada en el login y el deslizamiento de la caducidad (`SlidingExpiration`) está desactivado. La persistencia de la cookie (`Expires`) se decide en cada login según «Recordarme»; el ticket caduca igual en ambos casos (valores en specifications.md → Sesión).
 - Las páginas de `/app` se agrupan en la carpeta `Pages/App` y se protegen de una vez con la convención de autorización por carpeta (`AuthorizeFolder("/App")`). Las páginas de cuenta que deben ser anónimas se marcan explícitamente (`AllowAnonymousToPage`).
 - Tras el login, `ReturnUrl` solo se acepta si es una URL local de la aplicación; si no, se redirige al panel (`/app`).
 - Todos los formularios que modifican datos usan POST con validación antiforgery, que Razor Pages aplica por defecto. Cerrar sesión también es un POST con antiforgery.
-- Todas las respuestas llevan las cabeceras `X-Content-Type-Options: nosniff` y `Content-Security-Policy: frame-ancestors 'none'`.
+- Todas las respuestas llevan las cabeceras `X-Content-Type-Options: nosniff`, `Content-Security-Policy: frame-ancestors 'none'` y `Referrer-Policy: strict-origin-when-cross-origin`.
 
 ## Correo
 
@@ -90,7 +90,7 @@ El comportamiento de cada caso de uso está en specifications.md y sus invariant
 
 ## Enrutamiento
 
-- Todo lo que no es público cuelga de `/app`: registro, verificación de email, login, recuperación y restablecimiento de contraseña (páginas anónimas); panel de gestión; configuración, cambio de contraseña y eliminación de cuenta.
+- Todo lo que no es público cuelga de `/app`: registro, completar registro, login, recuperación y restablecimiento de contraseña (páginas anónimas); panel de gestión; configuración, cambio de contraseña y eliminación de cuenta.
 - La raíz queda reservada a las rutas públicas de specifications.md → Páginas públicas y a los recursos estáticos.
 - Las rutas literales tienen prioridad sobre las parametrizadas, y `app` no puede ser un alias porque es más corto que la longitud mínima de un alias. Como los alias tampoco tienen puntos, no pueden coincidir con ninguna ruta de la aplicación ni con un recurso estático.
 - Las variantes de una URL pública (barra final, mayúsculas) se sirven sin redirecciones; la etiqueta canonical indica la forma canónica.
@@ -113,14 +113,18 @@ Reglas obligatorias:
 - Dentro de una transacción no se espera al usuario, no se hacen llamadas HTTP, scraping ni envíos de correo, y no se esperan reintentos ni intervalos de tiempo.
 - Las lecturas no mantienen transacciones abiertas innecesariamente.
 - Las consultas paginadas no cargan en memoria más datos de los necesarios.
-- Las restricciones únicas de SQLite son la garantía final frente a duplicados y colisiones.
-- Las reglas que no garantizan una restricción de la base de datos se comprueban dentro de la misma transacción de escritura que la operación, iniciada con `BEGIN IMMEDIATE`, para evitar condiciones de carrera. Por ejemplo: no borrar la última colección del usuario, el límite de correos (`User.LastEmailSentAt`) y el contador de intentos fallidos (`User.FailedLoginAttempts`).
-- Los borrados de datos relacionados los hace la aplicación de forma explícita, nunca la base de datos de forma automática (sin `ON DELETE CASCADE`).
+- Las restricciones únicas de SQLite son la garantía final frente a duplicados y colisiones, y la clave foránea compuesta entre `Link` y `Collection` es la garantía final de que un enlace nunca está en una colección de otro usuario.
+- Las reglas que no garantiza una restricción de la base de datos se comprueban dentro de la misma transacción de escritura que la operación, iniciada con `BEGIN IMMEDIATE`, para evitar condiciones de carrera entre peticiones concurrentes (dos pestañas o dos navegadores del mismo usuario). Como SQLite solo admite un escritor a la vez, la segunda transacción no empieza hasta que la primera termina y lee siempre el estado ya confirmado. Se comprueban así:
+  - No borrar la última colección del usuario.
+  - El límite de correos (`User.LastEmailSentAt`) y el contador de intentos fallidos (`User.FailedLoginAttempts`).
+  - La propiedad de las relaciones (domain-model.md → Propiedad de los datos): al crear o mover un enlace, que la colección sea del usuario; al asociar etiquetas, que cada etiqueta sea del usuario.
+  - Las invariantes de domain-model.md → Público y privado: al hacer público un enlace, que su colección sea pública en ese momento; al hacer privada una colección, sus enlaces pasan a privados en la misma transacción.
+- Los borrados de datos relacionados los hace la aplicación de forma explícita, nunca la base de datos de forma automática (sin `ON DELETE CASCADE`). Tampoco se usan triggers: la lógica vive en la aplicación.
 
 Operaciones que van en una sola transacción:
 
-- El registro de un usuario y la creación de su «Bandeja de entrada».
-- La sustitución de una cuenta sin verificar y el borrado de sus datos.
+- Completar el registro: fijar nombre, alias, contraseña y `EmailConfirmedAt`, crear la «Bandeja de entrada» y consumir el token.
+- El restablecimiento de contraseña y la confirmación del cambio de email, con sus efectos sobre los tokens, el bloqueo y el `SecurityStamp`.
 - La eliminación de una cuenta y de todos sus datos.
 - Cualquier escritura o borrado de enlaces, colecciones o etiquetas, junto con sus relaciones `LinkTag` y la proyección FTS5 afectada.
 
@@ -128,25 +132,16 @@ Configuración y convenciones:
 
 - SQLite se configura con WAL, `busy_timeout` y claves foráneas activadas. Los reintentos por bloqueo son limitados y solo se aplican a errores transitorios identificados.
 - Los identificadores son `INTEGER PRIMARY KEY` (el `rowid` de SQLite), salvo en `LinkTag`, cuya clave es la pareja `LinkId + TagId`.
+- `User.Name`, `User.Alias` y `User.Password` admiten `NULL` mientras el registro está sin completar. El índice único de `Alias` admite varios `NULL`, como hace SQLite por defecto.
 - Todas las fechas se guardan en UTC y en formato ISO 8601.
 - Las migraciones se resuelven mediante scripts SQL versionados o una herramienta ligera equivalente, sin EF Core.
 
 Restricciones e índices previstos:
 
 - Las restricciones de unicidad de domain-model.md → Restricciones de unicidad.
+- Clave foránea compuesta `Link (UserId, CollectionId)` → `Collection (UserId, Id)`, apoyada en un índice único `Collection (UserId, Id)`.
 - Índices por usuario, colección, estado público y fecha.
 - Índice de `UserToken` por usuario y propósito.
-
-### Relaciones
-
-```text
-User 1 ---- 1..N Collection
-User 1 ---- N Link
-User 1 ---- N Tag
-User 1 ---- N UserToken
-Collection 1 ---- N Link
-Link N ---- N Tag (mediante LinkTag)
-```
 
 ## FTS5
 
@@ -156,7 +151,7 @@ Link N ---- N Tag (mediante LinkTag)
 - Tokenizador `unicode61` con `remove_diacritics 2` iguala «canción» y «cancion», y trata la `ñ` como `n`, igual que los slugs. FTS5 no incluye stemming para castellano.
 - Los términos de consulta se escapan.
 - El orden por relevancia usa `ORDER BY rank` ascendente: en FTS5, `rank` (`bm25()`) es más bajo cuanto mejor es la coincidencia, así que `ORDER BY rank DESC` devolvería primero los menos relevantes.
-- La paginación es estable, con los desempates de specifications.md → Búsqueda y filtros.
+- La paginación es estable, con los desempates de specifications.md → Listados.
 - La reconstrucción del índice es un comando de mantenimiento que se ejecuta a mano: vacía la proyección y la regenera desde las tablas, en una transacción. En el MVP0 no se lanza de forma automática.
 
 ## Scraping
@@ -172,7 +167,7 @@ El scraping forma parte del MVP0, pero se implementará en una fase posterior. S
   - Tipos de contenido permitidos.
   - No sustituir nunca la URL original por la de una redirección.
   - Sanitizar los metadatos extraídos.
-  - Validar `og:image` según specifications.md → Ajuste y validación.
+  - Validar `og:image` según specifications.md → Reglas adicionales para `Image`.
 
 ## Logs
 
