@@ -29,4 +29,10 @@ Las colecciones podrán ser públicas o privadas. Dentro de una colección públ
 
 ## Alcance tecnológico previsto
 
-La pila técnica prevista está en [architecture.md → Plataforma](context/architecture.md#plataforma). La estrategia de despliegue se decidirá más adelante.
+La pila técnica prevista está en [architecture.md → «Plataforma»](context/architecture.md#plataforma). La estrategia de despliegue se decidirá más adelante.
+
+## Enlaces para Brais Moure
+
+- 
+- 
+

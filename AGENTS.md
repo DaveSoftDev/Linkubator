@@ -43,6 +43,8 @@ Señales de que un texto está en el documento equivocado:
 
 Este mismo criterio se aplica a `AGENTS.md` y a las skills: no copian reglas del producto, salvo las invariantes críticas de la sección siguiente.
 
+Los diagramas de `context/diagrams/` son vistas derivadas: muestran estructura y nombres (entidades, propiedades, estados, pasos y decisiones de un flujo), pero no números, límites ni listas cerradas de valores. Para esos valores enlazan a su documento propietario.
+
 ## Skills de Linkubator
 
 Las skills del proyecto viven en `skills/`. Cada una contiene un `SKILL.md` con su procedimiento y debe usarse cuando la tarea corresponda a su propósito.
@@ -55,11 +57,11 @@ Cuando se cree una nueva skill de Linkubator, añádela aquí con su nombre, enl
 
 Estas reglas no se pueden romper nunca, ni en la documentación ni en el código. Su detalle está en los documentos enlazados.
 
-- Toda lectura o modificación privada se limita al usuario identificado, y nunca se confía en un `UserId`, `Alias` o `Slug` enviado por el cliente (domain-model.md → Propiedad de los datos).
-- Una colección privada nunca expone sus enlaces, y nada se hace público sin una acción explícita del usuario (domain-model.md → Público y privado).
-- Las respuestas de login, registro, recuperación y cambio de email no revelan si una cuenta existe, ni por su contenido ni por su tipo de respuesta (specifications.md → Respuestas que no revelan si una cuenta existe).
-- Contraseñas y tokens nunca se guardan ni se registran en claro (specifications.md → Contraseñas y Correo y tokens).
-- Dentro de una transacción de base de datos nunca se espera al usuario, ni se hacen llamadas HTTP, scraping o envíos de correo (architecture.md → Persistencia).
+- Toda lectura o modificación privada se limita al usuario identificado, y nunca se confía en un `UserId`, `Alias` o `Slug` enviado por el cliente (domain-model.md → «Propiedad de los datos»).
+- Una colección privada nunca expone sus enlaces, y nada se hace público sin una acción explícita del usuario (domain-model.md → «Público y privado»).
+- Las respuestas de login, registro, recuperación y cambio de email no revelan si una cuenta existe, ni por su contenido ni por su tipo de respuesta (specifications.md → «Respuestas que no revelan si una cuenta existe»).
+- Contraseñas y tokens nunca se guardan ni se registran en claro (specifications.md → «Contraseñas» y «Tokens»).
+- Dentro de una transacción de base de datos nunca se espera al usuario, ni se hacen llamadas HTTP, scraping o envíos de correo (architecture.md → «Persistencia»).
 
 ## Reglas de documentación
 
@@ -72,6 +74,7 @@ Estas reglas no se pueden romper nunca, ni en la documentación ni en el código
 - Vocabulario de lo público: colecciones y enlaces solo son «públicos» o «privados», y las acciones son «hacer público» y «hacer privado». «Visible» e «invisible» solo se usan para la interfaz de usuario.
 - En la documentación funcional se nombra «colección»; `Collection` es un nombre técnico.
 - En la documentación funcional se nombra «etiqueta»; `Tag` y `LinkTag` son nombres técnicos.
+- Referencias a secciones: el documento sin formato y la sección siempre entre «», con el nombre exacto de su título y un solo nivel. Otro documento: `specifications.md → «Sesión»`. El mismo documento: `«Sesión»`. Varias secciones: `specifications.md → «Cuenta» y «Sesión»`. Por eso los títulos no se repiten dentro de un documento.
 
 ## Restricciones de edición actuales
 
@@ -84,4 +87,4 @@ No crear todavía:
 - Frontend funcional.
 - Configuración de despliegue.
 
-La implementación empieza solo después de revisar y aceptar la documentación del MVP0. La pila técnica prevista está en architecture.md → Plataforma.
+La implementación empieza solo después de revisar y aceptar la documentación del MVP0. La pila técnica prevista está en architecture.md → «Plataforma».

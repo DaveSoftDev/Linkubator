@@ -26,7 +26,7 @@ No la uses para implementar funcionalidades, resolver errores de código, diseñ
 
 ## Source of truth
 
-Documentos y su responsabilidad (la tabla completa está en `AGENTS.md` → Dónde vive cada cosa):
+Documentos y su responsabilidad (la tabla completa está en AGENTS.md → «Dónde vive cada cosa»):
 
 1. `context/requirements.md`: qué hace el producto y para quién.
 2. `context/domain-model.md`: entidades, propiedades, relaciones e invariantes.
@@ -50,9 +50,9 @@ No empieces editando. Primero formula una hipótesis concreta sobre la posible i
 
 Recorre cada documento párrafo a párrafo y viñeta a viñeta:
 
-- Clasifica cada texto con la tabla de `AGENTS.md` → Dónde va cada texto.
+- Clasifica cada texto con la tabla de AGENTS.md → «Dónde va cada texto».
 - Si su tipo no corresponde al documento en el que está, es un hallazgo de tipo `Ubicación incorrecta`, aunque el texto sea correcto y no esté repetido. Indica el documento de destino.
-- Aplica las señales de `AGENTS.md` → Dónde va cada texto. Las más habituales:
+- Aplica las señales de AGENTS.md → «Dónde va cada texto». Las más habituales:
   - `requirements.md`: valores exactos, nombres de clases o propiedades usados como regla, SQL, cabeceras HTTP, capas o librerías.
   - `domain-model.md`: capas, transacciones, índices, formatos de almacenamiento, rutas, SEO o comportamiento de la interfaz.
   - `specifications.md`: justificaciones de por qué se decidió algo, tecnologías o capas.
@@ -69,7 +69,8 @@ Para cada regla, valor o algoritmo:
 - Identifica su documento propietario según la tabla de responsabilidades.
 - Comprueba que solo está escrito ahí. En los demás documentos solo puede aparecer un enlace o un resumen sin valores.
 - Si aparece un valor (un número, una lista, un código de respuesta, un nombre de parámetro) fuera de su documento propietario, es un hallazgo de tipo `Duplicado`, aunque hoy coincida.
-- Comprueba que cada enlace (`documento.md → Sección`) apunta a una sección que existe.
+- Comprueba que cada referencia apunta a una sección que existe y sigue el formato de AGENTS.md → «Reglas de documentación» (`documento.md → «Sección»`, un solo nivel). Si no, es un hallazgo de tipo `Terminología`.
+- Recorre también los diagramas de `context/diagrams/`: un número, un límite o una lista cerrada de valores dentro de un diagrama es un `Duplicado` (ver AGENTS.md → «Dónde va cada texto»). Comprueba que sus enlaces relativos (`../`) resuelven.
 
 ### 4. Build a consistency matrix
 
@@ -78,15 +79,15 @@ Comprueba como mínimo:
 | Área | Comprobación |
 | --- | --- |
 | Responsabilidades | Cada documento contiene solo lo que le corresponde según `AGENTS.md`. |
-| Terminología | Nombres de entidades, propiedades y estados consistentes. Vocabulario de lo público según `AGENTS.md` → Reglas de documentación. |
+| Terminología | Nombres de entidades, propiedades y estados consistentes. Vocabulario de lo público según AGENTS.md → «Reglas de documentación». |
 | Alcance | Ningún documento presenta como confirmada una funcionalidad fuera del MVP0. |
 | Propiedad | Toda lectura o escritura privada está limitada al usuario identificado, y la invariante de `UserId` entre enlace, colección y etiquetas se respeta en casos de uso y rutas. |
-| Público y privado | Las invariantes de domain-model.md → Público y privado se respetan en requisitos, especificaciones de páginas públicas y casos de uso. |
-| Cuenta y seguridad | Los flujos de specifications.md → Cuenta, Contraseñas, Correo y tokens y Sesión son coherentes entre sí: qué correo sale en cada flujo, qué tokens se invalidan, qué sesiones se cierran y qué respuestas son genéricas. |
+| Público y privado | Las invariantes de domain-model.md → «Público y privado» se respetan en requisitos, especificaciones de páginas públicas y casos de uso. |
+| Cuenta y seguridad | Los flujos de specifications.md → «Cuenta», «Contraseñas», «Correo», «Tokens» y «Sesión» son coherentes entre sí: qué correo sale en cada flujo, qué tokens se invalidan, qué sesiones se cierran y qué respuestas son genéricas. |
 | URLs | El ajuste, la validación y la normalización se aplican donde corresponde (enlaces e `Image`) y `UrlNormalized` se trata como clave plana. |
-| Listados y búsqueda | Orden, paginación y alcance por usuario coinciden entre specifications.md y architecture.md → FTS5. |
-| Páginas públicas | Rutas, indexabilidad y respuestas coinciden entre specifications.md, architecture.md → Enrutamiento y requirements.md. |
-| Persistencia | Las operaciones que deben ser atómicas están en architecture.md → Persistencia, y no hay operaciones externas dentro de transacciones. |
+| Listados y búsqueda | Orden, paginación y alcance por usuario coinciden entre specifications.md y architecture.md → «FTS5». |
+| Páginas públicas | Rutas, indexabilidad y respuestas coinciden entre specifications.md, architecture.md → «Enrutamiento» y requirements.md. |
+| Persistencia | Las operaciones que deben ser atómicas están en architecture.md → «Persistencia», y no hay operaciones externas dentro de transacciones. |
 | Scraping | El flujo funcional (specifications.md), las medidas técnicas (architecture.md) y los pendientes (decisions.md) no se contradicen. |
 | Decisiones | Cada decisión de decisions.md enlaza a su regla y tiene motivo cuando no es obvio. |
 | Roadmap | Las etapas y la checklist cubren todas las reglas y reflejan los pendientes actuales. |
@@ -129,7 +130,7 @@ Solo edita documentos si el usuario lo pide explícitamente o si la tarea consis
 
 Cuando edites:
 
-- Antes de escribir, clasifica cada texto con `AGENTS.md` → Dónde va cada texto. Si no encaja en el documento que estás editando, escríbelo en su propietario; nunca lo dejes «de momento» donde no corresponde.
+- Antes de escribir, clasifica cada texto con AGENTS.md → «Dónde va cada texto». Si no encaja en el documento que estás editando, escríbelo en su propietario; nunca lo dejes «de momento» donde no corresponde.
 - Escribe la regla solo en su documento propietario y enlázala desde los demás.
 - Si la decisión tiene un motivo, añádelo en decisions.md.
 - Si la regla necesita un test, añádelo a la checklist de roadmap.md.
@@ -154,7 +155,7 @@ La ficha es una vista generada bajo demanda: devuélvela en la conversación y n
 Estado: [coherente | coherente con observaciones | requiere decisiones]
 
 Hallazgos:
-- [Prioridad] [Tipo] Descripción. Lugares: archivo#Lnn, archivo#Lnn. Destino (si es Ubicación incorrecta o Duplicado): documento → sección. Recomendación: ...
+- [Prioridad] [Tipo] Descripción. Lugares: archivo#Lnn, archivo#Lnn. Destino (si es Ubicación incorrecta o Duplicado): documento.md → «Sección». Recomendación: ...
 
 Decisiones necesarias:
 - ...

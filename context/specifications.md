@@ -39,6 +39,8 @@ Este documento contiene las reglas exactas que la implementación debe cumplir: 
 7. Eliminar guiones medios duplicados.
 8. Eliminar guiones medios al principio y al final.
 
+> Diagrama del proceso: [Generación de alias y slugs](diagrams/process-alias-slugs.md).
+
 Ejemplo:
 
 ```text
@@ -79,7 +81,11 @@ Reglas de la guía NIST SP 800-63B-4 (sección 3.1.1.2) para contraseñas usadas
 - No se exigen reglas de composición (mayúsculas, números, símbolos…), ni cambios periódicos, ni pistas, ni preguntas de seguridad.
 - La contraseña se verifica completa; nunca se trunca.
 - Los campos de contraseña permiten pegar y el autocompletado de los gestores de contraseñas.
-- Los campos de contraseña ofrecen un botón accesible para mostrar u ocultar el texto (sujeto al límite de implementación de decisions.md → Producto y alcance).
+- Los campos de contraseña ofrecen, a su derecha, un botón con icono que muestra u oculta el texto:
+  - Con el texto enmascarado, el icono es un párpado cerrado o un ojo tachado y el nombre accesible del botón es «Mostrar contraseña».
+  - Con el texto visible, el icono es un ojo abierto y el nombre accesible es «Ocultar contraseña».
+  
+  Está sujeto al límite de implementación de decisions.md → «Producto y alcance».
 - Al establecer o cambiar una contraseña, se compara completa, tras normalizarla a NFC y sin distinguir mayúsculas, con la lista de contraseñas prohibidas y con estas palabras de contexto: `linkubator`, el alias, la parte local del email y el nombre del usuario. Si coincide, se rechaza indicando el motivo y orientando para elegir otra.
 
 ### Lista inicial de contraseñas prohibidas
@@ -121,13 +127,14 @@ linkubatorlinkubator
 
 - Tras 5 intentos fallidos consecutivos de verificar la contraseña de una cuenta (login, cambio de contraseña, cambio de email o eliminación de cuenta), la cuenta queda bloqueada durante 10 minutos.
 - El contador empieza en 0 y se reinicia al acertar, al aplicarse el bloqueo (de modo que, pasados los 10 minutos, se vuelve a disponer de 5 intentos) y al restablecer la contraseña con un token válido, que además anula el bloqueo.
-- Mientras dura el bloqueo, no se verifica la contraseña ni se cuentan intentos, y la respuesta es la misma que con credenciales incorrectas.
+- Mientras dura el bloqueo, no se cuentan intentos y la respuesta es la misma que con credenciales incorrectas, aunque la contraseña sea correcta.
+- En el login bloqueado se calcula igualmente el hash con los mismos parámetros y se descarta el resultado (ver «Respuestas que no revelan si una cuenta existe»). Las operaciones con sesión abierta no lo calculan.
 - Si el bloqueo se produce en una operación con sesión abierta (cambio de contraseña, cambio de email o eliminación de cuenta), la sesión no se cierra: solo se rechaza la operación.
 
 ### Respuestas que no revelan si una cuenta existe
 
 - Los mensajes de error del login son genéricos y no revelan si el email existe ni si su registro está sin completar.
-- Tampoco lo revela el tiempo de respuesta: el login calcula el hash con los mismos parámetros aunque el email no exista o el registro esté sin completar y no haya contraseña guardada.
+- Tampoco lo revela el tiempo de respuesta: el login calcula el hash con los mismos parámetros aunque el email no exista, el registro esté sin completar y no haya contraseña guardada, o la cuenta esté bloqueada.
 - El registro, la recuperación de contraseña y la petición de cambio de email dan siempre la misma respuesta, exista o no una cuenta con ese email y esté o no completada. Ninguna de las tres recibe una contraseña sin verificar, así que no hay hash que igualar.
 
 ### Hash de la contraseña
@@ -141,16 +148,15 @@ Argon2id con la configuración mínima de OWASP (Password Storage Cheat Sheet):
 - La comparación del hash calculado con el guardado se hace en tiempo constante.
 - Si los parámetros cambian en el futuro, el hash se recalcula con los nuevos en el siguiente login correcto, y los hashes antiguos se siguen verificando con los parámetros que llevan dentro.
 
-## Correo y tokens
-
-### Tokens
+## Tokens
 
 - Los enlaces de completar registro, restablecimiento de contraseña y cambio de email usan un token aleatorio de 256 bits, de un solo uso.
 - Solo se guarda el hash SHA-256 del token; el token en claro solo viaja en el enlace del correo.
+- Un token solo tiene efecto una vez: si varias peticiones presentan el mismo token a la vez, solo una lo consigue y las demás reciben la respuesta de un token no válido o caducado.
 - Al emitir un token, se invalidan los tokens anteriores sin usar del mismo usuario y propósito.
 - Al cambiar o restablecer la contraseña, se invalidan también los tokens de restablecimiento y de cambio de email pendientes.
 - Al confirmar un cambio de email, se invalidan también los tokens de restablecimiento de contraseña pendientes.
-- Los tokens nunca se registran en logs.
+- El registro en logs de los tokens se rige por «Registro de eventos».
 
 | Propósito | Caducidad |
 |---|---|
@@ -158,7 +164,7 @@ Argon2id con la configuración mínima de OWASP (Password Storage Cheat Sheet):
 | Restablecimiento de contraseña | 15 minutos |
 | Cambio de email | 2 horas |
 
-### Correos que envía la aplicación
+## Correo
 
 | Correo | Destinatario | Cuándo | Límite por minuto |
 |---|---|---|---|
@@ -170,11 +176,11 @@ Argon2id con la configuración mínima de OWASP (Password Storage Cheat Sheet):
 | Aviso de contraseña cambiada | Email de la cuenta | Al cambiar o restablecer la contraseña | No |
 | Confirmación de cuenta eliminada | Email de la cuenta | Al eliminar la cuenta | No |
 
-- Se envía como máximo 1 correo por minuto y cuenta en los correos con límite. Las peticiones que superen ese límite reciben la misma respuesta genérica sin enviar nada, y tampoco emiten ningún token: el token anterior, si lo hay, sigue vigente y el enlace que el usuario ya tiene en su buzón sigue funcionando.
+- Se envía como máximo 1 correo por minuto y cuenta en cada uno de los dos límites, independientes entre sí: el de los correos con token y el del aviso de cuenta existente. Las peticiones que superen ese límite reciben la misma respuesta genérica sin enviar nada, y tampoco emiten ningún token: el token anterior, si lo hay, sigue vigente y el enlace que el usuario ya tiene en su buzón sigue funcionando.
 - El aviso de cuenta existente se limita por la cuenta que ya tiene ese email, no por la que registra o pide el cambio.
-- El momento del último envío con límite se guarda en `User.LastEmailSentAt`.
-- Los avisos de seguridad (los correos sin límite) se envían siempre y no consultan ni actualizan `User.LastEmailSentAt`.
-- Cómo y cuándo se envían los correos está en architecture.md → Correo.
+- El momento del último correo con token se guarda en `User.LastEmailSentAt` y el del último aviso de cuenta existente en `User.LastExistingAccountNoticeAt`.
+- Los avisos de seguridad (los correos sin límite) se envían siempre y no consultan ni actualizan ninguno de los dos.
+- Cómo y cuándo se envían los correos está en architecture.md → «Correo».
 
 ## Cuenta
 
@@ -185,15 +191,17 @@ Argon2id con la configuración mínima de OWASP (Password Storage Cheat Sheet):
 - Si no existe ninguna cuenta con ese email, se crea un registro sin completar, que solo contiene el email, y se envía el correo de completar registro.
 - Si existe un registro sin completar con ese email, se emite un token nuevo y se vuelve a enviar el correo de completar registro. Volver a registrarse es la forma de pedir el reenvío.
 - Si existe una cuenta completada con ese email, no se crea nada y se envía a esa dirección el aviso de cuenta existente.
-- Un registro sin completar no tiene nombre, alias, contraseña ni colecciones, y no puede iniciar sesión (invariantes de domain-model.md → User).
+- Un registro sin completar no tiene nombre, alias, contraseña ni colecciones, y no puede iniciar sesión (invariantes de domain-model.md → «User»).
 
 ### Completar el registro
 
 - El enlace del correo abre un formulario con nombre, alias y contraseña, mientras el token sea válido.
 - El alias se muestra con su vista previa (ver «Generación de alias y slugs») y la contraseña sigue las reglas de «Contraseñas».
 - Si el alias está ocupado o algún dato no es válido, se indica junto al campo y el token sigue siendo válido hasta que se complete o caduque.
-- Al completarse, en una sola operación: se fijan el nombre, el alias, la contraseña y `EmailConfirmedAt`, se crea la colección privada «Bandeja de entrada» y se consume el token (ver architecture.md → Persistencia).
+- Al completarse, en una sola operación: se fijan el nombre, el alias, la contraseña y `EmailConfirmedAt`, se crea la colección privada «Bandeja de entrada» y se consume el token (ver architecture.md → «Persistencia»).
 - Después el usuario inicia sesión con normalidad.
+
+> Diagrama de la secuencia: [Registro y primer uso](diagrams/account-onboarding-sequence.md).
 
 ### Inicio de sesión
 
@@ -206,14 +214,19 @@ Argon2id con la configuración mínima de OWASP (Password Storage Cheat Sheet):
 - Si existe una cuenta completada, se le envía un enlace para introducir la nueva contraseña. Si existe un registro sin completar, se le envía el correo de completar registro.
 - Al completarse: se invalida el token, se cierran todas las sesiones abiertas, se reinicia el bloqueo por intentos fallidos y se envía el aviso de contraseña cambiada.
 
+> Diagrama de la secuencia: [Recuperación y restablecimiento de contraseña](diagrams/account-password-reset-sequence.md).
+
 ### Cambio de email
 
-- Requiere reintroducir la contraseña actual (invariantes de domain-model.md → User).
+- Requiere reintroducir la contraseña actual (invariantes de domain-model.md → «User»).
 - La respuesta al pedir el cambio es siempre la misma, esté libre u ocupado el nuevo email: se indica que, si la dirección está disponible, se ha enviado un enlace de verificación.
 - Si el nuevo email está libre, se emite el token de cambio de email y se envía la verificación del nuevo email.
 - Si el nuevo email ya lo tiene otra cuenta, no se emite ningún token y se envía a esa dirección el aviso de cuenta existente.
-- Al abrir el enlace de confirmación, si entretanto otra cuenta ha ocupado el nuevo email, la confirmación falla con la misma respuesta que un token no válido o caducado.
-- El nuevo email solo sustituye al anterior tras verificarlo; entonces se invalidan los tokens de restablecimiento de contraseña pendientes, se cierran las demás sesiones (la sesión desde la que se confirma, si la hay, sigue abierta; ver «Sesión») y se envía el aviso de email cambiado a la dirección anterior.
+- Al abrir el enlace de verificación se muestra una página con el nuevo email y un botón para confirmar el cambio; abrir el enlace no modifica nada. El cambio se aplica al pulsar el botón (POST con antiforgery). Con un token no válido o caducado, la página da la respuesta de token no válido.
+- Al confirmar, si entretanto otra cuenta ha ocupado el nuevo email, la confirmación falla con la misma respuesta que un token no válido o caducado.
+- El nuevo email solo sustituye al anterior tras verificarlo; entonces se invalidan los tokens de restablecimiento de contraseña pendientes, se cierran las demás sesiones (la sesión desde la que se confirma sigue abierta solo si pertenece al dueño del token; si no hay sesión o es de otra cuenta, no se crea ni se modifica ninguna; ver «Sesión») y se envía el aviso de email cambiado a la dirección anterior.
+
+> Diagrama de la secuencia: [Cambio de email](diagrams/account-email-change-sequence.md).
 
 ### Cambio de contraseña
 
@@ -233,12 +246,12 @@ Argon2id con la configuración mínima de OWASP (Password Storage Cheat Sheet):
 ## Sesión
 
 - Una sesión caduca a los 30 días del login, con independencia de la actividad y de si se marcó «Recordarme». La actividad no prolonga la sesión; solo un nuevo login inicia un plazo nuevo.
-- «Recordarme» solo decide si la sesión sobrevive al cierre del navegador: si no se marca, termina al cerrarlo; si se marca, se mantiene hasta caducar. Está sujeto al límite de implementación de decisions.md → Producto y alcance; si pasa a MVP1, todas las sesiones terminarán al cerrar el navegador.
+- «Recordarme» solo decide si la sesión sobrevive al cierre del navegador: si no se marca, termina al cerrarlo; si se marca, se mantiene hasta caducar. Está sujeto al límite de implementación de decisions.md → «Producto y alcance»; si pasa a MVP1, todas las sesiones terminarán al cerrar el navegador.
 - Cuando la sesión se vuelve a emitir (al cambiar la contraseña o al confirmar un cambio de email), conserva la fecha de caducidad y el carácter (con o sin «Recordarme») de la sesión original.
 - Al caducar la sesión, la siguiente petición a `/app` lleva al login.
-- Cambiar la contraseña y confirmar un cambio de email mantienen la sesión actual, si la hay, y cierran todas las demás. Restablecer la contraseña y eliminar la cuenta cierran todas.
+- Cambiar la contraseña y confirmar un cambio de email mantienen la sesión actual, si la hay y es del usuario afectado, y cierran todas las demás. Restablecer la contraseña y eliminar la cuenta cierran todas.
 - La zona privada muestra en todas sus páginas un botón para cerrar sesión.
-- Solo se usan cookies técnicas (autenticación y antiforgery); no hay banner de cookies (motivo en decisions.md → Cuenta y seguridad).
+- Solo se usan cookies técnicas (autenticación y antiforgery); no hay banner de cookies (motivo en decisions.md → «Seguridad»).
 
 ## URLs de los enlaces
 
@@ -264,9 +277,11 @@ Validación, sobre el resultado del ajuste:
 4. No puede contener credenciales (`usuario:clave@`).
 5. El puerto, si existe, debe ser válido.
 
+> Diagrama del proceso: [Ajuste y validación de URL](diagrams/process-url-adjustment-validation.md).
+
 `Link.UrlOriginal` guarda el resultado del ajuste, sin ninguna otra transformación. Como tras el ajuste el esquema siempre existe, el tratamiento de puertos de la normalización es determinista.
 
-Aceptar un enlace a `localhost` o a una IP no implica que el scraper pueda descargarlo (ver architecture.md → Scraping).
+Aceptar un enlace a `localhost` o a una IP no implica que el scraper pueda descargarlo (ver architecture.md → «Scraping»).
 
 | Entrada | Resultado |
 |---|---|
@@ -297,7 +312,7 @@ Validación:
 
 - El esquema debe ser `https`. Un `http://` explícito no supera la validación.
 - El host debe ser un dominio según el punto 3 de la validación general. No se aceptan `localhost` ni direcciones IP.
-- Esta comprobación valida el formato del host; no comprueba a qué dirección IP resuelve ni el destino de las redirecciones. El riesgo de que el navegador de un visitante intente acceder a una dirección privada se acepta en el MVP0 (ver decisions.md → Riesgos aceptados).
+- Esta comprobación valida el formato del host; no comprueba a qué dirección IP resuelve ni el destino de las redirecciones. El riesgo de que el navegador de un visitante intente acceder a una dirección privada se acepta en el MVP0 (ver decisions.md → «Riesgos aceptados»).
 
 Si la introduce el usuario y no supera las reglas, la operación se rechaza. Si la obtiene el scraper y no las supera, se descarta y el enlace se guarda sin imagen.
 
@@ -327,7 +342,7 @@ Fase 1, sobre la URL analizada con `System.Uri`:
 2. Descartar el fragmento.
 3. Tratar el puerto: eliminarlo si es `80` en HTTP o `443` en HTTPS, que son los puertos por defecto; conservar cualquier otro puerto.
 4. Descartar el esquema `http` o `https`, ya que ambos se consideran equivalentes.
-5. Tomar el host tal y como lo entrega `System.Uri`.
+5. Tomar el host con `Uri.IdnHost`, que devuelve los dominios internacionalizados en punycode (`xn--`).
 6. Decodificar la ruta una sola vez con la decodificación de URI (`Uri.UnescapeDataString`), en la que `+` es un carácter literal.
 7. Separar los parámetros de la consulta y decodificar una sola vez el nombre y el valor de cada uno con la decodificación de formularios, en la que `+` equivale a un espacio.
 8. Eliminar los parámetros de marketing conocidos (lista siguiente).
@@ -338,15 +353,17 @@ Fase 1, sobre la URL analizada con `System.Uri`:
 
 Fase 2, sobre la cadena resultante, sin volver a decodificar nada:
 
-13. Convertir todo a minúsculas.
-14. Eliminar los acentos conservando la letra base.
+13. Convertir todo a minúsculas, sin reglas de idioma (cultura invariante).
+14. Eliminar los acentos y demás marcas diacríticas conservando la letra base.
 15. Sustituir `ç` por `c`.
 16. Sustituir `ñ` por `n`.
 17. Convertir los espacios en guiones medios.
-18. Conservar únicamente letras, números y guiones medios.
+18. Conservar únicamente letras y números de cualquier alfabeto (categorías Unicode Letter y Number) y guiones medios.
 19. Eliminar cualquier otro carácter, incluidos `.`, `:`, `/`, `?`, `&` y `=`.
 20. Eliminar guiones medios duplicados.
 21. Eliminar guiones medios al principio y al final.
+
+> Diagrama del proceso: [Normalización de URL para detectar duplicados](diagrams/process-url-normalization.md).
 
 Cada componente se decodifica exactamente una vez, con la regla que le corresponde. Como el fragmento y los parámetros se separan sobre la URL codificada y después nada se reinterpreta, un `%23` o un `%26` codificados nunca cortan la URL ni separan parámetros: se convierten en texto y desaparecen al aplanar. Un texto codificado dos veces (`%2520`) se decodifica una sola vez y conserva su `%20` como texto, que también desaparece al aplanar.
 
@@ -389,6 +406,19 @@ https://example.com/a%2520b
 -> examplecoma20b
 ```
 
+Un dominio internacionalizado produce la misma clave escrito en Unicode o en punycode, y las rutas en otros alfabetos se conservan:
+
+```text
+https://münchen.de/日本語
+https://xn--mnchen-3ya.de/日本語
+-> xn-mnchen-3yade日本語
+```
+
+```text
+https://example.com/日本語
+-> examplecom日本語
+```
+
 También se aceptan colisiones como esta:
 
 ```text
@@ -418,7 +448,7 @@ Hasta la etapa de scraping:
 - Crear un enlace no lanza ningún scraping: el usuario rellena `Title`, `Description` e `Image` o los deja vacíos.
 - El enlace queda con `ScrapingStatus = null` (scraping no solicitado), `ScrapingAttempts = 0` y `NextScrapingAt = null`.
 
-Flujo provisional, cuando exista el scraping (los pendientes están en decisions.md → Pendientes):
+Flujo provisional, cuando exista el scraping (los pendientes están en decisions.md → «Pendientes de scraping»):
 
 - Al crear un enlace, `ScrapingStatus` pasa a `Pending`.
 - El primer intento se lanza cuando el usuario abandona el campo de la URL que acaba de introducir.
@@ -430,12 +460,23 @@ Flujo provisional, cuando exista el scraping (los pendientes están en decisions
   - Respuesta `4xx`, contenido que no es HTML, respuesta que supera el tamaño máximo o destino bloqueado por la protección SSRF: se considera definitivo. El enlace queda `Failed` sin más intentos.
 - El enlace se conserva siempre, con los metadatos que se hayan podido obtener.
 
+## Estados del scraping
+
+`ScrapingStatus` de `Link` toma uno de estos valores:
+
+- `null`: no se ha solicitado scraping, como en los enlaces creados antes de la etapa de scraping.
+- `Pending`: el scraping está solicitado y aún no se ha ejecutado ningún intento.
+- `Processing`: hay un intento en curso.
+- `Completed`: se descargó la página y se extrajeron los metadatos que tenía, fueran los que fueran.
+- `Failed`: no se pudo descargar la página, por un error definitivo o por agotar los reintentos de un error transitorio.
+
 ## Búsqueda y filtros
 
 - La búsqueda y los filtros solo actúan sobre los enlaces del usuario identificado.
 - La búsqueda textual cubre la URL original, el título, la descripción, el nombre de la colección y los nombres de las etiquetas.
 - No distingue acentos: «canción» encuentra «cancion».
 - Se puede filtrar por una colección y/o una etiqueta; los filtros se combinan con el texto de búsqueda y se aplican todos a la vez.
+- Un texto de búsqueda que queda vacío tras escaparlo equivale a no buscar por texto: solo se aplican los filtros.
 - El orden y la paginación están en «Listados».
 
 ## Listados
@@ -467,7 +508,7 @@ Flujo provisional, cuando exista el scraping (los pendientes están en decisions
 - Solo estas páginas son indexables. Un enlace nunca tiene página propia.
 - Barra final: una ruta que tiene páginas por debajo termina en `/`, y una ruta final no. Por eso `/{alias}/` termina en `/` (debajo tiene la página de colecciones y las páginas de cada colección) y `/{alias}/colecciones/{slug}` no (un enlace nunca tiene página propia).
 - Si una página es accesible con varias URLs equivalentes (con o sin barra final, con mayúsculas), se sirven todas sin redirecciones y la etiqueta canonical apunta a la forma canónica en minúsculas de la tabla.
-- Todas se renderizan en servidor, con encabezados semánticos, un único `h1`, `meta title`, `meta description` y URL canonical. El `meta title` se forma con el mismo texto que el `h1`, seguido del sufijo ` | Linkubator`; el `h1` no lleva ese sufijo (motivo en decisions.md → Producto y alcance). Los textos concretos que faltan están en decisions.md → Pendientes → Páginas públicas.
+- Todas se renderizan en servidor, con encabezados semánticos, un único `h1`, `meta title`, `meta description` y URL canonical. El `meta title` se forma con el mismo texto que el `h1`, seguido del sufijo ` | Linkubator`; el `h1` no lleva ese sufijo (motivo en decisions.md → «Producto y alcance»). Los textos concretos que faltan están en decisions.md → «Pendientes de páginas públicas».
 
 ### Paginación de las páginas públicas
 
@@ -475,8 +516,8 @@ Flujo provisional, cuando exista el scraping (los pendientes están en decisions
 - La página se indica con el parámetro de consulta `pagina`: `/{alias}/colecciones/{slug}?pagina=2`.
 - La primera página es la URL sin parámetro. `?pagina=1` se sirve con el mismo contenido y su canonical apunta a la URL sin parámetro.
 - Las páginas 2 y siguientes tienen como canonical su propia URL con el parámetro.
-- Un valor de `pagina` que no sea un entero mayor que 0, o que esté fuera de rango, responde `404`.
-- `rel="prev"`, `rel="next"` y `noindex` en las páginas interiores quedan fuera del MVP0 (ver decisions.md → Fuera de alcance del MVP0).
+- Un valor de `pagina` que no sea un entero mayor que 0 escrito solo con dígitos y sin ceros a la izquierda, o que esté fuera de rango, responde `404`.
+- `rel="prev"`, `rel="next"` y `noindex` en las páginas interiores quedan fuera del MVP0 (ver decisions.md → «Fuera de alcance del MVP0»).
 
 ### Landing
 
@@ -484,14 +525,14 @@ Flujo provisional, cuando exista el scraping (los pendientes están en decisions
 
 ### Página de usuario
 
-- Muestra las 5 últimas colecciones que se muestran en público (domain-model.md → Público y privado) con su nombre, su descripción y un enlace a cada una. Si tiene menos de 5, se muestran las que tenga. Si el usuario no tiene ninguna colección que se muestre en público, la página responde `404` (ver decisions.md → Producto y alcance).
+- Muestra las 5 últimas colecciones que se muestran en público (domain-model.md → «Público y privado») con su nombre, su descripción y un enlace a cada una. Si tiene menos de 5, se muestran las que tenga. Si el usuario no tiene ninguna colección que se muestre en público, la página responde `404` (ver decisions.md → «Producto y alcance»).
 - Muestra los 5 últimos enlaces públicos de esas colecciones, ordenados por `CreatedAt` descendente. Si tiene menos de 5, se muestran los que tenga; siempre hay al menos uno, porque una colección que se muestra tiene al menos un enlace público. Cada enlace muestra su título (o la URL si no tiene), su descripción y su imagen si las tiene, y enlaza a `UrlOriginal` con `rel="nofollow ugc noopener noreferrer"`. Un enlace privado o un enlace de una colección privada nunca aparece aquí.
 - El `h1` es el alias y el `meta title` es el alias seguido de ` | Linkubator`. La `meta description` está pendiente de definir. No muestra el nombre ni el email del usuario.
 - Responde `404` si el alias no existe (incluido un alias antiguo tras un cambio), sin revelar si tiene colecciones privadas.
 
 ### Página de colecciones
 
-- Muestra todas las colecciones del usuario que se muestran en público (domain-model.md → Público y privado) con su nombre, su descripción y un enlace a cada una.
+- Muestra todas las colecciones del usuario que se muestran en público (domain-model.md → «Público y privado») con su nombre, su descripción y un enlace a cada una.
 - El `h1` y el `meta title` incluyen el alias; el `meta title` añade ` | Linkubator`. Sus textos exactos y la `meta description` están pendientes de definir. No muestra ningún dato privado del usuario.
 - Responde `404` si el alias no existe (incluido un alias antiguo tras un cambio) o si el usuario no tiene ninguna colección que se muestre en público, sin revelar si tiene colecciones privadas.
 
@@ -499,29 +540,20 @@ Flujo provisional, cuando exista el scraping (los pendientes están en decisions
 
 - El `h1` es el nombre de la colección y el `meta title` es ese nombre seguido de ` | Linkubator`. La `meta description` es su descripción. El texto de respaldo cuando la colección no tiene descripción está pendiente de definir.
 - Muestra solo los enlaces públicos. Cada uno muestra su título (o la URL si no tiene), su descripción y su imagen si las tiene, y enlaza a `UrlOriginal` con `rel="nofollow ugc noopener noreferrer"`.
-- Si la colección es pública pero no tiene enlaces públicos, no se muestra en público y responde `404` (ver decisions.md → Producto y alcance).
+- Si la colección es pública pero no tiene enlaces públicos, no se muestra en público y responde `404` (ver decisions.md → «Producto y alcance»).
 - Una colección privada, una inexistente y un slug antiguo tras renombrarla responden igual: `404`.
 
-## Errores y recursos no disponibles
+## Errores controlados
 
 - Todas las páginas, públicas y privadas, declaran `lang="es"`.
-- Un error de validación vuelve a mostrar el mismo formulario, con los datos introducidos (salvo las contraseñas) y el mensaje junto a cada campo afectado (ver requirements.md → Accesibilidad).
+- Un error de validación vuelve a mostrar el mismo formulario, con los datos introducidos (salvo las contraseñas) y el mensaje junto a cada campo afectado (ver requirements.md → «Accesibilidad»).
 - Una operación rechazada por una regla del dominio (por ejemplo, borrar una colección con enlaces) vuelve a mostrar la página con un mensaje que explica el motivo.
 - En `/app`, un recurso inexistente y un recurso de otro usuario responden con el mismo código HTTP `404` y la misma respuesta genérica. La respuesta no indica si el recurso existe ni si pertenece a otra cuenta.
 - Las respuestas de las páginas públicas están en «Páginas públicas».
 
-## Registro de eventos (logs)
+## Registro de eventos
 
 - Se registran desde el inicio: operaciones relevantes, errores de persistencia, fallos y reintentos del scraper, validaciones, bloqueos por SSRF, cambios entre público y privado y eventos de autenticación.
 - Eventos de autenticación que se registran siempre: logins fallidos, bloqueos, restablecimientos de contraseña, cambios de email y eliminaciones de cuenta. Se identifican por `UserId`, sin email en claro.
 - Nunca se registran secretos, contraseñas, tokens, hashes innecesarios, credenciales contenidas en URLs ni el texto de las búsquedas.
-
-## Estados del scraping
-
-`ScrapingStatus` de `Link` toma uno de estos valores:
-
-- `null`: no se ha solicitado scraping, como en los enlaces creados antes de la etapa de scraping.
-- `Pending`: el scraping está solicitado y aún no se ha ejecutado ningún intento.
-- `Processing`: hay un intento en curso.
-- `Completed`: se descargó la página y se extrajeron los metadatos que tenía, fueran los que fueran.
-- `Failed`: no se pudo descargar la página, por un error definitivo o por agotar los reintentos de un error transitorio.
+- Los tokens viajan en la URL de los enlaces de los correos, así que tampoco se registra la URL completa de esas peticiones.
