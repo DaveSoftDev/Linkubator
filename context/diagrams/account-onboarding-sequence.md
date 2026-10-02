@@ -1,6 +1,6 @@
 # Secuencia de registro y primer uso
 
-Vista derivada de los flujos de cuenta y persistencia descritos en [specifications.md](../specifications.md), [domain-model.md](../domain-model.md) y [architecture.md](../architecture.md). El recorrido principal va desde el registro hasta guardar y encontrar el primer enlace.
+Flujo previsto para el MVP1, derivado de las reglas de cuenta y persistencia descritas en [specifications.md](../specifications.md), [domain-model.md](../domain-model.md) y [architecture.md](../architecture.md). En el MVP0, la gestión privada usa la identidad de desarrollo inyectada y no ejecuta este registro ni este login.
 
 ```mermaid
 sequenceDiagram
@@ -45,7 +45,7 @@ sequenceDiagram
     App->>DB: Cargar cuenta completada y su hash guardado
     App->>Hasher: Verificar contraseña
     Hasher-->>App: Contraseña válida
-    App-->>Browser: Emitir cookie de autenticación y abrir /app
+    App-->>Browser: Emitir cookie de autenticación y abrir /app/dashboard
 
     User->>Browser: Crea un enlace en Bandeja de entrada
     Browser->>App: Enviar URL y metadatos opcionales
@@ -54,7 +54,7 @@ sequenceDiagram
     App->>DB: Comprobar duplicado y propiedad de colección
     App->>DB: Guardar enlace privado y actualizar proyección FTS5
     App->>DB: COMMIT
-    App-->>Browser: Mostrar enlace guardado
+    App-->>Browser: Redirigir al listado de enlaces
 
     User->>Browser: Busca el enlace por texto o filtro
     Browser->>App: Solicitar resultados de búsqueda
@@ -65,4 +65,4 @@ sequenceDiagram
 
 La secuencia muestra el recorrido de una cuenta nueva con email disponible y datos válidos. Si el email ya tiene un registro incompleto, se renueva el token; si la cuenta está completada, se envía un aviso sin token. La respuesta al registro es genérica en todos los casos. Si se supera el límite de correo no se emite otro token ni se envía correo, y cualquier token previo sin usar sigue vigente. Si el token no es válido o los datos no superan la validación, no se completa la cuenta; los errores del formulario no consumen el token.
 
-El token en claro solo viaja en el enlace del correo; SQLite conserva su hash. El scraping no forma parte de este primer uso: en la etapa inicial el usuario informa manualmente los metadatos del enlace. La cuenta solo queda confirmada al completar correctamente el registro; el inicio de sesión se realiza después con normalidad.
+El token en claro solo viaja en el enlace del correo; SQLite conserva su hash. El usuario informa manualmente los metadatos del enlace. La obtención automática de metadatos se incorpora en MVP1. La cuenta solo queda confirmada al completar correctamente el registro; el inicio de sesión se realiza después con normalidad.

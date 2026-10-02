@@ -14,7 +14,7 @@ Objetivo: tener una definición coherente del MVP0 antes de implementar.
 
 Entregables:
 
-- requirements.md, domain-model.md, specifications.md, architecture.md y decisions.md.
+- [requirements.md](requirements.md), [domain-model.md](domain-model.md), [specifications.md](specifications.md), [architecture.md](architecture.md) y [decisions.md](decisions.md).
 - Este roadmap.
 
 Criterio de finalización:
@@ -22,9 +22,14 @@ Criterio de finalización:
 - No quedan reglas ambiguas que afecten al modelo de datos ni a los casos de uso principales.
 - Cada regla vive en un único documento y los demás la enlazan.
 - La revisión completa está cerrada sin contradicciones entre documentos.
-- La documentación del MVP0 está aceptada. Hasta entonces no empieza la implementación (ver AGENTS.md).
+- La documentación del MVP0 está aceptada. Hasta entonces no empieza la implementación (ver [AGENTS.md → «Restricciones de edición actuales»](../AGENTS.md#restricciones-de-edición-actuales)).
 
-Los pendientes de decisions.md → «Pendientes» (scraping y páginas públicas) no bloquean esta etapa: se resuelven en sus etapas respectivas.
+Los pendientes de [decisions.md → «Pendientes»](decisions.md#pendientes) no bloquean la aceptación de la documentación del MVP0. Se clasifican así:
+
+- Páginas públicas ([decisions.md → «Pendientes de páginas públicas»](decisions.md#pendientes-de-páginas-públicas)): se resuelven antes de su etapa del MVP0.
+- Scraping ([decisions.md → «Pendientes de scraping»](decisions.md#pendientes-de-scraping)): se resuelven antes de implementarlo en MVP1.
+- Interfaz privada ([decisions.md → «Pendiente de interfaz privada»](decisions.md#pendiente-de-interfaz-privada)): diferido; no bloquea la aceptación.
+- Cuentas y tokens ([decisions.md → «Pendientes de cuentas y tokens»](decisions.md#pendientes-de-cuentas-y-tokens)): diferidos; no bloquean la aceptación.
 
 ## Next
 
@@ -32,9 +37,10 @@ Los pendientes de decisions.md → «Pendientes» (scraping y páginas públicas
 
 Objetivos:
 
-- Implementar las entidades y sus invariantes (domain-model.md).
-- Implementar la generación común de alias y slugs y la normalización de URLs (specifications.md).
-- Definir los casos de uso, los contratos `Result`, el contexto de usuario autenticado y las interfaces de repositorios y de Unit of Work (architecture.md → «Capas»).
+- Implementar las entidades y sus invariantes para colecciones y enlaces ([domain-model.md → «Collection»](domain-model.md#collection) y [domain-model.md → «Link»](domain-model.md#link)).
+- Implementar la generación del alias ([specifications.md → «Generación del alias»](specifications.md#generación-del-alias)), del slug de colección ([«Generación de slugs»](specifications.md#generación-de-slugs)) y la normalización de URLs ([«Normalización para duplicados»](specifications.md#normalización-para-duplicados)); son reglas distintas.
+- Definir los casos de uso, los contratos `Result`, la abstracción del usuario identificado y las interfaces de repositorios y de Unit of Work ([architecture.md → «Capas»](architecture.md#capas)).
+- Proporcionar desde código una identidad de desarrollo asociada a un usuario válido para la gestión privada, sin aceptar identificadores enviados por el cliente ([architecture.md → «Identidad de desarrollo»](architecture.md#identidad-de-desarrollo)).
 
 Criterio de finalización:
 
@@ -45,14 +51,16 @@ Criterio de finalización:
 Objetivos:
 
 - Preparar SQLite, incorporar Dapper y crear los scripts SQL versionados.
+- Preparar el archivo SQL local especial que provisiona el usuario de desarrollo y su colección privada base, según [architecture.md → «Identidad de desarrollo»](architecture.md#identidad-de-desarrollo).
 - Añadir las restricciones únicas y los índices.
-- Implementar el Unit of Work, las transacciones, `LinkTag` y el índice FTS5 (architecture.md → «Persistencia» y «FTS5»).
+- Registrar la colación propia del orden alfabético en todas las conexiones ([architecture.md → «Persistencia»](architecture.md#persistencia)).
+- Implementar el Unit of Work, las transacciones y las proyecciones FTS5 de enlaces y de colecciones, una por entidad ([architecture.md → «Persistencia»](architecture.md#persistencia) y [«FTS5»](architecture.md#fts5)).
 
 Criterio de finalización:
 
-- Las operaciones de enlaces, colecciones y etiquetas son atómicas.
-- La búsqueda respeta siempre el usuario identificado.
-- FTS5 se mantiene sincronizado con altas, cambios y borrados.
+- Las operaciones de enlaces y colecciones son atómicas.
+- La búsqueda respeta siempre el usuario identificado y consulta solo la proyección de la entidad de su listado.
+- Las proyecciones FTS5 se mantienen sincronizadas con altas, cambios y borrados.
 - Las transacciones son breves y no contienen operaciones externas.
 - WAL, `busy_timeout` y claves foráneas están configurados.
 
@@ -60,42 +68,27 @@ Criterio de finalización:
 
 Objetivos:
 
-- Cuenta completa: registro con solo el email y compleción desde el enlace del correo, login con «Recordarme» y bloqueo, cierre de sesión, recuperación de contraseña, configuración de usuario y eliminación de cuenta (specifications.md → «Cuenta» y «Sesión»).
-- Envío de correo en segundo plano con MailKit y smtp4dev (architecture.md → «Correo»).
-- Seguridad web: HTTPS, cookie, `ReturnUrl`, antiforgery y cabeceras (architecture.md → «Autenticación» y «Seguridad web»).
-- Gestión de colecciones, enlaces y etiquetas, incluida la creación de etiquetas desde el formulario del enlace. Los enlaces se crean sin scraping.
-- Búsqueda y filtros (specifications.md → «Búsqueda y filtros»).
-- Estados vacíos y errores accesibles (requirements.md → «Accesibilidad»).
+- Seguridad web para la aplicación local: HTTPS, antiforgery y cabeceras ([architecture.md → «Seguridad web»](architecture.md#seguridad-web)).
+- Gestión de colecciones y enlaces.
+- Dashboard y rutas privadas según [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas).
+- Búsqueda de enlaces con filtro por colección y búsqueda de colecciones por nombre, cada una en su propio listado ([specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros)).
+- Estados vacíos y errores accesibles ([requirements.md → «Accesibilidad»](requirements.md#accesibilidad)).
 
 Criterio de finalización:
 
-- El usuario autenticado puede gestionar colecciones, enlaces y etiquetas, y buscar y filtrar sus enlaces.
-- Los formularios de creación muestran la casilla de público desmarcada.
-- Todas las páginas privadas y de cuenta cuelgan de `/app` y las privadas exigen sesión.
-- Ningún registro sin completar puede iniciar sesión.
+- La gestión privada usa la identidad de desarrollo inyectada y solo opera sobre los datos de ese usuario.
+- Cada listado aplica solo sus propios parámetros, ignora el resto y conserva sus filtros al buscar y al paginar ([specifications.md → «Rutas privadas»](specifications.md#rutas-privadas)).
+- Los formularios de creación muestran la casilla de público desmarcada; al crear un enlace en una colección privada, la opción pública está deshabilitada y la aplicación rechaza una petición manipulada que intente activarla con el mensaje de [specifications.md → «Errores controlados»](specifications.md#errores-controlados).
+- El dashboard, los listados y los formularios privados respetan [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas); los casos de uso no permiten elegir o alterar el `UserId` desde el cliente.
 
 ## Later
-
-### Scraping del MVP0
-
-Objetivos:
-
-- Resolver los pendientes de decisions.md → «Pendientes de scraping».
-- Implementar el flujo de specifications.md → «Metadatos y scraping».
-- Implementar las medidas obligatorias de architecture.md → «Scraping», incluida la protección SSRF.
-
-Criterio de finalización:
-
-- El enlace se conserva aunque no haya metadatos.
-- Los reintentos no bloquean las operaciones de base de datos.
-- El flujo provisional queda revisado y documentado.
 
 ### Área pública y fundamentos SEO
 
 Objetivos:
 
-- Definir los textos de decisions.md → «Pendientes de páginas públicas».
-- Crear la landing, la página de usuario (con las últimas colecciones y los últimos enlaces que se muestran en público), la página de colecciones y la página de colección según specifications.md → «Páginas públicas».
+- Definir los textos de [decisions.md → «Pendientes de páginas públicas»](decisions.md#pendientes-de-páginas-públicas).
+- Crear la landing, la página de usuario (con los últimos enlaces públicos, después las últimas colecciones que se muestran en público y acceso a todas), la página de colecciones y la página de colección según [specifications.md → «Páginas públicas»](specifications.md#páginas-públicas).
 
 Criterio de finalización:
 
@@ -109,59 +102,125 @@ Cada punto remite a la regla que se comprueba.
 
 Dominio y datos:
 
-- Tests de dominio de todas las invariantes de domain-model.md.
-- Tests de propiedad entre usuarios, incluida la igualdad de `UserId` entre enlace, colección y etiquetas (domain-model.md → «Propiedad de los datos»).
-- Tests de las reglas de público y privado y de sus transiciones (domain-model.md → «Público y privado»).
-- Tests de que siempre queda al menos una colección y de que la «Bandeja de entrada» se crea en la misma transacción que completa el registro.
-- Tests de transacciones y de condiciones de carrera con `BEGIN IMMEDIATE` (architecture.md → «Persistencia»): hacer privada una colección mientras se hace público uno de sus enlaces, mover un enlace a una colección ajena con un `CollectionId` manipulado (rechazado por la aplicación y por la clave foránea compuesta) y asociar una etiqueta ajena.
+- Tests de dominio de todas las invariantes de [domain-model.md](domain-model.md).
+- Tests de propiedad entre usuarios, incluida la igualdad de `UserId` entre enlace y colección ([domain-model.md → «Propiedad de los datos»](domain-model.md#propiedad-de-los-datos)).
+- Tests de las reglas de público y privado y de sus transiciones ([domain-model.md → «Público y privado»](domain-model.md#público-y-privado)), incluida la opción pública deshabilitada al crear un enlace en una colección privada y el rechazo de una petición manipulada.
+- Tests de que siempre queda al menos una colección.
+- Tests de la identidad de desarrollo ([architecture.md → «Identidad de desarrollo»](architecture.md#identidad-de-desarrollo)): resuelve por email un usuario completado, la aplicación no arranca si no existe o no está completado, el proveedor solo se registra en desarrollo, el SQL local se puede repetir sin duplicar datos, la identidad no puede alterarse mediante datos de la petición y todas las operaciones privadas se limitan al `UserId` inyectado.
+- Tests de transacciones y de condiciones de carrera con `BEGIN IMMEDIATE` ([architecture.md → «Persistencia»](architecture.md#persistencia)): hacer privada una colección mientras se hace público uno de sus enlaces y mover un enlace a una colección ajena con un `CollectionId` manipulado (rechazado por la aplicación y por la clave foránea compuesta).
 
 Especificaciones:
 
-- Tests de recorte de textos y de longitudes máximas: rechazo de lo introducido y truncado de lo obtenido por el scraper.
-- Tests de generación de alias y slugs: transformación, rangos, palabras reservadas, colisiones, regeneración al renombrar y alias ocupado.
-- Tests de normalización y validación mínima del email.
-- Tests de contraseñas: longitud, NFC, lista de prohibidas y palabras de contexto.
-- Tests del bloqueo: activación, reinicio del contador y respuesta idéntica durante el bloqueo, incluso con la contraseña correcta, y que el login bloqueado calcula el hash y descarta el resultado.
-- Tests de respuestas que no revelan cuentas, incluido el hash calculado en el login cuando el email no existe, el registro está sin completar o la cuenta está bloqueada.
-- Tests del hash: sal distinta por contraseña, formato PHC y verificación de hashes con parámetros anteriores.
-- Tests de tokens: caducidad, un solo uso, almacenamiento solo como hash e invalidación de los anteriores, incluida la de los tokens de restablecimiento al confirmar un cambio de email.
-- Tests de los límites de correo, de que al superarlos no se emite ningún token, de que el del aviso de cuenta existente no consume el de los correos con token y de que los avisos de seguridad se envían siempre.
-- Tests de registro (email nuevo, registro sin completar que reenvía el correo, cuenta completada que recibe el aviso), de completar el registro (alias ocupado, contraseña rechazada, token que sigue válido hasta completarlo), recuperación (incluida la de un registro sin completar), cambio de email (con contraseña, doble comprobación, respuesta idéntica con email ocupado, aviso de cuenta existente al titular y fallo genérico al confirmar si el email se ocupó entretanto), cambio de contraseña y eliminación de cuenta.
-- Tests de sesión: caducidad absoluta a pesar de la actividad, «Recordarme» en ambos modos, conservación de la caducidad al volver a emitir la sesión y efectos del `SecurityStamp` al cambiar o restablecer la contraseña y al confirmar un cambio de email, con la sesión del dueño del token, con la de otra cuenta y sin sesión. El GET del enlace de cambio de email no modifica datos.
-- Tests de ajuste y validación de URLs con todos los ejemplos de specifications.md, incluidas las reglas adicionales de `Image` (solo `https`, hosts públicos, `//` convertido a `https:`) y `og:image` con rutas relativas en páginas `http` y `https`.
-- Tests de `UrlNormalized` con todos los ejemplos de specifications.md, con caracteres estructurales codificados (`%23`, `%26`), texto codificado dos veces (`%2520`), `+` en la ruta y en la consulta, y de detección de duplicados.
-- Tests de etiquetas creadas desde el formulario del enlace, incluida la asociación de una existente.
-- Tests de búsqueda: usuario identificado, sin distinguir acentos, filtros combinados y resultado más relevante primero.
-- Tests de listados: orden, tamaño de página, `404` fuera de rango y, en la página de colección, el parámetro `pagina`, la canonical de `?pagina=1` hacia la URL sin parámetro y la canonical propia de las páginas interiores.
-- Tests de páginas públicas: contenido, `404` de alias, slugs antiguos, usuario sin colecciones que se muestren en público y colección sin enlaces públicos, ausencia de colecciones públicas vacías en la página de usuario y en la de colecciones, `rel` de los enlaces externos, canonical y barra final, últimas colecciones y últimos enlaces que se muestran en público, ausencia de enlaces privados y de colecciones privadas.
+- Tests de recorte de textos y de longitudes máximas: rechazo de lo introducido por el usuario.
+- Tests de generación del alias (acentos, espacios pegados, guiones duplicados, caracteres eliminados, rangos, palabras reservadas y alias ocupado) y del slug de colección (todos los ejemplos de la tabla de conversión, rechazo de letras y números no ASCII, rangos, colisiones y regeneración al renombrar).
+- Tests de ajuste y validación de URLs con todos los ejemplos de [specifications.md → «Ajuste y validación»](specifications.md#ajuste-y-validación) e [«Reglas adicionales para `Image`»](specifications.md#reglas-adicionales-para-image) (solo `https`, hosts públicos y `//` convertido a `https:`).
+- Tests de `UrlNormalized` con los ejemplos de [specifications.md → «Normalización para duplicados»](specifications.md#normalización-para-duplicados), con caracteres estructurales codificados (`%23`, `%26`), texto codificado dos veces (`%2520`), `+` en la ruta y en la consulta, y de detección de duplicados ([«Duplicados»](specifications.md#duplicados)).
+- Tests de búsqueda MVP0 ([specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros)): usuario identificado, sin distinguir acentos, entrada separada en secuencias de letras o números con el resto de caracteres como separadores (comillas, `*`, guiones, `OR`, `NEAR`) sin errores de sintaxis ni operadores, todos los términos obligatorios, palabras completas sin prefijo, entrada sin términos equivalente a no buscar, filtro por colección combinado con `q` y resultado más relevante primero.
+- Tests de búsqueda de colecciones MVP0 ([specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros) y [«Listados»](specifications.md#listados)): las mismas reglas de `q` que en enlaces, coincidencia solo por `Name`, resultado solo de colecciones del usuario identificado, sin enlaces en el resultado, orden alfabético con empates por `Id` (sin relevancia), paginación sobre el resultado filtrado y sincronización de la proyección de colecciones al crear, renombrar y eliminar colecciones, incluidas las filas de sus enlaces en la proyección de enlaces al renombrar.
+- Tests de aislamiento por entidad y por usuario: un texto que coincide con un enlace y con una colección aparece solo en el listado de cada uno, entidades de usuarios distintos con el mismo `Id` no se mezclan ni se confunden, y los datos de otro usuario nunca aparecen en ninguno de los listados.
+- Tests de los parámetros de los listados ([specifications.md → «Rutas privadas»](specifications.md#rutas-privadas)): parámetros aceptados por cada listado; desconocidos, no aplicables (por ejemplo, `coleccion` en el listado de colecciones) o de una capacidad no disponible (`etiqueta` en el MVP0) ignorados sin validarlos ni consultarlos; repetición de un parámetro aplicable, y `pg` o `coleccion` vacíos o inválidos, con el mismo `404` genérico; `q` que supera su máximo con el mismo `404` y `q` vacío o solo con espacios equivalente a no buscar; formularios de búsqueda que conservan los filtros del listado y descartan `pg`; y enlaces de paginación que conservan `q` y los filtros aplicables.
+- Tests de las rutas privadas ([specifications.md → «Páginas privadas»](specifications.md#páginas-privadas)): redirección de `/app` al dashboard y dashboard sin resultados, edición ni eliminación; `404` indistinguible para `id`, colección, parámetro repetido o método inválido, ajeno o inexistente; `?pg=1` con el mismo contenido que la primera página sin parámetro, listados vacíos en la primera página y `404` fuera de rango; selector y filtro con más colecciones que el tamaño de página; estado destino de visibilidad válido, ausente, repetido o inválido y redirección con aviso si se rechaza; redirección tras cada POST correcto; confirmación de borrado; y ausencia del texto de `q` en los logs.
+- Tests de listados ([specifications.md → «Listados»](specifications.md#listados)): orden alfabético de las colecciones privadas y públicas y del texto mostrado de los enlaces en la página pública de colección, con mayúsculas, acentos, `ñ` y empates resueltos por `Id`; tamaño de página, `404` fuera de rango y, en la página de colección, el parámetro `pg`, la canonical de `?pg=1` hacia la URL sin parámetro y la canonical propia de las páginas interiores.
+- Tests de páginas públicas: contenido y orden de los últimos enlaces públicos de todas las colecciones que se muestran en público, seguidos por las últimas colecciones que se muestran en público y el enlace a su listado completo; `404` de alias, slugs antiguos, usuario sin colecciones que se muestren en público y colección sin enlaces públicos, ausencia de colecciones públicas vacías en la página de usuario y en la de colecciones, `rel` de los enlaces externos, canonical y barra final, y ausencia de enlaces privados y de colecciones privadas.
+- Tests de los encabezados y del idioma de las páginas públicas: un único `h1` por página, igual al `meta title` salvo su sufijo ([specifications.md → «Páginas públicas»](specifications.md#páginas-públicas), [«Página de usuario»](specifications.md#página-de-usuario), [«Página de colecciones»](specifications.md#página-de-colecciones) y [«Página de colección»](specifications.md#página-de-colección)), e idioma declarado en castellano ([specifications.md → «Errores controlados»](specifications.md#errores-controlados)).
+- Test de la landing del MVP0: su botón lleva a la entrada de la zona privada ([specifications.md → «Landing»](specifications.md#landing) y [«Rutas privadas»](specifications.md#rutas-privadas)).
 - Tests de errores: formularios con errores de validación y `404` idéntico para recursos inexistentes y de otro usuario en `/app`.
-- Test del comando de reconstrucción del índice FTS5.
-- Tests del flujo de scraping: `200` con y sin metadatos, error transitorio con reintentos hasta `Failed`, error definitivo sin reintentos, y la protección SSRF.
+- Test del comando de reconstrucción de las proyecciones FTS5 de enlaces y de colecciones.
 
 Seguridad web:
 
-- Tests de autorización de la zona `/app` y de `ReturnUrl`.
-- Tests de redirección a HTTPS, cabeceras de seguridad, antiforgery, rechazo de un `Host` ajeno y enlaces de correo construidos con el origen configurado aunque la petición lleve otro `Host`.
-- Tests de los atributos de la cookie de autenticación (`__Host-`, `Path`, `HttpOnly`, `Secure`, `SameSite`) y de que el ticket no contiene datos personales en claro (architecture.md → «Autenticación»).
+- Tests de que la zona privada usa la identidad de desarrollo y rechaza recursos inexistentes y ajenos con la misma respuesta.
+- Tests de redirección a HTTPS, cabeceras de seguridad, antiforgery y rechazo de un `Host` ajeno.
 
 Accesibilidad y operación:
 
-- Tests de accesibilidad según requirements.md → «Accesibilidad»: teclado, orden de foco y errores anunciados; este test está pensado para que lo haga una persona.
+- Tests de accesibilidad según [requirements.md → «Accesibilidad»](requirements.md#accesibilidad): teclado, orden de foco y errores anunciados; este test está pensado para que lo haga una persona.
 - Pruebas en navegadores actuales; también para que una persona pruebe en varios navegadores actuales.
-- Logs disponibles por consola y en archivo rotativo (architecture.md → «Logs»).
-- Tests de registro de eventos: se registran los eventos que exige specifications.md → «Registro de eventos», los de autenticación se identifican por `UserId` sin email en claro, y los logs no contienen los datos que esa sección prohíbe registrar.
+- Logs disponibles por consola y en archivo rotativo ([architecture.md → «Logs»](architecture.md#logs)).
+- Tests de registro de eventos del MVP0 y de que los logs no contienen los datos que prohíbe [specifications.md → «Registro de eventos»](specifications.md#registro-de-eventos).
+
+## MVP1 confirmado
+
+### Gestión de etiquetas
+
+Objetivos:
+
+- Implementar `Tag` y `LinkTag` y las operaciones para crear, editar y eliminar etiquetas, asociarlas a enlaces y consultarlas ([domain-model.md → «Tag»](domain-model.md#tag) y [«LinkTag»](domain-model.md#linktag)).
+- Incorporar nombres de etiquetas a la búsqueda de enlaces, permitir filtrar enlaces por etiqueta y buscar etiquetas por nombre en su propio listado ([specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros) y [«Rutas privadas»](specifications.md#rutas-privadas)).
+- Añadir la proyección FTS5 de etiquetas, incluir sus nombres en la de enlaces y mantener las tres proyecciones sincronizadas ([architecture.md → «FTS5»](architecture.md#fts5)).
+
+Criterio de finalización:
+
+- La gestión de etiquetas respeta la propiedad por usuario y sus operaciones actualizan de forma atómica las relaciones y las proyecciones de búsqueda afectadas.
+- La búsqueda de etiquetas devuelve solo etiquetas del usuario identificado y consulta solo su propia proyección.
+- El filtro por etiqueta se aplica desde el MVP1 y no antes.
+
+#### Checklist de calidad de etiquetas
+
+- Tests de generación y colisión de slugs de etiquetas, incluida la asociación de una existente al crearla desde el formulario del enlace.
+- Tests de propiedad al asociar etiquetas y de rechazo de etiquetas de otro usuario.
+- Tests del orden alfabético del listado de etiquetas ([specifications.md → «Listados»](specifications.md#listados)).
+- Tests de búsqueda por nombres de etiquetas y de sincronización de las proyecciones FTS5 al crear, modificar, asociar, desasociar y eliminar etiquetas, incluidas las filas de sus enlaces en la proyección de enlaces.
+- Tests del filtro por etiqueta ([specifications.md → «Rutas privadas»](specifications.md#rutas-privadas)): mismas reglas de formato, propiedad, inexistencia y repetición que `coleccion`, combinación con `q` y con el filtro de colección, y conservación al buscar y al paginar; el parámetro `etiqueta` se ignora en los listados de colecciones y de etiquetas.
+- Tests de búsqueda de etiquetas ([specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros) y [«Listados»](specifications.md#listados)): mismas reglas de `q`, coincidencia solo por `Tag.Name`, resultado solo de etiquetas del usuario identificado, orden alfabético con empates por `Id`, paginación sobre el resultado filtrado, aislamiento frente a enlaces y colecciones que contienen el mismo texto, y `Id` iguales entre entidades y usuarios distintos sin colisiones.
+- Test del comando de reconstrucción de las tres proyecciones FTS5 (enlaces, colecciones y etiquetas).
+
+### Autenticación y gestión de cuenta
+
+Objetivos:
+
+- Sustituir la identidad de desarrollo inyectada por autenticación real mediante cookies y autorización de la zona privada ([architecture.md → «Autenticación»](architecture.md#autenticación)), y el botón de entrada de la landing por los de registro y login ([specifications.md → «Landing»](specifications.md#landing)).
+- Implementar registro, login y cierre de sesión, recuperación de contraseña, configuración y eliminación de cuenta ([specifications.md → «Cuenta»](specifications.md#cuenta) y [«Sesión»](specifications.md#sesión)).
+- Incorporar envío de correo local con MailKit y smtp4dev ([architecture.md → «Correo»](architecture.md#correo)).
+- Aplicar las reglas de [specifications.md → «Contraseñas»](specifications.md#contraseñas), [«Tokens»](specifications.md#tokens), [«Respuestas que no revelan si una cuenta existe»](specifications.md#respuestas-que-no-revelan-si-una-cuenta-existe) y [«Sesión»](specifications.md#sesión).
+
+Criterio de finalización:
+
+- Los flujos de cuenta y autenticación cumplen sus especificaciones y las operaciones privadas reciben la identidad de la sesión, nunca un identificador elegido por el cliente.
+- La cookie, el correo, la autorización y los cambios de sesión superan las pruebas de seguridad correspondientes.
+
+#### Checklist de calidad de autenticación
+
+- Tests de normalización y validación mínima del email, contraseñas, bloqueo, respuestas que no revelan cuentas y hash de contraseñas.
+- Tests de tokens: caducidad, un solo uso, almacenamiento solo como hash e invalidación de los anteriores.
+- Tests de los límites de correo y de las respuestas de registro, recuperación y cambio de email.
+- Tests de registro y compleción, recuperación, cambio de email, cambio de contraseña y eliminación de cuenta.
+- Tests de sesión: caducidad, «Recordarme», `SecurityStamp`, cierre y renovación de sesiones; el GET del enlace de cambio de email no modifica datos.
+- Tests de `ReturnUrl`, atributos de la cookie y ausencia de datos personales en claro en el ticket ([specifications.md → «Inicio de sesión»](specifications.md#inicio-de-sesión) y [architecture.md → «Autenticación»](architecture.md#autenticación)).
+- Tests del origen de enlaces de correo y del registro de eventos de autenticación sin email en claro.
+
+### Scraping de metadatos
+
+Objetivos:
+
+- Resolver los pendientes de [decisions.md → «Pendientes de scraping»](decisions.md#pendientes-de-scraping) antes de implementar.
+- Implementar el flujo de [specifications.md → «Metadatos y scraping»](specifications.md#metadatos-y-scraping).
+- Implementar las medidas de [architecture.md → «Scraping»](architecture.md#scraping), incluida la protección SSRF.
+
+Criterio de finalización:
+
+- El enlace se conserva aunque no haya metadatos.
+- Los reintentos no bloquean las operaciones de base de datos.
+- El flujo y sus decisiones pendientes quedan resueltos y documentados.
+
+#### Checklist de calidad del scraping
+
+- Tests de recorte de metadatos obtenidos por el scraper.
+- Tests de `og:image` con rutas relativas en páginas `http` y `https`.
+- Tests de que el resultado de un intento actualiza la proyección FTS5 en la misma transacción y de que nunca sobrescribe campos ya informados.
+- Tests del flujo de scraping: respuesta `200` con y sin metadatos, error transitorio con reintentos hasta `Failed`, error definitivo sin reintentos, protección SSRF y registro de fallos, reintentos y bloqueos por SSRF.
 
 ## Backlog de MVP1 (borrador, no comprometido)
 
-Candidatos sin fecha ni compromiso de entrega. La justificación de cada uno está en decisions.md → «Fuera de alcance del MVP0».
+Candidatos sin fecha ni compromiso de entrega. La justificación de cada uno está en [decisions.md → «Fuera de alcance del MVP0»](decisions.md#fuera-de-alcance-del-mvp0).
 
 - Redirecciones `301` de alias y de slug de colección.
 - Reserva temporal de los alias liberados.
 - Consulta online de contraseñas comprometidas (Pwned Passwords).
 - Proveedor real de correo.
-- «Mostrar contraseña» y «Recordarme», si superan su límite de implementación en el MVP0 (ver decisions.md → «Producto y alcance»).
 - «Recordarme» persistente sin fecha de fin, con un token de larga duración separado de la sesión.
 - Limpieza de los registros sin completar.
 - SEO avanzado.
 - Content-Security-Policy completa.
 - Proxy o caché de imágenes en el servidor.
+- Revisión de la conversión a ASCII de alias y slugs, y de una clave propia para las etiquetas.

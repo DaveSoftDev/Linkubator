@@ -2,15 +2,17 @@
 
 Vista derivada del modelo de dominio y de la arquitectura. Las propiedades e invariantes tienen como fuente de verdad [domain-model.md](../domain-model.md); la persistencia y los índices, [architecture.md](../architecture.md).
 
+`Tag` y `LinkTag` se muestran como entidades previstas para el MVP1; no forman parte del MVP0.
+
 ```mermaid
 erDiagram
     User {
         INTEGER Id PK
         TEXT Email UK
-        TEXT Name "NULL mientras el registro esta incompleto"
-        TEXT Alias UK "NULL mientras el registro esta incompleto"
-        TEXT Password "Hash PHC; NULL mientras el registro esta incompleto"
-        DATETIME EmailConfirmedAt "NULL mientras el registro esta incompleto"
+        TEXT Name "NULL mientras el registro está incompleto"
+        TEXT Alias UK "NULL mientras el registro está incompleto"
+        TEXT Password "Hash PHC; NULL mientras el registro está incompleto"
+        DATETIME EmailConfirmedAt "NULL mientras el registro está incompleto"
         TEXT SecurityStamp
         INTEGER FailedLoginAttempts
         DATETIME LockoutEnd "NULL si no hay bloqueo activo"
@@ -92,6 +94,6 @@ Un usuario con el registro incompleto todavía no tiene colecciones; una vez com
 - `LinkTag (LinkId, TagId)`, clave primaria compuesta.
 - `UserToken (Token)`.
 
-También están previstos índices por usuario, colección, estado público y fecha, y un índice de `UserToken` por usuario y propósito. La documentación aún no especifica las columnas concretas ni el orden de esos índices no únicos. FTS5 es una proyección de búsqueda aparte, no una relación ER normalizada.
+También están previstos índices por usuario, colección, estado público y fecha, y un índice de `UserToken` por usuario y propósito. La documentación aún no especifica las columnas concretas ni el orden de esos índices no únicos. Las proyecciones FTS5, una por entidad buscable, son proyecciones de búsqueda aparte, no relaciones ER normalizadas.
 
 Los identificadores son `INTEGER PRIMARY KEY`, salvo la clave compuesta de `LinkTag`. Los demás tipos del diagrama son descriptivos: la documentación no fija aún su declaración SQLite exacta.

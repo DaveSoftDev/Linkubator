@@ -2,6 +2,8 @@
 
 Vista derivada del modelo de dominio. Las propiedades e invariantes tienen como fuente de verdad [domain-model.md](../domain-model.md). Solo se muestran atributos documentados: no se especifican aquí tipos de implementación ni métodos de clase.
 
+`Tag` y `LinkTag` se muestran como entidades previstas para el MVP1; no forman parte del MVP0.
+
 ```mermaid
 classDiagram
     class User {

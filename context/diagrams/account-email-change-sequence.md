@@ -1,6 +1,6 @@
 # Secuencia de cambio de email
 
-Diagrama del camino válido definido en [specifications.md → «Cambio de email»](../specifications.md#cambio-de-email). Las ramas de rechazo se resumen después del diagrama para mantener la sintaxis de secuencia compatible con el renderizador.
+Flujo previsto para el MVP1, definido en [specifications.md → «Cambio de email»](../specifications.md#cambio-de-email). Las ramas de rechazo se resumen después del diagrama para mantener la sintaxis de secuencia compatible con el renderizador.
 
 ```mermaid
 sequenceDiagram

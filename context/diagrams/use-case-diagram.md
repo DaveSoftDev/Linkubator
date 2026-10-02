@@ -5,11 +5,12 @@ Vista derivada de los requisitos y de los casos de uso iniciales de [architectur
 ```mermaid
 flowchart LR
     anonymous["Persona sin sesión"]
-    registered["Usuario autenticado"]
+    registered["Usuario autenticado (MVP1)"]
+    devIdentity["Identidad de desarrollo inyectada (MVP0)"]
     visitor["Visitante anónimo"]
 
     subgraph system["Sistema: Linkubator"]
-        subgraph account["Cuenta"]
+        subgraph account["Cuenta (MVP1)"]
             register((Registrarse))
             complete((Completar registro))
             login((Iniciar sesión))
@@ -22,13 +23,20 @@ flowchart LR
             deleteAccount((Eliminar cuenta))
         end
 
-        subgraph manage["Gestión privada"]
+        subgraph manage["Gestión privada (MVP0)"]
             collections((Gestionar colecciones<br/>crear, editar, hacer públicas o privadas y eliminar))
-            tags((Gestionar etiquetas<br/>crear, editar y eliminar))
             links((Gestionar enlaces<br/>crear, editar, hacer públicos o privados, mover y eliminar))
+            search((Buscar y filtrar enlaces por colección))
+            collectionSearch((Buscar colecciones por nombre))
+            lists((Consultar colecciones propias))
+        end
+
+        subgraph tagManagement["Gestión de etiquetas (MVP1)"]
+            tags((Gestionar etiquetas<br/>crear, editar y eliminar))
             linkTags((Asociar y desasociar etiquetas<br/>incluida la creación desde un enlace))
-            search((Buscar y filtrar enlaces))
-            lists((Consultar colecciones y etiquetas propias))
+            tagSearch((Buscar enlaces por nombre de etiqueta y filtrar por etiqueta))
+            tagNameSearch((Buscar etiquetas por nombre))
+            tagLists((Consultar etiquetas propias))
         end
 
         subgraph public["Consulta pública"]
@@ -55,7 +63,17 @@ flowchart LR
     registered --> links
     registered --> linkTags
     registered --> search
+    registered --> collectionSearch
     registered --> lists
+    registered --> tagSearch
+    registered --> tagNameSearch
+    registered --> tagLists
+
+    devIdentity --> collections
+    devIdentity --> links
+    devIdentity --> search
+    devIdentity --> collectionSearch
+    devIdentity --> lists
 
     visitor --> landing
     visitor --> userPage
@@ -65,4 +83,4 @@ flowchart LR
     classDef future fill:#fff,stroke:#777,stroke-dasharray:5 5,color:#555
 ```
 
-El usuario autenticado también puede actuar como visitante en las páginas públicas. La creación de enlaces no incluye scraping en la etapa inicial; el procesamiento automático de metadatos se abordará en una fase posterior y no se representa como capacidad disponible.
+En el MVP0, la identidad de desarrollo inyectada permite la gestión privada, pero no ofrece casos de uso de cuenta ni una sesión real. En el MVP1, el usuario autenticado también puede actuar como visitante en las páginas públicas.

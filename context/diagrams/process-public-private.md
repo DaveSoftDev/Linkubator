@@ -18,11 +18,14 @@ flowchart TD
     privateAll[Marcar colección y todos sus enlaces como privados]
 
     createLink[Crea un enlace en una colección]
+    creationCollectionPublic{¿La colección está pública?}
+    publicOptionDisabled[Deshabilitar la opción pública<br/>e informar al usuario]
+    rejectCreationPublic[Rechazar la creación pública<br/>e informar al usuario]
     linkInitial{¿Lo marca público al crearlo?}
     checkCollection{¿La colección está pública?}
     linkPrivate[Guardar enlace privado]
     linkPublic[Guardar enlace público]
-    rejectPublic[Rechazar el cambio a público]
+    rejectPublic[Rechazar el cambio a público<br/>e informar al usuario]
 
     moveLink[Mueve un enlace a otra colección]
     movePrivate[Actualizar colección y dejar el enlace privado]
@@ -37,7 +40,11 @@ flowchart TD
     action -->|Hacer pública una colección| makeCollectionPublic --> preserveLinks
     action -->|Hacer privada una colección| makeCollectionPrivate --> privateAll
 
-    action -->|Crear enlace| createLink --> linkInitial
+    action -->|Crear enlace| createLink --> creationCollectionPublic
+    creationCollectionPublic -->|Sí| linkInitial
+    creationCollectionPublic -->|No| publicOptionDisabled
+    publicOptionDisabled -->|Crear privado| linkPrivate
+    publicOptionDisabled -->|Petición manipulada| rejectCreationPublic
     linkInitial -->|No| linkPrivate
     linkInitial -->|Sí| checkCollection
     action -->|Hacer público un enlace| makeLinkPublic --> checkCollection

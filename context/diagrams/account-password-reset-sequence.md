@@ -1,6 +1,6 @@
 # Secuencia de recuperación y restablecimiento de contraseña
 
-Diagrama del camino válido de una cuenta completada, definido en [specifications.md → «Recuperación de contraseña»](../specifications.md#recuperación-de-contraseña).
+Flujo previsto para el MVP1: camino válido de una cuenta completada, definido en [specifications.md → «Recuperación de contraseña»](../specifications.md#recuperación-de-contraseña).
 
 ```mermaid
 sequenceDiagram
