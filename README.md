@@ -11,14 +11,6 @@ Actualmente el repositorio contiene únicamente la documentación inicial del pr
 Linkubator permitirá que cada usuario gestione sus propios enlaces y los organice en colecciones y etiquetas.
 Las colecciones podrán ser públicas o privadas. Dentro de una colección pública, el usuario decidirá individualmente qué enlaces aparecen en su página pública indexable por buscadores.
 
-En este MVP0 serán rellenados manualmente por el usuaio los metadatos principales de sus enlaces:
-
-- Título.
-- Descripción.
-- Imagen Open Graph.
-
-A partir del MVP1, está previsto que estos s obtengan de forma automática.
-
 ## Documentación
 
 - [Requisitos de Linkubator](context/requirements.md)

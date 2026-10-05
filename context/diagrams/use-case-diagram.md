@@ -1,16 +1,15 @@
 # Diagrama de casos de uso
 
-Vista derivada de los requisitos y de los casos de uso iniciales de [architecture.md](../architecture.md). Los nodos externos son actores; los óvalos dentro del límite de Linkubator son casos de uso.
+Vista general de las capacidades del producto, derivada de [requirements.md](../requirements.md). La organización técnica está en [architecture.md → «Casos de uso iniciales»](../architecture.md#casos-de-uso-iniciales). No representa una etapa de entrega concreta. Los nodos externos son actores; los óvalos dentro del límite de Linkubator son casos de uso.
 
 ```mermaid
 flowchart LR
     anonymous["Persona sin sesión"]
-    registered["Usuario autenticado (MVP1)"]
-    devIdentity["Identidad de desarrollo inyectada (MVP0)"]
+    registered["Usuario autenticado"]
     visitor["Visitante anónimo"]
 
     subgraph system["Sistema: Linkubator"]
-        subgraph account["Cuenta (MVP1)"]
+        subgraph account["Cuenta"]
             register((Registrarse))
             complete((Completar registro))
             login((Iniciar sesión))
@@ -23,20 +22,15 @@ flowchart LR
             deleteAccount((Eliminar cuenta))
         end
 
-        subgraph manage["Gestión privada (MVP0)"]
+        subgraph manage["Gestión privada"]
             collections((Gestionar colecciones<br/>crear, editar, hacer públicas o privadas y eliminar))
-            links((Gestionar enlaces<br/>crear, editar, hacer públicos o privados, mover y eliminar))
-            search((Buscar y filtrar enlaces por colección))
-            collectionSearch((Buscar colecciones por nombre))
-            lists((Consultar colecciones propias))
-        end
-
-        subgraph tagManagement["Gestión de etiquetas (MVP1)"]
             tags((Gestionar etiquetas<br/>crear, editar y eliminar))
-            linkTags((Asociar y desasociar etiquetas<br/>incluida la creación desde un enlace))
-            tagSearch((Buscar enlaces por nombre de etiqueta y filtrar por etiqueta))
-            tagNameSearch((Buscar etiquetas por nombre))
-            tagLists((Consultar etiquetas propias))
+            links((Gestionar enlaces<br/>crear, editar, hacer públicos o privados, mover y eliminar))
+            scraping((Solicitar scraping de metadatos))
+            search((Buscar y filtrar enlaces por colección y etiqueta))
+            collectionSearch((Buscar colecciones por nombre))
+            tagSearch((Buscar etiquetas por nombre))
+            lists((Consultar colecciones y etiquetas propias))
         end
 
         subgraph public["Consulta pública"]
@@ -61,19 +55,11 @@ flowchart LR
     registered --> collections
     registered --> tags
     registered --> links
-    registered --> linkTags
+    registered --> scraping
     registered --> search
     registered --> collectionSearch
-    registered --> lists
     registered --> tagSearch
-    registered --> tagNameSearch
-    registered --> tagLists
-
-    devIdentity --> collections
-    devIdentity --> links
-    devIdentity --> search
-    devIdentity --> collectionSearch
-    devIdentity --> lists
+    registered --> lists
 
     visitor --> landing
     visitor --> userPage
@@ -82,5 +68,3 @@ flowchart LR
 
     classDef future fill:#fff,stroke:#777,stroke-dasharray:5 5,color:#555
 ```
-
-En el MVP0, la identidad de desarrollo inyectada permite la gestión privada, pero no ofrece casos de uso de cuenta ni una sesión real. En el MVP1, el usuario autenticado también puede actuar como visitante en las páginas públicas.

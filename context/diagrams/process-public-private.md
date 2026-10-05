@@ -54,5 +54,3 @@ flowchart TD
     action -->|Mover enlace| moveLink --> movePrivate
     action -->|Hacer privado un enlace| keepLinkPrivate
 ```
-
-Las escrituras que deben cambiar varios elementos se aplican de forma atómica. Hacer pública una colección no publica sus enlaces; hacerla privada vuelve privados todos sus enlaces. Mover un enlace siempre lo deja privado, aunque la colección de destino sea pública.

@@ -1,6 +1,6 @@
 # Secuencia de registro y primer uso
 
-Flujo previsto para el MVP1, derivado de las reglas de cuenta y persistencia descritas en [specifications.md](../specifications.md), [domain-model.md](../domain-model.md) y [architecture.md](../architecture.md). En el MVP0, la gestión privada usa la identidad de desarrollo inyectada y no ejecuta este registro ni este login.
+Flujo derivado de las reglas de cuenta y persistencia descritas en [specifications.md](../specifications.md), [domain-model.md](../domain-model.md) y [architecture.md](../architecture.md).
 
 ```mermaid
 sequenceDiagram
@@ -15,54 +15,56 @@ sequenceDiagram
     User->>Browser: Introduce email y solicita registro
     Browser->>App: POST de registro con email
     App->>DB: BEGIN IMMEDIATE
-    App->>DB: Buscar cuenta y comprobar límite de correo
-    App->>DB: Crear usuario incompleto con solo el email
-    App->>DB: Guardar hash del token y actualizar LastEmailSentAt
+    App->>DB: Buscar cuenta por email y comprobar el límite aplicable
+    alt No existe una cuenta
+        App->>DB: Crear registro incompleto con solo el email
+        opt Se permite enviar correo con token
+            App->>DB: Emitir token y actualizar LastEmailSentAt
+            App->>DB: Guardar el hash del token
+        end
+    else Existe un registro sin completar
+        opt Se permite enviar correo con token
+            App->>DB: Emitir token nuevo y actualizar LastEmailSentAt
+            App->>DB: Guardar el hash del token
+        end
+    else Existe una cuenta completada
+        opt Se permite enviar aviso de cuenta existente
+            App->>DB: Preparar aviso y actualizar LastExistingAccountNoticeAt
+        end
+    end
     App->>DB: COMMIT
-    App->>MailQueue: Encolar correo de completar registro tras el commit
+    opt Se preparó un correo
+        App->>MailQueue: Encolar correo o aviso tras el commit
+    end
     App-->>Browser: Mostrar respuesta genérica
+    opt Correo encolado
+        MailQueue->>SMTP: Enviar el mensaje en segundo plano, fuera de la petición y la transacción
+    end
 
-    MailQueue->>SMTP: Enviar correo por SMTP fuera de la transacción
-    Browser->>SMTP: Consultar el correo local y obtener el enlace
-    User->>Browser: Abre el enlace de completar registro
-    Browser->>App: GET con token en claro
-    App->>DB: Buscar hash del token y comprobar que sea válido
-    App-->>Browser: Mostrar formulario de nombre, alias y contraseña
-    User->>Browser: Introduce datos y envía el formulario
-    Browser->>App: POST de compleción con token
-    App->>App: Validar datos y normalizar alias
-    App->>Hasher: Calcular hash de la contraseña
-    Hasher-->>App: Devolver hash
-    App->>DB: BEGIN IMMEDIATE
-    App->>DB: Volver a validar token y alias
-    App->>DB: Fijar nombre, alias, hash y EmailConfirmedAt
-    App->>DB: Crear Bandeja de entrada privada y consumir token
-    App->>DB: COMMIT
-    App-->>Browser: Registro completado. Ir al inicio de sesión
+    opt Se emitió un token de completar registro
+        Browser->>SMTP: Consultar el correo local y obtener el enlace
+        User->>Browser: Abre el enlace de completar registro
+        Browser->>App: GET con token en claro
+        App->>DB: Buscar hash del token y comprobar que sea válido
+        App-->>Browser: Mostrar formulario de nombre, alias y contraseña sin consumir el token
+        User->>Browser: Introduce datos y envía el formulario
+        Browser->>App: POST de compleción con token y antiforgery
+        App->>App: Validar datos y normalizar alias
+        App->>Hasher: Calcular hash de la contraseña
+        Hasher-->>App: Devolver hash
+        App->>DB: BEGIN IMMEDIATE
+        App->>DB: Volver a validar token y alias
+        App->>DB: Fijar nombre, alias, hash y EmailConfirmedAt
+        App->>DB: Crear Bandeja de entrada privada y consumir token
+        App->>DB: COMMIT
+        App-->>Browser: Registro completado. Ir al inicio de sesión
+    end
 
     User->>Browser: Entra con email y contraseña
     Browser->>App: POST de inicio de sesión
-    App->>DB: Cargar cuenta completada y su hash guardado
+    App->>DB: Cargar cuenta completada, hash y SecurityStamp
     App->>Hasher: Verificar contraseña
     Hasher-->>App: Contraseña válida
-    App-->>Browser: Emitir cookie de autenticación y abrir /app/dashboard
-
-    User->>Browser: Crea un enlace en Bandeja de entrada
-    Browser->>App: Enviar URL y metadatos opcionales
-    App->>App: Ajustar, validar y normalizar URL
-    App->>DB: BEGIN IMMEDIATE
-    App->>DB: Comprobar duplicado y propiedad de colección
-    App->>DB: Guardar enlace privado y actualizar proyección FTS5
-    App->>DB: COMMIT
-    App-->>Browser: Redirigir al listado de enlaces
-
-    User->>Browser: Busca el enlace por texto o filtro
-    Browser->>App: Solicitar resultados de búsqueda
-    App->>DB: Consultar FTS5 y filtrar por usuario autenticado
-    DB-->>App: Devolver solo resultados del usuario
-    App-->>Browser: Mostrar el enlace
+    App->>DB: Volver a leer SecurityStamp y LockoutEnd
+    App-->>Browser: Si coinciden y no hay bloqueo, emitir cookie con el SecurityStamp comprobado y abrir /app/dashboard
 ```
-
-La secuencia muestra el recorrido de una cuenta nueva con email disponible y datos válidos. Si el email ya tiene un registro incompleto, se renueva el token; si la cuenta está completada, se envía un aviso sin token. La respuesta al registro es genérica en todos los casos. Si se supera el límite de correo no se emite otro token ni se envía correo, y cualquier token previo sin usar sigue vigente. Si el token no es válido o los datos no superan la validación, no se completa la cuenta; los errores del formulario no consumen el token.
-
-El token en claro solo viaja en el enlace del correo; SQLite conserva su hash. El usuario informa manualmente los metadatos del enlace. La obtención automática de metadatos se incorpora en MVP1. La cuenta solo queda confirmada al completar correctamente el registro; el inicio de sesión se realiza después con normalidad.

@@ -5,7 +5,7 @@ Diagrama derivado de [specifications.md → «Generación del alias»](../specif
 ```mermaid
 flowchart TD
     start([Texto escrito por el usuario])
-    input[El campo solo admite letras, números y guiones medios]
+    input[Validar que el texto cumpla los requisitos]
     lowercase[Convertir a minúsculas]
     diacritics[Eliminar marcas diacríticas conservando la letra base]
     spaces[Sustituir espacios por guiones medios]
@@ -16,8 +16,8 @@ flowchart TD
     range{¿Está dentro del rango de longitud del alias?}
     rejectRange[Rechazar sin truncar]
     preview[Mostrar vista previa del alias transformado]
-    reserved{¿Alias reservado?}
-    rejectReserved[Rechazar alias]
+    reserved{¿El alias transformado está reservado?}
+    rejectReserved[Rechazar por palabra reservada]
     collision{¿Alias ya usado en el sistema?}
     rejectCollision[Rechazar por colisión]
     saveAlias[Guardar alias]
@@ -26,11 +26,9 @@ flowchart TD
     empty -->|Sí| rejectEmpty
     empty -->|No| range
     range -->|No| rejectRange
-    range -->|Sí| preview --> reserved
+    range -->|Sí| reserved
     reserved -->|Sí| rejectReserved
-    reserved -->|No| collision
+    reserved -->|No| preview --> collision
     collision -->|Sí| rejectCollision
     collision -->|No| saveAlias
 ```
-
-El alias se transforma antes de mostrar la vista previa y se valida antes de guardarlo. No hay tablas de conversión: lo que no es una letra ASCII, un número o un guión medio se elimina. La lista de valores reservados, el rango y la regla de colisión tienen como fuente de verdad [specifications.md](../specifications.md).

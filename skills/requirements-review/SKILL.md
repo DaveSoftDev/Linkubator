@@ -28,13 +28,13 @@ No la uses para implementar funcionalidades, resolver errores de código, diseñ
 
 Documentos y su responsabilidad (la tabla completa está en [AGENTS.md → «Dónde vive cada cosa»](../../AGENTS.md#dónde-vive-cada-cosa)):
 
-1. [`context/requirements.md`](../../context/requirements.md): qué hace el producto y para quién.
-2. [`context/domain-model.md`](../../context/domain-model.md): entidades, propiedades, relaciones e invariantes.
-3. [`context/specifications.md`](../../context/specifications.md): reglas exactas (algoritmos, límites, valores, mensajes y respuestas).
-4. [`context/architecture.md`](../../context/architecture.md): cómo se construye.
-5. [`context/decisions.md`](../../context/decisions.md): qué se decidió y por qué, riesgos aceptados, pendientes y fuera de alcance.
-6. [`context/roadmap.md`](../../context/roadmap.md): orden de construcción, checklist de calidad y backlog.
-7. [`AGENTS.md`](../../AGENTS.md): reglas de trabajo e invariantes críticas.
+1. [`AGENTS.md`](../../AGENTS.md): reglas de trabajo e invariantes críticas.
+2. [`requirements.md`](../../context/requirements.md): qué hace el producto y para quién.
+3. [`specifications.md`](../../context/specifications.md): reglas exactas (algoritmos, límites, valores, mensajes y respuestas).
+4. [`decisions.md`](../../context/decisions.md): qué se decidió y por qué, riesgos aceptados, pendientes y fuera de alcance.
+5. [`architecture.md`](../../context/architecture.md): cómo se construye.
+6. [`domain-model.md`](../../context/domain-model.md): entidades, propiedades, relaciones e invariantes.
+7. [`roadmap.md`](../../context/roadmap.md): orden de construcción, checklist de calidad y backlog.
 
 Si falta alguno de estos archivos, informa de ello como hallazgo. No inventes su contenido sin indicarlo.
 
@@ -53,13 +53,13 @@ Recorre cada documento párrafo a párrafo y viñeta a viñeta:
 - Clasifica cada texto con la tabla de [AGENTS.md → «Dónde va cada texto»](../../AGENTS.md#dónde-va-cada-texto).
 - Si su tipo no corresponde al documento en el que está, es un hallazgo de tipo `Ubicación incorrecta`, aunque el texto sea correcto y no esté repetido. Indica el documento de destino.
 - Aplica las señales de [AGENTS.md → «Dónde va cada texto»](../../AGENTS.md#dónde-va-cada-texto). Las más habituales:
-  - [requirements.md](../../context/requirements.md): valores exactos, nombres de clases o propiedades usados como regla, SQL, cabeceras HTTP, capas o librerías.
-  - [domain-model.md](../../context/domain-model.md): capas, transacciones, índices, formatos de almacenamiento, rutas, SEO o comportamiento de la interfaz.
-  - [specifications.md](../../context/specifications.md): justificaciones de por qué se decidió algo, tecnologías o capas.
-  - [architecture.md](../../context/architecture.md): listas de propiedades de entidades, reglas de negocio (qué puede hacer el usuario, cuándo algo es público) o valores del producto.
-  - [decisions.md](../../context/decisions.md): reglas completas, algoritmos o tablas de valores, en lugar de un enlace.
-  - [roadmap.md](../../context/roadmap.md): reglas, valores o historial de decisiones.
   - [AGENTS.md](../../AGENTS.md) y skills: reglas del producto, salvo las invariantes críticas de [AGENTS.md](../../AGENTS.md).
+  - [requirements.md](../../context/requirements.md): valores exactos, nombres de clases o propiedades usados como regla, SQL, cabeceras HTTP, capas o librerías.
+  - [specifications.md](../../context/specifications.md): justificaciones de por qué se decidió algo, tecnologías o capas.
+  - [decisions.md](../../context/decisions.md): reglas completas, algoritmos o tablas de valores, en lugar de un enlace.
+  - [architecture.md](../../context/architecture.md): listas de propiedades de entidades, reglas de negocio (qué puede hacer el usuario, cuándo algo es público) o valores del producto.
+  - [domain-model.md](../../context/domain-model.md): capas, transacciones, índices, formatos de almacenamiento, rutas, SEO o comportamiento de la interfaz.
+  - [roadmap.md](../../context/roadmap.md): reglas, valores o historial de decisiones.
 - No son hallazgo: nombrar una entidad o propiedad para enlazarla, un resumen sin valores que remite a su fuente, ni describir qué casos cubre una regla o qué consigue un mecanismo técnico.
 
 ### 3. Check single source
@@ -78,7 +78,7 @@ Comprueba como mínimo:
 
 | Área | Comprobación |
 | --- | --- |
-| Responsabilidades | Cada documento contiene solo lo que le corresponde según [AGENTS.md](../../AGENTS.md). |
+| Responsabilidades | Cada documento contiene solo lo que le corresponde según [AGENTS.md → «Dónde va cada texto»](../../AGENTS.md#dónde-va-cada-texto). |
 | Terminología | Nombres de entidades, propiedades y estados consistentes. Vocabulario de lo público según [AGENTS.md → «Reglas de documentación»](../../AGENTS.md#reglas-de-documentación). |
 | Alcance | Ningún documento atribuye al MVP0 una funcionalidad prevista para MVP1; las funciones confirmadas para MVP1 se distinguen del backlog no comprometido. |
 | Identidad y autenticación | La gestión privada del MVP0 usa la identidad de desarrollo inyectada; el registro, el login, las sesiones y la gestión real de cuentas se reservan al MVP1, sin relajar la propiedad por usuario. |
@@ -89,9 +89,10 @@ Comprueba como mínimo:
 | Listados y búsqueda | Orden, paginación y alcance por usuario coinciden entre [specifications.md → «Listados»](../../context/specifications.md#listados) y [architecture.md → «FTS5»](../../context/architecture.md#fts5). |
 | Páginas públicas | Rutas, indexabilidad y respuestas coinciden entre [specifications.md → «Páginas públicas»](../../context/specifications.md#páginas-públicas), [architecture.md → «Enrutamiento»](../../context/architecture.md#enrutamiento) y [requirements.md → «Páginas públicas»](../../context/requirements.md#páginas-públicas). |
 | Persistencia | Las operaciones que deben ser atómicas están en [architecture.md → «Persistencia»](../../context/architecture.md#persistencia), y no hay operaciones externas dentro de transacciones. |
-| Scraping | El flujo funcional ([specifications.md → «Metadatos y scraping»](../../context/specifications.md#metadatos-y-scraping)), las medidas técnicas ([architecture.md → «Scraping»](../../context/architecture.md#scraping)) y los pendientes ([decisions.md → «Pendientes de scraping»](../../context/decisions.md#pendientes-de-scraping)) no se contradicen. |
+| Scraping | El flujo funcional ([specifications.md → «Scraping»](../../context/specifications.md#scraping)), las medidas técnicas ([architecture.md → «Scraping»](../../context/architecture.md#scraping)) y los pendientes ([decisions.md → «Pendientes de scraping»](../../context/decisions.md#pendientes-de-scraping)) no se contradicen. |
 | Decisiones | Cada decisión de [decisions.md](../../context/decisions.md) enlaza a su regla y tiene motivo cuando no es obvio. |
 | Roadmap | Las etapas y la checklist cubren todas las reglas y reflejan los pendientes actuales. |
+| MVP | La documentación es generica para todo el producto, las únicas referencias a MVPs concretos se deben hacer en [decisions.md](../../context/decisions.md) y en [roadmap.md](../../context/roadmap.md). Fuera de él, no deben aparecer menciones a MVPs específicos. |
 
 ### 5. Classify findings
 
@@ -151,6 +152,8 @@ Cuando se pida la ficha de una entidad (`User`, `Collection`, `Link`, `Tag`, `Li
 La ficha es una vista generada bajo demanda: devuélvela en la conversación y no la guardes en ningún archivo, para que no se desincronice de la documentación.
 
 ## Expected output
+
+Informa accionable y con esta estructura:
 
 ```text
 Estado: [coherente | coherente con observaciones | requiere decisiones]

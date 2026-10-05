@@ -11,16 +11,16 @@ flowchart TD
     discardPort["Eliminar puerto"]
     keepPort["Conservar el puerto no predeterminado, si existe"]
     structure["Descartar esquema y tomar el host en formato IdnHost"]
-    path["Ruta: decodificar una vez con decodificación URI<br/>El signo + es literal"]
-    query["Consulta: separar parámetros y decodificar una vez<br/>cada nombre y valor con decodificación de formularios<br/>El signo + equivale a espacio"]
-    removeMarketing["Eliminar parámetros de marketing<br/>lista definida en specifications.md"]
+    path["Ruta: decodificar una vez con decodificación URI"]
+    query["Consulta: separar parámetros y decodificar una vez cada nombre y valor con decodificación de formularios"]
+    removeMarketing["Eliminar parámetros de marketing"]
     lowercaseParams["Pasar a minúsculas nombres y valores restantes"]
-    sortParams["Ordenar por nombre y valor con comparación ordinal<br/>Conservar parámetros repetidos"]
+    sortParams["Ordenar por nombre y valor con comparación ordinal Conservar parámetros repetidos"]
     combine["Unir host, puerto conservado, ruta y parámetros ordenados"]
-    lowercaseAll["Pasar toda la cadena a minúsculas"]
-    accents["Eliminar acentos y marcas diacríticas conservando la letra base<br/>Sustituir ç por c y ñ por n"]
+    lowercaseUrl["Convertir a minúsculas la cadena resultante"]
+    accents["Eliminar acentos y marcas diacríticas conservando la letra base"]
     spaces["Convertir espacios en guiones medios"]
-    allowed["Conservar solo letras y números de cualquier alfabeto y guiones medios<br/>Eliminar los demás caracteres"]
+    allowed["Conservar solo letras y números de cualquier alfabeto y guiones medios. Eliminar los demás caracteres"]
     collapse["Eliminar guiones medios duplicados"]
     trim["Eliminar guiones medios iniciales y finales"]
     result([UrlNormalized])
@@ -32,5 +32,5 @@ flowchart TD
     structure --> query
     path --> combine
     query --> removeMarketing --> lowercaseParams --> sortParams --> combine
-    combine --> lowercaseAll --> accents --> spaces --> allowed --> collapse --> trim --> result
+    combine --> lowercaseUrl --> accents --> spaces --> allowed --> collapse --> trim --> result
 ```

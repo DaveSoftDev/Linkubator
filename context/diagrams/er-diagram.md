@@ -1,8 +1,8 @@
 # Diagrama ER
 
-Vista derivada del modelo de dominio y de la arquitectura. Las propiedades e invariantes tienen como fuente de verdad [domain-model.md](../domain-model.md); la persistencia y los índices, [architecture.md](../architecture.md).
+Vista derivada del modelo de dominio y de la arquitectura. Las propiedades e invariantes tienen como fuente de verdad [domain-model.md](../domain-model.md); la persistencia y los índices, [architecture.md → «Persistencia»](../architecture.md#persistencia).
 
-`Tag` y `LinkTag` se muestran como entidades previstas para el MVP1; no forman parte del MVP0.
+La multiplicidad User–Collection contempla todos los estados de la cuenta; la condición para las cuentas completadas está en [domain-model.md → «User»](../domain-model.md#user).
 
 ```mermaid
 erDiagram
@@ -41,9 +41,7 @@ erDiagram
         TEXT Description "NULL si no se informa"
         TEXT Image "NULL si no se informa"
         BOOLEAN IsPublic
-        TEXT ScrapingStatus "NULL si no se ha solicitado"
-        INTEGER ScrapingAttempts
-        DATETIME NextScrapingAt "NULL si no hay otro intento"
+        TEXT ScrapingStatus
         DATETIME CreatedAt
     }
 
@@ -68,6 +66,7 @@ erDiagram
         TEXT NewEmail "NULL salvo en cambio de email"
         DATETIME ExpiresAt
         DATETIME UsedAt "NULL mientras no se haya usado"
+        DATETIME InvalidatedAt "NULL mientras no se haya invalidado"
         DATETIME CreatedAt
     }
 
@@ -79,21 +78,3 @@ erDiagram
     Link ||--o{ LinkTag : se_asocia
     Tag ||--o{ LinkTag : se_asocia
 ```
-
-## Restricciones e índices
-
-Un usuario con el registro incompleto todavía no tiene colecciones; una vez completado, tiene al menos una. Cada enlace pertenece a un usuario y a una colección. La propiedad compartida entre ambos se garantiza además con la clave foránea compuesta `Link (UserId, CollectionId)` → `Collection (UserId, Id)`. Cada etiqueta y cada token pertenecen a un usuario. La relación entre enlaces y etiquetas usa la clave compuesta `LinkTag (LinkId, TagId)`.
-
-Índices y restricciones únicos definidos:
-
-- `User (Email)` y `User (Alias)`.
-- `Collection (UserId, Slug)`.
-- `Collection (UserId, Id)`, índice único requerido por la clave foránea compuesta desde `Link`.
-- `Link (UserId, UrlNormalized)`.
-- `Tag (UserId, Slug)`.
-- `LinkTag (LinkId, TagId)`, clave primaria compuesta.
-- `UserToken (Token)`.
-
-También están previstos índices por usuario, colección, estado público y fecha, y un índice de `UserToken` por usuario y propósito. La documentación aún no especifica las columnas concretas ni el orden de esos índices no únicos. Las proyecciones FTS5, una por entidad buscable, son proyecciones de búsqueda aparte, no relaciones ER normalizadas.
-
-Los identificadores son `INTEGER PRIMARY KEY`, salvo la clave compuesta de `LinkTag`. Los demás tipos del diagrama son descriptivos: la documentación no fija aún su declaración SQLite exacta.

@@ -11,13 +11,16 @@ La documentación funcional vive en `context/`. Cada documento responde a una so
 | Documento | Responde a | No contiene |
 |---|---|---|
 | [`requirements.md`](context/requirements.md) | Qué hace el producto y para quién | Valores exactos, SQL, cabeceras, nombres de clases |
-| [`domain-model.md`](context/domain-model.md) | Entidades, propiedades, relaciones e invariantes | Capas, formatos de almacenamiento, SEO |
 | [`specifications.md`](context/specifications.md) | Reglas exactas: algoritmos, límites, valores, mensajes y respuestas | Justificaciones |
-| [`architecture.md`](context/architecture.md) | Cómo se construye: plataforma, capas, persistencia, seguridad técnica | Reglas de negocio |
 | [`decisions.md`](context/decisions.md) | Qué se decidió y por qué, riesgos aceptados, pendientes y fuera de alcance | Especificaciones ni copias de reglas |
+| [`architecture.md`](context/architecture.md) | Cómo se construye: plataforma, capas, persistencia, seguridad técnica | Reglas de negocio |
+| [`domain-model.md`](context/domain-model.md) | Entidades, propiedades, relaciones e invariantes | Capas, formatos de almacenamiento, SEO |
 | [`roadmap.md`](context/roadmap.md) | En qué orden se construye y cuándo termina cada etapa, checklist de calidad y backlog de MVP1 | Reglas ni historial de decisiones |
 
 Principio de fuente única: **cada regla se escribe en un único documento, y los demás la enlazan sin repetirla.** Antes de añadir una regla, busca si ya existe. Si cambia una decisión, actualiza su documento propietario y revisa que los enlaces sigan siendo válidos.
+
+La documentación es genérica para todo el producto, las únicas referencias a MVPs concretos se deben hacer en [decisions.md](/context/decisions.md) y en [roadmap.md](/context/roadmap.md). Fuera de él, no deben aparecer ninguna mención a MVPs específicos.
+
 
 ### Dónde va cada texto
 
@@ -26,24 +29,24 @@ Antes de escribir cualquier texto, clasifícalo. **Si no encaja en el documento 
 | Si el texto es… | Va en |
 |---|---|
 | Algo que el usuario puede hacer, ver o esperar del producto | [`requirements.md`](context/requirements.md) |
-| Una entidad, una propiedad, una relación o una regla que los datos cumplen siempre | [`domain-model.md`](context/domain-model.md) |
 | Un valor, un límite, un algoritmo, un formato, una lista cerrada, un mensaje, un código de respuesta o el paso a paso de un flujo | [`specifications.md`](context/specifications.md) |
-| Una tecnología, una capa, una transacción, una configuración o una medida técnica | [`architecture.md`](context/architecture.md) |
 | El porqué de algo, una alternativa descartada, un riesgo aceptado, algo pendiente o algo fuera de alcance | [`decisions.md`](context/decisions.md) |
+| Una tecnología, una capa, una transacción, una configuración o una medida técnica | [`architecture.md`](context/architecture.md) |
+| Una entidad, una propiedad, una relación o una regla que los datos cumplen siempre | [`domain-model.md`](context/domain-model.md) |
 | Una etapa, su orden, su criterio de finalización, un test de la checklist o un candidato para MVP1 | [`roadmap.md`](context/roadmap.md) |
 
 Señales de que un texto está en el documento equivocado:
 
-- Una lista de propiedades de una entidad fuera de [domain-model.md](context/domain-model.md). Nombrar una entidad o una propiedad para enlazarla sí está permitido.
+- Una capa, una tabla, una transacción o una librería en [requirements.md](context/requirements.md) o en [domain-model.md](context/domain-model.md).
 - Un número, una lista cerrada o un código de respuesta fuera de [specifications.md](context/specifications.md).
 - Un «porque», un «así se evita» o un «para que» que justifica una decisión, fuera de [decisions.md](context/decisions.md). Describir qué casos cubre una regla o qué consigue un mecanismo técnico sí está permitido.
-- Una capa, una tabla, una transacción o una librería en [requirements.md](context/requirements.md) o en [domain-model.md](context/domain-model.md).
 - Qué puede hacer el usuario o cuándo algo es público escrito como regla en [architecture.md](context/architecture.md).
+- Una lista de propiedades de una entidad fuera de [domain-model.md](context/domain-model.md). Nombrar una entidad o una propiedad para enlazarla sí está permitido.
 - Una regla completa en [decisions.md](context/decisions.md) o en [roadmap.md](context/roadmap.md), en lugar de un enlace a ella.
 
 Este mismo criterio se aplica a [AGENTS.md](AGENTS.md) y a las skills: no copian reglas del producto, salvo las invariantes críticas de la sección siguiente.
 
-Los diagramas de `context/diagrams/` son vistas derivadas: muestran estructura y nombres (entidades, propiedades, estados, pasos y decisiones de un flujo), pero no números, límites ni listas cerradas de valores. Para esos valores enlazan a su documento propietario.
+Los diagramas de `context/diagrams/` son vistas derivadas: muestran estructura y nombres (entidades, propiedades, estados, pasos y decisiones de un flujo) y pueden incluir valores de estándares o convenciones ampliamente adoptadas cuando ayuden a interpretarlos, como tipos de datos o códigos de estado HTTP. No deben introducir ni duplicar reglas propias de Linkubator; estas se definen en su documento propietario y se enlazan desde el diagrama. Que un valor sea estándar no convierte en estándar la decisión de Linkubator de usarlo en un caso concreto.
 
 ## Skills de Linkubator
 
