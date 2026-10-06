@@ -4,7 +4,7 @@ Aplicación web para la gestión de enlaces en colecciones y etiquetas.
 
 ## Estado del proyecto
 
-Actualmente el repositorio contiene únicamente la documentación inicial del producto. No se ha generado código de aplicación ni infraestructura técnica.
+La documentación funcional fue aceptada el 2026-10-06. Está autorizada su implementación según el alcance y el orden de [roadmap.md](context/roadmap.md); las reglas de producto y las invariantes de esta guía siguen siendo obligatorias.
 
 ## Visión
 

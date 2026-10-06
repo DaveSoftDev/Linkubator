@@ -4,33 +4,15 @@ Este documento indica en qué orden se construye el MVP0 y cuándo se da por ter
 
 ## Hecho
 
-Todavía no hay ninguna etapa cerrada.
+### Documentación del MVP0 (aceptada el 2026-10-06)
+
+Entregables aceptados:
+
+- [requirements.md](requirements.md), [domain-model.md](domain-model.md), [specifications.md](specifications.md), [architecture.md](architecture.md), [decisions.md](decisions.md) y este roadmap.
+
+La aceptación cierra la fase de definición y permite iniciar la implementación según [AGENTS.md → «Implementación autorizada»](../AGENTS.md#implementación-autorizada).
 
 ## Now
-
-### Documentación (en revisión)
-
-Objetivo: tener una definición coherente del MVP0 antes de implementar.
-
-Entregables:
-
-- [requirements.md](requirements.md), [domain-model.md](domain-model.md), [specifications.md](specifications.md), [architecture.md](architecture.md) y [decisions.md](decisions.md).
-- Este roadmap.
-- Una base inicial de [specs/README.md](../specs/README.md), [specs/TEMPLATE.md](../specs/TEMPLATE.md), [specs/fundaciones.md](../specs/fundaciones.md), [specs/dominio.md](../specs/dominio.md) y [specs/aplicacion.md](../specs/aplicacion.md), enlazando a las fuentes funcionales sin duplicarlas.
-
-Criterio de finalización:
-
-- No quedan reglas ambiguas que afecten al modelo de datos ni a los casos de uso principales.
-- Cada regla vive en un único documento y los demás la enlazan.
-- La revisión completa está cerrada sin contradicciones entre documentos.
-- La documentación del MVP0 está aceptada. Hasta entonces no empieza la implementación (ver [AGENTS.md → «Restricciones de edición actuales»](../AGENTS.md#restricciones-de-edición-actuales)).
-
-Los pendientes de [decisions.md → «Pendientes»](decisions.md#pendientes) no bloquean la aceptación de la documentación del MVP0. Se clasifican así:
-
-- Scraping ([decisions.md → «Pendientes de scraping»](decisions.md#pendientes-de-scraping)): se resuelven antes de implementarlo en MVP1.
-- Limpieza de tokens ([decisions.md → «Pendiente de limpieza de tokens»](decisions.md#pendiente-de-limpieza-de-tokens)): diferida; no bloquea la aceptación.
-
-## Next
 
 ### Dominio y aplicación
 
@@ -44,6 +26,8 @@ Objetivos:
 Criterio de finalización:
 
 - Los casos de uso principales tienen contratos y criterios de aceptación claros.
+
+## Next
 
 ### Persistencia
 
