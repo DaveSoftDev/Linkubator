@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-El repositorio está en fase de definición de requisitos. Hasta que se indique expresamente lo contrario, el trabajo se centra en documentación y análisis, sin generar código de aplicación.
+La documentación funcional fue aceptada el 2026-10-06. Está autorizada su implementación según el alcance y el orden de [roadmap.md](context/roadmap.md); las reglas de producto y las invariantes de esta guía siguen siendo obligatorias.
 
 ## Dónde vive cada cosa
 
@@ -83,15 +83,6 @@ Estas reglas no se pueden romper nunca, ni en la documentación ni en el código
 
 Copilot no debe listar, buscar, leer ni modificar archivos dentro de ningún directorio cuyo nombre empiece por `.` en cualquier nivel del workspace. En búsquedas y operaciones recursivas, debe excluir siempre esos directorios. Si una tarea requiere acceder a uno de ellos, debe detenerse y explicárselo al usuario.
 
-## Restricciones de edición actuales
+## Implementación autorizada
 
-No crear todavía:
-
-- Proyectos .NET.
-- Código C#.
-- SQL de aplicación o migraciones ejecutables.
-- Paquetes o archivos de dependencias.
-- Frontend funcional.
-- Configuración de despliegue.
-
-La implementación empieza solo después de revisar y aceptar la documentación del MVP0. La pila técnica prevista está en [architecture.md → «Plataforma»](context/architecture.md#plataforma).
+Se permite crear los proyectos, el código, el SQL de aplicación y migraciones, las dependencias y el frontend necesarios para implementar la etapa activa del [roadmap.md](context/roadmap.md), siguiendo la pila prevista en [architecture.md → «Plataforma»](context/architecture.md#plataforma). No se amplía por ello el alcance comprometido: las funciones reservadas a etapas posteriores y las propuestas siguen sujetas a [decisions.md](context/decisions.md) y [roadmap.md](context/roadmap.md). La configuración de despliegue continúa fuera del alcance.
