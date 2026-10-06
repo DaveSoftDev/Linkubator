@@ -16,6 +16,7 @@ Entregables:
 
 - [requirements.md](requirements.md), [domain-model.md](domain-model.md), [specifications.md](specifications.md), [architecture.md](architecture.md) y [decisions.md](decisions.md).
 - Este roadmap.
+- Una base inicial de [specs/README.md](../specs/README.md), [specs/TEMPLATE.md](../specs/TEMPLATE.md), [specs/fundaciones.md](../specs/fundaciones.md), [specs/dominio.md](../specs/dominio.md) y [specs/aplicacion.md](../specs/aplicacion.md), enlazando a las fuentes funcionales sin duplicarlas.
 
 Criterio de finalización:
 
