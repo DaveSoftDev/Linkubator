@@ -16,7 +16,6 @@ Este SDD se apoya en:
 
 Incluye:
 
-- layout de proyectos y dependencias permitidas;
 - configuración de entorno local;
 - logging y observabilidad básica;
 - coordenadas de arranque y pruebas base;
@@ -33,7 +32,7 @@ Excluye:
 
 ### Estructura base
 
-La solución se organiza por capas coherentes con [architecture.md](../context/architecture.md). La capa de dominio mantiene su lógica y tipos; la aplicación coordina casos de uso y contratos; la infraestructura implementa persistencia, identidad y adaptadores; la web expone la interfaz y no contiene regla de negocio.
+La estructura de la solución, sus referencias entre capas y su validación se definen en [s0.2-crear-solucion/spec.md](s0.2-crear-solucion/spec.md). Este SDD cubre los elementos transversales que completan la base técnica alrededor de esa estructura.
 
 ### Entorno de desarrollo
 
@@ -47,8 +46,8 @@ Los eventos de aplicación se registran con nivel y contexto suficientes para di
 
 1. Se prepara el entorno de ejecución local.
 2. La solución arranca con la configuración de desarrollo.
-3. La capa web inicia la aplicación con la infraestructura necesaria.
-4. Las pruebas del proyecto validan la cohesión de capas y el arranque mínimo.
+3. La estructura de proyectos y la composición de dependencias se aplican según [s0.2-crear-solucion/spec.md](s0.2-crear-solucion/spec.md).
+4. Las pruebas base validan el arranque mínimo antes de ejecutar las pruebas de comportamiento que correspondan.
 5. El cierre del trabajo requiere revisión de trazabilidad y de coherencia con la fuente funcional.
 
 ## Persistencia y dependencias
@@ -62,7 +61,7 @@ Los eventos de aplicación se registran con nivel y contexto suficientes para di
 - No se crea funcionalidad fuera del alcance documentado.
 - La capa web no define reglas del dominio.
 - Las pruebas se ejecutan sobre comportamiento real y no sobre mocks sin necesidad.
-- La identidad de acceso se resuelve desde infraestructura o contexto de ejecución, nunca desde datos enviados por el cliente.
+- La identidad de acceso llega a los casos de uso mediante la abstracción de Application, nunca desde datos enviados por el cliente.
 
 ## Trazabilidad
 
@@ -71,6 +70,7 @@ Este SDD soporta la preparación de la base del proyecto y se usa antes de cada 
 - [roadmap.md](../context/roadmap.md)
 - [AGENTS.md](../AGENTS.md)
 - [plans/mvp0-plan.md](../plans/mvp0-plan.md)
+- [s0.2-crear-solucion/spec.md](s0.2-crear-solucion/spec.md)
 
 ## Riesgos y decisiones pendientes
 
@@ -81,7 +81,6 @@ Este SDD soporta la preparación de la base del proyecto y se usa antes de cada 
 
 Se considera correcto cuando:
 
-- la solución mantiene la separación de capas;
 - el arranque mínimo funciona en entorno local;
 - la observabilidad es útil y no revela contenido sensible;
 - la trazabilidad con `context/` permanece clara y sin duplicados.

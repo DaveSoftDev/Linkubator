@@ -65,7 +65,9 @@ Si falta una condición, entrega un informe con el bloqueo, la fuente afectada y
 ### 3. Redactar o actualizar el SDD
 
 - Parte de [templates/sdd-template.md](templates/sdd-template.md).
-- Al crear el documento en `specs/`, conserva las rutas relativas de la plantilla: están escritas para el SDD resultante, no para su ubicación dentro de los assets de la skill.
+- Cada SDD nuevo va en su propia subcarpeta: `specs/<slug>/spec.md`, con un `slug` descriptivo en kebab-case. Añade un enlace al nuevo SDD en `specs/README.md`.
+- Ajusta las rutas relativas de la plantilla a la ubicación final del SDD; están escritas para el documento resultante, no para su ubicación dentro de los assets de la skill.
+- Al actualizar un SDD existente, conserva su ubicación; esta convención no requiere migrar documentos anteriores.
 - Mantén el contenido en castellano.
 - En `Fuente funcional`, enlaza solo las secciones que sustentan el diseño.
 - En `Decisiones técnicas`, describe componentes, contratos, dependencias, flujos internos y límites entre capas.

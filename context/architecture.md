@@ -22,6 +22,21 @@ Este documento describe cómo se construirá Linkubator: plataforma, capas, pers
 
 > Diagrama de capas: [Capas y dependencias](diagrams/architecture-layers.md).
 
+### Dependencias entre proyectos
+
+Domain, Application, Infrastructure y Web forman el grafo productivo. Sus referencias se limitan a esta matriz:
+
+| Proyecto | Puede referenciar |
+| --- | --- |
+| Domain | Ninguno de los demás proyectos de la solución |
+| Application | Domain |
+| Infrastructure | Application y Domain |
+| Web | Application e Infrastructure |
+
+Web solo referencia Infrastructure en el composition root para registrar sus implementaciones al arrancar. El flujo de negocio permanece en Web → Application → Domain.
+
+Tests puede referenciar los cuatro proyectos de producción para validarlos. Ningún proyecto de producción referencia Tests, que queda fuera del grafo productivo.
+
 ### Domain
 
 - Entidades, value objects, invariantes, reglas de negocio, errores de dominio y enumeradores.

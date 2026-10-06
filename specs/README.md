@@ -25,7 +25,8 @@ Los documentos de `specs/` enlazan a estas fuentes y no repiten sus reglas.
 ## Estructura
 
 - [sdd-writer](../skills/sdd-writer/SKILL.md): skill que crea y mantiene los SDD mediante su plantilla interna.
-- [fundaciones.md](fundaciones.md): diseño de la base técnica y del entorno de trabajo.
+- [s0.2-crear-solucion/spec.md](s0.2-crear-solucion/spec.md): estructura de la solución y referencias permitidas entre capas.
+- [fundaciones.md](fundaciones.md): diseño transversal de la base técnica y del entorno de trabajo.
 - [dominio.md](dominio.md): diseño del núcleo funcional y sus invariantes técnicas.
 - [aplicacion.md](aplicacion.md): contratos de casos de uso, identidad y coordinación entre capas.
 

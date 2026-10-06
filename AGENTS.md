@@ -54,8 +54,9 @@ Los diagramas de `context/diagrams/` son vistas derivadas: muestran estructura y
 
 ## Skills de Linkubator
 
-Las skills del proyecto viven en `skills/`. Cada una contiene un archivo [`SKILL.md`](skills/requirements-review/SKILL.md) con su procedimiento y debe usarse cuando la tarea corresponda a su propósito.
+Las skills del proyecto viven en `skills/`. Cada una contiene un archivo [`SKILL.md`](skills/requirements-review/SKILL.md) con su procedimiento y debe usarse cuando la tarea corresponda a su propósito. Al crear o modificar una skill del proyecto, usa [skill-authoring](skills/skill-authoring/SKILL.md).
 
+- [skill-authoring](skills/skill-authoring/SKILL.md): define cómo crear, actualizar y validar skills de Linkubator, adaptando patrones externos a las convenciones del repositorio y de Copilot.
 - [requirements-review](skills/requirements-review/SKILL.md): revisa y sincroniza la documentación. Detecta contradicciones, duplicados, textos en el documento equivocado, omisiones, deriva del alcance del MVP0 y supuestos no documentados, y genera bajo demanda la ficha de una entidad. No genera código.
 - [sdd-writer](skills/sdd-writer/SKILL.md): redacta y actualiza el diseño técnico en `specs/`, con trazabilidad a las fuentes funcionales y sin introducir reglas de producto. No genera código.
 
