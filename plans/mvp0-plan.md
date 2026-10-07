@@ -93,12 +93,12 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 
 **Definition of Done**
 
-- [ ] La aplicación arranca por HTTPS en local y muestra una página mínima.
-- [ ] `dotnet build` y `dotnet test` pasan en limpio.
-- [ ] Hay logs por consola y por archivo.
-- [ ] Los tests de referencias entre proyectos y del límite del composition root pasan.
-- [ ] El README permite a otra persona arrancar el proyecto.
-- [ ] Las convenciones de ramas, PRs y commits están acordadas.
+- [x] La aplicación arranca por HTTPS en local y muestra una página mínima.
+- [x] `dotnet build` y `dotnet test` pasan en limpio.
+- [x] Hay logs por consola y por archivo.
+- [x] Los tests de referencias entre proyectos y del límite del composition root pasan.
+- [x] El README permite a otra persona arrancar el proyecto.
+- [x] Las convenciones de ramas, PRs y commits están acordadas.
 
 ### S1: Dominio I: textos, alias y slugs (L)
 
