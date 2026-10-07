@@ -2,11 +2,10 @@
 
 ## Estado y aprobación del plan
 
-- Estado: propuesta.
-- Especificación: [spec.md](spec.md).
+- Estado: propuesta / aprobado / bloqueado.
 - Aprobaciones:
-  - Especificación: pendiente; registrar responsable, fecha y referencia real cuando se apruebe.
-  - Plan y tareas: pendiente; registrar responsable, fecha y referencia real cuando se aprueben.
+  - Especificación: [spec.md](spec.md), aprobada por [responsable, fecha].
+	- Plan: pendiente; registrar responsable, fecha y referencia real cuando se apruebe.
 
 ## Diseño de implementación
 
@@ -40,8 +39,8 @@ Garantías necesarias para preservar los criterios e invariantes fuente, con enl
 
 Identificar lo que cada comprobación no demuestra. Cuando corresponda, describir una comprobación negativa segura que confirme la sensibilidad del test; no asumir que un fallo de compilación demuestra una infracción detectada por un test.
 
-## Orden de ejecución y puerta de salida
+## Orden de ejecución y cierre
 
-- [Tareas](tasks.md): dependencias, paralelismo justificado y checks inmediatos.
+- Tareas: crear `tasks.md` tras aprobar este plan; contendrá dependencias, paralelismo justificado y checks inmediatos.
 - Criterios con evidencia satisfactoria, sin bloqueos y aceptación humana registrada en las tareas.
 - Ante un cambio de regla, detener la tarea afectada y tramitar su aprobación en la fuente propietaria antes de continuar.

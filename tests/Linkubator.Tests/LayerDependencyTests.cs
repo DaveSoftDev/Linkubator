@@ -7,7 +7,7 @@ public class LayerDependencyTests
     [Fact]
     public void WebTypesOutsideTheCompositionRootDoNotDependOnInfrastructure()
     {
-        var infrastructureDependentTypes = Types.InAssembly(typeof(Program).Assembly)
+        IEnumerable<Type>? infrastructureDependentTypes = Types.InAssembly(typeof(Program).Assembly)
             .That()
             .HaveDependencyOn("Linkubator.Infrastructure")
             .GetTypes();

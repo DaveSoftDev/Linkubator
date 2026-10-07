@@ -2,10 +2,12 @@
 
 ## Referencias y autorización
 
-- [Especificación](spec.md)
-- [Plan técnico y validaciones](plan.md)
-- Puertas de especificación y plan: pendientes / referencias a aprobaciones reales.
-- La preparación de tareas no autoriza su implementación.
+- Estado: pendiente / aprobado / bloqueado.
+- Aprobaciones:
+    - Especificación: [spec.md](spec.md), aprobada por [responsable, fecha].
+    - Plan: [plan.md](plan.md), aprobado por [responsable, fecha].
+	- Tareas: pendiente; registrar responsable, fecha y referencia real cuando se apruebe.
+- La preparación de tareas no inventa aprobaciones ni evidencias de implementación.
 
 ## Descomposición
 

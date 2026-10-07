@@ -32,7 +32,7 @@ Lee [AGENTS.md](../../AGENTS.md) y los documentos completos que correspondan al 
 - [architecture.md](../../context/architecture.md): plataforma, capas y medidas técnicas.
 - [decisions.md](../../context/decisions.md): decisiones, motivos y pendientes.
 - [roadmap.md](../../context/roadmap.md): orden y criterios de finalización.
-- [Plan de implementación](../../plans/mvp0-plan.md): tarea, dependencias y puertas aplicables.
+- [Plan de implementación](../../plans/mvp0-plan.md): tarea, dependencias y revisión del SDD antes del desarrollo cuando aplique.
 - Los criterios de aceptación aprobados del trabajo, cuando existan. Comprueba su ubicación antes de enlazarlos; no presupongas un archivo inexistente.
 
 La especificación de trabajo es derivada: no reemplaza `context/`. Enlaza las secciones propietarias, sin copiar valores, algoritmos, mensajes, listas cerradas ni reglas como fuentes independientes. Los criterios expresan comprobaciones de esas reglas, no las redefinen. Si ya existe un criterio aprobado, enlázalo con su identificador en lugar de duplicarlo.
@@ -56,12 +56,12 @@ Los trabajos terminados y aceptados se trasladan, con su carpeta completa, a `sp
 ### 1. Delimitar y contrastar
 
 - Identifica el trabajo, su fuente propietaria y los artefactos existentes.
-- Contrasta el alcance con el plan y las tareas vecinas: distingue quién crea un componente, quién escribe sus tests y quién los ejecuta para aceptarlo. No fusiones etapas implícitamente.
+- Contrasta el alcance con el plan y las tareas vecinas: distingue quién crea un componente, quién escribe sus tests y quién los ejecuta para aceptarlo. No fusiones etapas implícitamente ni presupongas que todos los artefactos SDD ya existen.
 - Formula una hipótesis local sobre el resultado esperado y una comprobación que pueda refutarla.
 - Si ya hay implementación, úsala solo para detectar detalles técnicos útiles y contrastar que la propuesta no contradice las fuentes. Separa esa lectura del texto que redactas: la existencia del código no demuestra que el criterio esté cumplido ni que se aprobó antes de construir.
 - Si falta una fuente necesaria, hay contradicción o una decisión bloqueante, informa del bloqueo, su fuente y la pregunta pendiente. No inventes la regla ni presentes el trabajo como listo para implementar.
 
-### 2. Especificar y preparar la primera aprobación
+### 2. Especificar y preparar la revisión
 
 Redacta `spec.md` con objetivo, fuentes, alcance incluido y excluido, dependencias y criterios identificados como `CA01`, `CA02`, etc. En las celdas de columna `ID` escribe los identificadores sin guion (por ejemplo, `CA01`, `V01`, `T01`); aplica esta forma también a sus referencias en texto, enlaces y evidencias para mantener una nomenclatura uniforme. Usa dado/cuando/entonces o una formulación igualmente observable. Cada criterio enlaza a su fuente o al criterio aprobado propietario y tiene una comprobación posible. No impongas un resultado nuevo sin respaldo.
 
@@ -69,7 +69,7 @@ Identifica casos negativos y límites aplicables mediante enlaces. Mantén el c�
 
 ### 3. Diseñar y planificar
 
-Redacta `plan.md`: componentes, responsabilidades, contratos, flujos internos, persistencia y transacciones cuando apliquen, dependencias, garantías técnicas y riesgos. Reutiliza el diseño y los tests existentes adecuados. Separa decisiones confirmadas de propuestas.
+Redacta `plan.md` solo después de que `spec.md` tenga aprobación humana registrada. El plan cubre componentes, responsabilidades, contratos, flujos internos, persistencia y transacciones cuando apliquen, dependencias, garantías técnicas y riesgos. Reutiliza el diseño y los tests existentes adecuados. Separa decisiones confirmadas de propuestas.
 
 Para cada criterio, define validación, alcance, prerrequisitos, resultado esperado y evidencia que se registrará. Distingue prueba automatizada, revisión técnica y validación manual; no atribuyas a un test garantías que no comprueba. Usa comandos concretos y filtros compatibles con el runner cuando se conozcan; si no, registra la detección necesaria como tarea. Evita pruebas de UI o herramientas ajenas a las fuentes aprobadas.
 
@@ -77,7 +77,7 @@ Cuando una garantía dependa de un test arquitectónico o de seguridad, planific
 
 ### 4. Descomponer en tareas
 
-Redacta `tasks.md` con identificadores estables. Cada tarea debe tener:
+Redacta `tasks.md` solo después de que `plan.md` tenga aprobación humana registrada. No crees el archivo de tareas como borrador previo a la aprobación del plan. Usa identificadores estables. Cada tarea debe tener:
 
 - criterio cubierto y enlace al diseño;
 - dependencias explícitas y paralelismo solo si las tareas son independientes;
@@ -87,19 +87,21 @@ Redacta `tasks.md` con identificadores estables. Cada tarea debe tener:
 
 Ordena preparación, cambios pequeños, validación integrada y revisión humana. Incluye tareas documentales cuando correspondan a este trabajo, sin adelantar trabajo de otra etapa. Todo criterio debe tener tareas y validación; toda tarea debe justificar su contribución. Una tarea no está completada solo por haber creado archivos.
 
-### 5. Puertas y entrega a implementación
+### 5. Aprobaciones y entrega a implementación
 
-- Primera puerta: fuentes coherentes, alcance y criterios aprobados, sin decisiones bloqueantes.
-- Segunda puerta: diseño, tareas y validaciones aprobados antes de nuevos cambios productivos.
-- Puedes preparar el conjunto como propuesta para una revisión conjunta, pero no iniciar implementación ni marcar ambas puertas aprobadas por haberlo redactado.
-- Entrega el siguiente paso autorizado y los bloqueos. La implementación pertenece a otro trabajo: avanza por tareas con su check inmediato y evidencia, respetando las puertas del plan propietario.
+- Registra tres aprobaciones diferenciadas y secuenciales: primero `spec.md`; tras su aprobación, prepara y somete a aprobación `plan.md`; tras aprobar el plan, crea `tasks.md` y somételo a su propia aprobación. Cada documento conserva su estado, responsable, fecha y referencia real.
+- La aprobación de un documento no implica la de los otros. Solicita y registra una decisión explícita para cada artefacto; no combines las tres aprobaciones en una sola.
+- No crees `plan.md` antes de aprobar `spec.md`, ni `tasks.md` antes de aprobar `plan.md`. Hasta entonces, no incluyas el artefacto futuro en el índice ni dejes enlaces que aparenten que existe.
+- No empieces cambios productivos hasta que `tasks.md` esté aprobado.
+- No marques aprobado un artefacto no cubierto por una referencia explícita. Una decisión pendiente que afecte a requisitos, contrato o alcance se registra como pregunta concreta.
+- La implementación avanza por tareas con su check inmediato y evidencia, una vez registradas las aprobaciones requeridas.
 
 ### 6. Validación, aceptación y mantenimiento
 
 - Antes de entregar documentos, verifica frontmatter cuando aplique, rutas, anclas, identificadores, dependencias sin ciclos y cobertura fuente -> criterio -> tarea -> validación.
 - Comprueba que no se duplican reglas del producto y que se respetan terminología e invariantes de [AGENTS.md](../../AGENTS.md). Si el cambio requiere sincronizar fuentes o introduce una posible duplicación, usa [requirements-review](../requirements-review/SKILL.md) antes de darlo por listo.
 - Al actualizar evidencia, registra criterio, comprobación, entorno o versión pertinente, resultado, fecha y referencia. No inventes comandos ejecutados, resultados, aprobaciones ni fechas. Una validación pendiente, fallida o no disponible sigue explícita.
-- La puerta de salida requiere evidencia satisfactoria para todos los criterios, tareas completadas y aceptación humana registrada. Pruebas verdes no conceden aceptación humana ni cierran otras etapas.
+- El cierre requiere evidencia satisfactoria para todos los criterios, tareas completadas y aceptación humana registrada. Pruebas verdes no conceden aceptación humana ni cierran otras etapas.
 - Si un cambio revela una regla nueva o una contradicción, bloquea la tarea afectada, propone el cambio en su documento propietario y espera aprobación antes de actualizar e implementar los artefactos dependientes. No edites reglas funcionales por iniciativa propia.
 
 ### 7. Archivar un trabajo terminado

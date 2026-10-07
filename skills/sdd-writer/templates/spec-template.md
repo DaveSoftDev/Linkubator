@@ -3,7 +3,7 @@
 ## Estado y aprobación
 
 - Estado: borrador / bloqueada / aprobada mediante referencia real.
-- Aprobación humana: pendiente; registrar fecha, responsable y referencia cuando exista.
+- Aprobación: pendiente; registrar fecha, responsable y referencia cuando exista.
 
 ## Objetivo
 
