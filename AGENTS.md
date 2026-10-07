@@ -16,8 +16,11 @@ La documentación funcional vive en `context/`. Cada documento responde a una so
 | [`architecture.md`](context/architecture.md) | Cómo se construye: plataforma, capas, persistencia, seguridad técnica | Reglas de negocio |
 | [`domain-model.md`](context/domain-model.md) | Entidades, propiedades, relaciones e invariantes | Capas, formatos de almacenamiento, SEO |
 | [`roadmap.md`](context/roadmap.md) | En qué orden se construye y cuándo termina cada etapa, checklist de calidad y backlog de MVP1 | Reglas ni historial de decisiones |
+| [`specs/`](specs/) | Cómo se implementa cada subsistema: diseño técnico, estructura interna, ejecución de flujos y trazabilidad | Reglas del producto, límites funcionales, mensajes exactos, requisitos de usuario ni decisiones de negocio en sí mismas |
 
 Principio de fuente única: **cada regla se escribe en un único documento, y los demás la enlazan sin repetirla.** Antes de añadir una regla, busca si ya existe. Si cambia una decisión, actualiza su documento propietario y revisa que los enlaces sigan siendo válidos.
+
+La carpeta [`specs/`](specs/) es documentación técnica derivada: explica cómo se implementa cada subsistema, pero siempre enlaza a la regla fuente en `context/` y nunca repite sus requisitos ni sus decisiones de negocio.
 
 La documentación es genérica para todo el producto, las únicas referencias a MVPs concretos se deben hacer en [decisions.md](/context/decisions.md) y en [roadmap.md](/context/roadmap.md). Fuera de él, no deben aparecer ninguna mención a MVPs específicos.
 
@@ -34,6 +37,7 @@ Antes de escribir cualquier texto, clasifícalo. **Si no encaja en el documento 
 | Una tecnología, una capa, una transacción, una configuración o una medida técnica | [`architecture.md`](context/architecture.md) |
 | Una entidad, una propiedad, una relación o una regla que los datos cumplen siempre | [`domain-model.md`](context/domain-model.md) |
 | Una etapa, su orden, su criterio de finalización, un test de la checklist o un candidato para MVP1 | [`roadmap.md`](context/roadmap.md) |
+| Un diseño de implementación: componentes, dependencias, flujos internos, errores de infraestructura, SQL y trazabilidad técnica | [`specs/`](specs/) |
 
 Señales de que un texto está en el documento equivocado:
 
@@ -50,9 +54,11 @@ Los diagramas de `context/diagrams/` son vistas derivadas: muestran estructura y
 
 ## Skills de Linkubator
 
-Las skills del proyecto viven en `skills/`. Cada una contiene un archivo [`SKILL.md`](skills/requirements-review/SKILL.md) con su procedimiento y debe usarse cuando la tarea corresponda a su propósito.
+Las skills del proyecto viven en `skills/`. Cada una contiene un archivo [`SKILL.md`](skills/requirements-review/SKILL.md) con su procedimiento y debe usarse cuando la tarea corresponda a su propósito. Al crear o modificar una skill del proyecto, usa [skill-authoring](skills/skill-authoring/SKILL.md).
 
+- [skill-authoring](skills/skill-authoring/SKILL.md): define cómo crear, actualizar y validar skills de Linkubator, adaptando patrones externos a las convenciones del repositorio y de Copilot.
 - [requirements-review](skills/requirements-review/SKILL.md): revisa y sincroniza la documentación. Detecta contradicciones, duplicados, textos en el documento equivocado, omisiones, deriva del alcance del MVP0 y supuestos no documentados, y genera bajo demanda la ficha de una entidad. No genera código.
+- [sdd-writer](skills/sdd-writer/SKILL.md): prepara especificación, plan técnico y tareas bajo Spec-Driven Development; verifica cierre y archiva trabajos aceptados con evidencia y enlaces trazables. No introduce reglas de producto ni implementa código.
 
 Cuando se cree una nueva skill de Linkubator, añádela aquí con su nombre, enlace y propósito.
 

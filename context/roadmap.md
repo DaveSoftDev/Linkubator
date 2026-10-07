@@ -14,6 +14,18 @@ La aceptación cierra la fase de definición y permite iniciar la implementació
 
 ## Now
 
+### Fundaciones
+
+Objetivos:
+
+- Crear la solución y dejar un esqueleto que compila y arranca localmente, con los proyectos, referencias y pruebas base de [mvp0-plan.md → «S0: Fundaciones (M)»](../plans/mvp0-plan.md#s0-fundaciones-m).
+
+Criterio de finalización:
+
+- Se cumple la Definition of Done de [mvp0-plan.md → «S0: Fundaciones (M)»](../plans/mvp0-plan.md#s0-fundaciones-m).
+
+## Next
+
 ### Dominio y aplicación
 
 Objetivos:
@@ -26,8 +38,6 @@ Objetivos:
 Criterio de finalización:
 
 - Los casos de uso principales tienen contratos y criterios de aceptación claros.
-
-## Next
 
 ### Persistencia
 
