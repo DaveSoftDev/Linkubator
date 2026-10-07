@@ -59,5 +59,14 @@ nunit-*.xml
 #Kilo Code
 .kilo
 
-#Qween3
+# Local development and generated data
+appsettings.Development.json
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+logs/
+
+# Qween3
 .qween3

@@ -1,0 +1,21 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^Get-ChildItem -File \\| Select-Object -ExpandProperty Name; dotnet --list-sdks$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^& \\{ dotnet sln Linkubator\\.sln add src/Linkubator\\.Domain/Linkubator\\.Domain\\.csproj src/Linkubator\\.Application/Linkubator\\.Application\\.csproj src/Linkubator\\.Infrastructure/Linkubator\\.Infrastructure\\.csproj src/Linkubator\\.Web/Linkubator\\.Web\\.csproj tests/Linkubator\\.Tests/Linkubator\\.Tests\\.csproj; dotnet add src/Linkubator\\.Application/Linkubator\\.Application\\.csproj reference src/Linkubator\\.Domain/Linkubator\\.Domain\\.csproj; dotnet add src/Linkubator\\.Infrastructure/Linkubator\\.Infrastructure\\.csproj reference src/Linkubator\\.Application/Linkubator\\.Application\\.csproj src/Linkubator\\.Domain/Linkubator\\.Domain\\.csproj; dotnet add src/Linkubator\\.Web/Linkubator\\.Web\\.csproj reference src/Linkubator\\.Application/Linkubator\\.Application\\.csproj src/Linkubator\\.Infrastructure/Linkubator\\.Infrastructure\\.csproj; dotnet add tests/Linkubator\\.Tests/Linkubator\\.Tests\\.csproj reference src/Linkubator\\.Domain/Linkubator\\.Domain\\.csproj src/Linkubator\\.Application/Linkubator\\.Application\\.csproj src/Linkubator\\.Infrastructure/Linkubator\\.Infrastructure\\.csproj src/Linkubator\\.Web/Linkubator\\.Web\\.csproj; dotnet add tests/Linkubator\\.Tests/Linkubator\\.Tests\\.csproj package NetArchTest\\.Rules; dotnet add tests/Linkubator\\.Tests/Linkubator\\.Tests\\.csproj package Microsoft\\.AspNetCore\\.Mvc\\.Testing --version 10\\.0\\.0; dotnet add src/Linkubator\\.Infrastructure/Linkubator\\.Infrastructure\\.csproj package Microsoft\\.Extensions\\.DependencyInjection\\.Abstractions --version 10\\.0\\.0 \\}$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^dotnet test tests/Linkubator\\.Tests/Linkubator\\.Tests\\.csproj --no-restore$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "dotnet test": true,
+        "&": true,
+        "dotnet build": true,
+        "Get-Command": true,
+        "dotnet watch": true
+    }
+}

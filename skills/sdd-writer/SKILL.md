@@ -1,112 +1,120 @@
 ---
 name: sdd-writer
-description: "Use when creating, updating or preparing a technical SDD in specs/ for a Linkubator subsystem or sprint. Derives implementation design from approved context/ rules and acceptance criteria, maintains traceability, detects open decisions, and never invents product rules or duplicates their source."
+description: "Usa esta skill para crear, actualizar o archivar specs bajo Spec-Driven Development en Linkubator. Prepara criterios, diseño, tareas, validaciones y cierre trazables sin implementar código ni inventar aprobaciones o evidencias."
 ---
 
-# SDD Writer
+# SDD Writer: Spec-Driven Development
 
 ## Propósito
 
-Crear y mantener documentación de diseño de implementación en `specs/`. Un SDD explica cómo se implementa un subsistema a partir de la fuente funcional, pero no se convierte en una fuente de reglas del producto.
+Preparar y mantener los artefactos que guían un trabajo bajo Spec-Driven Development (SDD): especificar, aprobar, diseñar y planificar, aprobar, implementar por tareas, validar, aceptar y archivar. SDD nombra el proceso, no un documento de diseño ni una carpeta.
+
+Esta skill escribe documentación y prepara la entrega a implementación. No ejecuta las tareas productivas ni concede aprobaciones humanas. Puede comprobar sus documentos y registrar evidencia de implementación aportada o comprobada mediante validaciones autorizadas, sin confundirla con una aceptación.
 
 ## Cuándo usar
 
-Usa esta skill cuando:
+- Preparar una especificación de trabajo para un subsistema o bloque del plan.
+- Derivar criterios de aceptación verificables de las fuentes aprobadas.
+- Diseñar la implementación y descomponerla en tareas con dependencias y validaciones.
+- Revisar trazabilidad entre fuente, criterio, tarea y evidencia.
+- Mantener estos artefactos cuando cambie una fuente o la implementación revele un bloqueo.
+- Archivar una spec terminada cuando se pida explícitamente (por ejemplo, «Archiva la spec S0.2»), tras comprobar sus condiciones de cierre.
 
-- se prepara un sprint que requiere diseño técnico;
-- se crea un SDD nuevo en `specs/`;
-- se modifica el diseño de implementación de un subsistema;
-- se necesita comprobar la trazabilidad entre una decisión funcional, el diseño y sus pruebas;
-- un cambio de implementación obliga a descubrir dependencias, transacciones, contratos o riesgos técnicos.
+No la uses para definir reglas de producto, decidir ambigüedades funcionales, sustituir [requirements-review](../requirements-review/SKILL.md), generar código, proyectos, SQL ejecutable, migraciones, paquetes o despliegue. Una petición de redactar specs no autoriza implementar sus tareas.
 
-No la uses para:
+## Fuentes y responsabilidad
 
-- definir requisitos, límites, mensajes, respuestas o algoritmos del producto;
-- resolver una ambigüedad funcional sin decisión humana;
-- sustituir la revisión de coherencia de `requirements-review`;
-- generar código, proyectos, SQL ejecutable, migraciones, dependencias o configuración de despliegue.
+Lee [AGENTS.md](../../AGENTS.md) y los documentos completos que correspondan al área:
 
-## Fuentes de verdad
+- [requirements.md](../../context/requirements.md): capacidades del producto.
+- [specifications.md](../../context/specifications.md): reglas exactas.
+- [domain-model.md](../../context/domain-model.md): entidades e invariantes.
+- [architecture.md](../../context/architecture.md): plataforma, capas y medidas técnicas.
+- [decisions.md](../../context/decisions.md): decisiones, motivos y pendientes.
+- [roadmap.md](../../context/roadmap.md): orden y criterios de finalización.
+- [Plan de implementación](../../plans/mvp0-plan.md): tarea, dependencias y puertas aplicables.
+- Los criterios de aceptación aprobados del trabajo, cuando existan. Comprueba su ubicación antes de enlazarlos; no presupongas un archivo inexistente.
 
-Antes de redactar, lee los documentos completos que correspondan al área:
+La especificación de trabajo es derivada: no reemplaza `context/`. Enlaza las secciones propietarias, sin copiar valores, algoritmos, mensajes, listas cerradas ni reglas como fuentes independientes. Los criterios expresan comprobaciones de esas reglas, no las redefinen. Si ya existe un criterio aprobado, enlázalo con su identificador en lugar de duplicarlo.
 
-1. [AGENTS.md](../../AGENTS.md): reglas de trabajo e invariantes críticas.
-2. [requirements.md](../../context/requirements.md): qué hace el producto y para quién.
-3. [specifications.md](../../context/specifications.md): reglas exactas del producto.
-4. [domain-model.md](../../context/domain-model.md): entidades, propiedades, relaciones e invariantes.
-5. [architecture.md](../../context/architecture.md): plataforma, capas y medidas técnicas generales.
-6. [decisions.md](../../context/decisions.md): decisiones, riesgos, pendientes y fuera de alcance.
-7. [roadmap.md](../../context/roadmap.md): orden de trabajo y criterios de finalización.
-8. [mvp0-plan.md](../../plans/mvp0-plan.md), si el SDD prepara ese plan.
-9. [acceptance-criteria.md](../../plans/acceptance-criteria.md), cuando exista y afecte al caso de uso.
+## Artefactos
 
-El SDD usa estas fuentes mediante enlaces. Si una fuente falta, está incompleta o se contradice, no inventes su contenido: informa del hallazgo y pide la decisión necesaria.
+Para trabajos nuevos usa `specs/<slug>/`, con un nombre descriptivo en kebab-case:
+
+| Archivo | Responsabilidad | Plantilla |
+| --- | --- | --- |
+| `spec.md` | Resultado técnico esperado, alcance, fuentes y criterios de aceptación derivados. | [spec-template.md](templates/spec-template.md) |
+| `plan.md` | Diseño técnico, dependencias, riesgos y estrategia de validación. | [plan-template.md](templates/plan-template.md) |
+| `tasks.md` | Tareas ordenadas, estados, evidencia por criterio y aceptación final. | [tasks-template.md](templates/tasks-template.md) |
+
+Es una convención local para los trabajos de esta skill, no un estándar universal de SDD. No crees otros artefactos sin necesidad. Carga cada plantilla cuando vayas a redactar su documento. Sus enlaces están preparados para el destino `specs/<slug>/`; ajusta las rutas si la ubicación difiere. Enlaza el trabajo desde [specs-index.md](../../specs/specs-index.md) sin duplicar su contenido.
+
+Los trabajos terminados y aceptados se trasladan, con su carpeta completa, a `specs/archive/<slug>/`. El estado y la evidencia de cierre pertenecen a `tasks.md`; el índice es solo navegación. Un documento redundante, una propuesta descartada o un diseño antiguo sin cierre no se archivan como trabajo terminado.
 
 ## Flujo de trabajo
 
-### 1. Delimitar el diseño
+### 1. Delimitar y contrastar
 
-- Identifica el subsistema, el trabajo que se pretende preparar y el SDD propietario.
-- Localiza las reglas funcionales, invariantes y decisiones que aplican.
-- Formula una hipótesis concreta de diseño técnico y una comprobación que pueda refutarla.
-- Determina qué debe quedar fuera del SDD para no invadir otro subsistema ni duplicar una fuente funcional.
+- Identifica el trabajo, su fuente propietaria y los artefactos existentes.
+- Contrasta el alcance con el plan y las tareas vecinas: distingue quién crea un componente, quién escribe sus tests y quién los ejecuta para aceptarlo. No fusiones etapas implícitamente.
+- Formula una hipótesis local sobre el resultado esperado y una comprobación que pueda refutarla.
+- Si ya hay implementación, úsala solo para detectar detalles técnicos útiles y contrastar que la propuesta no contradice las fuentes. Separa esa lectura del texto que redactas: la existencia del código no demuestra que el criterio esté cumplido ni que se aprobó antes de construir.
+- Si falta una fuente necesaria, hay contradicción o una decisión bloqueante, informa del bloqueo, su fuente y la pregunta pendiente. No inventes la regla ni presentes el trabajo como listo para implementar.
 
-### 2. Comprobar la puerta de entrada
+### 2. Especificar y preparar la primera aprobación
 
-Antes de redactar un diseño para implementación, confirma que:
+Redacta `spec.md` con objetivo, fuentes, alcance incluido y excluido, dependencias y criterios identificados como `CA-01`, `CA-02`, etc. Usa dado/cuando/entonces o una formulación igualmente observable. Cada criterio enlaza a su fuente o al criterio aprobado propietario y tiene una comprobación posible. No impongas un resultado nuevo sin respaldo.
 
-- las reglas funcionales necesarias tienen fuente propietaria;
-- los criterios de aceptación aplicables existen o están claramente identificados;
-- no queda una decisión funcional bloqueante;
-- la propuesta no contradice las capas ni las medidas técnicas de `architecture.md`.
+Identifica casos negativos y límites aplicables mediante enlaces. Mantén el cómo en `plan.md`. Marca la especificación como borrador hasta tener aprobación humana explícita; registra fecha, responsable y referencia real. Una autorización general de implementación no implica aprobación de una spec recién redactada.
 
-Si falta una condición, entrega un informe con el bloqueo, la fuente afectada y la pregunta que debe resolver la persona responsable. No presentes una propuesta como decisión confirmada.
+### 3. Diseñar y planificar
 
-### 3. Redactar o actualizar el SDD
+Redacta `plan.md`: componentes, responsabilidades, contratos, flujos internos, persistencia y transacciones cuando apliquen, dependencias, garantías técnicas y riesgos. Reutiliza el diseño y los tests existentes adecuados. Separa decisiones confirmadas de propuestas.
 
-- Parte de [templates/sdd-template.md](templates/sdd-template.md).
-- Cada SDD nuevo va en su propia subcarpeta: `specs/<slug>/spec.md`, con un `slug` descriptivo en kebab-case. Añade un enlace al nuevo SDD en `specs/README.md`.
-- Ajusta las rutas relativas de la plantilla a la ubicación final del SDD; están escritas para el documento resultante, no para su ubicación dentro de los assets de la skill.
-- Al actualizar un SDD existente, conserva su ubicación; esta convención no requiere migrar documentos anteriores.
-- Mantén el contenido en castellano.
-- En `Fuente funcional`, enlaza solo las secciones que sustentan el diseño.
-- En `Decisiones técnicas`, describe componentes, contratos, dependencias, flujos internos y límites entre capas.
-- En `Persistencia y dependencias`, describe mecanismos técnicos; los valores y reglas funcionales se enlazan desde su fuente.
-- En `Invariantes de implementación`, expresa garantías técnicas, especialmente las invariantes críticas de `AGENTS.md` que el diseño debe preservar.
-- En `Trazabilidad`, enlaza criterios de aceptación, checklist y verificaciones que demuestran el diseño.
-- En `Riesgos y decisiones pendientes`, separa lo aprobado de las propuestas y preguntas abiertas.
+Para cada criterio, define validación, alcance, prerrequisitos, resultado esperado y evidencia que se registrará. Distingue prueba automatizada, revisión técnica y validación manual; no atribuyas a un test garantías que no comprueba. Usa comandos concretos y filtros compatibles con el runner cuando se conozcan; si no, registra la detección necesaria como tarea. Evita pruebas de UI o herramientas ajenas a las fuentes aprobadas.
 
-### 4. Aplicar cambios relacionados
+Cuando una garantía dependa de un test arquitectónico o de seguridad, planifica una comprobación negativa proporcionada al riesgo que demuestre que detecta la infracción. No alteres cambios del usuario ni conviertas ese requisito en una nueva infraestructura de testing.
 
-Solo actualiza fuera de `specs/` cuando el cambio sea de su propiedad:
+### 4. Descomponer en tareas
 
-- El orden del trabajo, la puerta del sprint o el criterio de finalización pertenecen a [roadmap.md](../../context/roadmap.md) o al plan correspondiente.
-- Una nueva regla, límite, mensaje, respuesta o algoritmo pertenece a [specifications.md](../../context/specifications.md).
-- Una entidad, propiedad, relación o invariante de datos pertenece a [domain-model.md](../../context/domain-model.md).
-- El motivo de una decisión, riesgo aceptado o pendiente pertenece a [decisions.md](../../context/decisions.md).
-- Una medida técnica general de plataforma o capa pertenece a [architecture.md](../../context/architecture.md).
+Redacta `tasks.md` con identificadores estables. Cada tarea debe tener:
 
-Un SDD no adelanta decisiones de producto. Si el diseño revela que hace falta una, se detiene y la propone en su documento propietario para aprobación humana.
+- criterio cubierto y enlace al diseño;
+- dependencias explícitas y paralelismo solo si las tareas son independientes;
+- acción acotada, entregable y comprobación inmediata con resultado esperado;
+- estado: pendiente, en curso, completada o bloqueada;
+- evidencia real o indicación de que está pendiente.
 
-### 5. Verificar antes de entregar
+Ordena preparación, cambios pequeños, validación integrada y revisión humana. Incluye tareas documentales cuando correspondan a este trabajo, sin adelantar trabajo de otra etapa. Todo criterio debe tener tareas y validación; toda tarea debe justificar su contribución. Una tarea no está completada solo por haber creado archivos.
 
-Comprueba:
+### 5. Puertas y entrega a implementación
 
-- cada enlace a `context/` existe y apunta a la sección correcta;
-- no hay límites, listas cerradas, mensajes, códigos de respuesta o reglas de producto duplicados;
-- las referencias a MVP concretos solo aparecen en [decisions.md](../../context/decisions.md) y [roadmap.md](../../context/roadmap.md);
-- la terminología coincide con `AGENTS.md`;
-- el diseño preserva propiedad de datos, público/privado, privacidad de cuenta y límites de transacción aplicables;
-- el SDD contiene una estrategia de verificación trazable.
+- Primera puerta: fuentes coherentes, alcance y criterios aprobados, sin decisiones bloqueantes.
+- Segunda puerta: diseño, tareas y validaciones aprobados antes de nuevos cambios productivos.
+- Puedes preparar el conjunto como propuesta para una revisión conjunta, pero no iniciar implementación ni marcar ambas puertas aprobadas por haberlo redactado.
+- Entrega el siguiente paso autorizado y los bloqueos. La implementación pertenece a otro trabajo: avanza por tareas con su check inmediato y evidencia, respetando las puertas del plan propietario.
 
-Cuando el cambio abarque varias fuentes o pueda introducir duplicados, ejecuta también `requirements-review` antes de dar el SDD por listo.
+### 6. Validación, aceptación y mantenimiento
+
+- Antes de entregar documentos, verifica frontmatter cuando aplique, rutas, anclas, identificadores, dependencias sin ciclos y cobertura fuente -> criterio -> tarea -> validación.
+- Comprueba que no se duplican reglas del producto y que se respetan terminología e invariantes de [AGENTS.md](../../AGENTS.md). Si el cambio requiere sincronizar fuentes o introduce una posible duplicación, usa [requirements-review](../requirements-review/SKILL.md) antes de darlo por listo.
+- Al actualizar evidencia, registra criterio, comprobación, entorno o versión pertinente, resultado, fecha y referencia. No inventes comandos ejecutados, resultados, aprobaciones ni fechas. Una validación pendiente, fallida o no disponible sigue explícita.
+- La puerta de salida requiere evidencia satisfactoria para todos los criterios, tareas completadas y aceptación humana registrada. Pruebas verdes no conceden aceptación humana ni cierran otras etapas.
+- Si un cambio revela una regla nueva o una contradicción, bloquea la tarea afectada, propone el cambio en su documento propietario y espera aprobación antes de actualizar e implementar los artefactos dependientes. No edites reglas funcionales por iniciativa propia.
+
+### 7. Archivar un trabajo terminado
+
+Aplica este paso solo ante una petición inequívoca de archivado; preguntar si se puede archivar, preparar un plan o aprobar la skill no es una orden de archivar una spec concreta.
+
+1. Identifica el trabajo por su carpeta y por [specs-index.md](../../specs/specs-index.md). Si ya está en `specs/archive/<slug>/`, comprueba el cierre y los enlaces; informa de que ya está archivado sin duplicarlo ni alterar la fecha. Si existen carpeta activa y archivada con el mismo slug, detente y comunica la colisión; nunca sobrescribas ni mezcles contenidos.
+2. Confirma que existen `spec.md`, `plan.md` y `tasks.md` coherentes, que todos los criterios tienen evidencia satisfactoria y vigente para el estado que se pretende cerrar, que todas las tareas necesarias están completadas y que no hay bloqueos. Comprueba las referencias a validaciones y a cualquier evidencia local. Una spec antigua que aún no sigue este flujo debe migrarse y auditarse primero, sin inventar tareas ejecutadas ni aprobaciones previas.
+3. Comprueba la aceptación humana explícita registrada en `tasks.md`. Una orden directa e inequívoca de archivar el trabajo identificado puede servir de aceptación del resultado **solo después** de verificar todos los puntos anteriores: consigna quién la dio, fecha y referencia real a esa instrucción. Si no se conoce su autor o falta una referencia verificable, solicita la aceptación sin fabricarla. La orden nunca reemplaza evidencia ni convierte pruebas pendientes en satisfactorias.
+4. Antes de mover, inventaría los archivos de la carpeta, los enlaces internos y entrantes desde documentos permitidos del repositorio, y el destino de imágenes y evidencias. No entres ni busques en directorios cuyo nombre empiece por `.`; si resulta imprescindible acceder a uno, detente y explícaselo al usuario. Prepara cambios de rutas resolviendo el destino anterior de cada enlace y recalculando su ruta desde la nueva ubicación; no sustituyas `../` globalmente. Los enlaces dentro de la misma carpeta suelen conservarse.
+5. Registra la aceptación y el cierre en `tasks.md`, pero deja el **archivado** como pendiente hasta comprobar el traslado. Mueve todos los artefactos y evidencias de la carpeta a `specs/archive/<slug>/`; crea `archive/` solo en el primer archivado efectivo. Actualiza referencias entrantes, enlaces salientes y [specs-index.md](../../specs/specs-index.md) para distinguir trabajos activos y archivados. No dejes duplicados ni un alias en la ruta antigua por defecto.
+6. Verifica que existen los archivos esperados en el destino, que la carpeta activa ya no existe, que los enlaces y anclas entrantes/salientes y evidencias siguen resolviendo y que no hay referencias a la ruta anterior. **Solo entonces** registra en el `tasks.md` trasladado el estado `archivado`, la fecha efectiva y la ubicación, y confirma que el índice apunta a ese cierre. Ante un fallo, informa de la ubicación y del estado reales, corrige únicamente lo que acabas de cambiar si es seguro y no declares el archivado completado.
+
+Archivar no significa obsoleto ni cierra trabajos vecinos. Si un cambio posterior requiere modificar lo ya aceptado, prepara una nueva spec que enlace la archivada; no reescribas en silencio su aceptación histórica.
 
 ## Resultado esperado
 
-Al terminar, informa de:
-
-- SDD creado o actualizado y su alcance técnico;
-- fuentes funcionales y criterios trazados;
-- decisiones técnicas propuestas y confirmadas;
-- bloqueos o preguntas que requieren decisión humana;
-- verificación realizada y riesgos restantes.
+Informa de los artefactos creados o actualizados, alcance, trazabilidad y tareas preparadas; separa propuesta de aprobación y comprobación documental de evidencia de implementación. Si se solicitó archivado, indica la ubicación comprobada o el bloqueo concreto, sin declarar terminado un movimiento parcial. Señala validaciones pendientes y el siguiente paso autorizado. No declares el bloque implementado o aceptado por haber redactado sus specs.

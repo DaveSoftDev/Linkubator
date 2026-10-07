@@ -87,7 +87,7 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 | S0.4 | Integrar Serilog con consola y archivo rotativo, configurable sin tocar casos de uso | IA |
 | S0.5 | Configurar Razor Pages, compilación de Tailwind en el build y `AllowedHosts` | IA |
 | S0.6 | Añadir configuración local: origen público, ruta de la BD y email de desarrollo | IA |
-| S0.7 | Crear proyecto xUnit con `WebApplicationFactory` y un test de dependencias entre capas | IA |
+| S0.7 | Configurar xUnit y `WebApplicationFactory` en el proyecto Tests creado en S0.2, comprobar las referencias entre proyectos y añadir con NetArchTest la regla de que solo `Web/Program.cs` depende de Infrastructure | IA |
 | S0.8 | Escribir el README de desarrollo (arranque, tests, comandos) | IA |
 | S0.9 | Acordar convenciones de ramas, PRs y commits, y crear el backlog con los sprints | Humano |
 
@@ -96,7 +96,7 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 - [ ] La aplicación arranca por HTTPS en local y muestra una página mínima.
 - [ ] `dotnet build` y `dotnet test` pasan en limpio.
 - [ ] Hay logs por consola y por archivo.
-- [ ] El test de dependencias de capas pasa.
+- [ ] Los tests de referencias entre proyectos y del límite del composition root pasan.
 - [ ] El README permite a otra persona arrancar el proyecto.
 - [ ] Las convenciones de ramas, PRs y commits están acordadas.
 

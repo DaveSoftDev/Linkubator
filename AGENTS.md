@@ -58,7 +58,7 @@ Las skills del proyecto viven en `skills/`. Cada una contiene un archivo [`SKILL
 
 - [skill-authoring](skills/skill-authoring/SKILL.md): define cómo crear, actualizar y validar skills de Linkubator, adaptando patrones externos a las convenciones del repositorio y de Copilot.
 - [requirements-review](skills/requirements-review/SKILL.md): revisa y sincroniza la documentación. Detecta contradicciones, duplicados, textos en el documento equivocado, omisiones, deriva del alcance del MVP0 y supuestos no documentados, y genera bajo demanda la ficha de una entidad. No genera código.
-- [sdd-writer](skills/sdd-writer/SKILL.md): redacta y actualiza el diseño técnico en `specs/`, con trazabilidad a las fuentes funcionales y sin introducir reglas de producto. No genera código.
+- [sdd-writer](skills/sdd-writer/SKILL.md): prepara especificación, plan técnico y tareas bajo Spec-Driven Development; verifica cierre y archiva trabajos aceptados con evidencia y enlaces trazables. No introduce reglas de producto ni implementa código.
 
 Cuando se cree una nueva skill de Linkubator, añádela aquí con su nombre, enlace y propósito.
 
