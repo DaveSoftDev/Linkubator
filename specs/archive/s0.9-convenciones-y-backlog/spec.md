@@ -2,10 +2,9 @@
 
 ## Estado y aprobación
 
-- Estado: aprobada por DLG el 07-X-2026.
-- Modalidad: reescritura excepcional prospectiva de spec heredada.
-- Aprobación humana: DLG, 07-X-2026, «Convenciones correctas», conforme a la instrucción expresa de esta conversación.
-- Las convenciones y referencias existentes se comprueban ahora; la aprobación no acredita su fecha histórica de adopción.
+- Estado: Aprobado por DLG el 7-X-2026.
+- [Especificación](spec.md): Convenciones correctas.
+- Este documento define el resultado esperado; las comprobaciones del estado actual y sus límites se registran en [tasks.md](tasks.md).
 
 ## Objetivo
 
@@ -36,10 +35,10 @@ Dejar accesibles y coherentes las pautas de colaboración del repositorio y la r
 
 | ID | Fuente o criterio aprobado propietario | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA-01 | [Plan principal → S0.9](../../../plans/mvp0-plan.md#s0-fundaciones-m); [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Las convenciones de colaboración existentes. | Se contrastan `CONTRIBUTING.md` y el resumen del README. | Ramas, commits y pull requests se describen de forma coherente y enlazada, sin reglas contradictorias. |
-| CA-02 | [Plan principal → «Resumen de sprints»](../../../plans/mvp0-plan.md#2-resumen-de-sprints); [roadmap.md](../../../context/roadmap.md) | El backlog y orden ya definidos en sus fuentes. | Se revisan las referencias desde CONTRIBUTING y README. | Ambos orientan a la fuente del backlog/roadmap sin copiar el listado de sprints ni redefinir su orden. |
-| CA-03 | [Plan principal → S0.9](../../../plans/mvp0-plan.md#s0-fundaciones-m); [AGENTS.md → «Reglas de documentación»](../../../AGENTS.md#reglas-de-documentación) | Los documentos del repositorio y sus enlaces locales. | Se revisan los enlaces y el contenido de alcance. | Las referencias resuelven, no se añaden reglas de producto, alcance funcional ni compromisos ajenos a S0.9. |
-| CA-04 | [Plan principal → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | La solución tras la revisión documental. | Se ejecutan build y pruebas disponibles. | El build compila sin warnings/errors y la suite descubierta pasa. |
+| CA01 | [Plan principal → S0.9](../../../plans/mvp0-plan.md#s0-fundaciones-m); [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Las convenciones de colaboración existentes. | Se contrastan `CONTRIBUTING.md` y el resumen del README. | Ramas, commits y pull requests se describen de forma coherente y enlazada, sin reglas contradictorias. |
+| CA02 | [Plan principal → «Resumen de sprints»](../../../plans/mvp0-plan.md#2-resumen-de-sprints); [roadmap.md](../../../context/roadmap.md) | El backlog y orden ya definidos en sus fuentes. | Se revisan las referencias desde CONTRIBUTING y README. | Ambos orientan a la fuente del backlog/roadmap sin copiar el listado de sprints ni redefinir su orden. |
+| CA03 | [Plan principal → S0.9](../../../plans/mvp0-plan.md#s0-fundaciones-m); [AGENTS.md → «Reglas de documentación»](../../../AGENTS.md#reglas-de-documentación) | Los documentos del repositorio y sus enlaces locales. | Se revisan los enlaces y el contenido de alcance. | Las referencias resuelven, no se añaden reglas de producto, alcance funcional ni compromisos ajenos a S0.9. |
+| CA04 | [Plan principal → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | La solución tras la revisión documental. | Se ejecutan build y pruebas disponibles. | El build compila sin warnings/errors y la suite descubierta pasa. |
 
 ## Bloqueos y preguntas pendientes
 

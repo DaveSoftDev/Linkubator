@@ -2,11 +2,11 @@
 
 ## Estado y aprobación del plan
 
-- Estado: aprobado por DLG el 07-X-2026.
-- Especificación: [spec.md](spec.md), aprobada por DLG el 07-X-2026.
-- Primera puerta: superada según la aprobación documental expresa «Pruebas completadas» de DLG.
-- Aprobación humana del plan y tareas: DLG, 07-X-2026, «Pruebas completadas», conforme a la instrucción expresa de esta conversación.
-- Modalidad: reescritura excepcional prospectiva; validaciones actuales se registran como evidencia sin atribuir cronología histórica a la implementación.
+- Estado: aprobado.
+- Especificación: [spec.md](spec.md).
+- Aprobaciones:
+  - Especificación: DLG, 07-X-2026 («Pruebas completadas»).
+  - Plan y tareas: DLG, 07-X-2026 («Pruebas completadas»).
 
 ## Diseño de implementación
 
@@ -47,12 +47,12 @@ No se crea ni se abre base de datos. `WebApplicationFactory` emplea un host de p
 
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comando, test o revisión | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |
-| V-01 | CA-01, CA-05 | Build | SDK disponible | `dotnet build Linkubator.sln --nologo --verbosity minimal` | Solución compila sin warnings/errors. | Salida resumida, SDK, fecha. |
-| V-02 | CA-02 | Automatizada | Test assembly construida | `dotnet test tests/Linkubator.Tests/Linkubator.Tests.csproj --no-build --no-restore --filter 'FullyQualifiedName~ProjectReferenceMatrixTests.ProjectReferencesMatchTheAllowedMatrix' --logger 'console;verbosity=normal'` | Test descubierto y pasa. | Recuento y nombre del test. No demuestra un cambio histórico de referencias. |
-| V-03 | CA-03 | Automatizada | Test assembly construida | `dotnet test tests/Linkubator.Tests/Linkubator.Tests.csproj --no-build --no-restore --filter 'FullyQualifiedName~LayerDependencyTests.WebTypesOutsideTheCompositionRootDoNotDependOnInfrastructure' --logger 'console;verbosity=normal'` | Test descubierto y pasa. | Recuento y nombre del test. Sin editar fuentes para inyectar una infracción. |
-| V-04 | CA-04 | Automatizada | Host TestServer disponible | `dotnet test tests/Linkubator.Tests/Linkubator.Tests.csproj --no-build --no-restore --filter 'FullyQualifiedName~WebStartupTests.HomePageReturnsSuccess' --logger 'console;verbosity=normal'` | Host responde con éxito en ruta raíz. | Recuento, respuesta lógica y advertencias; consignar que no es HTTPS live. |
-| V-05 | CA-05 | Automatizada | V-01 completada | `dotnet test Linkubator.sln --no-build --no-restore --logger 'console;verbosity=minimal'` | Todos los tests descubiertos pasan. | Total, aprobados, fallidos y omitidos. |
-| V-06 | CA-01 a CA-04 | Revisión técnica | Fuentes presentes | Revisar csproj, tres pruebas y que sus asserts correspondan a matriz, frontera de capa y ruta base. | Las pruebas ejercitan los contratos descritos sin ampliar el alcance. | Archivos revisados y límites de cobertura. |
+| V01 | CA01, CA05 | Build | SDK disponible | `dotnet build Linkubator.sln --nologo --verbosity minimal` | Solución compila sin warnings/errors. | Salida resumida, SDK, fecha. |
+| V02 | CA02 | Automatizada | Test assembly construida | `dotnet test tests/Linkubator.Tests/Linkubator.Tests.csproj --no-build --no-restore --filter 'FullyQualifiedName~ProjectReferenceMatrixTests.ProjectReferencesMatchTheAllowedMatrix' --logger 'console;verbosity=normal'` | Test descubierto y pasa. | Recuento y nombre del test. No demuestra un cambio histórico de referencias. |
+| V03 | CA03 | Automatizada | Test assembly construida | `dotnet test tests/Linkubator.Tests/Linkubator.Tests.csproj --no-build --no-restore --filter 'FullyQualifiedName~LayerDependencyTests.WebTypesOutsideTheCompositionRootDoNotDependOnInfrastructure' --logger 'console;verbosity=normal'` | Test descubierto y pasa. | Recuento y nombre del test. Sin editar fuentes para inyectar una infracción. |
+| V04 | CA04 | Automatizada | Host TestServer disponible | `dotnet test tests/Linkubator.Tests/Linkubator.Tests.csproj --no-build --no-restore --filter 'FullyQualifiedName~WebStartupTests.HomePageReturnsSuccess' --logger 'console;verbosity=normal'` | Host responde con éxito en ruta raíz. | Recuento, respuesta lógica y advertencias; consignar que no es HTTPS live. |
+| V05 | CA05 | Automatizada | V01 completada | `dotnet test Linkubator.sln --no-build --no-restore --logger 'console;verbosity=minimal'` | Todos los tests descubiertos pasan. | Total, aprobados, fallidos y omitidos. |
+| V06 | CA01 a CA04 | Revisión técnica | Fuentes presentes | Revisar csproj, tres pruebas y que sus asserts correspondan a matriz, frontera de capa y ruta base. | Las pruebas ejercitan los contratos descritos sin ampliar el alcance. | Archivos revisados y límites de cobertura. |
 
 El test del límite arquitectónico y el de matriz se revisan para confirmar que son sensibles según su lógica; no se fuerza una infracción en las fuentes productivas ni se atribuye cobertura de seguridad extra.
 

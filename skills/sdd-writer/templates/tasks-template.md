@@ -26,7 +26,7 @@ La tarea de aceptación solo se completa con aceptación humana explícita y reg
 
 | Criterio | Tareas | Validación | Resultado real | Fecha y entorno o versión | Referencia a evidencia |
 | --- | --- | --- | --- | --- | --- |
-| CA-01 | [ID] | [ID y enlace al plan] | Pendiente | No ejecutada | Sin evidencia |
+| CA01 | [ID] | [ID y enlace al plan] | Pendiente | No ejecutada | Sin evidencia |
 
 Un resultado no disponible o fallido sigue pendiente o bloqueado; no registrar resultados esperados como reales.
 

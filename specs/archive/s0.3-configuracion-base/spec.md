@@ -2,7 +2,7 @@
 
 ## Estado y aprobación
 
-- Estado: especificación aprobada por DLG el 07-X-2026.
+- Estado: Aprobado por DLG el 7-X-2026.
 - Referencia: Cumple lo esperado.
 - Este documento describe el resultado esperado; la evidencia obtenida tras construirlo pertenece a [tasks.md](tasks.md).
 
@@ -32,10 +32,10 @@ Configurar la base de análisis y estilo de los proyectos y excluir del reposito
 
 | ID | Fuente propietaria | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA-01 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | Los proyectos de la solución preparados en S0.2. | Se consulta la configuración efectiva del SDK/MSBuild para cada proyecto. | `nullable` está habilitado y los analizadores del SDK participan en el análisis de los proyectos. |
-| CA-02 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | Los archivos de la solución. | Se comprueban las convenciones de estilo aplicables. | `.editorconfig` define una base compartida de estilo y formato para los archivos del proyecto. |
-| CA-03 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | El repositorio de desarrollo. | Se comprueban las exclusiones declaradas y efectivas para rutas de prueba no creadas. | `.gitignore` excluye artefactos de compilación, datos y logs locales, así como configuración local; no excluye indiscriminadamente archivos fuente. |
-| CA-04 | [Plan → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | La solución configurada y el SDK disponible. | Se compila la solución con la configuración base. | El build finaliza sin errores ni advertencias. |
+| CA01 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | Los proyectos de la solución preparados en S0.2. | Se consulta la configuración efectiva del SDK/MSBuild para cada proyecto. | `nullable` está habilitado y los analizadores del SDK participan en el análisis de los proyectos. |
+| CA02 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | Los archivos de la solución. | Se comprueban las convenciones de estilo aplicables. | `.editorconfig` define una base compartida de estilo y formato para los archivos del proyecto. |
+| CA03 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | El repositorio de desarrollo. | Se comprueban las exclusiones declaradas y efectivas para rutas de prueba no creadas. | `.gitignore` excluye artefactos de compilación, datos y logs locales, así como configuración local; no excluye indiscriminadamente archivos fuente. |
+| CA04 | [Plan → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | La solución configurada y el SDK disponible. | Se compila la solución con la configuración base. | El build finaliza sin errores ni advertencias. |
 
 ## Bloqueos y preguntas pendientes
 

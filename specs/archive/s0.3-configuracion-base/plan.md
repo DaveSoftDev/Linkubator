@@ -2,9 +2,11 @@
 
 ## Estado y aprobación del plan
 
-- Estado: plan aprobado por DLG el 07-X-2026.
-- [Especificación](spec.md): aprobada por DLG el 07-X-2026.
-- Referencia: instrucción Cumple lo esperado; su aprobación no acredita la implementación ni sus pruebas.
+- Estado: aprobado.
+- Especificación: [spec.md](spec.md).
+- Aprobaciones:
+  - Especificación: DLG, 07-X-2026 («Cumple lo esperado»).
+  - Plan y tareas: DLG, 07-X-2026 («Cumple lo esperado»). La aprobación no acredita la implementación ni sus pruebas.
 
 ## Diseño de implementación
 
@@ -45,15 +47,15 @@ Los resultados van en [tasks.md](tasks.md). Las comprobaciones de S0.3 no cubren
 
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comprobación | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |
-| V-01 | CA-01 | Configuración efectiva de proyectos | SDK disponible | Consultar `EnableNETAnalyzers`, `AnalysisLevel` y `Nullable` mediante MSBuild para los proyectos de la solución | Analizadores del SDK habilitados y `nullable` activo en cada proyecto. | SDK, lista de proyectos y propiedades por proyecto. |
-| V-02 | CA-02 | Revisión técnica de estilo | `.editorconfig` en raíz | Revisar estructura y reglas aplicables a C# y proyectos; confirmar configuración raíz y ausencia de contradicciones que invaliden el alcance | Base de estilo/formatos definida sin imponer que sugerencias fallen el build. | Secciones y valores revisados, límites de la inspección. |
-| V-03 | CA-03 | Revisión técnica de exclusiones | `.gitignore` en raíz | Inspeccionar patrones de artefactos de build, BD y logs locales y configuración local, junto con rutas de ejemplo para fuentes que no deben excluirse | Cobertura declarada de exclusiones requeridas sin patrones generales que oculten fuentes. | Patrones comprobados y nota sobre comprobación real de Git si no se puede realizar sin acceder a directorios prohibidos. |
-| V-04 | CA-04 | Compilación integrada | SDK y dependencias del build disponibles | `dotnet build Linkubator.sln --nologo --verbosity minimal` | Código de salida correcto y cero errores/advertencias. | Comando, fecha, SDK y salida de build. |
+| V01 | CA01 | Configuración efectiva de proyectos | SDK disponible | Consultar `EnableNETAnalyzers`, `AnalysisLevel` y `Nullable` mediante MSBuild para los proyectos de la solución | Analizadores del SDK habilitados y `nullable` activo en cada proyecto. | SDK, lista de proyectos y propiedades por proyecto. |
+| V02 | CA02 | Revisión técnica de estilo | `.editorconfig` en raíz | Revisar estructura y reglas aplicables a C# y proyectos; confirmar configuración raíz y ausencia de contradicciones que invaliden el alcance | Base de estilo/formatos definida sin imponer que sugerencias fallen el build. | Secciones y valores revisados, límites de la inspección. |
+| V03 | CA03 | Revisión técnica de exclusiones | `.gitignore` en raíz | Inspeccionar patrones de artefactos de build, BD y logs locales y configuración local, junto con rutas de ejemplo para fuentes que no deben excluirse | Cobertura declarada de exclusiones requeridas sin patrones generales que oculten fuentes. | Patrones comprobados y nota sobre comprobación real de Git si no se puede realizar sin acceder a directorios prohibidos. |
+| V04 | CA04 | Compilación integrada | SDK y dependencias del build disponibles | `dotnet build Linkubator.sln --nologo --verbosity minimal` | Código de salida correcto y cero errores/advertencias. | Comando, fecha, SDK y salida de build. |
 
-V-02 y V-03 validan la configuración declarada; no acreditan por sí solos que un editor o Git hayan aplicado reglas a todos los archivos. Si una herramienta necesita acceder a un directorio prohibido para demostrar comportamiento efectivo, detener esa comprobación y dejar el criterio pendiente en vez de fingir su resultado. V-04 puede compilar elementos añadidos en otras etapas: registrar esa limitación sin ampliar el alcance S0.3.
+V02 y V03 validan la configuración declarada; no acreditan por sí solos que un editor o Git hayan aplicado reglas a todos los archivos. Si una herramienta necesita acceder a un directorio prohibido para demostrar comportamiento efectivo, detener esa comprobación y dejar el criterio pendiente en vez de fingir su resultado. V04 puede compilar elementos añadidos en otras etapas: registrar esa limitación sin ampliar el alcance S0.3.
 
 ## Orden de ejecución y puerta de salida
 
 - [Tareas](tasks.md): aprobaciones, comprobaciones inmediatas y verificación integrada.
-- Cerrar solo con evidencia suficiente para CA-01 a CA-04, todas las tareas necesarias completadas y aceptación humana explícita; archivar es un paso posterior, condicionado al traslado y los enlaces.
+- Cerrar solo con evidencia suficiente para CA01 a CA04, todas las tareas necesarias completadas y aceptación humana explícita; archivar es un paso posterior, condicionado al traslado y los enlaces.
 - Si una comprobación demuestra una discrepancia entre el alcance aprobado y la configuración real, bloquear la tarea afectada y resolverla antes de aceptar el resultado.

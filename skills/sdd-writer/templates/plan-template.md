@@ -4,8 +4,9 @@
 
 - Estado: propuesta.
 - Especificación: [spec.md](spec.md).
-- Primera puerta: pendiente / referencia a aprobación de la especificación.
-- Aprobación humana del plan y tareas: pendiente; registrar fecha, responsable y referencia real.
+- Aprobaciones:
+  - Especificación: pendiente; registrar responsable, fecha y referencia real cuando se apruebe.
+  - Plan y tareas: pendiente; registrar responsable, fecha y referencia real cuando se aprueben.
 
 ## Diseño de implementación
 
@@ -35,7 +36,7 @@ Garantías necesarias para preservar los criterios e invariantes fuente, con enl
 
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comando, test o revisión | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |
-| V-01 | CA-01 | [Automatizada / técnica / manual] | [Entorno y dependencias] | [Comprobación concreta] | [Resultado discriminante] | [Registro verificable] |
+| V01 | CA01 | [Automatizada / técnica / manual] | [Entorno y dependencias] | [Comprobación concreta] | [Resultado discriminante] | [Registro verificable] |
 
 Identificar lo que cada comprobación no demuestra. Cuando corresponda, describir una comprobación negativa segura que confirme la sensibilidad del test; no asumir que un fallo de compilación demuestra una infracción detectada por un test.
 

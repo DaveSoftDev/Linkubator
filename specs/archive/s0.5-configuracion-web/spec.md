@@ -2,9 +2,8 @@
 
 ## Estado y aprobación
 
-- Estado: especificación aprobada por DLG el 07-X-2026.
-- Enmienda documental: DLG, 07-X-2026, confirma que `AllowedHosts` corresponde a S0.5 según el plan principal. Se aclara el alcance y se añade CA-06 para su comprobación; la aprobación y aceptación originales se conservan, y esta comprobación adicional queda pendiente hasta registrar evidencia.
-- Referencia: instrucción de DLG que solicita migrar S0.5, aprobar sus documentos y usar «Cumple requisitos» como mensaje de aprobación.
+- Estado: Aprobado por DLG el 7-X-2026.
+- Referencia: Cumple requisitos.
 - Este documento define el resultado esperado; las comprobaciones actuales y sus límites se registran en [tasks.md](tasks.md).
 
 ## Objetivo
@@ -36,12 +35,12 @@ Preparar la capa Web para servir Razor Pages mediante HTTPS en desarrollo, compi
 
 | ID | Fuente propietaria | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA-01 | [Arquitectura → «Web»](../../../context/architecture.md#web) | El host ASP.NET Core de la aplicación. | Se configura y construye la aplicación. | Razor Pages queda registrado y mapeado en el pipeline Web. |
-| CA-02 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | El proyecto Web y sus archivos de estilos. | Se ejecuta el build. | El target de build ejecuta Tailwind y genera el CSS de salida sin errores cuando está disponible la herramienta prevista. |
-| CA-03 | [Arquitectura → «Seguridad web»](../../../context/architecture.md#seguridad-web) | El host Web ejecutándose en desarrollo. | Se solicita una página por HTTP y después por HTTPS local. | HTTP se redirige a HTTPS y el host puede servir la página técnica mínima por HTTPS, sin requerir páginas funcionales. |
-| CA-04 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | La aplicación Web configurada. | Se solicita la ruta base. | La página técnica mínima responde satisfactoriamente y no contiene comportamiento funcional del producto. |
-| CA-05 | [S0.2 → «Criterios de aceptación»](../s0.2-crear-solucion/spec.md#criterios-de-aceptación) | El ensamblado Web. | Se inspeccionan los consumidores de Infrastructure. | Solo el composition root consume Infrastructure; S0.5 no introduce otros consumidores. |
-| CA-06 (enmienda 07-X-2026) | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m); [Arquitectura → «Seguridad web»](../../../context/architecture.md#seguridad-web) | El host Web configurado. | Se comprueba la configuración de hosts permitidos y se solicita una petición con `Host` ajeno. | El host aplica la lista configurada y rechaza el `Host` que no corresponde a la aplicación. |
+| CA01 | [Arquitectura → «Web»](../../../context/architecture.md#web) | El host ASP.NET Core de la aplicación. | Se configura y construye la aplicación. | Razor Pages queda registrado y mapeado en el pipeline Web. |
+| CA02 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | El proyecto Web y sus archivos de estilos. | Se ejecuta el build. | El target de build ejecuta Tailwind y genera el CSS de salida sin errores cuando está disponible la herramienta prevista. |
+| CA03 | [Arquitectura → «Seguridad web»](../../../context/architecture.md#seguridad-web) | El host Web ejecutándose en desarrollo. | Se solicita una página por HTTP y después por HTTPS local. | HTTP se redirige a HTTPS y el host puede servir la página técnica mínima por HTTPS, sin requerir páginas funcionales. |
+| CA04 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | La aplicación Web configurada. | Se solicita la ruta base. | La página técnica mínima responde satisfactoriamente y no contiene comportamiento funcional del producto. |
+| CA05 | [S0.2 → «Criterios de aceptación»](../s0.2-crear-solucion/spec.md#criterios-de-aceptación) | El ensamblado Web. | Se inspeccionan los consumidores de Infrastructure. | Solo el composition root consume Infrastructure; S0.5 no introduce otros consumidores. |
+| CA06 (enmienda 7-X-2026) | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m); [Arquitectura → «Seguridad web»](../../../context/architecture.md#seguridad-web) | El host Web configurado. | Se comprueba la configuración de hosts permitidos y se solicita una petición con `Host` ajeno. | El host aplica la lista configurada y rechaza el `Host` que no corresponde a la aplicación. |
 
 ## Bloqueos y preguntas pendientes
 

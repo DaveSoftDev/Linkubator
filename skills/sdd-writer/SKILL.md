@@ -63,7 +63,7 @@ Los trabajos terminados y aceptados se trasladan, con su carpeta completa, a `sp
 
 ### 2. Especificar y preparar la primera aprobación
 
-Redacta `spec.md` con objetivo, fuentes, alcance incluido y excluido, dependencias y criterios identificados como `CA-01`, `CA-02`, etc. Usa dado/cuando/entonces o una formulación igualmente observable. Cada criterio enlaza a su fuente o al criterio aprobado propietario y tiene una comprobación posible. No impongas un resultado nuevo sin respaldo.
+Redacta `spec.md` con objetivo, fuentes, alcance incluido y excluido, dependencias y criterios identificados como `CA01`, `CA02`, etc. En las celdas de columna `ID` escribe los identificadores sin guion (por ejemplo, `CA01`, `V01`, `T01`); aplica esta forma también a sus referencias en texto, enlaces y evidencias para mantener una nomenclatura uniforme. Usa dado/cuando/entonces o una formulación igualmente observable. Cada criterio enlaza a su fuente o al criterio aprobado propietario y tiene una comprobación posible. No impongas un resultado nuevo sin respaldo.
 
 Identifica casos negativos y límites aplicables mediante enlaces. Mantén el cómo en `plan.md`. Marca la especificación como borrador hasta tener aprobación humana explícita; registra fecha, responsable y referencia real. Una autorización general de implementación no implica aprobación de una spec recién redactada.
 

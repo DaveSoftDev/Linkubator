@@ -2,11 +2,11 @@
 
 ## Estado y aprobación del plan
 
-- Estado: aprobado por DLG el 07-X-2026.
-- Especificación: [spec.md](spec.md), aprobada por DLG el 07-X-2026.
-- Primera puerta: superada según aprobación documental expresa «Readme completadas» de DLG.
-- Aprobación humana del plan y tareas: DLG, 07-X-2026, «Readme completadas», conforme a la instrucción expresa de esta conversación.
-- Modalidad: reescritura excepcional prospectiva; las comprobaciones actuales no atribuyen cronología histórica al README existente.
+- Estado: aprobado.
+- Especificación: [spec.md](spec.md).
+- Aprobaciones:
+  - Especificación: DLG, 07-X-2026 («Readme completado»).
+  - Plan y tareas: DLG, 07-X-2026 («Readme completado»).
 
 ## Diseño de implementación
 
@@ -42,19 +42,19 @@ Los comandos se ejecutan desde la raíz y usan los proyectos/runners reales del 
 | Decisión o riesgo | Estado | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
 | Mantener una guía operativa de raíz con enlaces a fuentes técnicas | Confirmada por la definición de S0.8 | [mvp0-plan.md → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | Evita replicar reglas funcionales en el README. |
-| El archivo SQLite configurado puede no existir aún | Observación de alcance | [S0.6 → CA-02](../s0.6-configuracion-local/spec.md#criterios-de-aceptación) | Describir el destino configurado, no su existencia ni datos. |
+| El archivo SQLite configurado puede no existir aún | Observación de alcance | [S0.6 → CA02](../s0.6-configuracion-local/spec.md#criterios-de-aceptación) | Describir el destino configurado, no su existencia ni datos. |
 | Una tabla/árbol de directorios puede quedar obsoleta al archivar specs | Riesgo editorial | Estructura del repositorio | Comprobar índice y árbol README después del movimiento de S0.8. |
 
 ## Estrategia de validación
 
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comando, test o revisión | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |
-| V-01 | CA-01 | Revisión técnica/editorial | README y árbol existentes | Contrastar listado de proyectos con `dotnet sln Linkubator.sln list` y directorios reales | Propósito y estructura coinciden con el repositorio. | Proyectos listados, fecha, sin asumir cronología de README. |
-| V-02 | CA-02 | Revisión de comandos | SDK y perfil Web disponibles | Verificar opciones con `dotnet restore --help`, `dotnet build --help`, `dotnet test --help`, `dotnet run --help`; confirmar rutas de proyecto y perfiles | Los comandos documentados son sintácticamente válidos y aplicables. | Opciones/rutas contrastadas. |
-| V-03 | CA-03, CA-04 | Revisión técnica/privacidad | Archivos config y logger disponibles | Revisar referencias a appsettings/logs/DB en README contra configuración y `.gitignore`; no volcar valores locales | Ubicaciones y estados correctamente descritos, sin valores sensibles. | Claves/archivos revisados y discrepancias. |
-| V-04 | CA-05 | Enlaces Markdown | Documentos y rutas referenciados presentes | Resolver enlaces relativos locales en `README.md` | Todos los enlaces resuelven. | Número y resultado del chequeo. |
-| V-05 | CA-05 | Build | SDK instalado | `dotnet build Linkubator.sln --nologo --verbosity minimal` | Cero warnings/errors. | Resumen, SDK y fecha. |
-| V-06 | CA-05 | Tests | Build correcto; xUnit/VSTest | `dotnet test Linkubator.sln --no-build --no-restore --logger 'console;verbosity=minimal'` | Todos los tests descubiertos pasan. | Total/pass/fail/skip y fecha. |
+| V01 | CA01 | Revisión técnica/editorial | README y árbol existentes | Contrastar listado de proyectos con `dotnet sln Linkubator.sln list` y directorios reales | Propósito y estructura coinciden con el repositorio. | Proyectos listados, fecha, sin asumir cronología de README. |
+| V02 | CA02 | Revisión de comandos | SDK y perfil Web disponibles | Verificar opciones con `dotnet restore --help`, `dotnet build --help`, `dotnet test --help`, `dotnet run --help`; confirmar rutas de proyecto y perfiles | Los comandos documentados son sintácticamente válidos y aplicables. | Opciones/rutas contrastadas. |
+| V03 | CA03, CA04 | Revisión técnica/privacidad | Archivos config y logger disponibles | Revisar referencias a appsettings/logs/DB en README contra configuración y `.gitignore`; no volcar valores locales | Ubicaciones y estados correctamente descritos, sin valores sensibles. | Claves/archivos revisados y discrepancias. |
+| V04 | CA05 | Enlaces Markdown | Documentos y rutas referenciados presentes | Resolver enlaces relativos locales en `README.md` | Todos los enlaces resuelven. | Número y resultado del chequeo. |
+| V05 | CA05 | Build | SDK instalado | `dotnet build Linkubator.sln --nologo --verbosity minimal` | Cero warnings/errors. | Resumen, SDK y fecha. |
+| V06 | CA05 | Tests | Build correcto; xUnit/VSTest | `dotnet test Linkubator.sln --no-build --no-restore --logger 'console;verbosity=minimal'` | Todos los tests descubiertos pasan. | Total/pass/fail/skip y fecha. |
 
 El build puede ejecutar Tailwind según la configuración disponible. Los tests no validan que el README sea claro; esa parte se comprueba mediante lectura técnica. No se ejecutará `dotnet run` como parte de la validación para evitar procesos persistentes/puertos; la sintaxis y el perfil se verifican contra `launchSettings.json` y `--help`.
 

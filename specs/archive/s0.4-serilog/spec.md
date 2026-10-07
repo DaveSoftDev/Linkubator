@@ -2,8 +2,8 @@
 
 ## Estado y aprobación
 
-- Estado: especificación aprobada por DLG el 07-X-2026.
-- Referencia: instrucción «Cumple expectativas» del usuario DLG para los documentos de S0.4 en esta conversación.
+- Estado: Aprobado por DLG el 7-X-2026.
+- Referencia: Cumple expectativas.
 - Este documento describe el resultado esperado; la evidencia obtenida tras construirlo pertenece a [tasks.md](tasks.md).
 
 ## Objetivo
@@ -32,10 +32,10 @@ Integrar Serilog en la capa Web con salida por consola y archivo rotativo, mante
 
 | ID | Fuente propietaria | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA-01 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | La aplicación ASP.NET Core y la solución preparada en S0.2/S0.3. | Se arranca la aplicación con la configuración del host. | Serilog queda registrado como proveedor de logs del host y `ILogger` sigue siendo el canal de registro usado por la capa Web. |
-| CA-02 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | Los archivos de configuración del proyecto. | Se revisa la configuración del entorno. | `appsettings.json` y `appsettings.Development.json` configuran al menos consola y archivo rotativo con una ruta local de logs y nivel mínimo configurable. |
-| CA-03 | [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos) | El sistema en ejecución. | Se comprueba el contenido de los logs. | Los mensajes no incluyen contraseñas, tokens, secretos ni contenido privado del usuario. |
-| CA-04 | [Plan → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | La solución con la configuración base correcta. | Se compila y ejecuta la solución con el logger integrado. | El proyecto finaliza sin errores ni advertencias y la prueba de la solución sigue pasando. |
+| CA01 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | La aplicación ASP.NET Core y la solución preparada en S0.2/S0.3. | Se arranca la aplicación con la configuración del host. | Serilog queda registrado como proveedor de logs del host y `ILogger` sigue siendo el canal de registro usado por la capa Web. |
+| CA02 | [Plan → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | Los archivos de configuración del proyecto. | Se revisa la configuración del entorno. | `appsettings.json` y `appsettings.Development.json` configuran al menos consola y archivo rotativo con una ruta local de logs y nivel mínimo configurable. |
+| CA03 | [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos) | El sistema en ejecución. | Se comprueba el contenido de los logs. | Los mensajes no incluyen contraseñas, tokens, secretos ni contenido privado del usuario. |
+| CA04 | [Plan → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | La solución con la configuración base correcta. | Se compila y ejecuta la solución con el logger integrado. | El proyecto finaliza sin errores ni advertencias y la prueba de la solución sigue pasando. |
 
 ## Bloqueos y preguntas pendientes
 

@@ -34,7 +34,7 @@ Fuentes o trabajos necesarios, estado comprobado y condiciones pendientes. No da
 
 | ID | Fuente o criterio aprobado propietario | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA-01 | [Enlace a sección propietaria] | [Contexto] | [Acción o comprobación] | [Resultado observable, sin copiar reglas] |
+| CA01 | [Enlace a sección propietaria] | [Contexto] | [Acción o comprobación] | [Resultado observable, sin copiar reglas] |
 
 Cubrir los casos negativos y límites aplicables mediante referencias a su fuente. Si el criterio ya está aprobado en otro documento, enlazarlo por identificador en lugar de volver a redactarlo.
 

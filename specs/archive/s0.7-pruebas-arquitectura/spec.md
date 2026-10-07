@@ -2,10 +2,9 @@
 
 ## Estado y aprobación
 
-- Estado: aprobada por DLG el 07-X-2026.
-- Modalidad: reescritura excepcional prospectiva de spec heredada.
-- Aprobación humana: DLG, 07-X-2026, «Pruebas completadas», conforme a la instrucción expresa de aprobar cada documento S0.7 en esta conversación.
-- Este documento expresa el resultado esperado; la comprobación actual de los artefactos y sus límites se registra en [tasks.md](tasks.md).
+- Estado: Aprobado por DLG el 7-X-2026.
+- [Especificación](spec.md): Pruebas completadas.
+- Este documento define el resultado esperado; las comprobaciones del estado actual y sus límites se registran en [tasks.md](tasks.md).
 
 ## Objetivo
 
@@ -35,11 +34,11 @@ Establecer una suite automática en el proyecto Tests que detecte regresiones en
 
 | ID | Fuente o criterio aprobado propietario | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA-01 | [Plan principal → S0.7](../../../plans/mvp0-plan.md#s0-fundaciones-m) | El proyecto Tests creado por S0.2. | Se restaura y compila el proyecto de pruebas. | xUnit y el runner de pruebas quedan configurados para ejecutar la suite de S0.7. |
-| CA-02 | [architecture.md → «Dependencias entre proyectos»](../../../context/architecture.md#dependencias-entre-proyectos); [S0.2 → «CA-03/CA-04»](../s0.2-crear-solucion/spec.md#criterios-de-aceptación) | La solución y sus proyectos. | Se ejecuta el test de matriz de referencias. | Las referencias reales coinciden con la matriz permitida y ningún proyecto productivo depende de Tests. |
-| CA-03 | [architecture.md → «Dependencias entre proyectos»](../../../context/architecture.md#dependencias-entre-proyectos); [S0.2 → «CA-05»](../s0.2-crear-solucion/spec.md#criterios-de-aceptación) | Los tipos compilados de Web. | Se ejecuta la prueba arquitectónica de consumidores de Infrastructure. | La prueba permite el uso de Infrastructure en el composition root y falla si un tipo fuera de este introduce esa dependencia. |
-| CA-04 | [S0.5 → «CA-01 y CA-04»](../s0.5-configuracion-web/spec.md#criterios-de-aceptación); [Plan principal → S0.7](../../../plans/mvp0-plan.md#s0-fundaciones-m) | El host Web configurado. | `WebApplicationFactory` consulta la ruta mínima. | El host se construye y la ruta responde satisfactoriamente; esta prueba no afirma conectividad HTTPS live. |
-| CA-05 | [Plan principal → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | La solución con las pruebas incorporadas. | Se ejecutan build y suite completa. | El build termina sin warnings/errors y todos los tests descubiertos pasan. |
+| CA01 | [Plan principal → S0.7](../../../plans/mvp0-plan.md#s0-fundaciones-m) | El proyecto Tests creado por S0.2. | Se restaura y compila el proyecto de pruebas. | xUnit y el runner de pruebas quedan configurados para ejecutar la suite de S0.7. |
+| CA02 | [architecture.md → «Dependencias entre proyectos»](../../../context/architecture.md#dependencias-entre-proyectos); [S0.2 → «CA03/CA04»](../s0.2-crear-solucion/spec.md#criterios-de-aceptación) | La solución y sus proyectos. | Se ejecuta el test de matriz de referencias. | Las referencias reales coinciden con la matriz permitida y ningún proyecto productivo depende de Tests. |
+| CA03 | [architecture.md → «Dependencias entre proyectos»](../../../context/architecture.md#dependencias-entre-proyectos); [S0.2 → «CA05»](../s0.2-crear-solucion/spec.md#criterios-de-aceptación) | Los tipos compilados de Web. | Se ejecuta la prueba arquitectónica de consumidores de Infrastructure. | La prueba permite el uso de Infrastructure en el composition root y falla si un tipo fuera de este introduce esa dependencia. |
+| CA04 | [S0.5 → «CA01 y CA04»](../s0.5-configuracion-web/spec.md#criterios-de-aceptación); [Plan principal → S0.7](../../../plans/mvp0-plan.md#s0-fundaciones-m) | El host Web configurado. | `WebApplicationFactory` consulta la ruta mínima. | El host se construye y la ruta responde satisfactoriamente; esta prueba no afirma conectividad HTTPS live. |
+| CA05 | [Plan principal → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | La solución con las pruebas incorporadas. | Se ejecutan build y suite completa. | El build termina sin warnings/errors y todos los tests descubiertos pasan. |
 
 ## Bloqueos y preguntas pendientes
 

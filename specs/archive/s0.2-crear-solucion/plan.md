@@ -2,9 +2,11 @@
 
 ## Estado y aprobación del plan
 
-- Estado: plan técnico aprobado por DLG el 07-X-2026.
-- [Especificación](spec.md): aprobada por DLG el 07-X-2026 mediante instrucción posterior de esta conversación.
-- Referencia de aprobación del plan: Plan revisado y me parece correcto. Su aprobación no implica ejecución de tareas ni aceptación del resultado.
+- Estado: aprobado.
+- Especificación: [spec.md](spec.md).
+- Aprobaciones:
+  - Especificación: DLG, 07-X-2026 («Leído y comprendido»).
+  - Plan y tareas: DLG, 07-X-2026 («Plan revisado y correcto»). Esta aprobación no implica ejecución de tareas ni aceptación del resultado.
 
 ## Diseño de implementación
 
@@ -45,12 +47,12 @@ Estas verificaciones se realizarán al implementar S0.2. Sus resultados se regis
 
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comprobación | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |
-| V-01 | CA-01 | Inspección de solución | SDK disponible | `dotnet sln Linkubator.sln list`; contrastar rutas y existencia de proyectos | Proyectos previstos presentes y listados. | Listado y fecha de ejecución. |
-| V-02 | CA-02 | Inspección y compilación | SDK disponible | Revisar SDK/TFM y ejecutar `dotnet build Linkubator.sln` | Plataforma de [architecture.md → «Plataforma»](../../../context/architecture.md#plataforma) y compilación sin errores ni warnings según [DoD común](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints). | SDK empleado y salida del build. |
-| V-03 | CA-03, CA-04 | Revisión de proyectos | Proyectos creados | Inspeccionar las referencias declaradas en los proyectos y cotejarlas con [architecture.md → «Dependencias entre proyectos»](../../../context/architecture.md#dependencias-entre-proyectos) | Ninguna referencia prohibida; Tests fuera del grafo productivo. | Matriz de comparación y revisión. |
-| V-04 | CA-05 | Revisión técnica | Composition root preparado | Revisar consumidores de tipos de Infrastructure en Web, firma del punto de registro y orden de invocación en `Program` | Solo el composition root consume Infrastructure y registra antes de construir el host. | Revisión de dependencias y orden de composición. |
+| V01 | CA01 | Inspección de solución | SDK disponible | `dotnet sln Linkubator.sln list`; contrastar rutas y existencia de proyectos | Proyectos previstos presentes y listados. | Listado y fecha de ejecución. |
+| V02 | CA02 | Inspección y compilación | SDK disponible | Revisar SDK/TFM y ejecutar `dotnet build Linkubator.sln` | Plataforma de [architecture.md → «Plataforma»](../../../context/architecture.md#plataforma) y compilación sin errores ni warnings según [DoD común](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints). | SDK empleado y salida del build. |
+| V03 | CA03, CA04 | Revisión de proyectos | Proyectos creados | Inspeccionar las referencias declaradas en los proyectos y cotejarlas con [architecture.md → «Dependencias entre proyectos»](../../../context/architecture.md#dependencias-entre-proyectos) | Ninguna referencia prohibida; Tests fuera del grafo productivo. | Matriz de comparación y revisión. |
+| V04 | CA05 | Revisión técnica | Composition root preparado | Revisar consumidores de tipos de Infrastructure en Web, firma del punto de registro y orden de invocación en `Program` | Solo el composition root consume Infrastructure y registra antes de construir el host. | Revisión de dependencias y orden de composición. |
 
-La revisión estructural de V-03 y V-04 deja identificados los límites para las pruebas automatizadas de arquitectura previstas más adelante en el [plan de fundaciones](../../../plans/mvp0-plan.md#s0-fundaciones-m); no se exige que esos tests existan en S0.2.
+La revisión estructural de V03 y V04 deja identificados los límites para las pruebas automatizadas de arquitectura previstas más adelante en el [plan de fundaciones](../../../plans/mvp0-plan.md#s0-fundaciones-m); no se exige que esos tests existan en S0.2.
 
 ## Orden de ejecución y puerta de salida
 

@@ -2,9 +2,11 @@
 
 ## Estado y aprobación del plan
 
-- Estado: plan aprobado por DLG el 07-X-2026.
-- [Especificación](spec.md): aprobada por DLG el 07-X-2026.
-- Referencia: instrucción «Cumple expectativas» del usuario DLG para todos los documentos S0.4.
+- Estado: aprobado.
+- Especificación: [spec.md](spec.md).
+- Aprobaciones:
+  - Especificación: DLG, 07-X-2026 («Cumple expectativas»).
+  - Plan y tareas: DLG, 07-X-2026 («Cumple expectativas»). La aprobación documental no acredita la ejecución ni aceptación de las tareas.
 
 ## Diseño de implementación
 
@@ -43,13 +45,13 @@ Los resultados van en [tasks.md](tasks.md). La validación se basa en la configu
 
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comprobación | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |
-| V-01 | CA-01 | Configuración del host | Solución construida y SDK disponible | Verificar `UseSerilog` y `ReadFrom.Configuration` en `Program.cs` | Serilog activo como proveedor del host de ASP.NET Core. | Captura del `Program.cs` y entorno de arranque. |
-| V-02 | CA-02 | Configuración externa | Archivos `appsettings` existentes | Revisar `WriteTo` y `MinimumLevel` en `appsettings*.json` | Consola + archivo rotativo + nivel configurable por entorno. | Archivos de configuración y ruta local de logs. |
-| V-03 | CA-03 | Revisión de contenido | Logs de ejecución disponibles | Revisar mensajes y contenido emitido | Sin contraseñas, tokens o datos privados. | Resultado de la revisión de contenido. |
-| V-04 | CA-04 | Compilación integrada | SDK y dependencias disponibles | `dotnet build Linkubator.sln --nologo --verbosity minimal` y `dotnet test Linkubator.sln --no-restore --logger 'console;verbosity=normal'` | Build sin errores ni advertencias y pruebas correctas. | Comando, salida y resultado de la solución. |
+| V01 | CA01 | Configuración del host | Solución construida y SDK disponible | Verificar `UseSerilog` y `ReadFrom.Configuration` en `Program.cs` | Serilog activo como proveedor del host de ASP.NET Core. | Captura del `Program.cs` y entorno de arranque. |
+| V02 | CA02 | Configuración externa | Archivos `appsettings` existentes | Revisar `WriteTo` y `MinimumLevel` en `appsettings*.json` | Consola + archivo rotativo + nivel configurable por entorno. | Archivos de configuración y ruta local de logs. |
+| V03 | CA03 | Revisión de contenido | Logs de ejecución disponibles | Revisar mensajes y contenido emitido | Sin contraseñas, tokens o datos privados. | Resultado de la revisión de contenido. |
+| V04 | CA04 | Compilación integrada | SDK y dependencias disponibles | `dotnet build Linkubator.sln --nologo --verbosity minimal` y `dotnet test Linkubator.sln --no-restore --logger 'console;verbosity=normal'` | Build sin errores ni advertencias y pruebas correctas. | Comando, salida y resultado de la solución. |
 
 ## Orden de ejecución y puerta de salida
 
 - [Tareas](tasks.md): aprobación documental, comprobaciones técnicas y cierre del trabajo.
-- Cerrar solo con evidencia suficiente para CA-01 a CA-04, tareas completadas y aceptación humana explícita.
+- Cerrar solo con evidencia suficiente para CA01 a CA04, tareas completadas y aceptación humana explícita.
 - No se declara la tarea aceptada si la comprobación de contenido sensible o del build está pendiente.

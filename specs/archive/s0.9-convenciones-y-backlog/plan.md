@@ -2,11 +2,11 @@
 
 ## Estado y aprobación del plan
 
-- Estado: aprobado por DLG el 07-X-2026.
-- Especificación: [spec.md](spec.md), aprobada por DLG el 07-X-2026.
-- Primera puerta: superada por aprobación expresa «Convenciones correctas» de DLG.
-- Aprobación humana del plan y tareas: DLG, 07-X-2026, «Convenciones correctas», conforme a la instrucción de esta conversación.
-- Modalidad: reescritura excepcional prospectiva; se valida el estado presente sin inferir cuándo se acordaron o escribieron las convenciones.
+- Estado: aprobado.
+- Especificación: [spec.md](spec.md).
+- Aprobaciones:
+  - Especificación: DLG, 07-X-2026 («Convenciones correctas»).
+  - Plan y tareas: DLG, 07-X-2026 («Convenciones correctas»).
 
 ## Diseño de implementación
 
@@ -43,16 +43,16 @@ La tarea modifica solo documentación si se requieren ajustes de sincronización
 
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comando, test o revisión | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |
-| V-01 | CA-01 | Revisión documental | README y CONTRIBUTING presentes | Comparar convenciones de ramas/commits/PR en ambos documentos | Resumen coherente y detalle operativo disponible, sin contradicciones. | Secciones revisadas y hallazgos. |
-| V-02 | CA-02 | Revisión de fuente/enlaces | Plan y roadmap presentes | Confirmar backlog bajo `plans/mvp0-plan.md` y referencias desde CONTRIBUTING/README | Enlaces al backlog y roadmap sin duplicar tabla de sprints. | Rutas y enlaces resueltos. |
-| V-03 | CA-03 | Validación de enlaces y alcance | Markdown del trabajo disponible | Resolver enlaces Markdown locales de README, CONTRIBUTING y los tres artefactos S0.9; revisar que no contienen listado duplicado de sprints ni contenido funcional nuevo | Cero enlaces rotos y límites respetados. | Número de enlaces comprobados y revisión de alcance. |
-| V-04 | CA-04 | Build | SDK .NET disponible | `dotnet build Linkubator.sln --nologo --verbosity minimal` | Build correcto con 0 advertencias y 0 errores. | Resumen, SDK, fecha. |
-| V-05 | CA-04 | Test automatizado | Build completo | `dotnet test Linkubator.sln --no-build --no-restore --logger 'console;verbosity=minimal'` | Todos los tests descubiertos pasan. | Total/pasados/fallidos/omitidos, fecha. |
+| V01 | CA01 | Revisión documental | README y CONTRIBUTING presentes | Comparar convenciones de ramas/commits/PR en ambos documentos | Resumen coherente y detalle operativo disponible, sin contradicciones. | Secciones revisadas y hallazgos. |
+| V02 | CA02 | Revisión de fuente/enlaces | Plan y roadmap presentes | Confirmar backlog bajo `plans/mvp0-plan.md` y referencias desde CONTRIBUTING/README | Enlaces al backlog y roadmap sin duplicar tabla de sprints. | Rutas y enlaces resueltos. |
+| V03 | CA03 | Validación de enlaces y alcance | Markdown del trabajo disponible | Resolver enlaces Markdown locales de README, CONTRIBUTING y los tres artefactos S0.9; revisar que no contienen listado duplicado de sprints ni contenido funcional nuevo | Cero enlaces rotos y límites respetados. | Número de enlaces comprobados y revisión de alcance. |
+| V04 | CA04 | Build | SDK .NET disponible | `dotnet build Linkubator.sln --nologo --verbosity minimal` | Build correcto con 0 advertencias y 0 errores. | Resumen, SDK, fecha. |
+| V05 | CA04 | Test automatizado | Build completo | `dotnet test Linkubator.sln --no-build --no-restore --logger 'console;verbosity=minimal'` | Todos los tests descubiertos pasan. | Total/pasados/fallidos/omitidos, fecha. |
 
-No se ejecutan operaciones Git reales; por tanto, no se afirma que las convenciones hayan sido ejercidas en una rama o PR. Build/tests son corroboración de la solución, no prueban la calidad editorial: V-01 a V-03 la verifican por lectura y rutas.
+No se ejecutan operaciones Git reales; por tanto, no se afirma que las convenciones hayan sido ejercidas en una rama o PR. Build/tests son corroboración de la solución, no prueban la calidad editorial: V01 a V03 la verifican por lectura y rutas.
 
 ## Orden de ejecución y puerta de salida
 
 - [Tareas](tasks.md) relaciona revisión documental, build, tests y cierre.
-- Completar tras evidencia satisfactoria de CA-01 a CA-04 y aceptación explícita de DLG.
+- Completar tras evidencia satisfactoria de CA01 a CA04 y aceptación explícita de DLG.
 - Antes de archivar, actualizar enlaces entrantes/salientes, índice y árbol del README; verificar la carpeta destino y las rutas tras mover.

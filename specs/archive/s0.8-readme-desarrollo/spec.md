@@ -2,10 +2,9 @@
 
 ## Estado y aprobación
 
-- Estado: aprobada por DLG el 07-X-2026.
-- Modalidad: reescritura excepcional prospectiva de spec heredada.
-- Aprobación humana: DLG, 07-X-2026, «Readme completadas», conforme a la instrucción expresa de aprobar cada documento S0.8 en esta conversación.
-- Esta especificación define el resultado esperado; las comprobaciones actuales del README y sus límites se registran en [tasks.md](tasks.md).
+- Estado: Aprobado por DLG el 7-X-2026.
+- [Especificación](spec.md): Readme completado.
+- Este documento define el resultado esperado; las comprobaciones del estado actual y sus límites se registran en [tasks.md](tasks.md).
 
 ## Objetivo
 
@@ -37,17 +36,17 @@ Proporcionar una guía de desarrollo local que permita a una persona identificar
 
 | ID | Fuente o criterio aprobado propietario | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA-01 | [Plan principal → S0.8](../../../plans/mvp0-plan.md#s0-fundaciones-m) | Una persona nueva en el repositorio. | Consulta el README desde la raíz. | Identifica el propósito, los proyectos principales y los requisitos locales sin necesitar una secuencia de documentos dispersa para comenzar. |
-| CA-02 | [Plan principal → S0.8](../../../plans/mvp0-plan.md#s0-fundaciones-m); [S0.5 → CA-02/CA-03](../s0.5-configuracion-web/spec.md#criterios-de-aceptación) | El árbol de solución y comandos disponibles. | Sigue los pasos de comprobación descritos. | Los comandos de restore/build/test/arranque coinciden con la solución y el proyecto Web actuales. |
-| CA-03 | [S0.6 → Criterios de aceptación](../s0.6-configuracion-local/spec.md#criterios-de-aceptación); [AGENTS.md → «Invariantes críticas»](../../../AGENTS.md#invariantes-críticas) | La configuración del entorno local. | El README explica dónde reside y qué datos de desarrollo se usan. | Distingue configuración base y local, no copia valores privados y no afirma que la base SQLite esté creada si no existe. |
-| CA-04 | [architecture.md → «Logs»](../../../context/architecture.md#logs); [S0.4 → Criterios de aceptación](../s0.4-serilog/spec.md#criterios-de-aceptación) | La configuración del logger y estructura local. | El README describe dónde consultar logs y la configuración que los gobierna. | La indicación de logs coincide con la configuración y no revela contenido de log ni datos sensibles. |
-| CA-05 | [Plan principal → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | Los enlaces Markdown y comandos del README. | Se revisan referencias y se ejecutan las comprobaciones pertinentes. | Los enlaces locales citados resuelven, y build y pruebas pasan. |
+| CA01 | [Plan principal → S0.8](../../../plans/mvp0-plan.md#s0-fundaciones-m) | Una persona nueva en el repositorio. | Consulta el README desde la raíz. | Identifica el propósito, los proyectos principales y los requisitos locales sin necesitar una secuencia de documentos dispersa para comenzar. |
+| CA02 | [Plan principal → S0.8](../../../plans/mvp0-plan.md#s0-fundaciones-m); [S0.5 → CA02/CA03](../s0.5-configuracion-web/spec.md#criterios-de-aceptación) | El árbol de solución y comandos disponibles. | Sigue los pasos de comprobación descritos. | Los comandos de restore/build/test/arranque coinciden con la solución y el proyecto Web actuales. |
+| CA03 | [S0.6 → Criterios de aceptación](../s0.6-configuracion-local/spec.md#criterios-de-aceptación); [AGENTS.md → «Invariantes críticas»](../../../AGENTS.md#invariantes-críticas) | La configuración del entorno local. | El README explica dónde reside y qué datos de desarrollo se usan. | Distingue configuración base y local, no copia valores privados y no afirma que la base SQLite esté creada si no existe. |
+| CA04 | [architecture.md → «Logs»](../../../context/architecture.md#logs); [S0.4 → Criterios de aceptación](../s0.4-serilog/spec.md#criterios-de-aceptación) | La configuración del logger y estructura local. | El README describe dónde consultar logs y la configuración que los gobierna. | La indicación de logs coincide con la configuración y no revela contenido de log ni datos sensibles. |
+| CA05 | [Plan principal → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | Los enlaces Markdown y comandos del README. | Se revisan referencias y se ejecutan las comprobaciones pertinentes. | Los enlaces locales citados resuelven, y build y pruebas pasan. |
 
 ## Bloqueos y preguntas pendientes
 
 | Pregunta o contradicción | Fuente afectada | Criterio bloqueado | Decisión humana necesaria |
 | --- | --- | --- | --- |
-| No se detectan bloqueos funcionales para escribir la guía. La existencia actual de una base SQLite no está afirmada; solo se documenta su destino configurado. | [S0.6 → CA-02](../s0.6-configuracion-local/spec.md#criterios-de-aceptación) | Ninguno. | Ninguna para el alcance de S0.8. |
+| No se detectan bloqueos funcionales para escribir la guía. La existencia actual de una base SQLite no está afirmada; solo se documenta su destino configurado. | [S0.6 → CA02](../s0.6-configuracion-local/spec.md#criterios-de-aceptación) | Ninguno. | Ninguna para el alcance de S0.8. |
 
 ## Artefactos relacionados
 

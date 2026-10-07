@@ -2,9 +2,8 @@
 
 ## Estado y aprobación
 
-- Estado: aprobada por DLG el 07-X-2026.
-- Modalidad: reescritura excepcional prospectiva de spec heredada.
-- Aprobación humana: DLG, 07-X-2026, «Configuración OK», conforme a la instrucción expresa de aprobación de los documentos S0.6 en esta conversación.
+- Estado: Aprobado por DLG el 7-X-2026.
+- [Especificación](spec.md): Configuración OK.
 - Este documento define el resultado esperado; las comprobaciones del estado actual y sus límites se registran en [tasks.md](tasks.md).
 
 ## Objetivo
@@ -36,11 +35,11 @@ Definir los valores técnicos locales necesarios para ejecutar la aplicación du
 
 | ID | Fuente o criterio aprobado propietario | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA-01 | [Plan principal → S0.6](../../../plans/mvp0-plan.md#s0-fundaciones-m); [architecture.md → «Enrutamiento»](../../../context/architecture.md#enrutamiento) | La configuración local del host. | Se comprueba el origen usado para enlaces públicos durante el desarrollo. | Hay un origen público local definido en la configuración del entorno Development, separado de la configuración base. |
-| CA-02 | [architecture.md → «Persistencia»](../../../context/architecture.md#persistencia); [Plan principal → S0.6](../../../plans/mvp0-plan.md#s0-fundaciones-m) | La conexión de datos del entorno Development. | Se inspecciona su destino sin abrir ni crear una base de datos. | La conexión apunta a un archivo local SQLite, no a un servidor compartido ni a una ubicación de producción. |
-| CA-03 | [architecture.md → «Autenticación»](../../../context/architecture.md#autenticación); [decisions.md → «Identidad de desarrollo»](../../../context/decisions.md#identidad-de-desarrollo) | La configuración local del usuario de desarrollo. | Se comprueba el dato de contacto utilizado por la identidad de desarrollo. | La dirección de desarrollo está declarada bajo configuración local y no se traslada a la configuración base ni a producción. |
-| CA-04 | [Plan principal → S0.6](../../../plans/mvp0-plan.md#s0-fundaciones-m); [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos) | La configuración base y la de Development. | Se validan estructura JSON y distribución de valores. | Los valores locales de S0.6 están en configuración de Development; la configuración base permanece independiente y no se añaden credenciales o secretos. |
-| CA-05 | [Plan principal → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | La solución configurada. | Se ejecutan build y suite de pruebas existentes. | La solución compila sin warnings/errors y las pruebas disponibles pasan. |
+| CA01 | [Plan principal → S0.6](../../../plans/mvp0-plan.md#s0-fundaciones-m); [architecture.md → «Enrutamiento»](../../../context/architecture.md#enrutamiento) | La configuración local del host. | Se comprueba el origen usado para enlaces públicos durante el desarrollo. | Hay un origen público local definido en la configuración del entorno Development, separado de la configuración base. |
+| CA02 | [architecture.md → «Persistencia»](../../../context/architecture.md#persistencia); [Plan principal → S0.6](../../../plans/mvp0-plan.md#s0-fundaciones-m) | La conexión de datos del entorno Development. | Se inspecciona su destino sin abrir ni crear una base de datos. | La conexión apunta a un archivo local SQLite, no a un servidor compartido ni a una ubicación de producción. |
+| CA03 | [architecture.md → «Autenticación»](../../../context/architecture.md#autenticación); [decisions.md → «Identidad de desarrollo»](../../../context/decisions.md#identidad-de-desarrollo) | La configuración local del usuario de desarrollo. | Se comprueba el dato de contacto utilizado por la identidad de desarrollo. | La dirección de desarrollo está declarada bajo configuración local y no se traslada a la configuración base ni a producción. |
+| CA04 | [Plan principal → S0.6](../../../plans/mvp0-plan.md#s0-fundaciones-m); [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos) | La configuración base y la de Development. | Se validan estructura JSON y distribución de valores. | Los valores locales de S0.6 están en configuración de Development; la configuración base permanece independiente y no se añaden credenciales o secretos. |
+| CA05 | [Plan principal → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints) | La solución configurada. | Se ejecutan build y suite de pruebas existentes. | La solución compila sin warnings/errors y las pruebas disponibles pasan. |
 
 ## Bloqueos y preguntas pendientes
 
