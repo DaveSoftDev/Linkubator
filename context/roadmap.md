@@ -32,7 +32,7 @@ Objetivos:
 
 - Implementar las entidades y sus invariantes para colecciones y enlaces ([domain-model.md → «Collection»](domain-model.md#collection) y [domain-model.md → «Link»](domain-model.md#link)).
 - Implementar la generación del alias ([specifications.md → «Generación del alias»](specifications.md#generación-del-alias)), del slug de colección ([specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs)), ajuste de URL ([specifications.md → «Ajuste de URL»](specifications.md#ajuste-de-url)), ajuste de `Image` ([specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image)) y la normalización de URLs ([«Normalización para duplicados»](specifications.md#normalización-para-duplicados)); son reglas distintas.
-- Definir los casos de uso, los contratos `Result`, la abstracción del usuario identificado y las interfaces de repositorios y de Unit of Work ([architecture.md → «Capas»](architecture.md#capas)).
+- Definir los casos de uso, los contratos `Result`, la abstracción del usuario identificado y las interfaces de repositorios y de Unit of Work ([architecture.md → «Arquitectura»](architecture.md#arquitectura)).
 - Proporcionar desde código una identidad de desarrollo asociada a un usuario válido para la gestión privada, sin aceptar identificadores enviados por el cliente ([decisions.md → «Identidad de desarrollo»](decisions.md#identidad-de-desarrollo)).
 
 Criterio de finalización:

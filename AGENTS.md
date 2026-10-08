@@ -13,7 +13,7 @@ La documentación funcional vive en `context/`. Cada documento responde a una so
 | [`requirements.md`](context/requirements.md) | Qué hace el producto y para quién | Valores exactos, SQL, cabeceras, nombres de clases |
 | [`specifications.md`](context/specifications.md) | Reglas exactas: algoritmos, límites, valores, mensajes y respuestas | Justificaciones |
 | [`decisions.md`](context/decisions.md) | Qué se decidió y por qué, riesgos aceptados, pendientes y fuera de alcance | Especificaciones ni copias de reglas |
-| [`architecture.md`](context/architecture.md) | Cómo se construye: plataforma, capas, persistencia, seguridad técnica | Reglas de negocio |
+| [`architecture.md`](context/architecture.md) | Cómo se construye: tecnologías, arquitectura , persistencia, seguridad técnica | Reglas de negocio |
 | [`domain-model.md`](context/domain-model.md) | Entidades, propiedades, relaciones e invariantes | Capas, formatos de almacenamiento, SEO |
 | [`roadmap.md`](context/roadmap.md) | En qué orden se construye y cuándo termina cada etapa, checklist de calidad y backlog de MVP1 | Reglas ni historial de decisiones |
 | [`specs/`](specs/) | Cómo se implementa cada subsistema: diseño técnico, estructura interna, ejecución de flujos y trazabilidad | Reglas del producto, límites funcionales, mensajes exactos, requisitos de usuario ni decisiones de negocio en sí mismas |
@@ -85,10 +85,6 @@ Estas reglas no se pueden romper nunca, ni en la documentación ni en el código
 - En la documentación funcional se nombra «etiqueta»; `Tag` y `LinkTag` son nombres técnicos.
 - Referencias a secciones: usar enlaces Markdown con el nombre exacto del título y un solo nivel. A otro documento: `[specifications.md → «Sesión»](context/specifications.md#sesión)`. En el mismo documento: `[«Reglas de documentación»](#reglas-de-documentación)`. Varias secciones: enlazar cada sección por separado. La ruta relativa parte del documento que contiene la referencia. Por eso los títulos no se repiten dentro de un documento.
 
-## Restricción de acceso de Copilot
-
-Copilot no debe listar, buscar, leer ni modificar archivos dentro de ningún directorio cuyo nombre empiece por `.` en cualquier nivel del workspace. En búsquedas y operaciones recursivas, debe excluir siempre esos directorios. Si una tarea requiere acceder a uno de ellos, debe detenerse y explicárselo al usuario.
-
 ## Implementación autorizada
 
-Se permite crear los proyectos, el código, el SQL de aplicación y migraciones, las dependencias y el frontend necesarios para implementar la etapa activa del [roadmap.md](context/roadmap.md), siguiendo la pila prevista en [architecture.md → «Plataforma»](context/architecture.md#plataforma). No se amplía por ello el alcance comprometido: las funciones reservadas a etapas posteriores y las propuestas siguen sujetas a [decisions.md](context/decisions.md) y [roadmap.md](context/roadmap.md). La configuración de despliegue continúa fuera del alcance.
+Se permite crear los proyectos, el código, el SQL de aplicación y migraciones, las dependencias y el frontend necesarios para implementar la etapa activa del [roadmap.md](context/roadmap.md), siguiendo la pila prevista en [architecture.md → Arquitectura](context/architecture.md#arquitectura). No se amplía por ello el alcance comprometido: las funciones reservadas a etapas posteriores y las propuestas siguen sujetas a [decisions.md](context/decisions.md) y [roadmap.md](context/roadmap.md). La configuración de despliegue continúa fuera del alcance.

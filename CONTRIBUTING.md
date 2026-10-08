@@ -19,9 +19,9 @@ Ejemplos:
 
 Usa prefijos claros:
 
-- `feat:` para funcionalidad
+- `fea:` para funcionalidad
 - `fix:` para correcciones
-- `docs:` para documentación
+- `doc:` para documentación
 - `chore:` para tareas de mantenimiento y configuración
 - `test:` para pruebas
 

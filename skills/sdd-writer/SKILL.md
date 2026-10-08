@@ -29,7 +29,7 @@ Lee [AGENTS.md](../../AGENTS.md) y los documentos completos que correspondan al 
 - [requirements.md](../../context/requirements.md): capacidades del producto.
 - [specifications.md](../../context/specifications.md): reglas exactas.
 - [domain-model.md](../../context/domain-model.md): entidades e invariantes.
-- [architecture.md](../../context/architecture.md): plataforma, capas y medidas técnicas.
+- [architecture.md](../../context/architecture.md): tecnologías, arquitectura y medidas técnicas.
 - [decisions.md](../../context/decisions.md): decisiones, motivos y pendientes.
 - [roadmap.md](../../context/roadmap.md): orden y criterios de finalización.
 - [Plan de implementación](../../plans/mvp0-plan.md): tarea, dependencias y revisión del SDD antes del desarrollo cuando aplique.

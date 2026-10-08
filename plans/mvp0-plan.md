@@ -6,7 +6,7 @@ Este plan organiza la construcción del MVP0 en sprints de 1 semana, con la IA g
 
 ### Tareas principales de la IA
 
-- Crear la solución .NET 10 y mantener las capas Domain, Application, Infrastructure, Web y Tests, respetando [architecture.md → «Capas»](../context/architecture.md#capas).
+- Crear la solución .NET 10 y mantener las capas Domain, Application, Infrastructure, Web y Tests, respetando [architecture.md → «Arquitectura»](../context/architecture.md#arquitectura).
 - Implementar reglas de dominio, casos de uso, SQL explícito con Dapper, scripts versionados, FTS5, Razor Pages y Tailwind.
 - Escribir los tests automáticos de la [checklist de calidad](../context/roadmap.md#checklist-de-calidad-del-mvp0): unitarios, integración SQLite e integración HTTP con `WebApplicationFactory`.
 - Entregar con cada sprint una guía de pruebas manuales con pasos y resultado esperado, y una matriz de trazabilidad regla → test.
