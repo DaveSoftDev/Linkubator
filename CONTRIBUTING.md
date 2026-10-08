@@ -27,8 +27,8 @@ Usa prefijos claros:
 
 Ejemplos:
 
-- `feat: add alias generation rules`
-- `docs: update development readme`
+- `fea: add alias generation rules`
+- `doc: update development readme`
 - `test: add architecture dependency checks`
 
 ## Pull requests

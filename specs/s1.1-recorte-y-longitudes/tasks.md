@@ -4,8 +4,8 @@
 
 - Estado: aprobadas por DLG el 08-X-2026.
 - Aprobaciones:
-    - Especificación: [spec.md](spec.md), aprobada por DLG, 08-X-2026 («La he aprobado yo»).
-    - Plan: [plan.md](plan.md), aprobado por DLG, 08-X-2026 («Confirmado»).
+    - Especificación: [spec.md](spec.md), aprobada por DLG, 07-X-2026 («La he aprobado yo»).
+    - Plan: [plan.md](plan.md), aprobado por DLG, 07-X-2026 («Confirmado»).
     - Tareas: aprobadas por DLG, 08-X-2026 («Listo para implementar»).
 
 ## Descomposición
