@@ -91,9 +91,9 @@ Ordena preparación, cambios pequeños, validación integrada y revisión humana
 
 ### 5. Aprobaciones y entrega a implementación
 
-- Registra tres aprobaciones diferenciadas y secuenciales: primero `spec.md`; tras su aprobación, prepara y somete a aprobación `plan.md`; tras aprobar el plan, crea `tasks.md` y somételo a su propia aprobación. Cada documento conserva su estado, responsable, fecha y referencia real.
+- Registra tres aprobaciones diferenciadas y secuenciales. Al registrar la aprobación de `spec.md`, genera de inmediato `plan.md` a partir de su plantilla, con estado de propuesta y su aprobación pendiente. Al registrar la aprobación de `plan.md`, genera de inmediato `tasks.md` a partir de su plantilla, con estado pendiente de aprobación. Cada documento conserva su estado, responsable, fecha y referencia real.
 - La aprobación de un documento no implica la de los otros. Solicita y registra una decisión explícita para cada artefacto; no combines las tres aprobaciones en una sola.
-- No crees `plan.md` antes de aprobar `spec.md`, ni `tasks.md` antes de aprobar `plan.md`. Hasta entonces, no incluyas el artefacto futuro en el índice ni dejes enlaces que aparenten que existe.
+- No crees `plan.md` antes de aprobar `spec.md`, ni `tasks.md` antes de aprobar `plan.md`. Al crear automáticamente el artefacto siguiente, rellénalo hasta donde permitan las fuentes y el documento recién aprobado; registra bloqueos y preguntas reales, pero no inventes decisiones. Hasta su creación, no incluyas el artefacto siguiente en el índice ni dejes enlaces que aparenten que existe.
 - No empieces cambios productivos hasta que `tasks.md` esté aprobado.
 - No marques aprobado un artefacto no cubierto por una referencia explícita. Una decisión pendiente que afecte a requisitos, contrato o alcance se registra como pregunta concreta.
 - Una vez aprobadas las tareas, registra en la cabecera de `tasks.md` el estado de implementación como `no iniciada`. Al iniciarla, actualiza ese resumen con la fecha y referencia reales y crea o completa la tarea documental que sincroniza [roadmap.md](../../context/roadmap.md), cuando el trabajo haga trazable una etapa.
