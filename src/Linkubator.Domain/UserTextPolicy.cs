@@ -18,9 +18,7 @@ public static class UserTextPolicy
         {
             count++;
 
-            if (char.IsHighSurrogate(value[index])
-                && index + 1 < value.Length
-                && char.IsLowSurrogate(value[index + 1]))
+            if (char.IsHighSurrogate(value[index]) && index + 1 < value.Length && char.IsLowSurrogate(value[index + 1]))
             {
                 index++;
             }
