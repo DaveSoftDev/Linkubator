@@ -41,7 +41,7 @@ No se añade acceso a datos ni dependencia de dominio. Tailwind requiere su ejec
 | Decisión o riesgo | Estado | Fuente o aprobación | Comprobación o resolución |
 | --- | --- | --- | --- |
 | Activar Razor Pages y una página mínima para comprobar el host | Diseño técnico aprobado | [mvp0-plan.md → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | Probar ruta raíz por HTTP/HTTPS y no confundirla con una página de producto. |
-| Compilar Tailwind desde el target de build de Web | Diseño técnico aprobado | [architecture.md → «Plataforma»](../../../context/architecture.md#plataforma) | Build con la herramienta disponible; si falta, anotar limitación sin ocultar el resultado. |
+| Compilar Tailwind desde el target de build de Web | Diseño técnico aprobado | [architecture.md → «Tecnologías»](../../../context/architecture.md#tecnologías) | Build con la herramienta disponible; si falta, anotar limitación sin ocultar el resultado. |
 | `AllowedHosts` forma parte de S0.5; otros valores de entorno corresponden a S0.6 | Asignación confirmada por el plan principal y aclaración DLG del 7-X-2026 | [mvp0-plan.md → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m) | La comprobación live de filtrado de host se registra como V06 en esta enmienda; no se presume superada. |
 | El redirect de HTTPS depende del certificado local | Riesgo de entorno | [architecture.md → «Seguridad web»](../../../context/architecture.md#seguridad-web) | Registrar si el certificado está disponible y separar error de entorno del comportamiento de la app. |
 

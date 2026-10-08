@@ -39,7 +39,7 @@
 
 - El conteo distingue puntos de código de unidades UTF-16 y grafemas, según [specifications.md → «Longitudes máximas»](../../context/specifications.md#longitudes-máximas).
 - La normalización y el conteo no incorporan reglas específicas de entidades ni máximos fijos de propiedades.
-- Domain permanece aislado de las demás capas, conforme a [architecture.md → «Capas»](../../context/architecture.md#capas).
+- Domain permanece aislado de las demás capas, conforme a [architecture.md → «Arquitectura»](../../context/architecture.md#arquitectura).
 - S1.1 no implementa el truncado de contenido obtenido por scraper; está fuera del alcance de esta tarea.
 
 ## Decisiones técnicas y riesgos

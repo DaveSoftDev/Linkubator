@@ -13,7 +13,7 @@ Proporcionar una guía de desarrollo local que permita a una persona identificar
 ## Fuentes
 
 - [mvp0-plan.md → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m): tarea S0.8 y Definition of Done del bloque.
-- [architecture.md → «Plataforma»](../../../context/architecture.md#plataforma): tecnologías previstas.
+- [architecture.md → «Tecnologías»](../../../context/architecture.md#tecnologías): tecnologías previstas.
 - [architecture.md → «Dependencias entre proyectos»](../../../context/architecture.md#dependencias-entre-proyectos): estructura y separación por proyectos.
 - [architecture.md → «Logs»](../../../context/architecture.md#logs): ubicación/uso técnico de logs.
 - [S0.5 → «Criterios de aceptación»](../s0.5-configuracion-web/spec.md#criterios-de-aceptación): arranque Web local y Tailwind.

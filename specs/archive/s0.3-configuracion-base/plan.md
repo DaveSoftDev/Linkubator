@@ -29,7 +29,7 @@ No se crea persistencia de aplicación. El contenido de datos locales y logs que
 
 ### Garantías técnicas
 
-- El análisis y `nullable` operan sobre los proyectos de [architecture.md → «Capas»](../../../context/architecture.md#capas) sin añadir dependencias entre ellos.
+- El análisis y `nullable` operan sobre los proyectos de [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura) sin añadir dependencias entre ellos.
 - `.editorconfig` no sustituye tests ni reglas funcionales.
 - Los patrones de `.gitignore` excluyen artefactos locales sin ocultar fuentes necesarias para construir la solución.
 
@@ -43,7 +43,7 @@ No se crea persistencia de aplicación. El contenido de datos locales y logs que
 
 ## Estrategia de validación
 
-Los resultados van en [tasks.md](tasks.md). Las comprobaciones de S0.3 no cubren logging, seguridad web ni arranque de páginas. No acceder a directorios cuyo nombre comience por `.` según [AGENTS.md → «Restricción de acceso de Copilot»](../../../AGENTS.md#restricción-de-acceso-de-copilot); `.editorconfig` y `.gitignore` son archivos de raíz, no directorios.
+Los resultados van en [tasks.md](tasks.md). Las comprobaciones de S0.3 no cubren logging, seguridad web ni arranque de páginas.
 
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comprobación | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |

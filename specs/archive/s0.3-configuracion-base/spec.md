@@ -14,7 +14,7 @@ Configurar la base de análisis y estilo de los proyectos y excluir del reposito
 
 - [mvp0-plan.md → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m): tarea S0.3 y su reparto con los trabajos siguientes.
 - [mvp0-plan.md → «3. Definition of Done común (aplica a todos los sprints)»](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints): comprobación de compilación.
-- [architecture.md → «Plataforma»](../../../context/architecture.md#plataforma): entorno de proyectos sobre el que se aplica la configuración.
+- [architecture.md → «Tecnologías»](../../../context/architecture.md#tecnologías): entorno de proyectos sobre el que se aplica la configuración.
 - [AGENTS.md → «Reglas de documentación»](../../../AGENTS.md#reglas-de-documentación): límites de este documento derivado.
 
 ## Alcance
@@ -26,7 +26,7 @@ Configurar la base de análisis y estilo de los proyectos y excluir del reposito
 ## Dependencias y prerrequisitos
 
 - La estructura de solución y proyectos procede de [S0.2](../s0.2-crear-solucion/spec.md).
-- Para compilar se requiere el SDK previsto en [architecture.md → «Plataforma»](../../../context/architecture.md#plataforma).
+- Para compilar se requiere el SDK previsto en [architecture.md → «Tecnologías»](../../../context/architecture.md#tecnologías).
 
 ## Criterios de aceptación
 
