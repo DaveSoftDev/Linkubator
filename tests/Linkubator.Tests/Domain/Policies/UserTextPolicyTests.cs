@@ -1,6 +1,6 @@
-using Linkubator.Domain;
+using DomainPolicies = Linkubator.Domain.Policies;
 
-namespace Linkubator.Tests;
+namespace Linkubator.Tests.Domain.Policies;
 
 public class UserTextPolicyTests
 {
@@ -12,7 +12,7 @@ public class UserTextPolicyTests
     [InlineData(null, null)]
     public void TrimToNullTrimsAndMapsEmptyValuesToNull(string? value, string? expected)
     {
-        Assert.Equal(expected, UserTextPolicy.TrimToNull(value));
+        Assert.Equal(expected, DomainPolicies.UserTextPolicy.TrimToNull(value));
     }
 
     [Theory]
@@ -21,7 +21,7 @@ public class UserTextPolicyTests
     [InlineData("a\u0301", 2)]
     public void CountCodePointsCountsUnicodeCodePoints(string value, int expected)
     {
-        Assert.Equal(expected, UserTextPolicy.CountCodePoints(value));
+        Assert.Equal(expected, DomainPolicies.UserTextPolicy.CountCodePoints(value));
     }
 
     [Theory]
@@ -33,6 +33,6 @@ public class UserTextPolicyTests
     [InlineData("😀", 0, false)]
     public void IsWithinMaximumLengthComparesCodePointCount(string value, int maximum, bool expected)
     {
-        Assert.Equal(expected, UserTextPolicy.IsWithinMaximumLength(value, maximum));
+        Assert.Equal(expected, DomainPolicies.UserTextPolicy.IsWithinMaximumLength(value, maximum));
     }
 }

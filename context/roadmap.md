@@ -24,7 +24,9 @@ S1.1 está aceptada; no implica que el resto del sprint S1 esté terminado. La e
 
 ### Dominio y aplicación
 
-Continúa el trabajo de S1. S1.1 está aceptada; las tareas S1 restantes del [mvp0-plan.md → «S1: Dominio I: textos, alias y slugs (L)»](../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugs-l) siguen pendientes.
+Continúa el trabajo de S1. S1.1 y S1.2 están aceptadas; las demás tareas S1 del [mvp0-plan.md → «S1: Dominio I: textos, alias y slugs (L)»](../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugs-l) siguen pendientes.
+
+S1.2 fue aprobada, implementada, validada y cerrada por DLG el 09-X-2026. La evidencia está en [specs/s1.2-errores-y-enumeradores/tasks.md → «Aceptación y cierre»](../specs/s1.2-errores-y-enumeradores/tasks.md#aceptación-y-cierre). La integración de la excepción en entidades se realizará en S3.
 
 Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 

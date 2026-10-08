@@ -9,6 +9,7 @@ Los siguientes trabajos permanecen en sus ubicaciones activas; la tabla indica e
 | Trabajo | Documento disponible |
 | --- | --- |
 | S1.1 — Recorte y validación de longitudes | [spec.md](s1.1-recorte-y-longitudes/spec.md), [plan.md](s1.1-recorte-y-longitudes/plan.md), [tasks.md](s1.1-recorte-y-longitudes/tasks.md) |
+| S1.2 — Errores de dominio base y enumeradores | [spec.md](s1.2-errores-y-enumeradores/spec.md), [plan.md](s1.2-errores-y-enumeradores/plan.md), [tasks.md](s1.2-errores-y-enumeradores/tasks.md) |
 
 ## Trabajos archivados
 

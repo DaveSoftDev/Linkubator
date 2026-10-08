@@ -1,4 +1,4 @@
-namespace Linkubator.Domain;
+namespace Linkubator.Domain.Policies;
 
 public static class UserTextPolicy
 {
