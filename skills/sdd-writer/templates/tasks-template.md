@@ -4,8 +4,8 @@
 
 - Estado: pendiente / aprobado / bloqueado.
 - Aprobaciones:
-    - Especificación: [spec.md](spec.md), aprobada por [responsable, fecha].
-    - Plan: [plan.md](plan.md), aprobado por [responsable, fecha].
+    - Especificación: `spec.md`, aprobada por [responsable, fecha]. Al generar las tareas en `specs/<slug>/`, enlazarla solo si existe en su ubicación final.
+    - Plan: `plan.md`, aprobado por [responsable, fecha]. Enlazarlo solo si existe en su ubicación final.
 	- Tareas: pendiente; registrar responsable, fecha y referencia real cuando se apruebe.
 - La preparación de tareas no inventa aprobaciones ni evidencias de implementación.
 

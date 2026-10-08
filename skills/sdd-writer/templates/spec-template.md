@@ -13,12 +13,14 @@ Resultado técnico observable que debe conseguir este trabajo, sin describir su 
 
 Enlazar solo documentos y secciones pertinentes, con su título exacto. Los enlaces siguientes se resuelven desde `specs/<slug>/`; sustituir los enlaces generales por las secciones que sustentan el trabajo.
 
-- [requirements.md](../../context/requirements.md)
-- [specifications.md](../../context/specifications.md)
-- [domain-model.md](../../context/domain-model.md)
-- [architecture.md](../../context/architecture.md)
-- [decisions.md](../../context/decisions.md)
-- [roadmap.md](../../context/roadmap.md)
+- `../../context/requirements.md`
+- `../../context/specifications.md`
+- `../../context/domain-model.md`
+- `../../context/architecture.md`
+- `../../context/decisions.md`
+- `../../context/roadmap.md`
+
+Al generar `specs/<slug>/spec.md`, conserva como enlaces Markdown solo las fuentes realmente usadas, resolviendo sus rutas desde la carpeta de destino.
 
 ## Alcance
 
@@ -46,5 +48,4 @@ Cubrir los casos negativos y límites aplicables mediante referencias a su fuent
 
 ## Artefactos relacionados
 
-- [Plan técnico](plan.md)
-- [Tareas y evidencia](tasks.md)
+El plan técnico y las tareas se enlazan aquí solo después de que cada artefacto exista. No incluir enlaces a archivos futuros.

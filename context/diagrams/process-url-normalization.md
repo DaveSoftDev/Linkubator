@@ -19,6 +19,8 @@ flowchart TD
     combine["Unir host, puerto conservado, ruta y parámetros ordenados"]
     lowercaseUrl["Convertir a minúsculas la cadena resultante"]
     accents["Eliminar acentos y marcas diacríticas conservando la letra base"]
+    cedilla["Sustituir `ç` por `c`"]
+    enye["Sustituir `ñ` por `n`"]
     spaces["Convertir espacios en guiones medios"]
     allowed["Conservar solo letras y números de cualquier alfabeto y guiones medios. Eliminar los demás caracteres"]
     collapse["Eliminar guiones medios duplicados"]
@@ -32,5 +34,5 @@ flowchart TD
     structure --> query
     path --> combine
     query --> removeMarketing --> lowercaseParams --> sortParams --> combine
-    combine --> lowercaseUrl --> accents --> spaces --> allowed --> collapse --> trim --> result
+    combine --> lowercaseUrl --> accents --> cedilla --> enye --> spaces --> allowed --> collapse --> trim --> result
 ```

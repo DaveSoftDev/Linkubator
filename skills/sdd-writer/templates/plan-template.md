@@ -4,7 +4,7 @@
 
 - Estado: propuesta / aprobado / bloqueado.
 - Aprobaciones:
-  - Especificación: [spec.md](spec.md), aprobada por [responsable, fecha].
+	- Especificación: `spec.md`, aprobada por [responsable, fecha]. Al generar el plan en `specs/<slug>/`, enlazar `spec.md` solo si el archivo existe en su ubicación final.
 	- Plan: pendiente; registrar responsable, fecha y referencia real cuando se apruebe.
 
 ## Diseño de implementación

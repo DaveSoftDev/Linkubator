@@ -26,7 +26,7 @@ Propiedades:
 Invariantes:
 
 - `Email` es obligatorio y único en todo el sistema, normalizado y validado según [specifications.md → «Email»](specifications.md#email).
-- `EmailConfirmedAt` es `null` mientras el registro está sin completar. Un registro sin completar solo contiene el email: `Name`, `Alias` y `Password` son `null`, no tiene colecciones y no puede iniciar sesión. Al completar el registro se fijan los cuatro valores a la vez y, desde entonces, `Name`, `Alias` y `Password` son obligatorios.
+- `EmailConfirmedAt` es `null` mientras el registro está sin completar. Un registro sin completar solo contiene el email y el `SecurityStamp`: `Name`, `Alias` y `Password` son `null`, no tiene colecciones y no puede iniciar sesión. Al completar el registro se fijan los cuatro valores a la vez y, desde entonces, `Name`, `Alias` y `Password` son obligatorios.
 - Volver a registrarse con el email de un registro sin completar no crea otra cuenta: reenvía el correo de completar registro (ver [specifications.md → «Registro»](specifications.md#registro)).
 - `Name` no necesita ser único, ya que su finalidad es sólo para uso privado de la aplicación (Pantallas, Emails...).
 - `Alias` es público, mutable y único en todo el sistema. Se genera según [specifications.md → «Generación del alias»](specifications.md#generación-del-alias).

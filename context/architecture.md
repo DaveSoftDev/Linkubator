@@ -215,7 +215,7 @@ Restricciones e índices previstos:
 - Cada consulta de texto usa solo la proyección de la entidad del listado y combina siempre `MATCH` con el `UserId` del usuario identificado; la relación con la tabla de la entidad también comprueba que esta pertenece a ese usuario. Así no se puede devolver un resultado de otro usuario ni de otra entidad.
 - FTS5 se reserva para el texto libre. Los filtros del listado de enlaces (colección y etiqueta) usan SQL e índices convencionales.
 - Antes de tokenizar, se aplica a `q` y al texto que se incorpora a las proyecciones la normalización Unicode NFC definida en [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros). Los valores originales de las entidades no se modifican.
-- Tokenizador `unicode61` con `remove_diacritics 2` iguala «canción» y «cancion», y trata la `ñ` como `n`, igual que los slugs. FTS5 no incluye stemming para castellano.
+- Tokenizador `unicode61` con `remove_diacritics 2` y categorías `L* N*` iguala «canción» y «cancion», trata la `ñ` como `n` igual que los slugs, y tokeniza solo letras y números, conforme a [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros). FTS5 no incluye stemming para castellano.
 - La consulta se construye con los términos que define [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros). Cada término se escribe entre comillas dobles, para que FTS5 no interprete como operador palabras como `AND`, `OR`, `NOT` o `NEAR`, y los términos se combinan con el AND implícito de FTS5. No se usa la búsqueda por prefijo (`*`). Si no hay términos, no se consulta FTS5.
 - La relevancia solo se calcula en la proyección de enlaces, con `ORDER BY rank` ascendente: en FTS5, `rank` (`bm25()`) es más bajo cuanto mejor es la coincidencia, así que `ORDER BY rank DESC` devolvería primero los menos relevantes. Las consultas sobre las proyecciones de colecciones y de etiquetas solo obtienen los `Id` coincidentes y no usan `rank`; el orden de cada listado es el de [specifications.md → «Listados»](specifications.md#listados) (la colación está en [«Persistencia»](#persistencia)).
 - La reconstrucción del índice es un comando de mantenimiento que se ejecuta a mano: vacía todas las proyecciones (las de enlaces, colecciones y las de etiquetas) y las regenera desde las tablas, en una transacción.
@@ -233,7 +233,7 @@ Su diseño técnico no está cerrado hasta resolver los pendientes de [decisions
   - Tipos de contenido permitidos.
   - No sustituir nunca la URL original por la de una redirección.
   - Sanitizar los metadatos extraídos.
-  - Validar `og:image` según [specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image).
+  - Ajustar y validar `og:image` según [specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image) y [«Validación»](specifications.md#validación).
 
 ## Logs
 

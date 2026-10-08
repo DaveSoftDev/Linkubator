@@ -40,7 +40,7 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 ### Registro
 
 - A partir del email introducido por el usuario:
-  - Si no existe ninguna cuenta con ese email, se crea un registro sin completar, que solo contiene el email, y se envía el correo de completar registro.
+  - Si no existe ninguna cuenta con ese email, se crea un registro sin completar, que solo contiene el email y el `SecurityStamp` (La base de datos ya asignará `Id` y `CreatedAt`), y se envía el correo de completar registro.
   - Si existe un registro sin completar con ese email, se emite un token nuevo y se vuelve a enviar el correo de completar registro. Volver a registrarse es la forma de pedir el reenvío.
   - Si existe una cuenta completada con ese email, no se crea nada y se envía a esa dirección el correo de aviso de cuenta existente.
 - Un registro sin completar no tiene nombre, alias, contraseña ni colecciones, y no puede iniciar sesión (invariantes de [domain-model.md → «User»](domain-model.md#user)).
@@ -65,6 +65,7 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 
 ### Verificación concurrente de contraseña
 
+- Antes de verificar una contraseña presentada, normalizarla a Unicode NFC. No recortarla; usar el valor normalizado para verificar el hash.
 - Antes de verificar una contraseña, se leen juntos el hash de `User.Password` y el `User.SecurityStamp` vigente. El cálculo de Argon2id se realiza fuera de cualquier transacción.
 - Antes de aplicar el resultado de la verificación, se comprueba que `SecurityStamp` siga siendo el leído junto al hash y que la cuenta no esté bloqueada. Si el sello cambió o hay un bloqueo activo, se rechaza la operación sin aplicar cambios ni contar un intento fallido contra el estado nuevo de la cuenta.
 - En el login, antes de emitir la cookie se vuelve a comprobar el sello y el estado de bloqueo; la cookie lleva el sello comprobado. Si la cuenta cambió después de esa comprobación, la validación de sesión por `SecurityStamp` invalida la cookie.
@@ -77,7 +78,7 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
   - Existe y está completada: se le envía un enlace para introducir la nueva contraseña. 
   - Existe y está sin completar: se le envía el correo de completar registro.
 - Al mostrarse el formulario no se consume el token. El cambio se aplica al pulsar el botón (POST con antiforgery), tras volver a validar el token. Si la validación falla, se muestra la respuesta común de [«Tokens»](#tokens).
-- Al completarse: se invalida el token, se cierran todas las sesiones abiertas, se reinicia el bloqueo por intentos fallidos y se envía el aviso de contraseña cambiada.
+- Al completarse: se consume el token presentado y se aplican las invalidaciones de tokens pendientes definidas en [«Tokens»](#tokens); además, se cierran todas las sesiones abiertas, se reinicia el bloqueo por intentos fallidos y se envía el aviso de contraseña cambiada.
 
 > Diagrama de la secuencia: [Recuperación y restablecimiento de contraseña](diagrams/account-password-reset-sequence.md).
 
@@ -233,7 +234,7 @@ Reglas de la guía [**NIST SP 800-63B-4**](https://csrc.nist.gov/pubs/sp/800/63/
   - Con el texto enmascarado, el icono es un párpado cerrado o un ojo tachado y el nombre accesible del botón es «Mostrar contraseña».
   - Con el texto visible, el icono es un ojo abierto y el nombre accesible es «Ocultar contraseña».
 - Al establecer o cambiar una contraseña, se compara la contraseña con su confirmación después de normalizar ambas a NFC. La comparación es exacta y sensible a mayúsculas. Si no coinciden, se muestra un mensaje al usuario y no se continúa.
-- Al establecer o cambiar una contraseña, se compara completa, tras normalizarla a NFC y sin distinguir mayúsculas, con la lista de contraseñas prohibidas. Si coincide, se rechaza indicando el motivo y orientando para elegir otra.
+- Al establecer o cambiar una contraseña, se compara completa, tras normalizarla a NFC, con cada entrada de la lista de contraseñas prohibidas mediante comparación ordinal sin distinguir mayúsculas (`OrdinalIgnoreCase`), independiente de la cultura. Si coincide, se rechaza indicando el motivo y orientando para elegir otra.
 
 ### Lista inicial de contraseñas prohibidas
 
@@ -300,6 +301,7 @@ Argon2id con la configuración mínima de OWASP (Password Storage Cheat Sheet):
 - Los enlaces de completar registro, restablecimiento de contraseña, cambio de email y confirmación de eliminación de cuenta usan un token aleatorio de 256 bits, de un solo uso.
 - En completar registro, recuperación de contraseña, cambio de email y eliminación de cuenta, tanto al abrir el enlace o la página (GET) como al confirmar la operación (POST), si el token no existe, no es válido, ha caducado, ya se ha usado o se ha invalidado, se muestra «No se ha podido completar la operación. Vuelve a solicitarla.» y no se completa la operación. El GET no consume el token; el POST vuelve a validarlo antes de aplicar el cambio. Si al confirmar un cambio de email otra cuenta ya ocupa el nuevo email, se muestra la misma respuesta.
 - Solo se guarda el hash SHA-256 del token; el token en claro solo viaja en el enlace del correo.
+- Cada operación solo acepta tokens cuyo `UserId` corresponda a la cuenta afectada y cuyo `Purpose` corresponda exactamente a esa operación. Completar el registro requiere que la cuenta siga sin completar; recuperación de contraseña, cambio de email y eliminación de cuenta requieren una cuenta completada.
 - Un token solo tiene efecto una vez: si varias peticiones presentan el mismo token a la vez, solo una lo consigue y las demás reciben la respuesta de «No se ha podido completar la operación. Vuelve a solicitarla.».
 - Al completar la operación del token, se informa `UsedAt`. Si otra operación lo invalida antes de consumirlo, se informa `InvalidatedAt`; invalidar no cuenta como consumir. La validez y la exclusión entre ambos estados están definidas en [domain-model.md → «UserToken»](domain-model.md#usertoken).
 - Al emitir un token, se invalidan los tokens anteriores sin usar del mismo usuario y propósito, informando `InvalidatedAt`.
@@ -349,7 +351,7 @@ Antes de crear un enlace, la URL introducida pasa por un ajuste y una validació
 
 La URL que guarda el usuario no se transforma más allá del ajuste, y nunca se sustituye por la de una redirección. Es la que se usa para navegar.
 
-Los duplicados se detectan con una clave plana (`UrlNormalized`), no con una URL reconstruible. Se aceptan conscientemente colisiones derivadas de eliminar separadores. Cada componente se decodifica una sola vez y con la regla que le corresponde: en la ruta `+` es literal y en la consulta es un espacio; decodificar dos veces haría que la clave dependiera de en qué parte de la URL está el texto. El host se toma en punycode (`IdnHost`) para que un mismo dominio internacionalizado escrito en Unicode o en punycode produzca la misma clave, y se conservan las letras y los números de cualquier alfabeto: la clave es interna y no necesita la restricción a ASCII de los slugs, y con solo ASCII todas las rutas en otros alfabetos colisionarían entre sí (ver [«Normalización para duplicados»](#normalización-para-duplicados)).
+Los duplicados se detectan mediante la clave plana `UrlNormalized`, definida en [«Normalización para duplicados»](#normalización-para-duplicados). Los motivos de esta decisión y las colisiones aceptadas se documentan en [decisions.md → «Riesgos aceptados»](decisions.md#riesgos-aceptados).
 
 ### Detección de esquema URI
 
@@ -572,7 +574,7 @@ Correspondencia de metadatos, tomando el primero que exista de cada lista:
 |---|---|
 | `Title` | `<meta name="title">` → `<title>` → `<meta property="og:title">` |
 | `Description` | `<meta name="description">` → `<meta property="og:description">` |
-| `Image` | `<meta property="og:image">`, validada según [«Validación»](#validación) |
+| `Image` | `<meta property="og:image">`, ajustada según [«Ajuste de `Image`»](#ajuste-de-image) y validada según [«Validación»](#validación) |
 
 Flujo previsto para el scraping, sujeto a los pendientes de [decisions.md → «Pendientes de scraping»](decisions.md#pendientes-de-scraping):
 
@@ -583,8 +585,9 @@ Flujo previsto para el scraping, sujeto a los pendientes de [decisions.md → «
 - El resultado de un intento decide el estado:
   - Respuesta `200` con HTML: se extraen los metadatos que haya y el enlace queda `Completed`, tenga los tres campos, alguno o ninguno. No se reintenta.
   - Timeout, error de red o respuesta `5xx`: se considera `Failed`. El usuario podrá lanzarlo manualmente.
-  - Respuesta `4xx`, contenido que no es HTML, respuesta que supera el tamaño máximo o destino bloqueado por la protección SSRF: se considera definitivo. El enlace queda `Failed`. El usuario podrá lanzarlo manualmente.
+  - Respuesta `4xx`, contenido que no es HTML, respuesta que supera el tamaño máximo o destino bloqueado por la protección SSRF. El enlace queda `Failed`. El usuario podrá lanzarlo manualmente.
 - El enlace se conserva siempre, con los metadatos que se hayan podido obtener.
+- El usuario podrá lanzar el scraping de nuevo, si previamente elimina el contenido de los campos que intervienen.
 
 ## Estados del scraping
 
@@ -755,7 +758,7 @@ Las páginas públicas no muestran el nombre ni el email del usuario.
 
 ### Página de colección
 
-- Muestra solo los enlaces públicos. Cada uno muestra su título (o la URL si no tiene), su descripción y su imagen si las tiene, y enlaza a `UrlOriginal` con `rel="nofollow ugc noopener noreferrer"`.
+- Muestra solo los enlaces públicos. Cada uno muestra su título (o la URL si no tiene), su descripción y su imagen si las tiene, y enlaza a `UrlOriginal` con `rel="nofollow ugc noopener noreferrer"` y `target="_blank"`.
 - El orden de presentación de los enlaces está definido en [«Listados»](#listados).
 - Si la colección es pública pero no tiene enlaces públicos, no se muestra en público y responde `404` (ver [decisions.md → «Producto y alcance»](decisions.md#producto-y-alcance)).
 - Una colección privada, una inexistente y un slug antiguo tras renombrarla responden igual: `404`.

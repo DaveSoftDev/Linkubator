@@ -22,7 +22,7 @@ Principio de fuente única: **cada regla se escribe en un único documento, y lo
 
 La carpeta [`specs/`](specs/) es documentación técnica derivada: explica cómo se implementa cada subsistema, pero siempre enlaza a la regla fuente en `context/` y nunca repite sus requisitos ni sus decisiones de negocio.
 
-La documentación es genérica para todo el producto, las únicas referencias a MVPs concretos se deben hacer en [decisions.md](/context/decisions.md) y en [roadmap.md](/context/roadmap.md). Fuera de él, no deben aparecer ninguna mención a MVPs específicos.
+La documentación es genérica para todo el producto, las únicas referencias a MVPs concretos se deben hacer en [decisions.md](context/decisions.md) y en [roadmap.md](context/roadmap.md). Fuera de él, no deben aparecer ninguna mención a MVPs específicos.
 
 
 ### Dónde va cada texto

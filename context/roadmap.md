@@ -12,32 +12,23 @@ Entregables aceptados:
 
 La aceptación cierra la fase de definición y permite iniciar la implementación según [AGENTS.md → «Implementación autorizada»](../AGENTS.md#implementación-autorizada).
 
-## Now
-
 ### Fundaciones
 
-Objetivos:
+La Definition of Done de S0 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S0: Fundaciones (M)»](../plans/mvp0-plan.md#s0-fundaciones-m).
 
-- Crear la solución y dejar un esqueleto que compila y arranca localmente, con los proyectos, referencias y pruebas base de [mvp0-plan.md → «S0: Fundaciones (M)»](../plans/mvp0-plan.md#s0-fundaciones-m).
+### Dominio y aplicación: S1.1
 
-Criterio de finalización:
+S1.1 está aceptada; no implica que el resto del sprint S1 esté terminado. La evidencia está en [specs/s1.1-recorte-y-longitudes/tasks.md → «Aceptación y cierre»](../specs/s1.1-recorte-y-longitudes/tasks.md#aceptación-y-cierre).
 
-- Se cumple la Definition of Done de [mvp0-plan.md → «S0: Fundaciones (M)»](../plans/mvp0-plan.md#s0-fundaciones-m).
-
-## Next
+## Now
 
 ### Dominio y aplicación
 
-Objetivos:
+Continúa el trabajo de S1. S1.1 está aceptada; las tareas S1 restantes del [mvp0-plan.md → «S1: Dominio I: textos, alias y slugs (L)»](../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugs-l) siguen pendientes.
 
-- Implementar las entidades y sus invariantes para colecciones y enlaces ([domain-model.md → «Collection»](domain-model.md#collection) y [domain-model.md → «Link»](domain-model.md#link)).
-- Implementar la generación del alias ([specifications.md → «Generación del alias»](specifications.md#generación-del-alias)), del slug de colección ([specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs)), ajuste de URL ([specifications.md → «Ajuste de URL»](specifications.md#ajuste-de-url)), ajuste de `Image` ([specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image)) y la normalización de URLs ([«Normalización para duplicados»](specifications.md#normalización-para-duplicados)); son reglas distintas.
-- Definir los casos de uso, los contratos `Result`, la abstracción del usuario identificado y las interfaces de repositorios y de Unit of Work ([architecture.md → «Arquitectura»](architecture.md#arquitectura)).
-- Proporcionar desde código una identidad de desarrollo asociada a un usuario válido para la gestión privada, sin aceptar identificadores enviados por el cliente ([decisions.md → «Identidad de desarrollo»](decisions.md#identidad-de-desarrollo)).
+Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 
-Criterio de finalización:
-
-- Los casos de uso principales tienen contratos y criterios de aceptación claros.
+## Next
 
 ### Persistencia
 
@@ -47,7 +38,7 @@ Objetivos:
 - Preparar el archivo SQL local especial que provisiona el usuario de desarrollo y su colección privada base, según [decisions.md → «Identidad de desarrollo»](decisions.md#identidad-de-desarrollo).
 - Añadir las restricciones únicas y los índices.
 - Registrar la colación propia del orden alfabético en todas las conexiones ([architecture.md → «Persistencia»](architecture.md#persistencia)).
-- Implementar el Unit of Work, las transacciones y las proyecciones FTS5 de enlaces y de colecciones, una por entidad ([architecture.md → «Persistencia»](architecture.md#persistencia) y [architecture.md → «FTS5»](architecture.md#fts5)).
+- Implementar el Unit of Work, las transacciones y las proyecciones FTS5 de enlaces y colecciones, una por entidad ([architecture.md → «Persistencia»](architecture.md#persistencia) y [architecture.md → «FTS5»](architecture.md#fts5)).
 
 Criterio de finalización:
 
@@ -71,7 +62,7 @@ Criterio de finalización:
 
 - La gestión privada usa la identidad de desarrollo inyectada y solo opera sobre los datos de ese usuario.
 - Cada listado aplica solo sus propios parámetros, ignora el resto y conserva sus filtros al buscar y al paginar ([specifications.md → «Rutas privadas»](specifications.md#rutas-privadas)).
-- El formulario de creación de enlaces muestra la casilla de público desmarcada; al crear un enlace en una colección privada, la opción pública está deshabilitada y la aplicación rechaza una petición manipulada de creación, edición o cambio de privacidad que intente activarla con el mensaje de [specifications.md → «Errores controlados»](specifications.md#errores-controlados), mediante integración HTTP.
+- El formulario de creación de enlaces muestra la casilla de público desmarcada; al crear un enlace en una colección privada, la opción pública está deshabilitada y la aplicación rechaza una petición manipulada de creación, edición o cambio de privacidad según [specifications.md → «Errores controlados»](specifications.md#errores-controlados), mediante integración HTTP.
 - El dashboard, los listados y los formularios privados respetan [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas); los casos de uso no permiten elegir o alterar el `UserId` desde el cliente.
 
 ## Later
@@ -197,6 +188,8 @@ Criterio de finalización:
 
 ### Autenticación y gestión de cuenta
 
+La implementación queda bloqueada hasta resolver [decisions.md → «Pendiente de rutas de cuenta»](decisions.md#pendiente-de-rutas-de-cuenta) y definir las rutas y métodos en [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas).
+
 Objetivos:
 
 - Sustituir la identidad de desarrollo inyectada por autenticación real mediante cookies y autorización de la zona privada ([architecture.md → «Autenticación»](architecture.md#autenticación)), y el botón de entrada de la landing por los de registro y login ([specifications.md → «Landing»](specifications.md#landing)).
@@ -213,8 +206,8 @@ Criterio de finalización:
 #### Checklist de calidad de autenticación
 
 - Tests de las invariantes de [domain-model.md → «User»](domain-model.md#user) y [domain-model.md → «UserToken»](domain-model.md#usertoken) en los flujos de cuenta.
-- Tests de normalización y validación mínima del email, contraseñas, bloqueo, respuestas que no revelan cuentas y hash de contraseñas.
-- Tests de tokens: caducidad, un solo uso, almacenamiento solo como hash, invalidación registrada en `InvalidatedAt`, distinción frente a `UsedAt` y exclusión mutua entre ambos estados.
+- Tests de normalización y validación mínima del email y las contraseñas, incluida la equivalencia NFC entre contraseña establecida y contraseña presentada al verificarla, además de bloqueo, respuestas que no revelan cuentas y hash de contraseñas.
+- Tests de tokens: caducidad, un solo uso, almacenamiento solo como hash, correspondencia entre `UserId`, `Purpose`, operación y estado de cuenta, invalidación registrada en `InvalidatedAt`, distinción frente a `UsedAt` y exclusión mutua entre ambos estados.
 - Tests de concurrencia en verificaciones de contraseña ([specifications.md → «Verificación concurrente de contraseña»](specifications.md#verificación-concurrente-de-contraseña)): un cambio o restablecimiento concurrente del sello impide continuar con una verificación antigua; una verificación fallida contra un hash obsoleto no incrementa el contador nuevo; el login no emite una cookie con un sello desactualizado; y un bloqueo que aparece durante la verificación impide la operación.
 - Tests de los límites de correo y de las respuestas de registro, recuperación y cambio de email.
 - Tests de registro y compleción, recuperación, cambio de email y cambio de contraseña; en eliminación, el GET no modifica ni consume el token y solo el POST explícito elimina la cuenta y sus datos.
