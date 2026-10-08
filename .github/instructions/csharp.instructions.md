@@ -4,6 +4,13 @@
 
 Todo el código propuesto para esta solución debe ser como si lo hiciera un desarrollador senior con experiencia en entornos seguros, escalables y de alta demanda.
 
+## Organización de clases
+
+- No añadir clases de producción directamente en la raíz del proyecto, salvo puntos de entrada y composición.
+- Agruparlas en carpetas por responsabilidad y alinear el namespace con la ruta.
+- Organizar los tests reflejando la capa y responsabilidad de la clase probada.
+- No crear carpetas genéricas ni una carpeta por clase.
+
 ### Async
 - Los métodos asíncronos de `Linkubator` NO terminan en `Async`. Todos son async por defecto.
 - Sólo deben terminar en `Async` los propios métodos del framework de .NET.
