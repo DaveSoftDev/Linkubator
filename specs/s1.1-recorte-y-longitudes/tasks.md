@@ -7,6 +7,11 @@
     - Especificación: [spec.md](spec.md), aprobada por DLG, 07-X-2026 («La he aprobado yo»).
     - Plan: [plan.md](plan.md), aprobado por DLG, 07-X-2026 («Confirmado»).
     - Tareas: aprobadas por DLG, 08-X-2026 («Listo para implementar»).
+- Implementación:
+    - Estado: completada.
+    - Inicio: 08-X-2026.
+    - Finalización: 08-X-2026; tareas de implementación y validación T02–T05 completadas.
+    - Evidencia consolidada: [T02–T05](#descomposición) y [evidencia por criterio](#evidencia-por-criterio).
 
 ## Descomposición
 

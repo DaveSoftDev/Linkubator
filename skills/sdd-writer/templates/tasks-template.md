@@ -6,7 +6,12 @@
 - Aprobaciones:
     - Especificación: `spec.md`, aprobada por [responsable, fecha]. Al generar las tareas en `specs/<slug>/`, enlazarla solo si existe en su ubicación final.
     - Plan: `plan.md`, aprobado por [responsable, fecha]. Enlazarlo solo si existe en su ubicación final.
-	- Tareas: pendiente; registrar responsable, fecha y referencia real cuando se apruebe.
+    - Tareas: pendiente; registrar responsable, fecha y referencia real cuando se apruebe.
+- Implementación:
+    - Estado: no iniciada / en curso / completada / bloqueada.
+    - Inicio: pendiente; registrar fecha y referencia real al iniciarla.
+    - Finalización: pendiente; registrar fecha, comprobación y referencia real al completar las tareas de implementación y validación.
+    - Evidencia consolidada: pendiente; enlazar las tareas y validaciones que sustentan el estado.
 - La preparación de tareas no inventa aprobaciones ni evidencias de implementación.
 
 ## Descomposición
@@ -20,7 +25,7 @@ Estados: pendiente, en curso, completada o bloqueada. Conservar identificadores 
 | T03 | [Validación integrada] | [CA y enlace a validación] | T02 | [Comprobación y resultado] | pendiente | No ejecutada |
 | T04 | [Revisión y aceptación humana] | [Criterios del trabajo] | T03 | [Revisión de evidencia y decisión registrada] | pendiente | Sin aceptación |
 
-Adaptar el desglose al trabajo. Explicitar tareas independientes que puedan ejecutarse en paralelo. Registrar siempre evidencia obtenida en la comprobación actual, con fecha y límites; no inventar fechas, aprobaciones ni resultados históricos.
+Adaptar el desglose al trabajo. Explicitar tareas independientes que puedan ejecutarse en paralelo. Incluir tareas documentales para mantener el estado de implementación y el enlace de [roadmap.md](../../../context/roadmap.md) cuando el trabajo haga trazable una etapa. Registrar siempre evidencia obtenida en la comprobación actual, con fecha y límites; no inventar fechas, aprobaciones ni resultados históricos.
 
 La tarea de aceptación solo se completa con aceptación humana explícita y registrada. Presentar evidencia o terminar una revisión sin aceptación no cierra el trabajo; si se rechaza, registrar el bloqueo y las correcciones necesarias.
 
