@@ -89,6 +89,8 @@ Redacta `tasks.md` solo después de que `plan.md` tenga aprobación humana regis
 
 Ordena preparación, cambios pequeños, validación integrada y revisión humana. Incluye tareas documentales cuando correspondan a este trabajo, sin adelantar trabajo de otra etapa. Todo criterio debe tener tareas y validación; toda tarea debe justificar su contribución. Una tarea no está completada solo por haber creado archivos.
 
+Bajo «Descomposición» usa texto introductorio en esa sección solo para aportar dependencias, paralelismo o restricciones concretas del trabajo que no se entiendan en la tabla.
+
 ### 5. Aprobaciones y entrega a implementación
 
 - Registra tres aprobaciones diferenciadas y secuenciales. Al registrar la aprobación de `spec.md`, genera de inmediato `plan.md` a partir de su plantilla, con estado de propuesta y su aprobación pendiente. Al registrar la aprobación de `plan.md`, genera de inmediato `tasks.md` a partir de su plantilla, con estado pendiente de aprobación. Cada documento conserva su estado, responsable, fecha y referencia real.

@@ -16,7 +16,7 @@
 
 ## Descomposición
 
-Estados: pendiente, en curso, completada o bloqueada. Conservar identificadores al actualizar. Enlazar al criterio y a la sección de diseño o validación correspondiente.
+Conservar identificadores al actualizar. Enlazar cada tarea al criterio y a la sección de diseño o validación correspondiente. Añadir texto introductorio solo si documenta dependencias, paralelismo o restricciones concretas que no sean evidentes en la tabla.
 
 | ID | Acción y entregable | Criterios y diseño | Depende de | Check inmediato y resultado esperado | Estado | Evidencia o bloqueo |
 | --- | --- | --- | --- | --- | --- | --- |
