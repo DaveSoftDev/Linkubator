@@ -12,6 +12,7 @@ Los siguientes trabajos permanecen en sus ubicaciones activas; la tabla indica e
 | S1.2 — Errores de dominio base y enumeradores | [spec.md](s1.2-errores-y-enumeradores/spec.md), [plan.md](s1.2-errores-y-enumeradores/plan.md), [tasks.md](s1.2-errores-y-enumeradores/tasks.md) |
 | S1.3 — Generación de alias | [spec.md](s1.3-generacion-de-alias/spec.md), [plan.md](s1.3-generacion-de-alias/plan.md), [tasks.md](s1.3-generacion-de-alias/tasks.md) |
 | S1.4 — Transformación común a ASCII y generación de slugs | [spec.md](s1.4-generacion-de-slugs/spec.md), [plan.md](s1.4-generacion-de-slugs/plan.md), [tasks.md](s1.4-generacion-de-slugs/tasks.md) |
+| S1.5 — Tests de los ejemplos de alias y slugs | [spec.md](s1.5-tests-de-ejemplos/spec.md), [plan.md](s1.5-tests-de-ejemplos/plan.md), [tasks.md](s1.5-tests-de-ejemplos/tasks.md) |
 
 ## Trabajos archivados
 
