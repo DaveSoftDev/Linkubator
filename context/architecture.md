@@ -32,8 +32,7 @@ Este documento describe cómo se construirá Linkubator: tecnologías, arquitect
 - Excepciones de dominio.
 - Independiente de frameworks externos.
 - Transformaciones de texto sin dependencias de infraestructura.
-  - La generación de `User.Alias` (ver [specifications.md → «Generación del alias»](specifications.md#generación-del-alias)).
-  - La de `Collection.Slug` y `Tag.Slug` (ver [«Generación de slugs»](specifications.md#generación-de-slugs)) son reglas distintas del dominio.
+  - La generación de `User.Alias`, `Collection.Slug` y `Tag.Slug`, que comparten una única transformación (ver [specifications.md → «Transformación común a ASCII»](specifications.md#transformación-común-a-ascii), [«Generación del alias»](specifications.md#generación-del-alias) y [«Generación de slugs»](specifications.md#generación-de-slugs)).
   - La de `Link.UrlOriginal` (ver [specifications.md → «Ajuste de URL»](specifications.md#ajuste-de-url) y [specifications.md → «Validación»](specifications.md#validación)).
   - La de `Link.UrlNormalized` (ver [specifications.md → «Normalización para duplicados»](specifications.md#normalización-para-duplicados)).
   - La de `Link.Image` (ver [specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image) y [specifications.md → «Validación»](specifications.md#validación)).

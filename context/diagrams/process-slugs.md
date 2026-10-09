@@ -1,17 +1,12 @@
 # Proceso de generación de slugs
 
-Diagrama derivado de [specifications.md → «Generación de slugs»](../specifications.md#generación-de-slugs).
+Diagrama derivado de [specifications.md → «Generación de slugs»](../specifications.md#generación-de-slugs). La transformación se detalla en [Transformación común a ASCII](process-ascii-transformation.md).
 
 ```mermaid
 flowchart TD
     start([Nombre de colección o etiqueta])
-    lowercase[Convertir a minúsculas]
-    diacritics[Eliminar marcas diacríticas conservando la letra base]
-    table[Aplicar la tabla de conversión de símbolos]
-    spaces[Sustituir espacios por guiones medios]
-    nonAscii{¿Quedan letras o números que no son ASCII?}
-    rejectNonAscii[Rechazar indicando el motivo]
-    cleanup[Eliminar otros caracteres, guiones duplicados e iniciales o finales]
+    transform[Aplicar la transformación común a ASCII]
+    rejectTransform[Rechazar indicando el motivo]
     empty{¿Resultado vacío?}
     rejectEmpty[Rechazar]
     range{¿Está dentro del rango de longitud del slug?}
@@ -24,10 +19,9 @@ flowchart TD
     rejectCollision[Rechazar por colisión]
     saveSlug[Guardar slug]
 
-    start --> lowercase
-    lowercase --> diacritics --> table --> spaces --> nonAscii
-    nonAscii -->|Sí| rejectNonAscii
-    nonAscii -->|No| cleanup --> empty
+    start --> transform
+    transform -->|Rechazado| rejectTransform
+    transform -->|Texto ASCII| empty
     empty -->|Sí| rejectEmpty
     empty -->|No| range
     range -->|No| rejectRange

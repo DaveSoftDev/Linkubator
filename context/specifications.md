@@ -114,27 +114,44 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 
 ## Generación de alias y slugs
 
-### Generación del alias
+### Transformación común a ASCII
 
-La restricción de caracteres se aplica al alias resultante, no al texto de entrada: los caracteres que no puedan convertirse a letras ASCII, números o guiones medios se eliminan durante la transformación.
+`User.Alias`, `Collection.Slug` y `Tag.Slug` se generan con la misma transformación. Recibe el texto ya recortado según [«Textos introducidos por el usuario»](#textos-introducidos-por-el-usuario) y no lo recorta. No distingue para qué se usa el resultado: cada uno añade después sus propias validaciones (ver [«Generación del alias»](#generación-del-alias) y [«Generación de slugs»](#generación-de-slugs)).
 
-1. Convertir el texto a minúsculas.
-2. Eliminar las marcas diacríticas de cualquier letra, conservando la letra base: `Generación` se convierte en `generacion`, `pingüino` en `pinguino`, `caça` en `caca` y `España` en `espana`.
-3. Sustituir los espacios por guiones medios.
-4. Eliminar cualquier carácter que no sea una letra ASCII (`a`–`z`), un número (`0`–`9`) o un guión medio. Las letras de otros alfabetos, los emojis y los símbolos se eliminan sin conversión.
-5. Eliminar guiones medios duplicados: `--` pasa a `-`.
-6. Eliminar guiones medios al principio y al final.
+1. Normalizar el texto a Unicode NFKD. Convierte en su equivalente ASCII las letras y los números de ancho completo (`Ａ` pasa a `A`), los superíndices y subíndices (`x²` pasa a `x2`), `℃` y `℉` (`°C` y `°F`), `™` (`TM`) y los espacios que no son el espacio normal, como el de no separación y el ideográfico (espacio normal). Las fracciones como `½` pasan a `1⁄2`, con la barra de fracción `⁄`, que la [«Tabla de conversión de símbolos»](#tabla-de-conversión-de-símbolos) convierte después en un guion medio: `½` acaba como `1-2`.
+2. Rechazar el texto si contiene un carácter de control (como el tabulador o un salto de línea) o un separador distinto del espacio normal. No se eliminan: se rechaza indicando el motivo.
+3. Convertir el texto a minúsculas.
+4. Eliminar las marcas diacríticas de cualquier letra, conservando la letra base: `Generación` se convierte en `generacion`, `pingüino` en `pinguino`, `caça` en `caca` y `España` en `espana`.
+5. Aplicar la [«Tabla de conversión de símbolos»](#tabla-de-conversión-de-símbolos).
+6. Sustituir los espacios por guiones medios.
+7. Rechazar el texto si todavía contiene alguna letra o algún número que no sea ASCII. No se elimina: se rechaza indicando el motivo.
+8. Eliminar cualquier otro carácter que no sea una letra ASCII (`a`–`z`), un número (`0`–`9`) o un guión medio: los emojis, los signos de puntuación y los símbolos que no estén en la tabla.
+9. Eliminar guiones medios duplicados: `--` pasa a `-`.
+10. Eliminar guiones medios al principio y al final.
 
-> Diagrama del proceso: [Generación del alias](diagrams/process-alias.md).
+> Diagrama del proceso: [Transformación común a ASCII](diagrams/process-ascii-transformation.md).
 
 Ejemplos:
 
 ```text
-pingüino-2024       -> pinguino-2024
-ana--lopez          -> ana-lopez
-Ana_López!          -> analopez
-Ana López García    -> ana-lopez-garcia   (si se pega con espacios)
+pingüino-2024              -> pinguino-2024
+ana--lopez                 -> ana-lopez
+Ana_López!                 -> ana-lopez
+Ana López García           -> ana-lopez-garcia
+Ana😀López                 -> analopez
+Ａna１                      -> ana1
+Área x²                    -> area-x2
+Media ½ hora               -> media-1-2-hora
+Temp 20℃                   -> temp-20c
+Ana<tabulador>López        -> Rechazado: carácter de control
+日本語-ana                  -> Rechazado: letras no ASCII
 ```
+
+### Generación del alias
+
+El alias es el resultado de la [«Transformación común a ASCII»](#transformación-común-a-ascii), sin cambios.
+
+> Diagrama del proceso: [Generación del alias](diagrams/process-alias.md).
 
 Reglas del alias:
 
@@ -145,16 +162,7 @@ Reglas del alias:
 
 ### Generación de slugs
 
-`Collection.Slug` y `Tag.Slug` se generan a partir del nombre:
-
-1. Convertir el texto a minúsculas.
-2. Eliminar las marcas diacríticas de cualquier letra, conservando la letra base: `Generación` se convierte en `generacion` y `pingüino` en `pinguino`.
-3. Aplicar la [«Tabla de conversión de símbolos»](#tabla-de-conversión-de-símbolos).
-4. Sustituir los espacios por guiones medios.
-5. Rechazar el nombre si todavía contiene alguna letra o algún número que no sea ASCII. No se elimina: se rechaza indicando el motivo.
-6. Eliminar cualquier otro carácter: los emojis, los signos de puntuación y los símbolos que no estén en la tabla.
-7. Eliminar guiones medios duplicados: `--` pasa a `-`.
-8. Eliminar guiones medios al principio y al final.
+`Collection.Slug` y `Tag.Slug` se generan a partir del nombre con la [«Transformación común a ASCII»](#transformación-común-a-ascii), la misma que usa el alias. La transformación es idéntica para colecciones y para etiquetas.
 
 > Diagrama del proceso: [Generación de slugs](diagrams/process-slugs.md).
 
@@ -176,7 +184,7 @@ Reglas de los slugs:
 
 ### Tabla de conversión de símbolos
 
-Los símbolos se sustituyen por su palabra, separada por guiones medios del resto del texto. Los separadores se sustituyen por un guión medio. Las letras latinas que no se descomponen al eliminar las marcas diacríticas se sustituyen por su equivalente en ASCII.
+La tabla se aplica al texto ya normalizado y en minúsculas, por lo que solo contiene minúsculas. Los símbolos se sustituyen por su palabra, separada por guiones medios del resto del texto. Los separadores se sustituyen por un guión medio. Las letras latinas de los bloques Latin-1 y Latin Extended-A que no se reducen a ASCII con la normalización ni al eliminar las marcas diacríticas se sustituyen por su equivalente en ASCII.
 
 | Entrada | Resultado |
 |---|---|
@@ -185,7 +193,7 @@ Los símbolos se sustituyen por su palabra, separada por guiones medios del rest
 | `&` | `and` |
 | `@` | `at` |
 | `%` | `percent` |
-| `.` `/` `_` | `-` |
+| `.` `/` `_` `⁄` | `-` |
 | `$` | `dollar` |
 | `€` | `euro` |
 | `£` | `pound` |
@@ -195,8 +203,17 @@ Los símbolos se sustituyen por su palabra, separada por guiones medios del rest
 | `ø` | `o` |
 | `đ` | `d` |
 | `ł` | `l` |
+| `ð` | `d` |
+| `þ` | `th` |
+| `ħ` | `h` |
+| `ı` | `i` |
+| `ĸ` | `k` |
+| `ŋ` | `ng` |
+| `ŧ` | `t` |
 
-| Nombre | Slug |
+`µ` y `ŉ` no están en la tabla: la normalización los convierte en letras no ASCII y se rechazan.
+
+| Texto | Resultado |
 |---|---|
 | `C#` | `c-sharp` |
 | `C++` | `c-plus-plus` |
@@ -207,6 +224,8 @@ Los símbolos se sustituyen por su palabra, separada por guiones medios del rest
 | `TCP/IP` | `tcp-ip` |
 | `Straße` | `strasse` |
 | `Papá` | `papa` |
+| `Þór` | `thor` |
+| `Ŋ` | `ng` |
 | `日本語` | Rechazado: letras no ASCII |
 | `日本語 Tokyo` | Rechazado: letras no ASCII |
 

@@ -109,7 +109,7 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 | S1.1 | Implementar el recorte y la validación de longitudes máximas por puntos de código (BMP, marcas combinantes) según [«Textos introducidos por el usuario»](../context/specifications.md#textos-introducidos-por-el-usuario) y [«Longitudes máximas»](../context/specifications.md#longitudes-máximas) | IA |
 | S1.2 | Implementar los errores de dominio base y los enumeradores necesarios | IA |
 | S1.3 | Implementar la generación del alias, con acentos, guiones, rangos, palabras reservadas y alias ocupado | IA |
-| S1.4 | Implementar la generación de slugs con la tabla de conversión, el rechazo de no ASCII, los rangos y las colisiones | IA |
+| S1.4 | Implementar la transformación común a ASCII (NFKD, tabla de conversión y rechazo de caracteres no admitidos), la generación de slugs con sus rangos y la adaptación del alias a ella; la detección de colisiones se integra en S3–S5 | IA |
 | S1.5 | Escribir tests con todos los ejemplos de [«Generación del alias»](../context/specifications.md#generación-del-alias) y [«Generación de slugs»](../context/specifications.md#generación-de-slugs) | IA |
 | S1.6 | Revisar la tabla de símbolos contra el código y probar 20 nombres reales de colecciones | Humano |
 | S1.7 | Resolver las ambigüedades que surjan y aprobar el comportamiento | Humano |

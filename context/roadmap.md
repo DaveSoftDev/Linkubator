@@ -24,9 +24,13 @@ S1.1 está aceptada; no implica que el resto del sprint S1 esté terminado. La e
 
 ### Dominio y aplicación
 
-Continúa el trabajo de S1. S1.1 y S1.2 están aceptadas; las demás tareas S1 del [mvp0-plan.md → «S1: Dominio I: textos, alias y slugs (L)»](../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugs-l) siguen pendientes.
+Continúa el trabajo de S1. S1.1, S1.2 y S1.3 están aceptadas; las demás tareas S1 del [mvp0-plan.md → «S1: Dominio I: textos, alias y slugs (L)»](../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugs-l) siguen pendientes.
 
 S1.2 fue aprobada, implementada, validada y cerrada por DLG el 09-X-2026. La evidencia está en [specs/s1.2-errores-y-enumeradores/tasks.md → «Aceptación y cierre»](../specs/s1.2-errores-y-enumeradores/tasks.md#aceptación-y-cierre). La integración de la excepción en entidades se realizará en S3.
+
+S1.3 fue aprobada, implementada y validada el 09-X-2026, y su aceptación humana consta como cerrada («Alias OK»). La evidencia está en [specs/s1.3-generacion-de-alias/tasks.md → «Aceptación y cierre»](../specs/s1.3-generacion-de-alias/tasks.md#aceptación-y-cierre). La integración del alias en `User` se realizará en S3.
+
+La [especificación de S1.4](../specs/s1.4-generacion-de-slugs/spec.md) se reabrió para ampliar su alcance a la transformación común de alias y slugs, y fue aprobada por DLG el 09-X-2026 («Se han estudidao todos los casos»). Su [plan técnico](../specs/s1.4-generacion-de-slugs/plan.md) es una propuesta pendiente de aprobación y no autoriza su implementación.
 
 Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 
@@ -99,7 +103,7 @@ Dominio y datos:
 Especificaciones:
 
 - Tests de recorte de textos y de longitudes máximas de los campos del MVP0 según [specifications.md → «Textos introducidos por el usuario»](specifications.md#textos-introducidos-por-el-usuario) y [specifications.md → «Longitudes máximas»](specifications.md#longitudes-máximas): rechazo de lo introducido por el usuario; un carácter fuera del BMP cuenta como un punto de código y una letra seguida de una marca combinante cuenta según los puntos de código que tenga tras las transformaciones aplicables.
-- Tests de generación del alias (acentos, espacios pegados, guiones duplicados, caracteres eliminados, rangos, palabras reservadas y alias ocupado) y del slug de colección (todos los ejemplos de la tabla de conversión, rechazo de letras y números no ASCII, rangos, colisiones y regeneración al renombrar).
+- Tests de la transformación común a ASCII, de la generación del alias (acentos, espacios pegados, guiones duplicados, caracteres eliminados, rechazo de controles y de letras y números no ASCII, rangos, palabras reservadas y alias ocupado) y del slug de colección (todos los ejemplos de la tabla de conversión, rangos, colisiones y regeneración al renombrar).
 - Tests de ajuste y validación por separado para `UrlOriginal` e `Image`, con todos los ejemplos de [specifications.md → «Ajuste de URL»](specifications.md#ajuste-de-url), [«Ajuste de `Image`»](specifications.md#ajuste-de-image) y [«Validación»](specifications.md#validación): `UrlOriginal` admite los esquemas y hosts indicados en esas reglas, incluidos `http`, `localhost` e IP; `Image` se ajusta a `https` y rechaza `localhost` e IP. En ambos casos, probar la conversión de `//` a `https:`.
 - Tests de `UrlNormalized` con los ejemplos de [specifications.md → «Normalización para duplicados»](specifications.md#normalización-para-duplicados), con caracteres estructurales codificados (`%23`, `%26`), texto codificado dos veces (`%2520`), `+` en la ruta y en la consulta, y de detección de duplicados ([specifications.md → «Duplicados»](specifications.md#duplicados)).
 - Tests de búsqueda MVP0 ([specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros)): usuario identificado, sin distinguir acentos, equivalencia entre formas Unicode NFC precompuestas y descompuestas tanto en `q` como en los campos indexados, entrada separada en secuencias de letras o números con el resto de caracteres como separadores (comillas, `*`, guiones, `OR`, `NEAR`) sin errores de sintaxis ni operadores, todos los términos obligatorios, palabras completas sin prefijo, entrada sin términos equivalente a no buscar, filtro por colección combinado con `q` y resultado más relevante primero.
