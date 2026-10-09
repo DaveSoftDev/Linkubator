@@ -17,8 +17,6 @@
 
 ## Descomposición
 
-Estados: pendiente, en curso, completada o bloqueada. Enlazar al criterio y a la sección de diseño o validación correspondiente.
-
 | ID | Acción y entregable | Criterios y diseño | Depende de | Check inmediato y resultado esperado | Estado | Evidencia o bloqueo |
 | --- | --- | --- | --- | --- | --- | --- |
 | T01 | Revisar y aprobar estas tareas. | CA01–CA06; [plan → Orden de ejecución y cierre](plan.md#orden-de-ejecución-y-cierre) | Plan aprobado | Aprobación explícita de DLG registrada; resultado esperado: tasks aprobado, sin alterar estados de spec/plan. | completada | DLG confirmó explícitamente la aprobación en la conversación de implementación, 09-X-2026. |

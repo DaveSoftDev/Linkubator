@@ -10,6 +10,8 @@ Los siguientes trabajos permanecen en sus ubicaciones activas; la tabla indica e
 | --- | --- |
 | S1.1 — Recorte y validación de longitudes | [spec.md](s1.1-recorte-y-longitudes/spec.md), [plan.md](s1.1-recorte-y-longitudes/plan.md), [tasks.md](s1.1-recorte-y-longitudes/tasks.md) |
 | S1.2 — Errores de dominio base y enumeradores | [spec.md](s1.2-errores-y-enumeradores/spec.md), [plan.md](s1.2-errores-y-enumeradores/plan.md), [tasks.md](s1.2-errores-y-enumeradores/tasks.md) |
+| S1.3 — Generación de alias | [spec.md](s1.3-generacion-de-alias/spec.md), [plan.md](s1.3-generacion-de-alias/plan.md), [tasks.md](s1.3-generacion-de-alias/tasks.md) |
+| S1.4 — Transformación común a ASCII y generación de slugs | [spec.md](s1.4-generacion-de-slugs/spec.md), [plan.md](s1.4-generacion-de-slugs/plan.md), [tasks.md](s1.4-generacion-de-slugs/tasks.md) |
 
 ## Trabajos archivados
 

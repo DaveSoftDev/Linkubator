@@ -24,13 +24,13 @@ S1.1 está aceptada; no implica que el resto del sprint S1 esté terminado. La e
 
 ### Dominio y aplicación
 
-Continúa el trabajo de S1. S1.1, S1.2 y S1.3 están aceptadas; las demás tareas S1 del [mvp0-plan.md → «S1: Dominio I: textos, alias y slugs (L)»](../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugs-l) siguen pendientes.
+Continúa el trabajo de S1. S1.1, S1.2, S1.3 y S1.4 están aceptadas; las demás tareas S1 del [mvp0-plan.md → «S1: Dominio I: textos, alias y slugs (L)»](../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugs-l) siguen pendientes.
 
 S1.2 fue aprobada, implementada, validada y cerrada por DLG el 09-X-2026. La evidencia está en [specs/s1.2-errores-y-enumeradores/tasks.md → «Aceptación y cierre»](../specs/s1.2-errores-y-enumeradores/tasks.md#aceptación-y-cierre). La integración de la excepción en entidades se realizará en S3.
 
 S1.3 fue aprobada, implementada y validada el 09-X-2026, y su aceptación humana consta como cerrada («Alias OK»). La evidencia está en [specs/s1.3-generacion-de-alias/tasks.md → «Aceptación y cierre»](../specs/s1.3-generacion-de-alias/tasks.md#aceptación-y-cierre). La integración del alias en `User` se realizará en S3.
 
-La [especificación de S1.4](../specs/s1.4-generacion-de-slugs/spec.md) se reabrió para ampliar su alcance a la transformación común de alias y slugs, y fue aprobada por DLG el 09-X-2026 («Se han estudidao todos los casos»). Su [plan técnico](../specs/s1.4-generacion-de-slugs/plan.md) es una propuesta pendiente de aprobación y no autoriza su implementación.
+La [especificación de S1.4](../specs/s1.4-generacion-de-slugs/spec.md) se reabrió para ampliar su alcance a la transformación común de alias y slugs, y fue aprobada por DLG el 09-X-2026 («Se han estudidado todos los casos»). Su [plan técnico](../specs/s1.4-generacion-de-slugs/plan.md) fue aprobado por DLG el 09-X-2026 («Plan aprobado»); sus [tareas](../specs/s1.4-generacion-de-slugs/tasks.md) fueron aprobadas por DLG el 09-X-2026. La implementación y su validación se completaron ese día (build sin advertencias y 205 pruebas correctas), y DLG aceptó el resultado el 09-X-2026 («Implementación correcta»). La evidencia está en [specs/s1.4-generacion-de-slugs/tasks.md → «Aceptación y cierre»](../specs/s1.4-generacion-de-slugs/tasks.md#aceptación-y-cierre). La integración de los valores en `User`, `Collection` y `Tag` se realizará en S3. Los casos de alias de S1.3 cuyo resultado cambia están en [tasks.md → «Casos de alias que cambian respecto a S1.3»](../specs/s1.4-generacion-de-slugs/tasks.md#casos-de-alias-que-cambian-respecto-a-s13).
 
 Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 

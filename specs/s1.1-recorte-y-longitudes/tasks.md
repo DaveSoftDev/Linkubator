@@ -15,8 +15,6 @@
 
 ## Descomposición
 
-Estados: pendiente, en curso, completada o bloqueada. Toda tarea requiere su check inmediato y evidencia real.
-
 | ID | Acción y entregable | Criterios y diseño | Depende de | Check inmediato y resultado esperado | Estado | Evidencia o bloqueo |
 | --- | --- | --- | --- | --- | --- | --- |
 | T01 | Revisar y aprobar estas tareas. | CA01–CA07; [plan → Orden de ejecución y cierre](plan.md#orden-de-ejecución-y-cierre) | Plan aprobado | Aprobación explícita de DLG registrada; resultado esperado: tasks aprobado, sin alterar estados de spec/plan. | completada | DLG, 08-X-2026: «Listo para implementar». |

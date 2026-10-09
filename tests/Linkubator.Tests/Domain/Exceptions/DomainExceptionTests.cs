@@ -37,6 +37,45 @@ public class DomainExceptionTests
     }
 
     [Fact]
+    public void MinimumLengthExceptionExposesItsStableCode()
+    {
+        DomainExceptions.TextBelowMinimumLengthException exception = new();
+
+        Assert.Equal("TextBelowMinimumLength", exception.Code);
+    }
+
+    [Fact]
+    public void ReservedAliasExceptionExposesItsStableCode()
+    {
+        DomainExceptions.AliasReservedException exception = new();
+
+        Assert.Equal("AliasReserved", exception.Code);
+    }
+
+    [Fact]
+    public void UnsupportedCharactersExceptionExposesItsStableCode()
+    {
+        DomainExceptions.TextContainsUnsupportedCharactersException exception = new();
+
+        Assert.Equal("TextContainsUnsupportedCharacters", exception.Code);
+        Assert.IsAssignableFrom<DomainExceptions.DomainException>(exception);
+    }
+
+    [Fact]
+    public void UnsupportedCharactersExceptionDoesNotAcceptOrExposeUserData()
+    {
+        System.Reflection.ConstructorInfo[] constructors = typeof(DomainExceptions.TextContainsUnsupportedCharactersException).GetConstructors();
+        System.Reflection.PropertyInfo[] properties = typeof(DomainExceptions.TextContainsUnsupportedCharactersException).GetProperties(
+            System.Reflection.BindingFlags.Instance |
+            System.Reflection.BindingFlags.Public |
+            System.Reflection.BindingFlags.DeclaredOnly);
+
+        Assert.True(typeof(DomainExceptions.TextContainsUnsupportedCharactersException).IsSealed);
+        Assert.Collection(constructors, constructor => Assert.Empty(constructor.GetParameters()));
+        Assert.Empty(properties);
+    }
+
+    [Fact]
     public void ContractDoesNotAcceptOrExposeUserData()
     {
         System.Reflection.ConstructorInfo[] baseConstructors = typeof(DomainExceptions.DomainException).GetConstructors(
