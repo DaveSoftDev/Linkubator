@@ -14,6 +14,7 @@ Los siguientes trabajos permanecen en sus ubicaciones activas; la tabla indica e
 | S1.4 — Transformación común a ASCII y generación de slugs | [spec.md](s1.4-generacion-de-slugs/spec.md), [plan.md](s1.4-generacion-de-slugs/plan.md), [tasks.md](s1.4-generacion-de-slugs/tasks.md) |
 | S1.5 — Tests de los ejemplos de alias y slugs | [spec.md](s1.5-tests-de-ejemplos/spec.md), [plan.md](s1.5-tests-de-ejemplos/plan.md), [tasks.md](s1.5-tests-de-ejemplos/tasks.md) |
 | S1.6 — Revisión de la tabla de símbolos y prueba con nombres reales | [spec.md](s1.6-revision-de-simbolos-y-nombres-reales/spec.md), [plan.md](s1.6-revision-de-simbolos-y-nombres-reales/plan.md), [tasks.md](s1.6-revision-de-simbolos-y-nombres-reales/tasks.md) |
+| S1.7 — Resolución de ambigüedades y aprobación del comportamiento | [spec.md](s1.7-resolucion-de-ambiguedades-y-aprobacion/spec.md), [plan.md](s1.7-resolucion-de-ambiguedades-y-aprobacion/plan.md), [tasks.md](s1.7-resolucion-de-ambiguedades-y-aprobacion/tasks.md) |
 
 ## Trabajos archivados
 
