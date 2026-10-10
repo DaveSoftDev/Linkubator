@@ -4,7 +4,9 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 ## Trabajos activos
 
-No hay trabajos activos.
+| Trabajo | Especificación | Plan técnico | Tareas |
+| --- | --- | --- | --- |
+| S2.1 — Detección de esquema URI y ajuste de `UrlOriginal` | [spec.md](s2.1-ajuste-de-url/spec.md) | [plan.md](s2.1-ajuste-de-url/plan.md) | [tasks.md](s2.1-ajuste-de-url/tasks.md) |
 
 ## Trabajos archivados
 

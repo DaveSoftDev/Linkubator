@@ -135,6 +135,7 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 | S2.5 | Escribir tests con todos los ejemplos de las especificaciones, separando `UrlOriginal` e `Image` | IA |
 | S2.6 | Proporcionar 30 URLs reales (favoritos propios) y revisar su normalización | Humano |
 | S2.7 | Decidir los casos dudosos y registrarlos | Humano |
+| S2.8 | Unificar las validaciones de entrada de Domain (por ejemplo, `ThrowIfNullOrWhiteSpace` en alias y slugs) y lo que surja durante el sprint | IA |
 
 **Definition of Done**
 
@@ -143,6 +144,7 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 - [ ] `UrlNormalized` y la detección de duplicados cubren todos los ejemplos, incluidos los caracteres codificados.
 - [ ] El humano ha comparado las 30 URLs reales con el resultado.
 - [ ] Los casos dudosos están decididos y registrados.
+- [ ] Las validaciones de entrada de Domain están unificadas.
 
 ### S3: Dominio III: entidades e invariantes (M)
 
