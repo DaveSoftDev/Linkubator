@@ -40,7 +40,7 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 ### Registro
 
 - A partir del email introducido por el usuario:
-  - Si no existe ninguna cuenta con ese email, se crea un registro sin completar, que solo contiene el email, y se envía el correo de completar registro.
+  - Si no existe ninguna cuenta con ese email, se crea un registro sin completar, que solo contiene el email y el `SecurityStamp` (La base de datos ya asignará `Id` y `CreatedAt`), y se envía el correo de completar registro.
   - Si existe un registro sin completar con ese email, se emite un token nuevo y se vuelve a enviar el correo de completar registro. Volver a registrarse es la forma de pedir el reenvío.
   - Si existe una cuenta completada con ese email, no se crea nada y se envía a esa dirección el correo de aviso de cuenta existente.
 - Un registro sin completar no tiene nombre, alias, contraseña ni colecciones, y no puede iniciar sesión (invariantes de [domain-model.md → «User»](domain-model.md#user)).
@@ -65,6 +65,7 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 
 ### Verificación concurrente de contraseña
 
+- Antes de verificar una contraseña presentada, normalizarla a Unicode NFC. No recortarla; usar el valor normalizado para verificar el hash.
 - Antes de verificar una contraseña, se leen juntos el hash de `User.Password` y el `User.SecurityStamp` vigente. El cálculo de Argon2id se realiza fuera de cualquier transacción.
 - Antes de aplicar el resultado de la verificación, se comprueba que `SecurityStamp` siga siendo el leído junto al hash y que la cuenta no esté bloqueada. Si el sello cambió o hay un bloqueo activo, se rechaza la operación sin aplicar cambios ni contar un intento fallido contra el estado nuevo de la cuenta.
 - En el login, antes de emitir la cookie se vuelve a comprobar el sello y el estado de bloqueo; la cookie lleva el sello comprobado. Si la cuenta cambió después de esa comprobación, la validación de sesión por `SecurityStamp` invalida la cookie.
@@ -77,7 +78,7 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
   - Existe y está completada: se le envía un enlace para introducir la nueva contraseña. 
   - Existe y está sin completar: se le envía el correo de completar registro.
 - Al mostrarse el formulario no se consume el token. El cambio se aplica al pulsar el botón (POST con antiforgery), tras volver a validar el token. Si la validación falla, se muestra la respuesta común de [«Tokens»](#tokens).
-- Al completarse: se invalida el token, se cierran todas las sesiones abiertas, se reinicia el bloqueo por intentos fallidos y se envía el aviso de contraseña cambiada.
+- Al completarse: se consume el token presentado y se aplican las invalidaciones de tokens pendientes definidas en [«Tokens»](#tokens); además, se cierran todas las sesiones abiertas, se reinicia el bloqueo por intentos fallidos y se envía el aviso de contraseña cambiada.
 
 > Diagrama de la secuencia: [Recuperación y restablecimiento de contraseña](diagrams/account-password-reset-sequence.md).
 
@@ -113,27 +114,44 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 
 ## Generación de alias y slugs
 
-### Generación del alias
+### Transformación común a ASCII
 
-La restricción de caracteres se aplica al alias resultante, no al texto de entrada: los caracteres que no puedan convertirse a letras ASCII, números o guiones medios se eliminan durante la transformación.
+`User.Alias`, `Collection.Slug` y `Tag.Slug` se generan con la misma transformación. Recibe el texto ya recortado según [«Textos introducidos por el usuario»](#textos-introducidos-por-el-usuario) y no lo recorta. No distingue para qué se usa el resultado: cada uno añade después sus propias validaciones (ver [«Generación del alias»](#generación-del-alias) y [«Generación de slugs»](#generación-de-slugs)).
 
-1. Convertir el texto a minúsculas.
-2. Eliminar las marcas diacríticas de cualquier letra, conservando la letra base: `Generación` se convierte en `generacion`, `pingüino` en `pinguino`, `caça` en `caca` y `España` en `espana`.
-3. Sustituir los espacios por guiones medios.
-4. Eliminar cualquier carácter que no sea una letra ASCII (`a`–`z`), un número (`0`–`9`) o un guión medio. Las letras de otros alfabetos, los emojis y los símbolos se eliminan sin conversión.
-5. Eliminar guiones medios duplicados: `--` pasa a `-`.
-6. Eliminar guiones medios al principio y al final.
+1. Normalizar el texto a Unicode NFKD. Convierte en su equivalente ASCII las letras y los números de ancho completo (`Ａ` pasa a `A`), los superíndices y subíndices (`x²` pasa a `x2`), `℃` y `℉` (`°C` y `°F`), `™` (`TM`) y los espacios que no son el espacio normal, como el de no separación y el ideográfico (espacio normal). Las fracciones como `½` pasan a `1⁄2`, con la barra de fracción `⁄`, que la [«Tabla de conversión de símbolos»](#tabla-de-conversión-de-símbolos) convierte después en un guion medio: `½` acaba como `1-2`.
+2. Rechazar el texto si contiene un carácter de control (como el tabulador o un salto de línea) o un separador distinto del espacio normal. No se eliminan: se rechaza indicando el motivo.
+3. Convertir el texto a minúsculas.
+4. Eliminar las marcas diacríticas de cualquier letra, conservando la letra base: `Generación` se convierte en `generacion`, `pingüino` en `pinguino`, `caça` en `caca` y `España` en `espana`.
+5. Aplicar la [«Tabla de conversión de símbolos»](#tabla-de-conversión-de-símbolos).
+6. Sustituir los espacios por guiones medios.
+7. Rechazar el texto si todavía contiene alguna letra o algún número que no sea ASCII. No se elimina: se rechaza indicando el motivo.
+8. Eliminar cualquier otro carácter que no sea una letra ASCII (`a`–`z`), un número (`0`–`9`) o un guión medio: los emojis, los signos de puntuación y los símbolos que no estén en la tabla.
+9. Eliminar guiones medios duplicados: `--` pasa a `-`.
+10. Eliminar guiones medios al principio y al final.
 
-> Diagrama del proceso: [Generación del alias](diagrams/process-alias.md).
+> Diagrama del proceso: [Transformación común a ASCII](diagrams/process-ascii-transformation.md).
 
 Ejemplos:
 
 ```text
-pingüino-2024       -> pinguino-2024
-ana--lopez          -> ana-lopez
-Ana_López!          -> analopez
-Ana López García    -> ana-lopez-garcia   (si se pega con espacios)
+pingüino-2024              -> pinguino-2024
+ana--lopez                 -> ana-lopez
+Ana_López!                 -> ana-lopez
+Ana López García           -> ana-lopez-garcia
+Ana😀López                 -> analopez
+Ａna１                      -> ana1
+Área x²                    -> area-x2
+Media ½ hora               -> media-1-2-hora
+Temp 20℃                   -> temp-20c
+Ana<tabulador>López        -> Rechazado: carácter de control
+日本語-ana                  -> Rechazado: letras no ASCII
 ```
+
+### Generación del alias
+
+El alias es el resultado de la [«Transformación común a ASCII»](#transformación-común-a-ascii), sin cambios.
+
+> Diagrama del proceso: [Generación del alias](diagrams/process-alias.md).
 
 Reglas del alias:
 
@@ -144,16 +162,7 @@ Reglas del alias:
 
 ### Generación de slugs
 
-`Collection.Slug` y `Tag.Slug` se generan a partir del nombre:
-
-1. Convertir el texto a minúsculas.
-2. Eliminar las marcas diacríticas de cualquier letra, conservando la letra base: `Generación` se convierte en `generacion` y `pingüino` en `pinguino`.
-3. Aplicar la [«Tabla de conversión de símbolos»](#tabla-de-conversión-de-símbolos).
-4. Sustituir los espacios por guiones medios.
-5. Rechazar el nombre si todavía contiene alguna letra o algún número que no sea ASCII. No se elimina: se rechaza indicando el motivo.
-6. Eliminar cualquier otro carácter: los emojis, los signos de puntuación y los símbolos que no estén en la tabla.
-7. Eliminar guiones medios duplicados: `--` pasa a `-`.
-8. Eliminar guiones medios al principio y al final.
+`Collection.Slug` y `Tag.Slug` se generan a partir del nombre con la [«Transformación común a ASCII»](#transformación-común-a-ascii), la misma que usa el alias. La transformación es idéntica para colecciones y para etiquetas.
 
 > Diagrama del proceso: [Generación de slugs](diagrams/process-slugs.md).
 
@@ -175,7 +184,7 @@ Reglas de los slugs:
 
 ### Tabla de conversión de símbolos
 
-Los símbolos se sustituyen por su palabra, separada por guiones medios del resto del texto. Los separadores se sustituyen por un guión medio. Las letras latinas que no se descomponen al eliminar las marcas diacríticas se sustituyen por su equivalente en ASCII.
+La tabla se aplica al texto ya normalizado y en minúsculas, por lo que solo contiene minúsculas. Los símbolos se sustituyen por su palabra, separada por guiones medios del resto del texto. Los separadores se sustituyen por un guión medio. Las letras latinas de los bloques Latin-1 y Latin Extended-A que no se reducen a ASCII con la normalización ni al eliminar las marcas diacríticas se sustituyen por su equivalente en ASCII.
 
 | Entrada | Resultado |
 |---|---|
@@ -184,7 +193,7 @@ Los símbolos se sustituyen por su palabra, separada por guiones medios del rest
 | `&` | `and` |
 | `@` | `at` |
 | `%` | `percent` |
-| `.` `/` `_` | `-` |
+| `.` `/` `_` `⁄` | `-` |
 | `$` | `dollar` |
 | `€` | `euro` |
 | `£` | `pound` |
@@ -194,8 +203,17 @@ Los símbolos se sustituyen por su palabra, separada por guiones medios del rest
 | `ø` | `o` |
 | `đ` | `d` |
 | `ł` | `l` |
+| `ð` | `d` |
+| `þ` | `th` |
+| `ħ` | `h` |
+| `ı` | `i` |
+| `ĸ` | `k` |
+| `ŋ` | `ng` |
+| `ŧ` | `t` |
 
-| Nombre | Slug |
+`µ` y `ŉ` no están en la tabla: la normalización los convierte en letras no ASCII y se rechazan.
+
+| Texto | Resultado |
 |---|---|
 | `C#` | `c-sharp` |
 | `C++` | `c-plus-plus` |
@@ -206,6 +224,8 @@ Los símbolos se sustituyen por su palabra, separada por guiones medios del rest
 | `TCP/IP` | `tcp-ip` |
 | `Straße` | `strasse` |
 | `Papá` | `papa` |
+| `Þór` | `thor` |
+| `Ŋ` | `ng` |
 | `日本語` | Rechazado: letras no ASCII |
 | `日本語 Tokyo` | Rechazado: letras no ASCII |
 
@@ -233,7 +253,7 @@ Reglas de la guía [**NIST SP 800-63B-4**](https://csrc.nist.gov/pubs/sp/800/63/
   - Con el texto enmascarado, el icono es un párpado cerrado o un ojo tachado y el nombre accesible del botón es «Mostrar contraseña».
   - Con el texto visible, el icono es un ojo abierto y el nombre accesible es «Ocultar contraseña».
 - Al establecer o cambiar una contraseña, se compara la contraseña con su confirmación después de normalizar ambas a NFC. La comparación es exacta y sensible a mayúsculas. Si no coinciden, se muestra un mensaje al usuario y no se continúa.
-- Al establecer o cambiar una contraseña, se compara completa, tras normalizarla a NFC y sin distinguir mayúsculas, con la lista de contraseñas prohibidas. Si coincide, se rechaza indicando el motivo y orientando para elegir otra.
+- Al establecer o cambiar una contraseña, se compara completa, tras normalizarla a NFC, con cada entrada de la lista de contraseñas prohibidas mediante comparación ordinal sin distinguir mayúsculas (`OrdinalIgnoreCase`), independiente de la cultura. Si coincide, se rechaza indicando el motivo y orientando para elegir otra.
 
 ### Lista inicial de contraseñas prohibidas
 
@@ -300,6 +320,7 @@ Argon2id con la configuración mínima de OWASP (Password Storage Cheat Sheet):
 - Los enlaces de completar registro, restablecimiento de contraseña, cambio de email y confirmación de eliminación de cuenta usan un token aleatorio de 256 bits, de un solo uso.
 - En completar registro, recuperación de contraseña, cambio de email y eliminación de cuenta, tanto al abrir el enlace o la página (GET) como al confirmar la operación (POST), si el token no existe, no es válido, ha caducado, ya se ha usado o se ha invalidado, se muestra «No se ha podido completar la operación. Vuelve a solicitarla.» y no se completa la operación. El GET no consume el token; el POST vuelve a validarlo antes de aplicar el cambio. Si al confirmar un cambio de email otra cuenta ya ocupa el nuevo email, se muestra la misma respuesta.
 - Solo se guarda el hash SHA-256 del token; el token en claro solo viaja en el enlace del correo.
+- Cada operación solo acepta tokens cuyo `UserId` corresponda a la cuenta afectada y cuyo `Purpose` corresponda exactamente a esa operación. Completar el registro requiere que la cuenta siga sin completar; recuperación de contraseña, cambio de email y eliminación de cuenta requieren una cuenta completada.
 - Un token solo tiene efecto una vez: si varias peticiones presentan el mismo token a la vez, solo una lo consigue y las demás reciben la respuesta de «No se ha podido completar la operación. Vuelve a solicitarla.».
 - Al completar la operación del token, se informa `UsedAt`. Si otra operación lo invalida antes de consumirlo, se informa `InvalidatedAt`; invalidar no cuenta como consumir. La validez y la exclusión entre ambos estados están definidas en [domain-model.md → «UserToken»](domain-model.md#usertoken).
 - Al emitir un token, se invalidan los tokens anteriores sin usar del mismo usuario y propósito, informando `InvalidatedAt`.
@@ -349,7 +370,7 @@ Antes de crear un enlace, la URL introducida pasa por un ajuste y una validació
 
 La URL que guarda el usuario no se transforma más allá del ajuste, y nunca se sustituye por la de una redirección. Es la que se usa para navegar.
 
-Los duplicados se detectan con una clave plana (`UrlNormalized`), no con una URL reconstruible. Se aceptan conscientemente colisiones derivadas de eliminar separadores. Cada componente se decodifica una sola vez y con la regla que le corresponde: en la ruta `+` es literal y en la consulta es un espacio; decodificar dos veces haría que la clave dependiera de en qué parte de la URL está el texto. El host se toma en punycode (`IdnHost`) para que un mismo dominio internacionalizado escrito en Unicode o en punycode produzca la misma clave, y se conservan las letras y los números de cualquier alfabeto: la clave es interna y no necesita la restricción a ASCII de los slugs, y con solo ASCII todas las rutas en otros alfabetos colisionarían entre sí (ver [«Normalización para duplicados»](#normalización-para-duplicados)).
+Los duplicados se detectan mediante la clave plana `UrlNormalized`, definida en [«Normalización para duplicados»](#normalización-para-duplicados). Los motivos de esta decisión y las colisiones aceptadas se documentan en [decisions.md → «Riesgos aceptados»](decisions.md#riesgos-aceptados).
 
 ### Detección de esquema URI
 
@@ -572,7 +593,7 @@ Correspondencia de metadatos, tomando el primero que exista de cada lista:
 |---|---|
 | `Title` | `<meta name="title">` → `<title>` → `<meta property="og:title">` |
 | `Description` | `<meta name="description">` → `<meta property="og:description">` |
-| `Image` | `<meta property="og:image">`, validada según [«Validación»](#validación) |
+| `Image` | `<meta property="og:image">`, ajustada según [«Ajuste de `Image`»](#ajuste-de-image) y validada según [«Validación»](#validación) |
 
 Flujo previsto para el scraping, sujeto a los pendientes de [decisions.md → «Pendientes de scraping»](decisions.md#pendientes-de-scraping):
 
@@ -583,8 +604,9 @@ Flujo previsto para el scraping, sujeto a los pendientes de [decisions.md → «
 - El resultado de un intento decide el estado:
   - Respuesta `200` con HTML: se extraen los metadatos que haya y el enlace queda `Completed`, tenga los tres campos, alguno o ninguno. No se reintenta.
   - Timeout, error de red o respuesta `5xx`: se considera `Failed`. El usuario podrá lanzarlo manualmente.
-  - Respuesta `4xx`, contenido que no es HTML, respuesta que supera el tamaño máximo o destino bloqueado por la protección SSRF: se considera definitivo. El enlace queda `Failed`. El usuario podrá lanzarlo manualmente.
+  - Respuesta `4xx`, contenido que no es HTML, respuesta que supera el tamaño máximo o destino bloqueado por la protección SSRF. El enlace queda `Failed`. El usuario podrá lanzarlo manualmente.
 - El enlace se conserva siempre, con los metadatos que se hayan podido obtener.
+- El usuario podrá lanzar el scraping de nuevo, si previamente elimina el contenido de los campos que intervienen.
 
 ## Estados del scraping
 
@@ -755,7 +777,7 @@ Las páginas públicas no muestran el nombre ni el email del usuario.
 
 ### Página de colección
 
-- Muestra solo los enlaces públicos. Cada uno muestra su título (o la URL si no tiene), su descripción y su imagen si las tiene, y enlaza a `UrlOriginal` con `rel="nofollow ugc noopener noreferrer"`.
+- Muestra solo los enlaces públicos. Cada uno muestra su título (o la URL si no tiene), su descripción y su imagen si las tiene, y enlaza a `UrlOriginal` con `rel="nofollow ugc noopener noreferrer"` y `target="_blank"`.
 - El orden de presentación de los enlaces está definido en [«Listados»](#listados).
 - Si la colección es pública pero no tiene enlaces públicos, no se muestra en público y responde `404` (ver [decisions.md → «Producto y alcance»](decisions.md#producto-y-alcance)).
 - Una colección privada, una inexistente y un slug antiguo tras renombrarla responden igual: `404`.

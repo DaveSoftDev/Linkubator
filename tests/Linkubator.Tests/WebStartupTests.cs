@@ -14,7 +14,7 @@ public class WebStartupTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task HomePageReturnsSuccess()
     {
-        using var response = await _client.GetAsync("/");
+        using HttpResponseMessage response = await _client.GetAsync("/");
 
         Assert.True(response.IsSuccessStatusCode);
     }

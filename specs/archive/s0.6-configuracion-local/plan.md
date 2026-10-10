@@ -39,7 +39,7 @@ El formato y la ubicación del usuario de desarrollo se enlazan con [architectur
 
 | Decisión o riesgo | Estado | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
-| Mantener valores locales en el proveedor de configuración Development | Confirmada por la separación de entorno descrita en la arquitectura | [architecture.md → «Plataforma»](../../../context/architecture.md#plataforma) | Evita mezclar valores de ejecución local con configuración base. |
+| Mantener valores locales en el proveedor de configuración Development | Confirmada por la separación de entorno descrita en la arquitectura | [architecture.md → «Tecnologías»](../../../context/architecture.md#tecnologías) | Evita mezclar valores de ejecución local con configuración base. |
 | S0.6 valida la ruta, no crea la base SQLite | Confirmada por el reparto S0/S5 | [mvp0-plan.md → «Resumen de sprints»](../../../plans/mvp0-plan.md#2-resumen-de-sprints) | El arranque del host no prueba conectividad con SQLite. |
 
 ## Estrategia de validación

@@ -6,7 +6,7 @@ Este plan organiza la construcción del MVP0 en sprints de 1 semana, con la IA g
 
 ### Tareas principales de la IA
 
-- Crear la solución .NET 10 y mantener las capas Domain, Application, Infrastructure, Web y Tests, respetando [architecture.md → «Capas»](../context/architecture.md#capas).
+- Crear la solución .NET 10 y mantener las capas Domain, Application, Infrastructure, Web y Tests, respetando [architecture.md → «Arquitectura»](../context/architecture.md#arquitectura).
 - Implementar reglas de dominio, casos de uso, SQL explícito con Dapper, scripts versionados, FTS5, Razor Pages y Tailwind.
 - Escribir los tests automáticos de la [checklist de calidad](../context/roadmap.md#checklist-de-calidad-del-mvp0): unitarios, integración SQLite e integración HTTP con `WebApplicationFactory`.
 - Entregar con cada sprint una guía de pruebas manuales con pasos y resultado esperado, y una matriz de trazabilidad regla → test.
@@ -93,12 +93,12 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 
 **Definition of Done**
 
-- [ ] La aplicación arranca por HTTPS en local y muestra una página mínima.
-- [ ] `dotnet build` y `dotnet test` pasan en limpio.
-- [ ] Hay logs por consola y por archivo.
-- [ ] Los tests de referencias entre proyectos y del límite del composition root pasan.
-- [ ] El README permite a otra persona arrancar el proyecto.
-- [ ] Las convenciones de ramas, PRs y commits están acordadas.
+- [x] La aplicación arranca por HTTPS en local y muestra una página mínima.
+- [x] `dotnet build` y `dotnet test` pasan en limpio.
+- [x] Hay logs por consola y por archivo.
+- [x] Los tests de referencias entre proyectos y del límite del composition root pasan.
+- [x] El README permite a otra persona arrancar el proyecto.
+- [x] Las convenciones de ramas, PRs y commits están acordadas.
 
 ### S1: Dominio I: textos, alias y slugs (L)
 
@@ -109,18 +109,18 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 | S1.1 | Implementar el recorte y la validación de longitudes máximas por puntos de código (BMP, marcas combinantes) según [«Textos introducidos por el usuario»](../context/specifications.md#textos-introducidos-por-el-usuario) y [«Longitudes máximas»](../context/specifications.md#longitudes-máximas) | IA |
 | S1.2 | Implementar los errores de dominio base y los enumeradores necesarios | IA |
 | S1.3 | Implementar la generación del alias, con acentos, guiones, rangos, palabras reservadas y alias ocupado | IA |
-| S1.4 | Implementar la generación de slugs con la tabla de conversión, el rechazo de no ASCII, los rangos y las colisiones | IA |
+| S1.4 | Implementar la transformación común a ASCII (NFKD, tabla de conversión y rechazo de caracteres no admitidos), la generación de slugs con sus rangos y la adaptación del alias a ella; la detección de colisiones se integra en S3–S5 | IA |
 | S1.5 | Escribir tests con todos los ejemplos de [«Generación del alias»](../context/specifications.md#generación-del-alias) y [«Generación de slugs»](../context/specifications.md#generación-de-slugs) | IA |
 | S1.6 | Revisar la tabla de símbolos contra el código y probar 20 nombres reales de colecciones | Humano |
 | S1.7 | Resolver las ambigüedades que surjan y aprobar el comportamiento | Humano |
 
 **Definition of Done**
 
-- [ ] Todos los ejemplos de las especificaciones de alias y slug están cubiertos por tests.
-- [ ] Recorte y longitudes cubren puntos de código fuera del BMP y marcas combinantes.
-- [ ] Las reglas viven en Domain, sin dependencias de infraestructura.
-- [ ] El humano ha validado los 20 nombres reales.
-- [ ] No quedan ambigüedades abiertas sin registrar.
+- [x] Todos los ejemplos de las especificaciones de alias y slug están cubiertos por tests.
+- [x] Recorte y longitudes cubren puntos de código fuera del BMP y marcas combinantes.
+- [x] Las reglas viven en Domain, sin dependencias de infraestructura.
+- [x] El humano ha validado los 20 nombres reales.
+- [x] No quedan ambigüedades abiertas sin registrar.
 
 ### S2: Dominio II: URLs (L)
 

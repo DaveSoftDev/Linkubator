@@ -16,8 +16,8 @@ flowchart TD
     allowedScheme{¿Es un esquema admitido con autoridad válida?}
     unsupported[Rechazar ajuste y dejar URL ajustada en `""`]
     isLocalhost{¿El host es localhost?}
-    addProtocolHttp[Anteponer `http`]
-    addProtocolHttps[Anteponer `https`]
+    addProtocolHttp[Anteponer `http://`]
+    addProtocolHttps[Anteponer `https://`]
     tooLong{¿Supera la longitud máxima?}
     adjusted([URL ajustada, lista para validación])
     validate[Continuar a validación]

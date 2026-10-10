@@ -13,7 +13,7 @@ Preparar la capa Web para servir Razor Pages mediante HTTPS en desarrollo, compi
 ## Fuentes
 
 - [mvp0-plan.md → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m): tarea S0.5 y Definition of Done del bloque.
-- [architecture.md → «Plataforma»](../../../context/architecture.md#plataforma): ASP.NET Core Razor Pages y Tailwind.
+- [architecture.md → «Tecnologías»](../../../context/architecture.md#tecnologías): ASP.NET Core Razor Pages y Tailwind.
 - [architecture.md → «Web»](../../../context/architecture.md#web): responsabilidades y límites de la capa Web.
 - [architecture.md → «Seguridad web»](../../../context/architecture.md#seguridad-web): HTTPS local y política de hosts.
 - [AGENTS.md → «Reglas de documentación»](../../../AGENTS.md#reglas-de-documentación): trazabilidad y fuente única.

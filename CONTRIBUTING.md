@@ -19,16 +19,16 @@ Ejemplos:
 
 Usa prefijos claros:
 
-- `feat:` para funcionalidad
+- `fea:` para funcionalidad
 - `fix:` para correcciones
-- `docs:` para documentación
+- `doc:` para documentación
 - `chore:` para tareas de mantenimiento y configuración
 - `test:` para pruebas
 
 Ejemplos:
 
-- `feat: add alias generation rules`
-- `docs: update development readme`
+- `fea: add alias generation rules`
+- `doc: update development readme`
 - `test: add architecture dependency checks`
 
 ## Pull requests

@@ -34,20 +34,20 @@ public class ProjectReferenceMatrixTests
     [Fact]
     public void ProjectReferencesMatchTheAllowedMatrix()
     {
-        var repositoryRoot = FindRepositoryRoot();
+        string repositoryRoot = FindRepositoryRoot();
 
-        foreach (var matrixEntry in AllowedProjectReferences)
+        foreach (KeyValuePair<string, string[]> matrixEntry in AllowedProjectReferences)
         {
-            var projectPath = Path.Combine(repositoryRoot, ToPlatformPath(matrixEntry.Key));
-            var projectDirectory = Path.GetDirectoryName(projectPath)!;
-            var actualReferences = XDocument.Load(projectPath)
+            string? projectPath = Path.Combine(repositoryRoot, ToPlatformPath(matrixEntry.Key));
+            string? projectDirectory = Path.GetDirectoryName(projectPath)!;
+            string[]? actualReferences = XDocument.Load(projectPath)
                 .Descendants("ProjectReference")
                 .Select(projectReference => Path.GetFullPath(Path.Combine(
                     projectDirectory,
                     projectReference.Attribute("Include")!.Value)))
                 .OrderBy(referencePath => referencePath, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-            var expectedReferences = matrixEntry.Value
+            string[]? expectedReferences = matrixEntry.Value
                 .Select(referencePath => Path.GetFullPath(Path.Combine(
                     repositoryRoot,
                     ToPlatformPath(referencePath))))
@@ -60,7 +60,7 @@ public class ProjectReferenceMatrixTests
 
     private static string FindRepositoryRoot()
     {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        DirectoryInfo? directory = new DirectoryInfo(AppContext.BaseDirectory);
 
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Linkubator.sln")))
         {

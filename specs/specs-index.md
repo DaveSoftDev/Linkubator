@@ -4,10 +4,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 ## Trabajos activos
 
-Los siguientes trabajos permanecen en sus ubicaciones activas; la tabla indica el documento disponible y no implica cierre salvo que conste en sus tareas.
-
-| Trabajo | Documento disponible |
-| --- | --- |
+No hay trabajos activos.
 
 ## Trabajos archivados
 
@@ -23,3 +20,10 @@ El estado y la evidencia de cierre constan en las tareas del trabajo; este índi
 | S0.7 — Pruebas de arquitectura | [spec.md](archive/s0.7-pruebas-arquitectura/spec.md) | [plan.md](archive/s0.7-pruebas-arquitectura/plan.md) | [tasks.md](archive/s0.7-pruebas-arquitectura/tasks.md#aceptación-y-cierre) |
 | S0.8 — README de desarrollo | [spec.md](archive/s0.8-readme-desarrollo/spec.md) | [plan.md](archive/s0.8-readme-desarrollo/plan.md) | [tasks.md](archive/s0.8-readme-desarrollo/tasks.md#aceptación-y-cierre) |
 | S0.9 — Convenciones y backlog | [spec.md](archive/s0.9-convenciones-y-backlog/spec.md) | [plan.md](archive/s0.9-convenciones-y-backlog/plan.md) | [tasks.md](archive/s0.9-convenciones-y-backlog/tasks.md#aceptación-y-cierre) |
+| S1.1 — Recorte y validación de longitudes | [spec.md](archive/s1.1-recorte-y-longitudes/spec.md) | [plan.md](archive/s1.1-recorte-y-longitudes/plan.md) | [tasks.md](archive/s1.1-recorte-y-longitudes/tasks.md#aceptación-y-cierre) |
+| S1.2 — Errores de dominio base y enumeradores | [spec.md](archive/s1.2-errores-y-enumeradores/spec.md) | [plan.md](archive/s1.2-errores-y-enumeradores/plan.md) | [tasks.md](archive/s1.2-errores-y-enumeradores/tasks.md#aceptación-y-cierre) |
+| S1.3 — Generación de alias | [spec.md](archive/s1.3-generacion-de-alias/spec.md) | [plan.md](archive/s1.3-generacion-de-alias/plan.md) | [tasks.md](archive/s1.3-generacion-de-alias/tasks.md#aceptación-y-cierre) |
+| S1.4 — Transformación común a ASCII y generación de slugs | [spec.md](archive/s1.4-generacion-de-slugs/spec.md) | [plan.md](archive/s1.4-generacion-de-slugs/plan.md) | [tasks.md](archive/s1.4-generacion-de-slugs/tasks.md#aceptación-y-cierre) |
+| S1.5 — Tests de los ejemplos de alias y slugs | [spec.md](archive/s1.5-tests-de-ejemplos/spec.md) | [plan.md](archive/s1.5-tests-de-ejemplos/plan.md) | [tasks.md](archive/s1.5-tests-de-ejemplos/tasks.md#aceptación-y-cierre) |
+| S1.6 — Revisión de la tabla de símbolos y prueba con nombres reales | [spec.md](archive/s1.6-revision-de-simbolos-y-nombres-reales/spec.md) | [plan.md](archive/s1.6-revision-de-simbolos-y-nombres-reales/plan.md) | [tasks.md](archive/s1.6-revision-de-simbolos-y-nombres-reales/tasks.md#aceptación-y-cierre) |
+| S1.7 — Resolución de ambigüedades y aprobación del comportamiento | [spec.md](archive/s1.7-resolucion-de-ambiguedades-y-aprobacion/spec.md) | [plan.md](archive/s1.7-resolucion-de-ambiguedades-y-aprobacion/plan.md) | [tasks.md](archive/s1.7-resolucion-de-ambiguedades-y-aprobacion/tasks.md#aceptación-y-cierre) |

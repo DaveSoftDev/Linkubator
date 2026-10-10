@@ -12,7 +12,7 @@
 
 ### Componentes y contratos
 
-Crear la solución `Linkubator.sln`, con los proyectos productivos en `src/` y Tests en `tests/`. Seleccionar SDK y framework a partir de [architecture.md → «Plataforma»](../../../context/architecture.md#plataforma). Sus responsabilidades y la matriz vinculante se consultan en [architecture.md → «Capas»](../../../context/architecture.md#capas) y [«Dependencias entre proyectos»](../../../context/architecture.md#dependencias-entre-proyectos); este plan no reproduce la matriz.
+Crear la solución `Linkubator.sln`, con los proyectos productivos en `src/` y Tests en `tests/`. Seleccionar SDK y framework a partir de [architecture.md → «Tecnologías»](../../../context/architecture.md#tecnologías). Sus responsabilidades y la matriz vinculante se consultan en [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura) y [«Dependencias entre proyectos»](../../../context/architecture.md#dependencias-entre-proyectos); este plan no reproduce la matriz.
 
 Situar el composition root en `Web/Program.cs`. Preparar un único punto público de registro `AddInfrastructure()` en Infrastructure, que reciba y devuelva `IServiceCollection`, e invocarlo antes de construir el host. Las implementaciones concretas no se expondrán como API pública para el resto de Web; el flujo de negocio seguirá por Application.
 
@@ -48,7 +48,7 @@ Estas verificaciones se realizarán al implementar S0.2. Sus resultados se regis
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comprobación | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |
 | V01 | CA01 | Inspección de solución | SDK disponible | `dotnet sln Linkubator.sln list`; contrastar rutas y existencia de proyectos | Proyectos previstos presentes y listados. | Listado y fecha de ejecución. |
-| V02 | CA02 | Inspección y compilación | SDK disponible | Revisar SDK/TFM y ejecutar `dotnet build Linkubator.sln` | Plataforma de [architecture.md → «Plataforma»](../../../context/architecture.md#plataforma) y compilación sin errores ni warnings según [DoD común](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints). | SDK empleado y salida del build. |
+| V02 | CA02 | Inspección y compilación | SDK disponible | Revisar SDK/TFM y ejecutar `dotnet build Linkubator.sln` | Arquitectura de [architecture.md → «Tecnologías»](../../../context/architecture.md#tecnologías) y compilación sin errores ni warnings según [DoD común](../../../plans/mvp0-plan.md#3-definition-of-done-común-aplica-a-todos-los-sprints). | SDK empleado y salida del build. |
 | V03 | CA03, CA04 | Revisión de proyectos | Proyectos creados | Inspeccionar las referencias declaradas en los proyectos y cotejarlas con [architecture.md → «Dependencias entre proyectos»](../../../context/architecture.md#dependencias-entre-proyectos) | Ninguna referencia prohibida; Tests fuera del grafo productivo. | Matriz de comparación y revisión. |
 | V04 | CA05 | Revisión técnica | Composition root preparado | Revisar consumidores de tipos de Infrastructure en Web, firma del punto de registro y orden de invocación en `Program` | Solo el composition root consume Infrastructure y registra antes de construir el host. | Revisión de dependencias y orden de composición. |
 

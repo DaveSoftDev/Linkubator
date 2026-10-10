@@ -14,7 +14,7 @@ Integrar Serilog en la capa Web con salida por consola y archivo rotativo, mante
 
 - [mvp0-plan.md → «S0: Fundaciones (M)»](../../../plans/mvp0-plan.md#s0-fundaciones-m): trabajo S0.4 y su Definition of Done.
 - [architecture.md → «Logs»](../../../context/architecture.md#logs): principios de observabilidad y restricciones del registro.
-- [architecture.md → «Plataforma»](../../../context/architecture.md#plataforma): uso de Serilog como proveedor de logs.
+- [architecture.md → «Tecnologías»](../../../context/architecture.md#tecnologías): uso de Serilog como proveedor de logs.
 - [AGENTS.md → «Reglas de documentación»](../../../AGENTS.md#reglas-de-documentación): límites y trazabilidad de este documento.
 
 ## Alcance

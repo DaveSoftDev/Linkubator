@@ -12,32 +12,35 @@ Entregables aceptados:
 
 La aceptación cierra la fase de definición y permite iniciar la implementación según [AGENTS.md → «Implementación autorizada»](../AGENTS.md#implementación-autorizada).
 
-## Now
-
 ### Fundaciones
 
-Objetivos:
+La Definition of Done de S0 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S0: Fundaciones (M)»](../plans/mvp0-plan.md#s0-fundaciones-m).
 
-- Crear la solución y dejar un esqueleto que compila y arranca localmente, con los proyectos, referencias y pruebas base de [mvp0-plan.md → «S0: Fundaciones (M)»](../plans/mvp0-plan.md#s0-fundaciones-m).
+### Dominio y aplicación: S1.1
 
-Criterio de finalización:
+S1.1 está aceptada; no implica que el resto del sprint S1 esté terminado. La evidencia está en [specs/archive/s1.1-recorte-y-longitudes/tasks.md → «Aceptación y cierre»](../specs/archive/s1.1-recorte-y-longitudes/tasks.md#aceptación-y-cierre).
 
-- Se cumple la Definition of Done de [mvp0-plan.md → «S0: Fundaciones (M)»](../plans/mvp0-plan.md#s0-fundaciones-m).
-
-## Next
+## Now
 
 ### Dominio y aplicación
 
-Objetivos:
+Continúa el trabajo de S1. S1.1 a S1.7 están aceptadas, por lo que todas las tareas S1 del [mvp0-plan.md → «S1: Dominio I: textos, alias y slugs (L)»](../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugs-l) están terminadas.
 
-- Implementar las entidades y sus invariantes para colecciones y enlaces ([domain-model.md → «Collection»](domain-model.md#collection) y [domain-model.md → «Link»](domain-model.md#link)).
-- Implementar la generación del alias ([specifications.md → «Generación del alias»](specifications.md#generación-del-alias)), del slug de colección ([specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs)), ajuste de URL ([specifications.md → «Ajuste de URL»](specifications.md#ajuste-de-url)), ajuste de `Image` ([specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image)) y la normalización de URLs ([«Normalización para duplicados»](specifications.md#normalización-para-duplicados)); son reglas distintas.
-- Definir los casos de uso, los contratos `Result`, la abstracción del usuario identificado y las interfaces de repositorios y de Unit of Work ([architecture.md → «Capas»](architecture.md#capas)).
-- Proporcionar desde código una identidad de desarrollo asociada a un usuario válido para la gestión privada, sin aceptar identificadores enviados por el cliente ([decisions.md → «Identidad de desarrollo»](decisions.md#identidad-de-desarrollo)).
+S1.2 fue aprobada, implementada, validada y cerrada por DLG el 09-X-2026. La evidencia está en [specs/archive/s1.2-errores-y-enumeradores/tasks.md → «Aceptación y cierre»](../specs/archive/s1.2-errores-y-enumeradores/tasks.md#aceptación-y-cierre). La integración de la excepción en entidades se realizará en S3.
 
-Criterio de finalización:
+S1.3 fue aprobada, implementada y validada el 09-X-2026, y su aceptación humana consta como cerrada («Alias OK»). La evidencia está en [specs/archive/s1.3-generacion-de-alias/tasks.md → «Aceptación y cierre»](../specs/archive/s1.3-generacion-de-alias/tasks.md#aceptación-y-cierre). La integración del alias en `User` se realizará en S3.
 
-- Los casos de uso principales tienen contratos y criterios de aceptación claros.
+La [especificación de S1.4](../specs/archive/s1.4-generacion-de-slugs/spec.md) se reabrió para ampliar su alcance a la transformación común de alias y slugs, y fue aprobada por DLG el 09-X-2026 («Se han estudidado todos los casos»). Su [plan técnico](../specs/archive/s1.4-generacion-de-slugs/plan.md) fue aprobado por DLG el 09-X-2026 («Plan aprobado»); sus [tareas](../specs/archive/s1.4-generacion-de-slugs/tasks.md) fueron aprobadas por DLG el 09-X-2026. La implementación y su validación se completaron ese día (build sin advertencias y 205 pruebas correctas), y DLG aceptó el resultado el 09-X-2026 («Implementación correcta»). La evidencia está en [specs/archive/s1.4-generacion-de-slugs/tasks.md → «Aceptación y cierre»](../specs/archive/s1.4-generacion-de-slugs/tasks.md#aceptación-y-cierre). La integración de los valores en `User`, `Collection` y `Tag` se realizará en S3. Los casos de alias de S1.3 cuyo resultado cambia están en [tasks.md → «Casos de alias que cambian respecto a S1.3»](../specs/archive/s1.4-generacion-de-slugs/tasks.md#casos-de-alias-que-cambian-respecto-a-s13).
+
+La [especificación de S1.5](../specs/archive/s1.5-tests-de-ejemplos/spec.md) fue aprobada por DLG el 09-X-2026 («Ok»). Su [plan técnico](../specs/archive/s1.5-tests-de-ejemplos/plan.md) fue aprobado por DLG el 09-X-2026 («Entendido»). Sus [tareas](../specs/archive/s1.5-tests-de-ejemplos/tasks.md) fueron aprobadas por DLG el 09-X-2026 («Implementa»). La implementación y la validación de la cobertura de ejemplos se completaron el 09-X-2026, y DLG aceptó el resultado el 09-X-2026 con la referencia «Cambios realizados OK». La evidencia está en [specs/archive/s1.5-tests-de-ejemplos/tasks.md → «Aceptación y cierre»](../specs/archive/s1.5-tests-de-ejemplos/tasks.md#aceptación-y-cierre).
+
+La [especificación de S1.6](../specs/archive/s1.6-revision-de-simbolos-y-nombres-reales/spec.md) fue aprobada por DLG el 10-X-2026 («Listo»). Su [plan técnico](../specs/archive/s1.6-revision-de-simbolos-y-nombres-reales/plan.md) fue aprobado por DLG el 10-X-2026 («Aprobado»); sus [tareas](../specs/archive/s1.6-revision-de-simbolos-y-nombres-reales/tasks.md) fueron aprobadas por DLG el 10-X-2026 («Listo»). La validación técnica de la recopilación y transformación de nombres reales quedó completada el 10-X-2026 con `dotnet test` y `dotnet build` sin errores, y con la comprobación de que no hay cambios en `src/Linkubator.Domain` ni artefactos temporales fuera de la carpeta de la spec. La etapa fue aceptada por DLG el 10-X-2026 («Aprobada»). La evidencia está en [specs/archive/s1.6-revision-de-simbolos-y-nombres-reales/tasks.md → «Aceptación y cierre»](../specs/archive/s1.6-revision-de-simbolos-y-nombres-reales/tasks.md#aceptación-y-cierre). Los hallazgos para S1.7 están en [tasks.md → «Hallazgos para S1.7»](../specs/archive/s1.6-revision-de-simbolos-y-nombres-reales/tasks.md#hallazgos-para-s17).
+
+La [especificación de S1.7](../specs/archive/s1.7-resolucion-de-ambiguedades-y-aprobacion/spec.md) fue aprobada por DLG el 10-X-2026 («Nada que modificar»). Su [plan técnico](../specs/archive/s1.7-resolucion-de-ambiguedades-y-aprobacion/plan.md) fue aprobado por DLG el 10-X-2026 («De acuerdo»); sus [tareas](../specs/archive/s1.7-resolucion-de-ambiguedades-y-aprobacion/tasks.md) fueron aprobadas por DLG el 10-X-2026 («Aprobadas»). La implementación y su validación se completaron el 10-X-2026: DLG decidió los seis casos sin cambiar reglas, código ni pruebas (208 pruebas correctas y build sin advertencias). La etapa fue aceptada por DLG el 10-X-2026 («Cumple lo especificado»). La evidencia está en [specs/archive/s1.7-resolucion-de-ambiguedades-y-aprobacion/tasks.md → «Aceptación y cierre»](../specs/archive/s1.7-resolucion-de-ambiguedades-y-aprobacion/tasks.md#aceptación-y-cierre).
+
+Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
+
+## Next
 
 ### Persistencia
 
@@ -47,7 +50,7 @@ Objetivos:
 - Preparar el archivo SQL local especial que provisiona el usuario de desarrollo y su colección privada base, según [decisions.md → «Identidad de desarrollo»](decisions.md#identidad-de-desarrollo).
 - Añadir las restricciones únicas y los índices.
 - Registrar la colación propia del orden alfabético en todas las conexiones ([architecture.md → «Persistencia»](architecture.md#persistencia)).
-- Implementar el Unit of Work, las transacciones y las proyecciones FTS5 de enlaces y de colecciones, una por entidad ([architecture.md → «Persistencia»](architecture.md#persistencia) y [architecture.md → «FTS5»](architecture.md#fts5)).
+- Implementar el Unit of Work, las transacciones y las proyecciones FTS5 de enlaces y colecciones, una por entidad ([architecture.md → «Persistencia»](architecture.md#persistencia) y [architecture.md → «FTS5»](architecture.md#fts5)).
 
 Criterio de finalización:
 
@@ -71,7 +74,7 @@ Criterio de finalización:
 
 - La gestión privada usa la identidad de desarrollo inyectada y solo opera sobre los datos de ese usuario.
 - Cada listado aplica solo sus propios parámetros, ignora el resto y conserva sus filtros al buscar y al paginar ([specifications.md → «Rutas privadas»](specifications.md#rutas-privadas)).
-- El formulario de creación de enlaces muestra la casilla de público desmarcada; al crear un enlace en una colección privada, la opción pública está deshabilitada y la aplicación rechaza una petición manipulada de creación, edición o cambio de privacidad que intente activarla con el mensaje de [specifications.md → «Errores controlados»](specifications.md#errores-controlados), mediante integración HTTP.
+- El formulario de creación de enlaces muestra la casilla de público desmarcada; al crear un enlace en una colección privada, la opción pública está deshabilitada y la aplicación rechaza una petición manipulada de creación, edición o cambio de privacidad según [specifications.md → «Errores controlados»](specifications.md#errores-controlados), mediante integración HTTP.
 - El dashboard, los listados y los formularios privados respetan [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas); los casos de uso no permiten elegir o alterar el `UserId` desde el cliente.
 
 ## Later
@@ -106,7 +109,7 @@ Dominio y datos:
 Especificaciones:
 
 - Tests de recorte de textos y de longitudes máximas de los campos del MVP0 según [specifications.md → «Textos introducidos por el usuario»](specifications.md#textos-introducidos-por-el-usuario) y [specifications.md → «Longitudes máximas»](specifications.md#longitudes-máximas): rechazo de lo introducido por el usuario; un carácter fuera del BMP cuenta como un punto de código y una letra seguida de una marca combinante cuenta según los puntos de código que tenga tras las transformaciones aplicables.
-- Tests de generación del alias (acentos, espacios pegados, guiones duplicados, caracteres eliminados, rangos, palabras reservadas y alias ocupado) y del slug de colección (todos los ejemplos de la tabla de conversión, rechazo de letras y números no ASCII, rangos, colisiones y regeneración al renombrar).
+- Tests de la transformación común a ASCII, de la generación del alias (acentos, espacios pegados, guiones duplicados, caracteres eliminados, rechazo de controles y de letras y números no ASCII, rangos, palabras reservadas y alias ocupado) y del slug de colección (todos los ejemplos de la tabla de conversión, rangos, colisiones y regeneración al renombrar).
 - Tests de ajuste y validación por separado para `UrlOriginal` e `Image`, con todos los ejemplos de [specifications.md → «Ajuste de URL»](specifications.md#ajuste-de-url), [«Ajuste de `Image`»](specifications.md#ajuste-de-image) y [«Validación»](specifications.md#validación): `UrlOriginal` admite los esquemas y hosts indicados en esas reglas, incluidos `http`, `localhost` e IP; `Image` se ajusta a `https` y rechaza `localhost` e IP. En ambos casos, probar la conversión de `//` a `https:`.
 - Tests de `UrlNormalized` con los ejemplos de [specifications.md → «Normalización para duplicados»](specifications.md#normalización-para-duplicados), con caracteres estructurales codificados (`%23`, `%26`), texto codificado dos veces (`%2520`), `+` en la ruta y en la consulta, y de detección de duplicados ([specifications.md → «Duplicados»](specifications.md#duplicados)).
 - Tests de búsqueda MVP0 ([specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros)): usuario identificado, sin distinguir acentos, equivalencia entre formas Unicode NFC precompuestas y descompuestas tanto en `q` como en los campos indexados, entrada separada en secuencias de letras o números con el resto de caracteres como separadores (comillas, `*`, guiones, `OR`, `NEAR`) sin errores de sintaxis ni operadores, todos los términos obligatorios, palabras completas sin prefijo, entrada sin términos equivalente a no buscar, filtro por colección combinado con `q` y resultado más relevante primero.
@@ -197,6 +200,8 @@ Criterio de finalización:
 
 ### Autenticación y gestión de cuenta
 
+La implementación queda bloqueada hasta resolver [decisions.md → «Pendiente de rutas de cuenta»](decisions.md#pendiente-de-rutas-de-cuenta) y definir las rutas y métodos en [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas).
+
 Objetivos:
 
 - Sustituir la identidad de desarrollo inyectada por autenticación real mediante cookies y autorización de la zona privada ([architecture.md → «Autenticación»](architecture.md#autenticación)), y el botón de entrada de la landing por los de registro y login ([specifications.md → «Landing»](specifications.md#landing)).
@@ -213,8 +218,8 @@ Criterio de finalización:
 #### Checklist de calidad de autenticación
 
 - Tests de las invariantes de [domain-model.md → «User»](domain-model.md#user) y [domain-model.md → «UserToken»](domain-model.md#usertoken) en los flujos de cuenta.
-- Tests de normalización y validación mínima del email, contraseñas, bloqueo, respuestas que no revelan cuentas y hash de contraseñas.
-- Tests de tokens: caducidad, un solo uso, almacenamiento solo como hash, invalidación registrada en `InvalidatedAt`, distinción frente a `UsedAt` y exclusión mutua entre ambos estados.
+- Tests de normalización y validación mínima del email y las contraseñas, incluida la equivalencia NFC entre contraseña establecida y contraseña presentada al verificarla, además de bloqueo, respuestas que no revelan cuentas y hash de contraseñas.
+- Tests de tokens: caducidad, un solo uso, almacenamiento solo como hash, correspondencia entre `UserId`, `Purpose`, operación y estado de cuenta, invalidación registrada en `InvalidatedAt`, distinción frente a `UsedAt` y exclusión mutua entre ambos estados.
 - Tests de concurrencia en verificaciones de contraseña ([specifications.md → «Verificación concurrente de contraseña»](specifications.md#verificación-concurrente-de-contraseña)): un cambio o restablecimiento concurrente del sello impide continuar con una verificación antigua; una verificación fallida contra un hash obsoleto no incrementa el contador nuevo; el login no emite una cookie con un sello desactualizado; y un bloqueo que aparece durante la verificación impide la operación.
 - Tests de los límites de correo y de las respuestas de registro, recuperación y cambio de email.
 - Tests de registro y compleción, recuperación, cambio de email y cambio de contraseña; en eliminación, el GET no modifica ni consume el token y solo el POST explícito elimina la cuenta y sus datos.

@@ -1,8 +1,8 @@
 # Arquitectura prevista para Linkubator
 
-Este documento describe cómo se construirá Linkubator: plataforma, capas, persistencia, seguridad técnica y procesos en segundo plano. Las reglas de negocio están en [domain-model.md](domain-model.md) y [specifications.md](specifications.md); las razones de cada elección técnica, en [decisions.md → «Tecnología»](decisions.md#tecnología).
+Este documento describe cómo se construirá Linkubator: tecnologías, arquitectura, persistencia, seguridad técnica y procesos en segundo plano. Las reglas de negocio están en [domain-model.md](domain-model.md) y [specifications.md](specifications.md); las razones de cada elección técnica, en [decisions.md → «Tecnología»](decisions.md#tecnología).
 
-## Plataforma
+## Tecnologías
 
 - .NET 10 y C#.
 - ASP.NET Core Razor Pages con renderizado del lado servidor.
@@ -12,15 +12,67 @@ Este documento describe cómo se construirá Linkubator: plataforma, capas, pers
 - MailKit para el envío de correo por SMTP, y smtp4dev como servidor SMTP local de desarrollo.
 - Serilog como proveedor de logs estructurados, detrás de `ILogger`.
 - Autenticación con el manejador de cookies de ASP.NET Core, sin ASP.NET Core Identity.
-- Clean Architecture, SOLID, DRY y YAGNI, con los patrones Repository, Unit of Work y Result.
 
 > Diagrama de contenedores: [Aplicación y dependencias](diagrams/container-diagram.md).
 
 > Diagrama de contexto: [Contexto](diagrams/context-diagram.md).
 
-## Capas
+## Arquitectura
+
+**Clean Architecture** con las siguientes capas:
 
 > Diagrama de capas: [Capas y dependencias](diagrams/architecture-layers.md).
+
+### Domain
+
+- Entidades del dominio (heredan de `BaseEntity`).
+- DTOs de entrada y salida.
+- POCOs / ViewModels.
+- Enumeraciones.
+- Excepciones de dominio.
+- Independiente de frameworks externos.
+- Transformaciones de texto sin dependencias de infraestructura.
+  - La generación de `User.Alias`, `Collection.Slug` y `Tag.Slug`, que comparten una única transformación (ver [specifications.md → «Transformación común a ASCII»](specifications.md#transformación-común-a-ascii), [«Generación del alias»](specifications.md#generación-del-alias) y [«Generación de slugs»](specifications.md#generación-de-slugs)).
+  - La de `Link.UrlOriginal` (ver [specifications.md → «Ajuste de URL»](specifications.md#ajuste-de-url) y [specifications.md → «Validación»](specifications.md#validación)).
+  - La de `Link.UrlNormalized` (ver [specifications.md → «Normalización para duplicados»](specifications.md#normalización-para-duplicados)).
+  - La de `Link.Image` (ver [specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image) y [specifications.md → «Validación»](specifications.md#validación)).
+- No conoce SQLite, Dapper, HTTP, Razor Pages ni detalles de infraestructura.
+
+### Application
+
+- Casos de uso, DTOs, validadores.
+- Servicios de aplicación — casos de uso orquestados.
+- Service Layer: `I*Service` → `*Service`.
+- Contratos, servicios.
+- Interfaces de repositorios y de Unit of Work.
+- Constantes, Options, Records.
+- Patrón `Result`.
+- Abstracciones del usuario identificado. 
+- Abstracciones del scraper.
+- Abstracciones de hashing de contraseñas (`IPasswordHasher`) y de envío de correo (`IEmailSender`).
+
+### Infrastructure
+
+- Repositorios con Dapper y SQL explícito.
+- Conexiones SQLite.
+- Transacciones.
+- Unit of Work ligero.
+- Scripts SQL versionados, índices y restricciones.
+- Índice de búsqueda con SQLite FTS5, con una proyección propia por entidad buscable: enlaces, colecciones y los nombres de las etiquetas.
+- Implementación de `IPasswordHasher` con Argon2id y de `IEmailSender` con MailKit. `Konscious.Security.Cryptography.Argon2` solo calcula el hash: la generación de la sal, el formato PHC y la comparación en tiempo constante los hace esta implementación (valores en [specifications.md → «Hash de la contraseña»](specifications.md#hash-de-la-contraseña)).
+- `IPasswordHasher` limitará el número de hashes que se calculan a la vez; los demás esperan en cola. El valor del límite se fija al implementar (motivo en [decisions.md → «Seguridad»](decisions.md#seguridad)). Un límite por IP queda fuera del alcance definido.
+- Scraper HTTP y trabajos persistidos, o un mecanismo equivalente, para el scraping (ver [specifications.md → «Scraping»](specifications.md#scraping)).
+
+### Web
+
+- Razor Pages.
+- TailwindCSS
+- Panel de gestión.
+- Páginas públicas.
+- Enrutamiento y seguridad web; la autenticación por cookies y la autorización de cuenta.
+- Resolución del usuario identificado desde una sesión autenticada. Los casos de uso no reciben un identificador de usuario del cliente.
+- Presentación de errores y estados accesibles.
+- Los valores usados en atributos HTML, incluidos `Title` y `UrlOriginal` al formar `alt`, se codifican contextualmente con Razor. No se omite esa codificación, no se preescapan los valores y no se aplica codificación de URL al texto de `alt`.
 
 ### Dependencias entre proyectos
 
@@ -37,40 +89,6 @@ Web solo referencia Infrastructure en el composition root para registrar sus imp
 
 Tests puede referenciar los cuatro proyectos de producción para validarlos. Ningún proyecto de producción referencia Tests, que queda fuera del grafo productivo.
 
-### Domain
-
-- Entidades, value objects, invariantes, reglas de negocio, errores de dominio y enumeradores.
-- Transformaciones de texto sin dependencias de infraestructura.
-  - La generación de `User.Alias` (ver [specifications.md → «Generación del alias»](specifications.md#generación-del-alias)).
-  - La de `Collection.Slug` y `Tag.Slug` (ver [«Generación de slugs»](specifications.md#generación-de-slugs)) son reglas distintas del dominio.
-  - La de `Link.UrlOriginal` (ver [specifications.md → «Ajuste de URL»](specifications.md#ajuste-de-url) y [specifications.md → «Validación»](specifications.md#validación))
-  - La de `Link.UrlNormalized` (ver [specifications.md → «Normalización para duplicados»](specifications.md#normalización-para-duplicados))
-  - La de `Link.Image` (ver [specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image) y [specifications.md → «Validación»](specifications.md#validación))
-- No conoce SQLite, Dapper, HTTP, Razor Pages ni detalles de infraestructura.
-
-### Application
-
-- Casos de uso, DTOs, validadores y patrón `Result`.
-- Interfaces de repositorios y de Unit of Work.
-- Abstracciones del usuario identificado. Las abstracciones del scraper, los puertos de hashing de contraseñas (`IPasswordHasher`) y de envío de correo (`IEmailSender`).
-
-### Infrastructure
-
-- Repositorios con Dapper y SQL explícito, conexiones SQLite, transacciones y Unit of Work ligero.
-- Scripts SQL versionados, índices y restricciones.
-- Índice de búsqueda con SQLite FTS5, con una proyección propia por entidad buscable: enlaces, colecciones y los nombres de las etiquetas.
-- Implementación de `IPasswordHasher` con Argon2id y de `IEmailSender` con MailKit. `Konscious.Security.Cryptography.Argon2` solo calcula el hash: la generación de la sal, el formato PHC y la comparación en tiempo constante los hace esta implementación (valores en [specifications.md → «Hash de la contraseña»](specifications.md#hash-de-la-contraseña)).
-- `IPasswordHasher` limitará el número de hashes que se calculan a la vez; los demás esperan en cola. El valor del límite se fija al implementar (motivo en [decisions.md → «Seguridad»](decisions.md#seguridad)). Un límite por IP queda fuera del alcance definido.
-- Scraper HTTP y trabajos persistidos, o un mecanismo equivalente, para el scraping (ver [specifications.md → «Scraping»](specifications.md#scraping)).
-
-### Web
-
-- Razor Pages, Tailwind, panel de gestión y páginas públicas.
-- Enrutamiento y seguridad web; la autenticación por cookies y la autorización de cuenta.
-- Resolución del usuario identificado desde una sesión autenticada. Los casos de uso no reciben un identificador de usuario del cliente.
-- Presentación de errores y estados accesibles.
-- Los valores usados en atributos HTML, incluidos `Title` y `UrlOriginal` al formar `alt`, se codifican contextualmente con Razor. No se omite esa codificación, no se preescapan los valores y no se aplica codificación de URL al texto de `alt`.
-
 ### Casos de uso iniciales
 
 Application implementa los casos de uso funcionales definidos en [requirements.md](requirements.md). Web los invoca mediante sus contratos, sin incorporar reglas de negocio a la presentación.
@@ -78,6 +96,22 @@ Application implementa los casos de uso funcionales definidos en [requirements.m
 El comportamiento exacto está en [specifications.md](specifications.md) y las invariantes, en [domain-model.md](domain-model.md). El cálculo del hash de contraseña corresponde a `IPasswordHasher` en Infrastructure; Domain recibe el hash ya calculado.
 
 > Diagrama de casos de uso del sistema: [Casos de uso de Linkubator](diagrams/use-case-diagram.md).
+
+### Principios de Diseño
+
+- **SOLID**: Aplicación estricta de los cinco principios
+  - Single Responsibility
+  - Open/Closed
+  - Liskov Substitution
+  - Interface Segregation
+  - Dependency Inversion
+
+- **KISS** (Keep It Simple, Stupid): Preferir soluciones simples y claras
+- **DRY** (Don't Repeat Yourself): Evitar la duplicación de código
+- **YAGNI** (You Aren't Gonna Need It): No implementar funcionalidades hasta que sean realmente necesarias
+- **Separation of Concerns**: Mantener las responsabilidades de cada clase y módulo claramente definidas
+- **Encapsulamiento**: Proteger el estado interno de las clases y exponer solo lo necesario a través de interfaces y métodos públicos
+- **Inmutabilidad**: Preferir objetos inmutables cuando sea posible para reducir efectos secundarios y mejorar la predictibilidad del código
 
 ## Autenticación
 
@@ -180,7 +214,7 @@ Restricciones e índices previstos:
 - Cada consulta de texto usa solo la proyección de la entidad del listado y combina siempre `MATCH` con el `UserId` del usuario identificado; la relación con la tabla de la entidad también comprueba que esta pertenece a ese usuario. Así no se puede devolver un resultado de otro usuario ni de otra entidad.
 - FTS5 se reserva para el texto libre. Los filtros del listado de enlaces (colección y etiqueta) usan SQL e índices convencionales.
 - Antes de tokenizar, se aplica a `q` y al texto que se incorpora a las proyecciones la normalización Unicode NFC definida en [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros). Los valores originales de las entidades no se modifican.
-- Tokenizador `unicode61` con `remove_diacritics 2` iguala «canción» y «cancion», y trata la `ñ` como `n`, igual que los slugs. FTS5 no incluye stemming para castellano.
+- Tokenizador `unicode61` con `remove_diacritics 2` y categorías `L* N*` iguala «canción» y «cancion», trata la `ñ` como `n` igual que los slugs, y tokeniza solo letras y números, conforme a [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros). FTS5 no incluye stemming para castellano.
 - La consulta se construye con los términos que define [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros). Cada término se escribe entre comillas dobles, para que FTS5 no interprete como operador palabras como `AND`, `OR`, `NOT` o `NEAR`, y los términos se combinan con el AND implícito de FTS5. No se usa la búsqueda por prefijo (`*`). Si no hay términos, no se consulta FTS5.
 - La relevancia solo se calcula en la proyección de enlaces, con `ORDER BY rank` ascendente: en FTS5, `rank` (`bm25()`) es más bajo cuanto mejor es la coincidencia, así que `ORDER BY rank DESC` devolvería primero los menos relevantes. Las consultas sobre las proyecciones de colecciones y de etiquetas solo obtienen los `Id` coincidentes y no usan `rank`; el orden de cada listado es el de [specifications.md → «Listados»](specifications.md#listados) (la colación está en [«Persistencia»](#persistencia)).
 - La reconstrucción del índice es un comando de mantenimiento que se ejecuta a mano: vacía todas las proyecciones (las de enlaces, colecciones y las de etiquetas) y las regenera desde las tablas, en una transacción.
@@ -198,7 +232,7 @@ Su diseño técnico no está cerrado hasta resolver los pendientes de [decisions
   - Tipos de contenido permitidos.
   - No sustituir nunca la URL original por la de una redirección.
   - Sanitizar los metadatos extraídos.
-  - Validar `og:image` según [specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image).
+  - Ajustar y validar `og:image` según [specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image) y [«Validación»](specifications.md#validación).
 
 ## Logs
 
