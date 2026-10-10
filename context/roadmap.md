@@ -34,6 +34,8 @@ La [especificación de S1.4](../specs/s1.4-generacion-de-slugs/spec.md) se reabr
 
 La [especificación de S1.5](../specs/s1.5-tests-de-ejemplos/spec.md) fue aprobada por DLG el 09-X-2026 («Ok»). Su [plan técnico](../specs/s1.5-tests-de-ejemplos/plan.md) fue aprobado por DLG el 09-X-2026 («Entendido»). Sus [tareas](../specs/s1.5-tests-de-ejemplos/tasks.md) fueron aprobadas por DLG el 09-X-2026 («Implementa»). La implementación y la validación de la cobertura de ejemplos se completaron el 09-X-2026, y DLG aceptó el resultado el 09-X-2026 con la referencia «Cambios realizados OK».
 
+La [especificación de S1.6](../specs/s1.6-revision-de-simbolos-y-nombres-reales/spec.md) fue aprobada por DLG el 10-X-2026 («Listo»). Su [plan técnico](../specs/s1.6-revision-de-simbolos-y-nombres-reales/plan.md) fue aprobado por DLG el 10-X-2026 («Aprobado»); sus [tareas](../specs/s1.6-revision-de-simbolos-y-nombres-reales/tasks.md) fueron aprobadas por DLG el 10-X-2026 («Listo»). La validación técnica de la recopilación y transformación de nombres reales quedó completada el 10-X-2026 con `dotnet test` y `dotnet build` sin errores, y con la comprobación de que no hay cambios en `src/Linkubator.Domain` ni artefactos temporales fuera de la carpeta de la spec. La etapa sigue abierta a la aceptación humana de DLG; no se declara cierre final de la etapa en este documento.
+
 Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 
 ## Next
