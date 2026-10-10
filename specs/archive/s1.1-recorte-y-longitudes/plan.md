@@ -37,9 +37,9 @@
 
 ### Garantías técnicas
 
-- El conteo distingue puntos de código de unidades UTF-16 y grafemas, según [specifications.md → «Longitudes máximas»](../../context/specifications.md#longitudes-máximas).
+- El conteo distingue puntos de código de unidades UTF-16 y grafemas, según [specifications.md → «Longitudes máximas»](../../../context/specifications.md#longitudes-máximas).
 - La normalización y el conteo no incorporan reglas específicas de entidades ni máximos fijos de propiedades.
-- Domain permanece aislado de las demás capas, conforme a [architecture.md → «Arquitectura»](../../context/architecture.md#arquitectura).
+- Domain permanece aislado de las demás capas, conforme a [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura).
 - S1.1 no implementa el truncado de contenido obtenido por scraper; está fuera del alcance de esta tarea.
 
 ## Decisiones técnicas y riesgos
@@ -47,10 +47,10 @@
 | Decisión o riesgo | Estado | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
 | Llamar `UserTextPolicy` al componente común | Definido | Instrucción de DLG en esta conversación | El nombre queda fijado. |
-| Exponer `TrimToNull`, `CountCodePoints` e `IsWithinMaximumLength` con las firmas descritas en «Componentes y contratos» | Definido | [spec.md → «Objetivo»](spec.md#objetivo) y [specifications.md → «Textos introducidos por el usuario»](../../context/specifications.md#textos-introducidos-por-el-usuario) | Las operaciones devuelven normalización y valores booleanos/numéricos; no definen ni lanzan errores de dominio. |
-| Representar como `null` el texto vacío tras normalizar y dejar al consumidor la política obligatorio/opcional | Propuesta derivada del contrato funcional | [specifications.md → «Textos introducidos por el usuario»](../../context/specifications.md#textos-introducidos-por-el-usuario) | La utilidad queda independiente de las entidades; S3 probará que cada entidad aplica la política de su campo. |
-| Recibir el máximo como argumento y no codificar máximos de propiedades en la utilidad | Propuesta técnica | [specifications.md → «Longitudes máximas»](../../context/specifications.md#longitudes-máximas) | El consumidor suministra el máximo apropiado en el punto de validación; confirmar al aprobar el plan. |
-| Cadenas UTF-16 malformadas con sustitutos aislados | No especificado por las fuentes consultadas | [specifications.md → «Longitudes máximas»](../../context/specifications.md#longitudes-máximas) | No introducir una regla de producto nueva. Si aparece un caso que requiera una decisión, detenerlo y proponer aclaración en la fuente propietaria. |
+| Exponer `TrimToNull`, `CountCodePoints` e `IsWithinMaximumLength` con las firmas descritas en «Componentes y contratos» | Definido | [spec.md → «Objetivo»](spec.md#objetivo) y [specifications.md → «Textos introducidos por el usuario»](../../../context/specifications.md#textos-introducidos-por-el-usuario) | Las operaciones devuelven normalización y valores booleanos/numéricos; no definen ni lanzan errores de dominio. |
+| Representar como `null` el texto vacío tras normalizar y dejar al consumidor la política obligatorio/opcional | Propuesta derivada del contrato funcional | [specifications.md → «Textos introducidos por el usuario»](../../../context/specifications.md#textos-introducidos-por-el-usuario) | La utilidad queda independiente de las entidades; S3 probará que cada entidad aplica la política de su campo. |
+| Recibir el máximo como argumento y no codificar máximos de propiedades en la utilidad | Propuesta técnica | [specifications.md → «Longitudes máximas»](../../../context/specifications.md#longitudes-máximas) | El consumidor suministra el máximo apropiado en el punto de validación; confirmar al aprobar el plan. |
+| Cadenas UTF-16 malformadas con sustitutos aislados | No especificado por las fuentes consultadas | [specifications.md → «Longitudes máximas»](../../../context/specifications.md#longitudes-máximas) | No introducir una regla de producto nueva. Si aparece un caso que requiera una decisión, detenerlo y proponer aclaración en la fuente propietaria. |
 
 ## Estrategia de validación
 

@@ -12,7 +12,7 @@
 ### Componentes y contratos
 
 - Se añadirá en `Linkubator.Domain/Policies` una política estática dedicada a transformar y validar localmente un candidato de alias. Su contrato devolverá el valor transformado y distinguirá los rechazos propios de S1.3 mediante excepciones específicas de Domain, sin recibir ni consultar servicios de disponibilidad.
-- La política realizará la transformación de [specifications.md → «Generación del alias»](../../context/specifications.md#generación-del-alias) con operaciones Unicode: minúsculas invariantes, descomposición para suprimir marcas diacríticas, filtrado del resultado a ASCII, consolidación de guiones y recorte de guiones extremos. La implementación no reutilizará las reglas diferentes de slugs.
+- La política realizará la transformación de [specifications.md → «Generación del alias»](../../../context/specifications.md#generación-del-alias) con operaciones Unicode: minúsculas invariantes, descomposición para suprimir marcas diacríticas, filtrado del resultado a ASCII, consolidación de guiones y recorte de guiones extremos. La implementación no reutilizará las reglas diferentes de slugs.
 - Se añadirán en `Linkubator.Domain/Exceptions` los subtipos sellados de `DomainException` que representen resultado vacío, fuera de rango y reservado. Sus constructores no recibirán el texto introducido ni expondrán valores sensibles; sus identificadores estables se decidirán de forma coherente en la implementación tras aprobar este plan.
 - La comprobación del rango se apoyará en `UserTextPolicy.IsWithinMaximumLength`; los límites aplicables se expresarán como constantes internas de la política o en un componente de Domain con responsabilidad específica, sin dispersar números mágicos.
 - No se definirá contrato de repositorio ni se introducirá una abstracción para comprobar disponibilidad: la colisión requiere `User` y persistencia, que pertenecen a los trabajos señalados en [spec.md → «Alcance»](spec.md#alcance).
@@ -35,7 +35,7 @@
 
 - Las pruebas comprobarán todos los ejemplos de alias y casos negativos que pertenecen a S1.3, preservando que S1.5 complete la cobertura conjunta con slugs.
 - Los rechazos no incluyen el valor original, transformado, contraseñas ni tokens en su contrato, conforme a [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación).
-- La validación de longitud se hace sobre el resultado de la transformación, con el conteo de puntos de código de `UserTextPolicy` y sin truncado, conforme a [specifications.md → «Longitudes máximas»](../../context/specifications.md#longitudes-máximas).
+- La validación de longitud se hace sobre el resultado de la transformación, con el conteo de puntos de código de `UserTextPolicy` y sin truncado, conforme a [specifications.md → «Longitudes máximas»](../../../context/specifications.md#longitudes-máximas).
 - Una palabra se considera reservada únicamente tras la transformación y por coincidencia exacta con la fuente; las comparaciones no dependen de cultura del entorno.
 
 ## Decisiones técnicas y riesgos
@@ -43,8 +43,8 @@
 | Decisión o riesgo | Estado | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
 | Usar una política estática de Domain para transformar y validar localmente alias | Propuesta | [spec.md → «Alcance»](spec.md#alcance) | Centraliza la lógica reutilizable sin adelantar la entidad ni la persistencia. |
-| Usar normalización Unicode de descomposición y filtrado explícito a ASCII | Propuesta | [specifications.md → «Generación del alias»](../../context/specifications.md#generación-del-alias) | Permite eliminar diacríticos y descartar letras no ASCII, emojis y símbolos según la fuente. |
-| Crear un subtipo de `DomainException` por cada rechazo local de alias | Propuesta | [spec.md → «Alcance»](spec.md#alcance), [specs/s1.2-errores-y-enumeradores/plan.md → «Componentes y contratos»](../s1.2-errores-y-enumeradores/plan.md#componentes-y-contratos) | Mantiene errores distinguibles sin exponer el texto; los nombres y códigos concretos requieren aprobación del plan. |
+| Usar normalización Unicode de descomposición y filtrado explícito a ASCII | Propuesta | [specifications.md → «Generación del alias»](../../../context/specifications.md#generación-del-alias) | Permite eliminar diacríticos y descartar letras no ASCII, emojis y símbolos según la fuente. |
+| Crear un subtipo de `DomainException` por cada rechazo local de alias | Propuesta | [spec.md → «Alcance»](spec.md#alcance), [specs/archive/s1.2-errores-y-enumeradores/plan.md → «Componentes y contratos»](../s1.2-errores-y-enumeradores/plan.md#componentes-y-contratos) | Mantiene errores distinguibles sin exponer el texto; los nombres y códigos concretos requieren aprobación del plan. |
 | Mantener la comprobación de alias ocupado fuera de S1.3 | Confirmada | [spec.md → «Alcance»](spec.md#alcance) | No se añade una dependencia de repositorio ni se simula unicidad global antes de S3–S5. |
 | Reutilizar `UserTextPolicy.IsWithinMaximumLength` para el rango transformado | Propuesta | [spec.md → «Dependencias y prerrequisitos»](spec.md#dependencias-y-prerrequisitos) | Evita duplicar el conteo Unicode de S1.1; una prueba protegerá que no se trunca el valor. |
 

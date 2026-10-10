@@ -37,8 +37,8 @@
 ### Garantías técnicas
 
 - El tipo y el código distinguen el rechazo funcional sin depender de mensajes ni de datos sensibles, conforme a [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación).
-- `ScrapingStatus` y `Purpose` contienen solo los valores definidos en [specifications.md → «Estados del scraping»](../../context/specifications.md#estados-del-scraping) y [specifications.md → «Tokens»](../../context/specifications.md#tokens).
-- Domain se mantiene aislado conforme a [architecture.md → «Arquitectura»](../../context/architecture.md#arquitectura).
+- `ScrapingStatus` y `Purpose` contienen solo los valores definidos en [specifications.md → «Estados del scraping»](../../../context/specifications.md#estados-del-scraping) y [specifications.md → «Tokens»](../../../context/specifications.md#tokens).
+- Domain se mantiene aislado conforme a [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura).
 
 ## Decisiones técnicas y riesgos
 
@@ -46,7 +46,7 @@
 | --- | --- | --- | --- |
 | Usar una `DomainException` abstracta y un subtipo específico por regla, conservando `Code` | Confirmada por DLG, 09-X-2026 («hazlo con la base y las específicas») | [spec.md → «Alcance»](spec.md#alcance) | Permite capturar errores conjuntamente o por regla concreta y conserva un identificador estable para su mapeo. |
 | Limitar los identificadores de error de S1.2 a `TextExceedsMaximumLength` | Definido | [spec.md → «Alcance»](spec.md#alcance) | Los errores de alias y slug se añadirán en sus trabajos propietarios, sin ampliar este contrato por anticipado. |
-| Usar `Purpose` para los propósitos de token | Propuesta | [specifications.md → «Tokens»](../../context/specifications.md#tokens) | Sus valores técnicos serán `CompleteRegistration`, `PasswordReset`, `EmailChange` y `AccountDeletion`; requiere aprobación del plan. |
+| Usar `Purpose` para los propósitos de token | Propuesta | [specifications.md → «Tokens»](../../../context/specifications.md#tokens) | Sus valores técnicos serán `CompleteRegistration`, `PasswordReset`, `EmailChange` y `AccountDeletion`; requiere aprobación del plan. |
 | No lanzar excepciones desde entidades en S1.2 | Definido | [spec.md → «Alcance»](spec.md#alcance) | S1.2 prueba la jerarquía; S3 prueba que las entidades lanzan la excepción específica ante exceso de longitud. |
 | El criterio CA02 incluye una integración de entidad excluida de S1.2 | Aclarado | [spec.md → «Alcance»](spec.md#alcance), [«Criterios de aceptación»](spec.md#criterios-de-aceptación) | S1.2 verifica que el código puede transportarse en `DomainException`; la evidencia de lanzamiento desde una entidad se completará en S3. |
 

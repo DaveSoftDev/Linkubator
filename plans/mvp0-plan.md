@@ -116,11 +116,11 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 
 **Definition of Done**
 
-- [ ] Todos los ejemplos de las especificaciones de alias y slug están cubiertos por tests.
-- [ ] Recorte y longitudes cubren puntos de código fuera del BMP y marcas combinantes.
-- [ ] Las reglas viven en Domain, sin dependencias de infraestructura.
-- [ ] El humano ha validado los 20 nombres reales.
-- [ ] No quedan ambigüedades abiertas sin registrar.
+- [x] Todos los ejemplos de las especificaciones de alias y slug están cubiertos por tests.
+- [x] Recorte y longitudes cubren puntos de código fuera del BMP y marcas combinantes.
+- [x] Las reglas viven en Domain, sin dependencias de infraestructura.
+- [x] El humano ha validado los 20 nombres reales.
+- [x] No quedan ambigüedades abiertas sin registrar.
 
 ### S2: Dominio II: URLs (L)
 

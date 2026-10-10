@@ -40,11 +40,11 @@ CA02 conserva su formulación de la spec, que requiere que una entidad lance el 
 
 ## Aceptación y cierre
 
-- Estado del trabajo: cerrado; implementación y validación completadas y aceptadas por DLG el 09-X-2026.
+- Estado del trabajo: archivado; implementación y validación completadas y aceptadas por DLG el 09-X-2026.
 - Criterios sin evidencia satisfactoria: ninguno pendiente para el cierre de S1.2; el lanzamiento de CA02 desde una entidad se implementará y validará en S3, según aceptación de DLG.
 - Bloqueos y riesgos restantes: ninguno para S1.2.
 - Aceptación humana: DLG, 09-X-2026; confirmación explícita «Por terminada...». 
-- Archivado: no solicitado.
-- Ubicación archivada: pendiente.
-- Fecha efectiva de archivado y comprobación de enlaces: pendientes.
+- Archivado: completado el 10-X-2026 por orden de DLG («Archiva las specs activas»); la aceptación del resultado es la registrada arriba.
+- Ubicación archivada: `specs/archive/s1.2-errores-y-enumeradores/`.
+- Fecha efectiva de archivado y comprobación de enlaces: 10-X-2026; los 732 enlaces locales de los documentos afectados resuelven (archivo y ancla), los tres artefactos están en destino y la carpeta activa no existe.
 - Siguiente paso: continuar con las tareas posteriores del roadmap; integrar y validar el lanzamiento de CA02 desde las entidades en S3.

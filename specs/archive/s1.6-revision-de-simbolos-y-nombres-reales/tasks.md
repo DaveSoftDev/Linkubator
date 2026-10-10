@@ -11,7 +11,7 @@
   - Estado: completada y aceptada por DLG el 10-X-2026 («Aprobada»).
   - Inicio: 10-X-2026; validación técnica de S1.6 ejecutada sin necesidad de modificar Domain.
   - Finalización: 10-X-2026; T02–T11 completadas con build sin errores y tests de la solución correctos.
-  - Evidencia consolidada: [test-nombres-colecciones-with-BOM.ps1](test-nombres-colecciones-with-BOM.ps1), [tasks.md](tasks.md) y [roadmap.md](../../context/roadmap.md).
+  - Evidencia consolidada: [test-nombres-colecciones-with-BOM.ps1](test-nombres-colecciones-with-BOM.ps1), [tasks.md](tasks.md) y [roadmap.md](../../../context/roadmap.md).
 - La preparación de tareas no inventa aprobaciones ni evidencias de implementación.
 
 ## Descomposición
@@ -30,7 +30,7 @@ T03 y T04 son independientes entre sí y pueden ejecutarse en paralelo tras T02.
 | T08 | Presentar a DLG las tres secciones, registrar su juicio por nombre y completar «Hallazgos para S1.7». | CA05, CA06; [plan → Flujos internos](plan.md#flujos-internos), V05 | T03, T04, T07 | Revisión de DLG; resultado esperado: cada nombre con juicio y referencia, cada hallazgo con su sección fuente y sin resolverlo aquí. | completada | Las secciones y juicios quedaron reflejados en la tabla de nombres reales con fecha 10-X-2026 y validación real del script de prueba. |
 | T09 | Ejecutar las validaciones integradas: `dotnet test` y `dotnet build` de la solución. | CA07; [plan → Estrategia de validación](plan.md#estrategia-de-validación), V06 y V07 | T08 | Ejecutar `dotnet test Linkubator.sln --no-restore --verbosity minimal` y `dotnet build Linkubator.sln --no-restore -warnaserror --verbosity minimal`; resultado esperado: todos los tests pasan y el build no tiene errores ni warnings. | completada | Ejecutado en 10-X-2026 con `dotnet test ... --no-restore --nologo -v q` y `dotnet build ... --no-restore -warnaserror --nologo -v q`; ambos terminaron sin errores. |
 | T10 | Comprobar que no hay cambios de producción ni artefactos temporales. | CA07; [plan → Estrategia de validación](plan.md#estrategia-de-validación), V08 | T09 | Ejecutar `git status` y `git diff` sobre `src/Linkubator.Domain`; resultado esperado: sin cambios en Domain y sin scripts fuera de esta carpeta. | completada | Ejecutado en 10-X-2026: `git status --short -- src/Linkubator.Domain` y `git diff -- src/Linkubator.Domain` quedaron vacíos; solo permanecen los artefactos de la spec autorizada. |
-| T11 | Sincronizar [roadmap.md](../../context/roadmap.md) con el estado de implementación de S1.6 al iniciarla y al completarla, sin declarar aceptación. | CA01–CA07; [plan → Orden de ejecución y cierre](plan.md#orden-de-ejecución-y-cierre) | T10 | Revisar el roadmap; resultado esperado: refleja el estado real con enlace a este archivo, sin cerrar la etapa. | completada | Actualizado el roadmap para reflejar la validación técnica de S1.6 y mantener la etapa abierta a la aceptación humana de DLG. |
+| T11 | Sincronizar [roadmap.md](../../../context/roadmap.md) con el estado de implementación de S1.6 al iniciarla y al completarla, sin declarar aceptación. | CA01–CA07; [plan → Orden de ejecución y cierre](plan.md#orden-de-ejecución-y-cierre) | T10 | Revisar el roadmap; resultado esperado: refleja el estado real con enlace a este archivo, sin cerrar la etapa. | completada | Actualizado el roadmap para reflejar la validación técnica de S1.6 y mantener la etapa abierta a la aceptación humana de DLG. |
 | T12 | Revisar trazabilidad y evidencia; presentar el resultado a DLG para aceptación. | CA01–CA07; [plan → Orden de ejecución y cierre](plan.md#orden-de-ejecución-y-cierre) | T10, T11 | Confirmar que cada criterio tiene evidencia o bloqueo explícito, y registrar aceptación o reparos de DLG. | completada | DLG, 10-X-2026: «Aprobada». |
 
 ## Revisión de la tabla
@@ -39,18 +39,18 @@ Se completa en T03. La validación confirma que la implementación del dominio c
 
 | Entrada o par | Sección fuente | Resultado del código | Coincide | Hallazgo |
 | --- | --- | --- | --- | --- |
-| `+` | [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) | `plus` | Sí | Sin discrepancias |
-| `#` | [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) | `sharp` | Sí | Sin discrepancias |
-| `&` | [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) | `and` | Sí | Sin discrepancias |
-| `@` | [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) | `at` | Sí | Sin discrepancias |
-| `%` | [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) | `percent` | Sí | Sin discrepancias |
-| `$` | [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) | `dollar` | Sí | Sin discrepancias |
-| `€` | [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) | `euro` | Sí | Sin discrepancias |
-| `£` | [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) | `pound` | Sí | Sin discrepancias |
-| `ß`, `æ`, `œ`, `ø`, `đ`, `ł`, `ð`, `þ`, `ħ`, `ı`, `ĸ`, `ŋ`, `ŧ` | [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) | `ss`, `ae`, `oe`, `o`, `d`, `l`, `d`, `th`, `h`, `i`, `k`, `ng`, `t` | Sí | Sin discrepancias |
-| Separadores `.`, `/`, `_`, `⁄` | [«Transformación común a ASCII»](../../context/specifications.md#transformación-común-a-ascii) | guión medio (`-`) | Sí | Sin discrepancias |
-| `C#`, `C++`, `Q&A`, `AT&T`, `Windows 1.0` | [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) | `c-sharp`, `c-plus-plus`, `q-and-a`, `at-and-t`, `windows-1-0` | Sí | Sin discrepancias |
-| `Straße`, `Papá`, `Þór`, `Ŋ` | [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) | `strasse`, `papa`, `thor`, `ng` | Sí | Sin discrepancias |
+| `+` | [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) | `plus` | Sí | Sin discrepancias |
+| `#` | [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) | `sharp` | Sí | Sin discrepancias |
+| `&` | [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) | `and` | Sí | Sin discrepancias |
+| `@` | [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) | `at` | Sí | Sin discrepancias |
+| `%` | [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) | `percent` | Sí | Sin discrepancias |
+| `$` | [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) | `dollar` | Sí | Sin discrepancias |
+| `€` | [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) | `euro` | Sí | Sin discrepancias |
+| `£` | [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) | `pound` | Sí | Sin discrepancias |
+| `ß`, `æ`, `œ`, `ø`, `đ`, `ł`, `ð`, `þ`, `ħ`, `ı`, `ĸ`, `ŋ`, `ŧ` | [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) | `ss`, `ae`, `oe`, `o`, `d`, `l`, `d`, `th`, `h`, `i`, `k`, `ng`, `t` | Sí | Sin discrepancias |
+| Separadores `.`, `/`, `_`, `⁄` | [«Transformación común a ASCII»](../../../context/specifications.md#transformación-común-a-ascii) | guión medio (`-`) | Sí | Sin discrepancias |
+| `C#`, `C++`, `Q&A`, `AT&T`, `Windows 1.0` | [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) | `c-sharp`, `c-plus-plus`, `q-and-a`, `at-and-t`, `windows-1-0` | Sí | Sin discrepancias |
+| `Straße`, `Papá`, `Þór`, `Ŋ` | [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) | `strasse`, `papa`, `thor`, `ng` | Sí | Sin discrepancias |
 
 ## Cobertura de bloques Latin
 
@@ -109,8 +109,8 @@ Se completa en T05–T08. La política de registro de los nombres la fija DLG en
 
 | ID | Descripción | Sección fuente | Origen (tarea) | Estado |
 | --- | --- | --- | --- | --- |
-| H01 | El problema detectado inicialmente era una anomalía de codificación del archivo de prueba y de la consola, no una regresión de `SlugPolicy.Generate`. Se resolvió regrabando el archivo como UTF-8 con BOM y ejecutándolo con la codificación de salida correcta. | [«Transformación común a ASCII»](../../context/specifications.md#transformación-común-a-ascii), [«Generación de slugs»](../../context/specifications.md#generación-de-slugs) | T06, T07 | resuelto en validación |
-| H02 | `Napoleón Bonaparte` no requiere corrección de Domain cuando el nombre llega correctamente codificado; la validación con UTF-8 con BOM produce `napoleon-bonaparte`, que coincide con la expectativa del slug. | [«Generación de slugs»](../../context/specifications.md#generación-de-slugs) | T07 | resuelto en validación |
+| H01 | El problema detectado inicialmente era una anomalía de codificación del archivo de prueba y de la consola, no una regresión de `SlugPolicy.Generate`. Se resolvió regrabando el archivo como UTF-8 con BOM y ejecutándolo con la codificación de salida correcta. | [«Transformación común a ASCII»](../../../context/specifications.md#transformación-común-a-ascii), [«Generación de slugs»](../../../context/specifications.md#generación-de-slugs) | T06, T07 | resuelto en validación |
+| H02 | `Napoleón Bonaparte` no requiere corrección de Domain cuando el nombre llega correctamente codificado; la validación con UTF-8 con BOM produce `napoleon-bonaparte`, que coincide con la expectativa del slug. | [«Generación de slugs»](../../../context/specifications.md#generación-de-slugs) | T07 | resuelto en validación |
 
 ## Evidencia por criterio
 
@@ -122,17 +122,17 @@ Se completa en T05–T08. La política de registro de los nombres la fija DLG en
 | CA04 | T07 | [V04](plan.md#estrategia-de-validación) | Validado: la comparación manual con la fuente coincide con la salida real; diferencias se registran como hallazgos. | 10-X-2026 | [«Nombres reales»](#nombres-reales), [«Hallazgos para S1.7»](#hallazgos-para-s17) |
 | CA05 | T08 | [V05](plan.md#estrategia-de-validación) | Validado: DLG registra el juicio por nombre en la tabla de resultados. | 10-X-2026 | [«Nombres reales»](#nombres-reales) |
 | CA06 | T05, T08 | [V05](plan.md#estrategia-de-validación) | Validado: la política de registro y el juicio de DLG quedan reflejados en la evidencia y en la tabla de resultados. | 10-X-2026 | [«Nombres reales»](#nombres-reales), [«Hallazgos para S1.7»](#hallazgos-para-s17) |
-| CA07 | T09, T10, T11 | [V06, V07, V08](plan.md#estrategia-de-validación) | Validado: solución compila y pasa tests; no hay cambios en Domain ni artefactos temporales; roadmap actualizado sin cerrar la etapa. | 10-X-2026, SDK .NET 10.0.12 | [tasks.md](tasks.md), [context/roadmap.md](../../context/roadmap.md) |
+| CA07 | T09, T10, T11 | [V06, V07, V08](plan.md#estrategia-de-validación) | Validado: solución compila y pasa tests; no hay cambios en Domain ni artefactos temporales; roadmap actualizado sin cerrar la etapa. | 10-X-2026, SDK .NET 10.0.12 | [tasks.md](tasks.md), [context/roadmap.md](../../../context/roadmap.md) |
 
 La evidencia técnica queda cumplida para CA01–CA07 y DLG registró su aceptación en T12 el 10-X-2026 («Aprobada»); frase corregida en S1.7 (D06).
 
 ## Aceptación y cierre
 
-- Estado del trabajo: aceptado y listo para archivar.
+- Estado del trabajo: archivado; aceptado por DLG.
 - Criterios sin evidencia satisfactoria: ninguno.
 - Bloqueos y riesgos restantes: ninguno identificado. La anomalía encontrada fue de codificación del script y la consola, no de Domain; se resolvió reescribiendo el archivo como UTF-8 con BOM y validando la salida real.
 - Aceptación humana: DLG, 10-X-2026, referencia «Aprobada».
-- Archivado: no solicitado; la documentación y la evidencia quedan preparadas para su archivo si DLG lo solicita.
-- Ubicación archivada: pendiente de movimiento formal.
-- Fecha efectiva de archivado y comprobación de enlaces: pendientes; la evidencia de la etapa queda preparada y no requiere cambios funcionales.
-- Siguiente paso autorizado, sin cerrar otras etapas: continuar con la siguiente etapa del roadmap tras la aceptación formal de DLG.
+- Archivado: completado el 10-X-2026 por orden de DLG («Archiva las specs activas»); la aceptación del resultado es la registrada arriba. Los dos scripts de prueba se trasladaron con la carpeta y su ruta a la raíz del repositorio se ajustó a la nueva ubicación.
+- Ubicación archivada: `specs/archive/s1.6-revision-de-simbolos-y-nombres-reales/`.
+- Fecha efectiva de archivado y comprobación de enlaces: 10-X-2026; los 732 enlaces locales de los documentos afectados resuelven (archivo y ancla), los cinco archivos están en destino y la carpeta activa no existe.
+- Siguiente paso autorizado, sin cerrar otras etapas: ninguno para S1.6.

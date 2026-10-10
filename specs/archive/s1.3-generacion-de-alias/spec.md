@@ -11,16 +11,16 @@ Proporcionar en Domain la generación determinista del alias de usuario a partir
 
 ## Fuentes
 
-- [mvp0-plan.md → «S1: Dominio I: textos, alias y slugs (L)»](../../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugs-l): tarea S1.3 y reparto con los trabajos vecinos.
-- [specifications.md → «Generación del alias»](../../context/specifications.md#generación-del-alias): transformación, resultados no admisibles, palabras reservadas y tratamiento de la colisión.
-- [specifications.md → «Longitudes máximas»](../../context/specifications.md#longitudes-máximas): rango aplicable al resultado transformado y unidad de conteo.
-- [domain-model.md → «User»](../../context/domain-model.md#user): propiedad, carácter público, mutabilidad y unicidad global de `User.Alias`.
-- [architecture.md → «Arquitectura»](../../context/architecture.md#arquitectura): responsabilidad y aislamiento de Domain.
+- [mvp0-plan.md → «S1: Dominio I: textos, alias y slugs (L)»](../../../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugs-l): tarea S1.3 y reparto con los trabajos vecinos.
+- [specifications.md → «Generación del alias»](../../../context/specifications.md#generación-del-alias): transformación, resultados no admisibles, palabras reservadas y tratamiento de la colisión.
+- [specifications.md → «Longitudes máximas»](../../../context/specifications.md#longitudes-máximas): rango aplicable al resultado transformado y unidad de conteo.
+- [domain-model.md → «User»](../../../context/domain-model.md#user): propiedad, carácter público, mutabilidad y unicidad global de `User.Alias`.
+- [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura): responsabilidad y aislamiento de Domain.
 
 ## Alcance
 
 - Incluye:
-  - Generar en Domain el alias resultante a partir del texto de entrada conforme a [«Generación del alias»](../../context/specifications.md#generación-del-alias).
+  - Generar en Domain el alias resultante a partir del texto de entrada conforme a [«Generación del alias»](../../../context/specifications.md#generación-del-alias).
   - Identificar los resultados vacíos, fuera del rango de longitud y reservados para que la entidad o el caso de uso que corresponda pueda rechazar la operación.
   - Definir los errores de dominio específicos necesarios para esos rechazos sobre la jerarquía entregada por S1.2, sin incluir contenido introducido por el usuario.
   - Pruebas automatizadas del comportamiento de generación y de los rechazos que pertenecen a este trabajo; S1.5 completa la cobertura exhaustiva de los ejemplos de alias y slugs.
@@ -49,12 +49,12 @@ Proporcionar en Domain la generación determinista del alias de usuario a partir
 
 | ID | Fuente o criterio aprobado propietario | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA01 | [«Generación del alias»](../../context/specifications.md#generación-del-alias) | Un texto introducido para formar un alias. | Domain genera su resultado. | Aplica en el orden establecido las transformaciones de la fuente y produce el alias ASCII resultante. |
-| CA02 | [«Generación del alias»](../../context/specifications.md#generación-del-alias) | Entradas representativas con diacríticos, espacios pegados, guiones duplicados o caracteres eliminables. | Domain genera el alias. | El resultado coincide con los ejemplos de transformación de la fuente. |
-| CA03 | [«Generación del alias»](../../context/specifications.md#generación-del-alias) y [«Longitudes máximas»](../../context/specifications.md#longitudes-máximas) | Un resultado transformado vacío o fuera del rango aplicable. | Una operación de Domain solicita validarlo. | Se identifica como no admisible, sin truncarlo ni conservar el texto de entrada en el error de dominio. |
-| CA04 | [«Generación del alias»](../../context/specifications.md#generación-del-alias) | Un resultado transformado que coincide exactamente con una palabra reservada. | Una operación de Domain solicita validarlo. | Se identifica como no admisible mediante el error de dominio correspondiente. |
-| CA05 | [domain-model.md → «User»](../../context/domain-model.md#user) y [«Generación del alias»](../../context/specifications.md#generación-del-alias) | Un alias generado para una cuenta completada. | Se prepara para asignarlo a `User.Alias`. | Conserva el resultado transformado; la consulta de si está ocupado no se realiza en este trabajo. |
-| CA06 | [architecture.md → «Arquitectura»](../../context/architecture.md#arquitectura) | La implementación de S1.3. | Se comprueban las dependencias del proyecto Domain. | Reside en Domain y no introduce dependencias de Application, Infrastructure, Web ni paquetes externos. |
+| CA01 | [«Generación del alias»](../../../context/specifications.md#generación-del-alias) | Un texto introducido para formar un alias. | Domain genera su resultado. | Aplica en el orden establecido las transformaciones de la fuente y produce el alias ASCII resultante. |
+| CA02 | [«Generación del alias»](../../../context/specifications.md#generación-del-alias) | Entradas representativas con diacríticos, espacios pegados, guiones duplicados o caracteres eliminables. | Domain genera el alias. | El resultado coincide con los ejemplos de transformación de la fuente. |
+| CA03 | [«Generación del alias»](../../../context/specifications.md#generación-del-alias) y [«Longitudes máximas»](../../../context/specifications.md#longitudes-máximas) | Un resultado transformado vacío o fuera del rango aplicable. | Una operación de Domain solicita validarlo. | Se identifica como no admisible, sin truncarlo ni conservar el texto de entrada en el error de dominio. |
+| CA04 | [«Generación del alias»](../../../context/specifications.md#generación-del-alias) | Un resultado transformado que coincide exactamente con una palabra reservada. | Una operación de Domain solicita validarlo. | Se identifica como no admisible mediante el error de dominio correspondiente. |
+| CA05 | [domain-model.md → «User»](../../../context/domain-model.md#user) y [«Generación del alias»](../../../context/specifications.md#generación-del-alias) | Un alias generado para una cuenta completada. | Se prepara para asignarlo a `User.Alias`. | Conserva el resultado transformado; la consulta de si está ocupado no se realiza en este trabajo. |
+| CA06 | [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura) | La implementación de S1.3. | Se comprueban las dependencias del proyecto Domain. | Reside en Domain y no introduce dependencias de Application, Infrastructure, Web ni paquetes externos. |
 
 ## Bloqueos y preguntas pendientes
 

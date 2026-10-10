@@ -42,9 +42,11 @@ Un resultado fallido o no disponible permanece pendiente/bloqueado; no registrar
 
 ## Aceptación y cierre
 
-- Estado del trabajo: aceptado; implementación funcional, verificaciones técnicas y aceptación humana registradas. No archivado.
+- Estado del trabajo: archivado; implementación funcional, verificaciones técnicas y aceptación humana registradas.
 - Criterios sin evidencia satisfactoria: ninguno.
 - Bloqueos y riesgos restantes: ninguno identificado para S1.1; no se definen ni lanzan errores de dominio.
 - Aceptación humana: DLG, 08-X-2026 («el diff es correcto»).
-- Archivado: no solicitado.
-- Siguiente paso: ninguno para S1.1. El archivado no se ha solicitado.
+- Archivado: completado el 10-X-2026 por orden de DLG («Archiva las specs activas»); la aceptación del resultado es la registrada arriba.
+- Ubicación archivada: `specs/archive/s1.1-recorte-y-longitudes/`.
+- Fecha efectiva de archivado y comprobación de enlaces: 10-X-2026; los 732 enlaces locales de los documentos afectados resuelven (archivo y ancla), los tres artefactos están en destino y la carpeta activa no existe.
+- Siguiente paso: ninguno para S1.1.

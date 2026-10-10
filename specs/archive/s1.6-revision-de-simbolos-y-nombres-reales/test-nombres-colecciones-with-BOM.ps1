@@ -1,6 +1,6 @@
 ﻿$ErrorActionPreference = "Stop"
 
-$repoRoot = (Get-Item (Join-Path $PSScriptRoot "..\..")).FullName
+$repoRoot = (Get-Item (Join-Path $PSScriptRoot "..\..\..")).FullName
 $domainProject = Join-Path $repoRoot "src\Linkubator.Domain\Linkubator.Domain.csproj"
 
 if (-not (Test-Path $domainProject)) {

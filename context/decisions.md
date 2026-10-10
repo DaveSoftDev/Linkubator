@@ -76,7 +76,7 @@ Las reglas de esta sección describen la gestión de cuentas del MVP1. En el MVP
 - **MailKit para el correo y smtp4dev en local, ambos en el MVP1.** Microsoft recomienda MailKit frente a `System.Net.Mail.SmtpClient` para desarrollos nuevos. En MVP1 bastará con cambiar la configuración SMTP a un proveedor real.
 - **`Konscious.Security.Cryptography.Argon2`, MailKit y Serilog son excepciones justificadas a la filosofía de mínimas dependencias.** Son librerías acotadas y de propósito específico, no abstracciones pesadas como EF Core.
 - **Implementar Identidad de desarrollo para la gestión privada.** Para este MVP implementaremos un sistema de identidad de desarrollo para que toda la aplicación esté preparada a trabajar con identidad y que al implementar la gestión de cuenta en el MVP1 sea mucho más fácil (ver [«Identidad de desarrollo»](#identidad-de-desarrollo)).
-- **Usar una excepción base de dominio y una excepción específica por regla.** Así los consumidores pueden manejar cualquier error de dominio en conjunto o capturar por separado cada regla; el contrato técnico está en [S1.2 → Componentes y contratos](../specs/s1.2-errores-y-enumeradores/plan.md#componentes-y-contratos). Decisión aprobada por DLG el 09-X-2026.
+- **Usar una excepción base de dominio y una excepción específica por regla.** Así los consumidores pueden manejar cualquier error de dominio en conjunto o capturar por separado cada regla; el contrato técnico está en [S1.2 → Componentes y contratos](../specs/archive/s1.2-errores-y-enumeradores/plan.md#componentes-y-contratos). Decisión aprobada por DLG el 09-X-2026.
 
 ## Riesgos aceptados
 

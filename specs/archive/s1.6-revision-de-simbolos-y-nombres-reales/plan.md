@@ -13,11 +13,11 @@
 
 - **Sin código de producción ni pruebas nuevas.** S1.6 no modifica `Linkubator.Domain` ni `Linkubator.Tests`. La revisión consume los puntos de entrada públicos ya aceptados: el generador común (`AsciiTransformationPolicy.Transform`) y la política de slugs (`SlugPolicy.Generate`).
 - **Ejecución fuera del repositorio.** Las comprobaciones que requieren ejecutar Domain se realizan con un script desechable que referencia el ensamblado compilado de Domain y no se guarda en el repositorio. Su salida se registra en `tasks.md` como evidencia. La disponibilidad de esa vía (por ejemplo, `dotnet fsi`) se comprueba al inicio; si no está disponible, se propone a DLG la alternativa antes de continuar (ver [«Decisiones técnicas y riesgos»](#decisiones-técnicas-y-riesgos)).
-- **Revisión de la tabla contra el código (CA01).** Se cruzan las entradas de [«Tabla de conversión de símbolos»](../../context/specifications.md#tabla-de-conversión-de-símbolos) con el código de [AsciiTransformationPolicy.cs](../../src/Linkubator.Domain/Policies/AsciiTransformationPolicy.cs) en dos sentidos:
+- **Revisión de la tabla contra el código (CA01).** Se cruzan las entradas de [«Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos) con el código de [AsciiTransformationPolicy.cs](../../../src/Linkubator.Domain/Policies/AsciiTransformationPolicy.cs) en dos sentidos:
   - De la fuente al código: cada entrada y cada par texto/resultado se ejecuta con el generador y su resultado se compara con el de la fuente.
   - Del código a la fuente: la lectura del código lista cada símbolo, separador y letra que sustituye, porque las estructuras que los contienen son privadas, y se comprueba que cada uno figura en la fuente.
 - **Cobertura de bloques Latin-1 y Latin Extended-A (CA02).** Se enumeran las letras de ambos bloques, se transforma cada una con el generador y se clasifica el resultado como reducida a ASCII, sustituida por la tabla o rechazada. Los dos caracteres que la fuente declara ausentes sirven de control: deben aparecer como rechazados. Un resultado distinto de las tres clases, como una letra eliminada en silencio o convertida en vacío, se registra como hallazgo.
-- **Prueba con nombres reales (CA03, CA04).** Con los 20 nombres que aporta DLG, se ejecuta `SlugPolicy.Generate` y se registra para cada uno el slug o el tipo de error de dominio. El resultado esperado por la fuente se obtiene aplicando a mano los pasos de [«Transformación común a ASCII»](../../context/specifications.md#transformación-común-a-ascii) y las reglas de [«Generación de slugs»](../../context/specifications.md#generación-de-slugs), sin reutilizar el código revisado.
+- **Prueba con nombres reales (CA03, CA04).** Con los 20 nombres que aporta DLG, se ejecuta `SlugPolicy.Generate` y se registra para cada uno el slug o el tipo de error de dominio. El resultado esperado por la fuente se obtiene aplicando a mano los pasos de [«Transformación común a ASCII»](../../../context/specifications.md#transformación-común-a-ascii) y las reglas de [«Generación de slugs»](../../../context/specifications.md#generación-de-slugs), sin reutilizar el código revisado.
 - **Juicio y hallazgos (CA05, CA06).** `tasks.md` recoge una tabla de los 20 nombres con su origen, resultado real, resultado según la fuente y juicio de DLG (aceptable o no aceptable, con su referencia), y una lista de hallazgos con su sección fuente. Los hallazgos no aceptados o ambiguos quedan como entrada de S1.7 sin resolverlos.
 - **Excepciones reutilizadas.** `TextBelowMinimumLengthException`, `TextExceedsMaximumLengthException` y `TextContainsUnsupportedCharactersException`, sin tipos nuevos.
 
@@ -44,7 +44,7 @@
 - La salida registrada indica la versión del SDK y el estado del código revisado (confirmación o rama), para que sea reproducible.
 - El resultado esperado según la fuente no procede del código revisado, para que la comparación no sea circular.
 - No se registran datos que DLG no haya aportado para ese fin; los nombres se guardan solo con el consentimiento indicado en [«Decisiones técnicas y riesgos»](#decisiones-técnicas-y-riesgos).
-- Aislamiento de Domain según [architecture.md → «Arquitectura»](../../context/architecture.md#arquitectura): sin cambios en su código ni en sus dependencias.
+- Aislamiento de Domain según [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura): sin cambios en su código ni en sus dependencias.
 
 ## Decisiones técnicas y riesgos
 
@@ -55,7 +55,7 @@
 | Los 20 nombres reales pueden contener datos personales o de otras personas | Pendiente | [spec.md → «Bloqueos y preguntas pendientes»](spec.md#bloqueos-y-preguntas-pendientes) | DLG indica si se registran tal cual en `tasks.md` o de forma anonimizada. No se registran hasta que lo confirme. |
 | El resultado esperado según la fuente se deriva a mano | Propuesta | Esta propuesta | Evita la comprobación circular con el código; puede contener errores de derivación, por lo que DLG revisa las diferencias. |
 | Una divergencia entre la fuente y el código, o un resultado no aceptado, se registra y no se corrige | Confirmada | [spec.md → «Alcance»](spec.md#alcance) | El cambio se tramita en el documento propietario y se resuelve en S1.7. |
-| Los casos de DLG pueden revelar un comportamiento ya aceptado como riesgo | Confirmada | [decisions.md → «Riesgos aceptados»](../../context/decisions.md#riesgos-aceptados) | Se registra como hallazgo y DLG decide en S1.7 si lo acepta o lo propone para otra etapa. |
+| Los casos de DLG pueden revelar un comportamiento ya aceptado como riesgo | Confirmada | [decisions.md → «Riesgos aceptados»](../../../context/decisions.md#riesgos-aceptados) | Se registra como hallazgo y DLG decide en S1.7 si lo acepta o lo propone para otra etapa. |
 
 ## Estrategia de validación
 
@@ -72,7 +72,7 @@ Las comprobaciones de V01–V05 son revisión técnica y ejecución puntual de D
 | V07 | CA07 | Build integrado | SDK y dependencias | `dotnet build Linkubator.sln --no-restore -warnaserror --verbosity minimal` | Build correcto, sin errores ni warnings | Comando, SDK, código de salida, errores y warnings. |
 | V08 | CA07 | Revisión técnica: sin cambios de producción | V01–V07 | `git status` y `git diff` de `src/Linkubator.Domain`, y comprobar que no quedan scripts temporales | Sin cambios en Domain ni archivos de la revisión fuera de la carpeta de la spec | Salida de `git status` y revisión del diff. |
 
-V01 y V02 comprueban el comportamiento actual del código frente a la fuente, pero no demuestran que las letras fuera de Latin-1 y Latin Extended-A ni los alfabetos no latinos tengan el tratamiento deseado: esa decisión es del riesgo aceptado ([decisions.md → «Riesgos aceptados»](../../context/decisions.md#riesgos-aceptados)). V03–V05 prueban 20 nombres, no la representatividad de los nombres de los usuarios. V06 y V07 no sustituyen el juicio humano de DLG. No se planifica una comprobación negativa de sensibilidad porque no se añaden pruebas; el control con los dos caracteres ausentes de V02 solo demuestra que la enumeración detecta rechazos.
+V01 y V02 comprueban el comportamiento actual del código frente a la fuente, pero no demuestran que las letras fuera de Latin-1 y Latin Extended-A ni los alfabetos no latinos tengan el tratamiento deseado: esa decisión es del riesgo aceptado ([decisions.md → «Riesgos aceptados»](../../../context/decisions.md#riesgos-aceptados)). V03–V05 prueban 20 nombres, no la representatividad de los nombres de los usuarios. V06 y V07 no sustituyen el juicio humano de DLG. No se planifica una comprobación negativa de sensibilidad porque no se añaden pruebas; el control con los dos caracteres ausentes de V02 solo demuestra que la enumeración detecta rechazos.
 
 ## Orden de ejecución y cierre
 
