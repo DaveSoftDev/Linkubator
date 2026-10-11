@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Sockets;
 using DomainExceptions = Linkubator.Domain.Exceptions;
 
 namespace Linkubator.Domain.Policies;
@@ -14,6 +16,83 @@ public static class UrlHostPolicy
         }
 
         throw new DomainExceptions.UrlHostInvalidException();
+    }
+
+    public static bool IsValidHost(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return false;
+        }
+
+        string candidate = input.Trim();
+
+        if (candidate.StartsWith("[", StringComparison.Ordinal) && candidate.EndsWith("]", StringComparison.Ordinal))
+        {
+            string literal = candidate[1..^1];
+            return IPAddress.TryParse(literal, out IPAddress? ipv6Address)
+                && ipv6Address.AddressFamily == AddressFamily.InterNetworkV6;
+        }
+
+        if (IPAddress.TryParse(candidate, out IPAddress? parsedAddress))
+        {
+            return parsedAddress.AddressFamily == AddressFamily.InterNetwork || parsedAddress.AddressFamily == AddressFamily.InterNetworkV6;
+        }
+
+        if (string.Equals(candidate, "localhost", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (candidate.Contains("..", StringComparison.Ordinal)
+            || candidate.Length > 0 && candidate[0] == '.'
+            || candidate.Length > 0 && candidate[^1] == '.')
+        {
+            return false;
+        }
+
+        string[] labels = candidate.Split('.', StringSplitOptions.TrimEntries);
+        if (labels.Length < 2 || labels.Any(label => string.IsNullOrEmpty(label)))
+        {
+            return false;
+        }
+
+        foreach (string label in labels)
+        {
+            if (label.Length == 0 || label.StartsWith('-') || label.EndsWith('-'))
+            {
+                return false;
+            }
+
+            foreach (char character in label)
+            {
+                if (!char.IsLetterOrDigit(character) && character != '-')
+                {
+                    return false;
+                }
+            }
+        }
+
+        string lastLabel = labels[^1];
+        if (lastLabel.Length < 2 && !lastLabel.StartsWith("xn--", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static bool TryExtractValidHost(string input, out string? host)
+    {
+        host = null;
+
+        if (TryExtractHost(input, out host) && !string.IsNullOrEmpty(host) && IsValidHost(host))
+        {
+            return true;
+        }
+
+        host = null;
+        return false;
     }
 
     public static bool TryExtractHost(string input, out string? host)
@@ -61,74 +140,64 @@ public static class UrlHostPolicy
             return false;
         }
 
-        if (authority.IndexOf(':') is int portIndex && portIndex > 0)
+        if (authority.StartsWith(":", StringComparison.Ordinal))
         {
-            string hostPart = authority[..portIndex];
-            string portPart = authority[(portIndex + 1)..];
+            return false;
+        }
 
-            if (string.IsNullOrEmpty(hostPart) || string.IsNullOrEmpty(portPart) || !int.TryParse(portPart, out int port) || port < 1 || port > 65535)
+        if (authority.StartsWith("[", StringComparison.Ordinal))
+        {
+            int closingBracketIndex = authority.IndexOf(']');
+            if (closingBracketIndex < 0)
             {
                 return false;
             }
 
-            if (!TryNormalizeHost(hostPart, out string? normalizedHost))
+            string hostCandidate = authority[..(closingBracketIndex + 1)];
+            if (authority.Length > closingBracketIndex + 1)
             {
-                return false;
+                if (authority[closingBracketIndex + 1] != ':')
+                {
+                    return false;
+                }
+
+                string portPart = authority[(closingBracketIndex + 2)..];
+                if (string.IsNullOrEmpty(portPart) || !int.TryParse(portPart, out int port) || port < 1 || port > 65535)
+                {
+                    return false;
+                }
             }
 
-            host = normalizedHost;
+            host = hostCandidate;
             return true;
         }
 
-        if (!TryNormalizeHost(authority, out string? normalizedHostWithoutPort))
+        int lastColonIndex = authority.LastIndexOf(':');
+        if (lastColonIndex > 0)
         {
-            return false;
-        }
+            string hostPart = authority[..lastColonIndex];
+            string portPart = authority[(lastColonIndex + 1)..];
 
-        host = normalizedHostWithoutPort;
-        return true;
-    }
-
-    private static bool TryNormalizeHost(string candidate, out string? normalized)
-    {
-        normalized = null;
-
-        if (string.IsNullOrWhiteSpace(candidate))
-        {
-            return false;
-        }
-
-        string host = candidate.Trim();
-        if (host.StartsWith('.') || host.EndsWith('.') || host.StartsWith('-') || host.EndsWith('-'))
-        {
-            return false;
-        }
-
-        foreach (char character in host)
-        {
-            if (char.IsLetterOrDigit(character) || character == '.' || character == '-')
-            {
-                continue;
-            }
-
-            return false;
-        }
-
-        string[] labels = host.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (labels.Length == 0)
-        {
-            return false;
-        }
-
-        foreach (string label in labels)
-        {
-            if (label.Length == 0 || label.StartsWith('-') || label.EndsWith('-'))
+            if (string.IsNullOrEmpty(hostPart) || string.IsNullOrEmpty(portPart))
             {
                 return false;
             }
+
+            if (!portPart.All(char.IsDigit))
+            {
+                return false;
+            }
+
+            if (!int.TryParse(portPart, out int port) || port < 1 || port > 65535)
+            {
+                return false;
+            }
+
+            host = hostPart;
+            return true;
         }
 
-        normalized = host;
+        host = authority;
         return true;
     }
 }

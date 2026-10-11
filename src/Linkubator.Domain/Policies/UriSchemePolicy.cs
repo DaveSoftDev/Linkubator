@@ -20,7 +20,7 @@ public static class UriSchemePolicy
             int schemeIndex = candidate.IndexOf("://", StringComparison.Ordinal);
             string scheme = candidate[..schemeIndex];
             string rest = candidate[(schemeIndex + 3)..];
-            bool hostFound = UrlHostPolicy.TryExtractHost(rest, out string? explicitHost);
+            bool hostFound = UrlHostPolicy.TryExtractValidHost(rest, out string? explicitHost);
             return new UriSchemeDetection(scheme, explicitHost, true, hostFound);
         }
 
@@ -29,11 +29,11 @@ public static class UriSchemePolicy
         {
             string scheme = candidate[..colonIndex];
             string remainder = candidate[(colonIndex + 1)..];
-            bool looksLikeHostPort = remainder.Length > 0 && char.IsDigit(remainder[0]) && UrlHostPolicy.TryExtractHost(candidate, out _);
+            bool looksLikeHostPort = remainder.Length > 0 && char.IsDigit(remainder[0]) && UrlHostPolicy.TryExtractValidHost(candidate, out _);
 
             if (looksLikeHostPort)
             {
-                bool validHost = UrlHostPolicy.TryExtractHost(candidate, out string? hostFromHostPort);
+                bool validHost = UrlHostPolicy.TryExtractValidHost(candidate, out string? hostFromHostPort);
                 return new UriSchemeDetection(null, validHost ? hostFromHostPort : null, false, validHost);
             }
 
@@ -43,7 +43,7 @@ public static class UriSchemePolicy
             }
         }
 
-        if (UrlHostPolicy.TryExtractHost(candidate, out string? bareHost))
+        if (UrlHostPolicy.TryExtractValidHost(candidate, out string? bareHost))
         {
             return new UriSchemeDetection(null, bareHost, false, candidate.Contains(':'));
         }

@@ -46,7 +46,7 @@ public static class LinkUrlPolicy
                 throw new DomainExceptions.UrlSchemeNotAllowedException();
             }
 
-            if (!UrlHostPolicy.TryExtractHost(remainder, out string? parsedHost) || string.IsNullOrEmpty(parsedHost))
+            if (!UrlHostPolicy.TryExtractValidHost(remainder, out string? parsedHost) || string.IsNullOrEmpty(parsedHost))
             {
                 throw new DomainExceptions.UrlAuthorityMissingException();
             }
@@ -59,7 +59,7 @@ public static class LinkUrlPolicy
         {
             string schemeCandidate = input[..colonIndex];
             string afterColon = input[(colonIndex + 1)..];
-            bool isHostPort = afterColon.Length > 0 && char.IsDigit(afterColon[0]) && UrlHostPolicy.TryExtractHost(input, out _);
+            bool isHostPort = afterColon.Length > 0 && char.IsDigit(afterColon[0]) && UrlHostPolicy.TryExtractValidHost(input, out _);
 
             if (!isHostPort)
             {
@@ -75,7 +75,7 @@ public static class LinkUrlPolicy
             }
         }
 
-        if (UrlHostPolicy.TryExtractHost(input, out string? host))
+        if (UrlHostPolicy.TryExtractValidHost(input, out string? host))
         {
             return "https://" + input;
         }

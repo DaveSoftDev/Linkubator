@@ -52,6 +52,7 @@ public class UrlPoliciesTests
     [InlineData("localhost:5000/path", true, false, null, "localhost")]
     [InlineData("example.com:8080/x", true, false, null, "example.com")]
     [InlineData("https://example.com/path", true, true, "https", "example.com")]
+    [InlineData("intranet:8080", false, true, "intranet", null)]
     [InlineData("mailto:ana@example.com", false, true, "mailto", null)]
     public void DetectClassifiesHostAndExplicitSchemeInputs(
         string input,

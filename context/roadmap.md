@@ -42,6 +42,10 @@ La [especificación de S2.1](../specs/archive/s2.1-ajuste-de-url/spec.md) fue ap
 
 La [especificación de S2.2](../specs/archive/s2.2-ajuste-de-image/spec.md) fue aprobada por DLG el 10-X-2026 («Revisada»). Su [plan técnico](../specs/archive/s2.2-ajuste-de-image/plan.md) fue aprobado por DLG el 10-X-2026 («Aceptado»). Sus [tareas](../specs/archive/s2.2-ajuste-de-image/tasks.md) fueron aprobadas por DLG el 10-X-2026 («Listo»). La implementación se completó el 10-X-2026: Domain compiló sin advertencias, 18 pruebas nuevas correctas (ImageUrlPolicyTests) + 257 pruebas de regresión correctas. DLG aceptó el resultado el 10-X-2026 («Funciona»). La evidencia está en [specs/archive/s2.2-ajuste-de-image/tasks.md → «Aceptación y cierre»](../specs/archive/s2.2-ajuste-de-image/tasks.md#aceptaci%C3%B3n-y-cierre). El trabajo fue archivado el 10-X-2026.
 
+La [especificación de S2.3](../specs/s2.3-validacion-de-urls/spec.md) fue aprobada por DLG el 10-X-2026 («Listo»). Su [plan técnico](../specs/s2.3-validacion-de-urls/plan.md) fue aprobado por DLG el 10-X-2026 («Entendido»). Sus [tareas](../specs/s2.3-validacion-de-urls/tasks.md) fueron aprobadas por DLG el 10-X-2026 («Listo»). La implementación se completó el 11-X-2026: todas las tareas T02–T10 finalizadas. Domain compiló sin advertencias, 298 pruebas correctas (CA01–CA16 con evidencia completa), sin cambios en ajustes más allá de T05 ni en la entidad `Link`. El trabajo está listo para aceptación de DLG. La evidencia está en [specs/s2.3-validacion-de-urls/tasks.md → «Aceptación y cierre»](../specs/s2.3-validacion-de-urls/tasks.md#aceptación-y-cierre).
+
+La [especificación de S2.4](../specs/s2.4-normalizacion-de-urls/spec.md) está en borrador, pendiente de aprobación.
+
 Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 
 ## Next
