@@ -46,6 +46,8 @@ La [especificación de S2.3](../specs/s2.3-validacion-de-urls/spec.md) fue aprob
 
 La [especificación de S2.4](../specs/s2.4-normalizacion-de-urls/spec.md) fue aprobada por DLG el 11-X-2026 («Comprendida»). Su [plan técnico](../specs/s2.4-normalizacion-de-urls/plan.md) fue aprobado por DLG el 11-X-2026 («Aprobado»). Sus [tareas](../specs/s2.4-normalizacion-de-urls/tasks.md) fueron aprobadas por DLG el 11-X-2026 («Listo»). La implementación se completó el 11-X-2026: Domain compiló sin advertencias, suite completa de 420 pruebas correctas (14 nuevas de UrlNormalizationPolicyTests) y build sin errores. La etapa fue aceptada por DLG el 11-X-2026 («Implementado»). La evidencia está en [specs/s2.4-normalizacion-de-urls/tasks.md → «Aceptación y cierre»](../specs/s2.4-normalizacion-de-urls/tasks.md#aceptación-y-cierre).
 
+La [especificación de S2.5](../specs/s2.5-tests-de-ejemplos-de-urls/spec.md) fue aprobada por DLG el 11-X-2026 («Ready»). Su [plan técnico](../specs/s2.5-tests-de-ejemplos-de-urls/plan.md) fue aprobado por DLG el 11-X-2026 («Gooo»). Sus [tareas](../specs/s2.5-tests-de-ejemplos-de-urls/tasks.md) fueron aprobadas por DLG el 11-X-2026 («Aprobado»); la implementación fue completada y aprobada por DLG el 11-X-2026 («Implementado»). Esta etapa queda cerrada.
+
 Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 
 ## Next

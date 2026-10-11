@@ -49,6 +49,7 @@ Este plan organiza la construcción del MVP0 en sprints de 1 semana, con la IA g
 | S1 | Dominio I: textos, alias y slugs | L | Domain | Recorte y longitudes, generación de alias y de slugs, y sus tests |
 | S2 | Dominio II: URLs | L | Domain | Ajuste de URL y de `Image`, validación, `UrlNormalized` y sus tests |
 | S3 | Dominio III: entidades e invariantes | M | Domain | `User`, `Collection` y `Link`, propiedad, público/privado, tests de invariantes |
+| S3a | Dominio IV: Refactor de dominio | M | Domain | Refactorizar Domain para mejorar su rendimiento y legibilidad del código |
 | S4 | Aplicación: casos de uso | L | Application | `Result`, contratos, criterios de aceptación aprobados (puerta), abstracciones de repos y UoW, casos de uso con fakes, contrato de identidad de desarrollo |
 | S5 | Persistencia I: SQLite y transacciones | L | Infrastructure | Esquema versionado, PRAGMAs, colación `es-ES`, UoW con `BEGIN IMMEDIATE`, repositorios Dapper, SQL local de desarrollo, proveedor de identidad |
 | S6 | Persistencia II: FTS5 | L | Infrastructure | Proyecciones de enlaces y de colecciones, sincronización atómica, consulta de búsqueda, comando de reconstrucción |
@@ -133,9 +134,9 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 | S2.3 | Implementar la validación de ambas ([«Validación»](../context/specifications.md#validación)) | IA |
 | S2.4 | Implementar `UrlNormalized` con `%23`, `%26`, `%2520` y `+` ([«Normalización para duplicados»](../context/specifications.md#normalización-para-duplicados)) | IA |
 | S2.5 | Escribir tests con todos los ejemplos de las especificaciones, separando `UrlOriginal` e `Image` | IA |
-| S2.6 | Proporcionar 30 URLs reales (favoritos propios) y revisar su normalización | Humano |
-| S2.7 | Decidir los casos dudosos y registrarlos | Humano |
-| S2.8 | Unificar las validaciones de entrada de Domain (por ejemplo, `ThrowIfNullOrWhiteSpace` en alias y slugs) y lo que surja durante el sprint | IA |
+| S2.6 | Unificar las validaciones de entrada de Domain (por ejemplo, `ThrowIfNullOrWhiteSpace` en alias y slugs) y lo que surja durante el sprint | IA |
+| S2.7 | Proporcionar 30 URLs reales (favoritos propios) y revisar su normalización | Humano |
+| S2.8 | Decidir los casos dudosos y registrarlos | Humano |
 
 **Definition of Done**
 
@@ -165,6 +166,20 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 - [ ] No existe ningún camino de dominio para hacer público un enlace de una colección privada.
 - [ ] Las fichas de entidad coinciden con el código.
 - [ ] El humano ha aprobado el modelo.
+
+### S3a: Dominio IV: refactor (M)
+
+**Objetivo:** refactorizar todo el Domain para mejorar en rendimiento y legibilidad del código.
+
+| ID | Tarea | Resp. |
+|---|---|---|
+| S3a.1 | Refactorizar las Policies | Humano |
+| S3a.2 | Refactorizar las entidades | Humano |
+
+**Definition of Done**
+
+- [ ] Dominio sigue funcionando como hasta ahora.
+- [ ] El humano ha aprobado el nuevo Domain.
 
 ### S4: Aplicación: casos de uso (L)
 
