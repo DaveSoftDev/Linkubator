@@ -28,6 +28,7 @@ public class UrlNormalizationPolicyTests
     [InlineData("https://example.com/a%2520b", "examplecoma20b")]
     [InlineData("https://münchen.de/日本語", "xn-mnchen-3yade日本語")]
     [InlineData("https://xn--mnchen-3ya.de/日本語", "xn-mnchen-3yade日本語")]
+    [InlineData("https://www.mediamarkt.es/es/product/_camara-instantanea-fujifilm-instax-mini-evo-iso-100-1600-pantalla-lcd-bluetooth-negro-1561872.html?utm_source=google&utm_medium=v2-sho&utm_campaign=es%7Cmm%7Crt%7Cv2-sho%7Cpmax%7Cnsp%7CTOP%7Cna%7Cd2c%7CNA%7CB0009TVC&utm_content=B0009TVC-TCID23908559954&gclsrc=aw.ds&gad_source=1&gad_campaignid=23912985034&gbraid=0AAAAADL_At-3b3_-pCuNKCsXxHKxHSfoY", "wwwmediamarktesesproductcamara-instantanea-fujifilm-instax-mini-evo-iso-100-1600-pantalla-lcd-bluetooth-negro-1561872htmlgclsrcawds")]
     public void NormalizeMatchesSpecificationExamples(string input, string expected)
     {
         string actual = UrlNormalizationPolicy.Normalize(input);
