@@ -1,4 +1,5 @@
 using System.Globalization;
+using DomainExceptions = Linkubator.Domain.Exceptions;
 using Linkubator.Domain.Policies;
 
 namespace Linkubator.Tests.Domain.Policies;
@@ -9,9 +10,9 @@ public class UrlNormalizationPolicyTests
     [Fact]
     public void NormalizeRejectsNullEmptyAndWhiteSpace()
     {
-        Assert.Throws<ArgumentNullException>(() => UrlNormalizationPolicy.Normalize(null!));
-        Assert.Throws<ArgumentException>(() => UrlNormalizationPolicy.Normalize(string.Empty));
-        Assert.Throws<ArgumentException>(() => UrlNormalizationPolicy.Normalize("   "));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => UrlNormalizationPolicy.Normalize(null!));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => UrlNormalizationPolicy.Normalize(string.Empty));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => UrlNormalizationPolicy.Normalize("   "));
     }
 
     [Trait("Category", "Validation")]

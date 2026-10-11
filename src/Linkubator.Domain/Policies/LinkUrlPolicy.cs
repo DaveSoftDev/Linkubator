@@ -9,7 +9,7 @@ public static class LinkUrlPolicy
 
     public static string Adjust(string input)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(input);
+        UserTextPolicy.ThrowIfNullOrWhiteSpace(input);
 
         if (input.Any(char.IsWhiteSpace) || ContainsControls(input))
         {

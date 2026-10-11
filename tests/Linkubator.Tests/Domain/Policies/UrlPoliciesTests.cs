@@ -102,8 +102,9 @@ public class UrlPoliciesTests
     [Fact]
     public void AdjustRejectsNullOrWhitespaceInput()
     {
-        Assert.Throws<ArgumentNullException>(() => DomainPolicies.LinkUrlPolicy.Adjust(null!));
-        Assert.Throws<ArgumentException>(() => DomainPolicies.LinkUrlPolicy.Adjust("   "));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.LinkUrlPolicy.Adjust(null!));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.LinkUrlPolicy.Adjust(string.Empty));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.LinkUrlPolicy.Adjust("   "));
     }
 
     [Trait("Category", "Links")]

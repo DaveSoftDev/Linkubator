@@ -25,15 +25,21 @@ public class GenerationExamplesTests
             ["Saltó la raña al charço!!! I luego, croo"] = "salto-la-rana-al-charco-i-luego-croo",
             ["Ana°López©"] = "analopez",
             ["!!!"] = "",
-            [""] = "",
-            ["   "] = "",
             ["Media ½ hora"] = "media-1-2-hora",
             ["Temp 20℃"] = "temp-20c",
             ["日本語-ana"] = "rechazado"
         };
 
+        List<string> rejectsNotValidInput = new() { "", "   " };
+
         foreach ((string? input, string? expected) in examples)
         {
+            if (rejectsNotValidInput.Contains(input))
+            {
+                Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.AsciiTransformationPolicy.Transform(input));
+                continue;
+            }
+
             if (expected == "rechazado")
             {
                 Assert.Throws<DomainExceptions.TextContainsUnsupportedCharactersException>(() => DomainPolicies.AsciiTransformationPolicy.Transform(input));

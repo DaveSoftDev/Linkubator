@@ -35,11 +35,11 @@ Que todos los ejemplos y casos concretos de las fuentes de ajuste, validación y
   - Reescribir las pruebas aceptadas de S2.1 a S2.4 salvo lo necesario para completar la cobertura de un ejemplo.
   - Calcular `UrlNormalized` a partir de `Image`: la clave pertenece a `UrlOriginal`.
   - Consultar o resolver duplicados entre enlaces guardados, que requieren entidades, casos de uso y persistencia.
-  - Revisar la normalización con URLs reales (S2.6), decidir los casos dudosos (S2.7) y unificar las validaciones de entrada de Domain (S2.8).
+  - Revisar la normalización con URLs reales (S2.7), decidir los casos dudosos (S2.8) y unificar las validaciones de entrada de Domain (S2.6).
 - Trabajo vecino y responsable de sus entregables:
   - S2.1, S2.2, S2.3 y S2.4 entregaron la implementación y las pruebas sobre las que se audita.
-  - S2.6 y S2.7 (humano) revisan la normalización con datos reales y deciden los casos dudosos.
-  - S2.8 unifica las validaciones de entrada de Domain.
+  - S2.7 y S2.8 (humano) revisan la normalización con datos reales y deciden los casos dudosos.
+  - S2.6 unifica las validaciones de entrada de Domain.
   - S3 integra los valores en la entidad `Link`.
 
 ## Dependencias y prerrequisitos

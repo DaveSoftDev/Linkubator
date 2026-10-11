@@ -37,8 +37,8 @@ Proporcionar en Domain el cálculo determinista de la clave plana `UrlNormalized
 - Trabajo vecino y responsable de sus entregables:
   - S2.1, S2.2 y S2.3 proporcionan el ajuste y la validación de la URL que este trabajo recibe ya ajustada y validada.
   - S2.5 escribe los tests con todos los ejemplos de las especificaciones de URL, separando `UrlOriginal` e `Image`.
-  - S2.6 y S2.7 aportan la revisión humana de la normalización con URLs reales y la decisión de los casos dudosos.
-  - S2.8 unifica las validaciones de entrada de Domain.
+  - S2.7 y S2.8 aportan la revisión humana de la normalización con URLs reales y la decisión de los casos dudosos.
+  - S2.6 unifica las validaciones de entrada de Domain.
   - S3 integra la clave en la entidad `Link`; las etapas de Application y persistencia detectan el duplicado entre enlaces guardados.
 
 ## Dependencias y prerrequisitos

@@ -13,7 +13,7 @@ public static class SlugPolicy
 
     public static string Generate(string name)
     {
-        ArgumentNullException.ThrowIfNull(name);
+        UserTextPolicy.ThrowIfNullOrWhiteSpace(name);
 
         string slug = AsciiTransformationPolicy.Transform(name);
 

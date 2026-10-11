@@ -35,7 +35,7 @@
 
 - No hay persistencia, transacciones, servicios externos ni paquetes NuGet nuevos.
 - `Linkubator.Tests` consume Domain mediante la referencia ya existente; `Linkubator.Domain.csproj` no cambia.
-- La detección de duplicados entre enlaces guardados y la integración con `Link` pertenecen a S3 y a las etapas posteriores; la revisión con URLs reales, a S2.6 y S2.7.
+- La detección de duplicados entre enlaces guardados y la integración con `Link` pertenecen a S3 y a las etapas posteriores; la revisión con URLs reales, a S2.7 y S2.8.
 
 ### Garantías técnicas
 
@@ -73,10 +73,10 @@ Las pruebas son automatizadas y unitarias, en Domain y sin UI, HTTP ni persisten
 | V11 | CA10 | Automatizada integrada | Dependencias restauradas | `dotnet test Linkubator.sln --no-restore --verbosity minimal` | Todos los tests pasan | Comando, código de salida y resumen. |
 | V12 | CA10 | Build integrado | SDK y dependencias | `dotnet build Linkubator.sln --no-restore -warnaserror --verbosity minimal` | Build correcto, sin errores ni warnings | Comando, SDK, código de salida, errores y warnings. |
 
-V02–V07 comprueban el comportamiento de las políticas ante los ejemplos de la fuente, pero no demuestran que la entidad `Link` los aplique, que el flujo completo de creación detecte duplicados, ni que las URLs reales funcionen; esos puntos pertenecen a S3 y posteriores y a S2.6. V08 demuestra que las pruebas nuevas son sensibles a una alteración concreta, no a cualquier regresión. V11 y V12 no sustituyen la revisión de código ni la aceptación humana.
+V02–V07 comprueban el comportamiento de las políticas ante los ejemplos de la fuente, pero no demuestran que la entidad `Link` los aplique, que el flujo completo de creación detecte duplicados, ni que las URLs reales funcionen; esos puntos pertenecen a S3 y posteriores y a S2.7. V08 demuestra que las pruebas nuevas son sensibles a una alteración concreta, no a cualquier regresión. V11 y V12 no sustituyen la revisión de código ni la aceptación humana.
 
 ## Orden de ejecución y cierre
 
 - Tareas: crear `tasks.md` tras aprobar este plan; contendrá la auditoría, las pruebas por campo y de normalización, el contraste entre campos, la comprobación negativa, la trazabilidad, las validaciones integradas, la sincronización del roadmap y la revisión humana, con dependencias, paralelismo justificado y checks inmediatos.
-- S2.5 se cerrará cuando CA01–CA10 tengan la evidencia indicada, no queden bloqueos y DLG acepte el resultado. La revisión con URLs reales (S2.6) y la decisión de los casos dudosos (S2.7) son tareas humanas posteriores que este trabajo no cierra.
+- S2.5 se cerrará cuando CA01–CA10 tengan la evidencia indicada, no queden bloqueos y DLG acepte el resultado. La revisión con URLs reales (S2.7) y la decisión de los casos dudosos (S2.8) son tareas humanas posteriores que este trabajo no cierra.
 - Ante un cambio de regla o un ejemplo divergente, detener la tarea afectada y tramitar su aprobación en el documento propietario antes de continuar.

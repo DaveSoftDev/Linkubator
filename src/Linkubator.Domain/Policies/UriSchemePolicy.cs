@@ -1,3 +1,5 @@
+using DomainExceptions = Linkubator.Domain.Exceptions;
+
 namespace Linkubator.Domain.Policies;
 
 public sealed record UriSchemeDetection(string? Scheme, string? Host, bool HasExplicitScheme, bool HasHostAndPort);
@@ -6,12 +8,7 @@ public static class UriSchemePolicy
 {
     public static UriSchemeDetection Detect(string input)
     {
-        ArgumentNullException.ThrowIfNull(input);
-
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            throw new ArgumentException("Input cannot be null or whitespace.", nameof(input));
-        }
+        UserTextPolicy.ThrowIfNullOrWhiteSpace(input);
 
         string candidate = input.Trim();
 

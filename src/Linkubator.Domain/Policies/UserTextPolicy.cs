@@ -1,3 +1,5 @@
+using DomainExceptions = Linkubator.Domain.Exceptions;
+
 namespace Linkubator.Domain.Policies;
 
 public static class UserTextPolicy
@@ -6,6 +8,14 @@ public static class UserTextPolicy
     {
         string? trimmed = value?.Trim();
         return string.IsNullOrEmpty(trimmed) ? null : trimmed;
+    }
+
+    public static void ThrowIfNullOrWhiteSpace(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
     }
 
     public static int CountCodePoints(string value)

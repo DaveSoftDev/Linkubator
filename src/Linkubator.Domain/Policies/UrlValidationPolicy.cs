@@ -7,12 +7,7 @@ public static class UrlValidationPolicy
 {
     public static void Validate(string input)
     {
-        ArgumentNullException.ThrowIfNull(input);
-
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            throw new ArgumentException("Input cannot be null or whitespace.", nameof(input));
-        }
+        UserTextPolicy.ThrowIfNullOrWhiteSpace(input);
 
         if (!Uri.TryCreate(input, UriKind.Absolute, out Uri? uri) || uri is null)
         {

@@ -75,17 +75,10 @@ public class UrlValidationPolicyTests
     [Fact]
     public void ValidateRejectsNullAsArgumentNull()
     {
-        Assert.Throws<ArgumentNullException>(() => DomainPolicies.UrlValidationPolicy.Validate(null!));
-    }
-
-    [Trait("Category", "Validation")]
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData("\t")]
-    public void ValidateRejectsEmptyOrBlankAsArgumentWithoutTrimming(string input)
-    {
-        Assert.Throws<ArgumentException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.UrlValidationPolicy.Validate(null!));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.UrlValidationPolicy.Validate(string.Empty));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.UrlValidationPolicy.Validate("   "));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.UrlValidationPolicy.Validate("\t"));
     }
 
     [Trait("Category", "Validation")]

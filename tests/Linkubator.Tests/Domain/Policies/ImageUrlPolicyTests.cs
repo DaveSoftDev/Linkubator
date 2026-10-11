@@ -33,17 +33,13 @@ public class ImageUrlPolicyTests
     }
 
     [Fact]
-    public void AdjustReturnsEmptyStringForEmptyOrWhitespaceInput()
+    public void AdjustRejectsNullOrWhitespaceInputOrBaseUrl()
     {
-        Assert.Equal(string.Empty, DomainPolicies.ImageUrlPolicy.Adjust(string.Empty, "https://example.com/a/b/post"));
-        Assert.Equal(string.Empty, DomainPolicies.ImageUrlPolicy.Adjust("   ", "https://example.com/a/b/post"));
-    }
-
-    [Fact]
-    public void AdjustRejectsNullOrWhitespaceBaseUrl()
-    {
-        Assert.Throws<ArgumentNullException>(() => DomainPolicies.ImageUrlPolicy.Adjust("https://cdn.example.com/img.jpg", null!));
-        Assert.Throws<ArgumentException>(() => DomainPolicies.ImageUrlPolicy.Adjust("https://cdn.example.com/img.jpg", "   "));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.ImageUrlPolicy.Adjust(null!, "https://example.com/a/b/post"));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.ImageUrlPolicy.Adjust(string.Empty, "https://example.com/a/b/post"));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.ImageUrlPolicy.Adjust("   ", "https://example.com/a/b/post"));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.ImageUrlPolicy.Adjust("https://cdn.example.com/img.jpg", null!));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.ImageUrlPolicy.Adjust("https://cdn.example.com/img.jpg", "   "));
     }
 
     [Theory]

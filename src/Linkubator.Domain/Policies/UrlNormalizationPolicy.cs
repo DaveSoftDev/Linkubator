@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Text;
+using DomainExceptions = Linkubator.Domain.Exceptions;
 
 namespace Linkubator.Domain.Policies;
 
@@ -34,12 +35,7 @@ public static class UrlNormalizationPolicy
 
     public static string Normalize(string url)
     {
-        ArgumentNullException.ThrowIfNull(url);
-
-        if (string.IsNullOrWhiteSpace(url))
-        {
-            throw new ArgumentException("Input cannot be null or whitespace.", nameof(url));
-        }
+        UserTextPolicy.ThrowIfNullOrWhiteSpace(url);
 
         if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) || uri is null)
         {

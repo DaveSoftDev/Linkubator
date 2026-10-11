@@ -45,8 +45,6 @@ public class SlugPolicyTests
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
     [InlineData("!!!")]
     [InlineData("😀")]
     [InlineData("--")]
@@ -109,6 +107,8 @@ public class SlugPolicyTests
     [Fact]
     public void GenerateRejectsANullName()
     {
-        Assert.Throws<ArgumentNullException>(() => DomainPolicies.SlugPolicy.Generate(null!));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.SlugPolicy.Generate(null!));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.SlugPolicy.Generate(string.Empty));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.SlugPolicy.Generate("   "));
     }
 }

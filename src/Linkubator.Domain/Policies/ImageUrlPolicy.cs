@@ -9,14 +9,10 @@ public static class ImageUrlPolicy
 
     public static string Adjust(string input, string baseUrl)
     {
-        ArgumentNullException.ThrowIfNull(input);
-        ArgumentException.ThrowIfNullOrWhiteSpace(baseUrl);
+        UserTextPolicy.ThrowIfNullOrWhiteSpace(input);
+        UserTextPolicy.ThrowIfNullOrWhiteSpace(baseUrl);
 
         string trimmedInput = input.Trim();
-        if (string.IsNullOrEmpty(trimmedInput))
-        {
-            return string.Empty;
-        }
 
         if (trimmedInput.Any(char.IsWhiteSpace) || ContainsControls(trimmedInput))
         {

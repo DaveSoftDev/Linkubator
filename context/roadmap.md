@@ -48,6 +48,8 @@ La [especificación de S2.4](../specs/s2.4-normalizacion-de-urls/spec.md) fue ap
 
 La [especificación de S2.5](../specs/s2.5-tests-de-ejemplos-de-urls/spec.md) fue aprobada por DLG el 11-X-2026 («Ready»). Su [plan técnico](../specs/s2.5-tests-de-ejemplos-de-urls/plan.md) fue aprobado por DLG el 11-X-2026 («Gooo»). Sus [tareas](../specs/s2.5-tests-de-ejemplos-de-urls/tasks.md) fueron aprobadas por DLG el 11-X-2026 («Aprobado»); la implementación fue completada y aprobada por DLG el 11-X-2026 («Implementado»). Esta etapa queda cerrada.
 
+La [especificación de S2.6](../specs/s2.6-unificacion-de-validaciones-de-entrada/spec.md) fue aprobada por DLG el 11-X-2026 («Aprobada»). Su [plan técnico](../specs/s2.6-unificacion-de-validaciones-de-entrada/plan.md) fue aprobado por DLG el 11-X-2026 («Listo»). Sus [tareas](../specs/s2.6-unificacion-de-validaciones-de-entrada/tasks.md) fueron aprobadas por DLG el 11-X-2026 («Gooo»); la implementación se completó el 11-X-2026: NotValidInputException unificó todas las precondiciones de entrada de texto en Domain, 434 pruebas correctas y build sin advertencias. DLG aceptó el resultado el 11-X-2026 («Unificación completada»). La evidencia está en [specs/s2.6-unificacion-de-validaciones-de-entrada/tasks.md → «Aceptación y cierre»](../specs/s2.6-unificacion-de-validaciones-de-entrada/tasks.md#aceptaci%C3%B3n-y-cierre). El trabajo fue archivado el 11-X-2026.
+
 Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 
 ## Next

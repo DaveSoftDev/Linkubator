@@ -41,8 +41,8 @@ Proporcionar en Domain la validación determinista de una URL ya ajustada, comú
   - S2.1 y S2.2 (implementadas y aceptadas) proporcionan el ajuste de `UrlOriginal` e `Image`, la detección de esquema URI y el reconocimiento de host que este trabajo amplía.
   - S2.4 implementa `UrlNormalized` y la regla de duplicados.
   - S2.5 escribe los tests con todos los ejemplos de las especificaciones de URL, separando `UrlOriginal` e `Image`.
-  - S2.6 y S2.7 aportan la revisión humana con URLs reales y la decisión de los casos dudosos.
-  - S2.8 unifica las validaciones de entrada de Domain.
+  - S2.7 y S2.8 aportan la revisión humana con URLs reales y la decisión de los casos dudosos.
+  - S2.6 unifica las validaciones de entrada de Domain.
 
 ## Dependencias y prerrequisitos
 

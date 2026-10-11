@@ -8,7 +8,7 @@ public static class UrlHostPolicy
 {
     public static string ExtractHost(string input)
     {
-        ArgumentNullException.ThrowIfNull(input);
+        UserTextPolicy.ThrowIfNullOrWhiteSpace(input);
 
         if (TryExtractHost(input, out string? host) && !string.IsNullOrEmpty(host))
         {

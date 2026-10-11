@@ -20,8 +20,6 @@ public class AliasPolicyTests
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
     [InlineData("!!!")]
     [InlineData("short")]
     [InlineData("aaaaaaaaa")]
@@ -110,6 +108,8 @@ public class AliasPolicyTests
     [Fact]
     public void GenerateRejectsANullCandidate()
     {
-        Assert.Throws<ArgumentNullException>(() => DomainPolicies.AliasPolicy.Generate(null!));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.AliasPolicy.Generate(null!));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.AliasPolicy.Generate(string.Empty));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.AliasPolicy.Generate("   "));
     }
 }
