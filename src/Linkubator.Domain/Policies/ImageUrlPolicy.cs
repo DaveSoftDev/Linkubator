@@ -51,12 +51,6 @@ public static class ImageUrlPolicy
             {
                 throw new DomainExceptions.UrlSchemeNotAllowedException();
             }
-
-            if (string.Equals(detection.Scheme, "http", StringComparison.OrdinalIgnoreCase))
-            {
-                int schemeSeparatorIndex = candidate.IndexOf("://", StringComparison.Ordinal);
-                candidate = "https://" + candidate[(schemeSeparatorIndex + 3)..];
-            }
         }
         else if (detection.HasHostAndPort)
         {
@@ -76,7 +70,8 @@ public static class ImageUrlPolicy
         {
             absoluteUri = new UriBuilder(absoluteUri)
             {
-                Scheme = "https"
+                Scheme = "https",
+                Port = absoluteUri.IsDefaultPort ? -1 : absoluteUri.Port
             }.Uri;
         }
 

@@ -36,7 +36,8 @@ public static class UrlHostPolicy
 
         if (IPAddress.TryParse(candidate, out IPAddress? parsedAddress))
         {
-            return parsedAddress.AddressFamily == AddressFamily.InterNetwork || parsedAddress.AddressFamily == AddressFamily.InterNetworkV6;
+            return parsedAddress.AddressFamily == AddressFamily.InterNetworkV6
+                || (parsedAddress.AddressFamily == AddressFamily.InterNetwork && HasFourDecimalGroups(candidate));
         }
 
         if (string.Equals(candidate, "localhost", StringComparison.OrdinalIgnoreCase))
@@ -74,12 +75,21 @@ public static class UrlHostPolicy
         }
 
         string lastLabel = labels[^1];
-        if (lastLabel.Length < 2 && !lastLabel.StartsWith("xn--", StringComparison.OrdinalIgnoreCase))
+        bool isPunycodeTld = lastLabel.StartsWith("xn--", StringComparison.OrdinalIgnoreCase);
+        if (!isPunycodeTld && (lastLabel.Length < 2 || !lastLabel.All(char.IsLetter)))
         {
             return false;
         }
 
         return true;
+    }
+
+    private static bool HasFourDecimalGroups(string candidate)
+    {
+        string[] groups = candidate.Split('.');
+
+        return groups.Length == 4
+            && groups.All(group => group.Length is > 0 and <= 3 && group.All(char.IsAsciiDigit));
     }
 
     public static bool TryExtractValidHost(string input, out string? host)
@@ -113,7 +123,8 @@ public static class UrlHostPolicy
         }
 
         int schemeIndex = authority.IndexOf("://", StringComparison.Ordinal);
-        if (schemeIndex >= 0)
+        int delimiterIndex = authority.IndexOfAny(['/', '?', '#']);
+        if (schemeIndex >= 0 && (delimiterIndex < 0 || schemeIndex < delimiterIndex))
         {
             authority = authority[(schemeIndex + 3)..];
         }

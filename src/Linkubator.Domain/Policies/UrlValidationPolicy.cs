@@ -30,15 +30,23 @@ public static class UrlValidationPolicy
             throw new DomainExceptions.UrlHostInvalidException();
         }
 
-        if (!string.IsNullOrEmpty(uri.UserInfo))
+        string host = uri.IdnHost;
+        if (uri.HostNameType == UriHostNameType.IPv4
+            && (!UrlHostPolicy.TryExtractHost(input, out string? writtenHost)
+                || writtenHost is null
+                || !UrlHostPolicy.IsValidHost(writtenHost)))
         {
-            throw new DomainExceptions.UrlCredentialsNotAllowedException();
+            throw new DomainExceptions.UrlHostInvalidException();
         }
 
-        string host = uri.IdnHost;
         if (!UrlHostPolicy.IsValidHost(host) && !UrlHostPolicy.IsValidHost($"[{host}]") && !UrlHostPolicy.IsValidHost($"[{uri.Host}]") )
         {
             throw new DomainExceptions.UrlHostInvalidException();
+        }
+
+        if (!string.IsNullOrEmpty(uri.UserInfo))
+        {
+            throw new DomainExceptions.UrlCredentialsNotAllowedException();
         }
 
         if (HasInvalidPort(input))

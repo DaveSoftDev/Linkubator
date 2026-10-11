@@ -47,7 +47,7 @@ Este plan organiza la construcción del MVP0 en sprints de 1 semana, con la IA g
 |---|---|---|---|---|
 | S0 | Fundaciones | M | Transversal | Solución con 5 proyectos, Serilog, Tailwind CLI, tests base, README de desarrollo |
 | S1 | Dominio I: textos, alias y slugs | L | Domain | Recorte y longitudes, generación de alias y de slugs, y sus tests |
-| S2 | Dominio II: URLs | L | Domain | Ajuste de URL y de `Image`, validación, `UrlNormalized`, duplicados, y sus tests |
+| S2 | Dominio II: URLs | L | Domain | Ajuste de URL y de `Image`, validación, `UrlNormalized` y sus tests |
 | S3 | Dominio III: entidades e invariantes | M | Domain | `User`, `Collection` y `Link`, propiedad, público/privado, tests de invariantes |
 | S4 | Aplicación: casos de uso | L | Application | `Result`, contratos, criterios de aceptación aprobados (puerta), abstracciones de repos y UoW, casos de uso con fakes, contrato de identidad de desarrollo |
 | S5 | Persistencia I: SQLite y transacciones | L | Infrastructure | Esquema versionado, PRAGMAs, colación `es-ES`, UoW con `BEGIN IMMEDIATE`, repositorios Dapper, SQL local de desarrollo, proveedor de identidad |
@@ -131,7 +131,7 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 | S2.1 | Implementar la detección de esquema URI y el ajuste de `UrlOriginal` ([«Ajuste de URL»](../context/specifications.md#ajuste-de-url)) | IA |
 | S2.2 | Implementar el ajuste de `Image` (`https`, rechazo de `localhost` e IP, `//` → `https:`) ([«Ajuste de `Image`»](../context/specifications.md#ajuste-de-image)) | IA |
 | S2.3 | Implementar la validación de ambas ([«Validación»](../context/specifications.md#validación)) | IA |
-| S2.4 | Implementar `UrlNormalized` con `%23`, `%26`, `%2520`, `+` y la regla de duplicados ([«Normalización para duplicados»](../context/specifications.md#normalización-para-duplicados) y [«Duplicados»](../context/specifications.md#duplicados)) | IA |
+| S2.4 | Implementar `UrlNormalized` con `%23`, `%26`, `%2520` y `+` ([«Normalización para duplicados»](../context/specifications.md#normalización-para-duplicados)) | IA |
 | S2.5 | Escribir tests con todos los ejemplos de las especificaciones, separando `UrlOriginal` e `Image` | IA |
 | S2.6 | Proporcionar 30 URLs reales (favoritos propios) y revisar su normalización | Humano |
 | S2.7 | Decidir los casos dudosos y registrarlos | Humano |
@@ -141,7 +141,7 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 
 - [ ] Ajuste y validación de `UrlOriginal` pasan todos los ejemplos.
 - [ ] Ajuste y validación de `Image` pasan todos los ejemplos, por separado.
-- [ ] `UrlNormalized` y la detección de duplicados cubren todos los ejemplos, incluidos los caracteres codificados.
+- [ ] `UrlNormalized` cubre todos los ejemplos, incluidos los caracteres codificados.
 - [ ] El humano ha comparado las 30 URLs reales con el resultado.
 - [ ] Los casos dudosos están decididos y registrados.
 - [ ] Las validaciones de entrada de Domain están unificadas.

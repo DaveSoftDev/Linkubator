@@ -35,9 +35,12 @@ public static class LinkUrlPolicy
             return "https://" + input[2..];
         }
 
-        if (input.Contains("://", StringComparison.Ordinal))
+        int separatorIndex = input.IndexOf("://", StringComparison.Ordinal);
+        int firstDelimiterIndex = input.IndexOfAny(['/', '?', '#']);
+
+        if (separatorIndex >= 0 && (firstDelimiterIndex < 0 || separatorIndex < firstDelimiterIndex))
         {
-            int index = input.IndexOf("://", StringComparison.Ordinal);
+            int index = separatorIndex;
             string scheme = input[..index];
             string remainder = input[(index + 3)..];
 
@@ -77,7 +80,7 @@ public static class LinkUrlPolicy
 
         if (UrlHostPolicy.TryExtractValidHost(input, out string? host))
         {
-            return "https://" + input;
+            return (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ? "http://" : "https://") + input;
         }
 
         throw new DomainExceptions.UrlHostInvalidException();

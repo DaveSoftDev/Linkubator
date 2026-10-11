@@ -8,6 +8,13 @@ public class ImageUrlPolicyTests
     [Theory]
     [InlineData("https://cdn.example.com/img.jpg", "https://cdn.example.com/img.jpg")]
     [InlineData("http://cdn.example.com/img.jpg", "https://cdn.example.com/img.jpg")]
+    [InlineData("HTTP://cdn.example.com/img.jpg", "https://cdn.example.com/img.jpg")]
+    [InlineData("http://cdn.example.com:8080/img.jpg", "https://cdn.example.com:8080/img.jpg")]
+    [InlineData("http://cdn.example.com:80/img.jpg", "https://cdn.example.com/img.jpg")]
+    [InlineData("//cdn.example.com/img.jpg", "https://cdn.example.com/img.jpg")]
+    [InlineData("cdn.example.com:8080/img.jpg", "https://cdn.example.com:8080/img.jpg")]
+    [InlineData("/img/a.jpg", "https://example.com/img/a.jpg", "http://example.com/post")]
+    [InlineData("img.jpg", "https://example.com/a/b/img.jpg", "http://example.com/a/b/post")]
     [InlineData("//cdn.example.com/img/img-01.jpg", "https://cdn.example.com/img/img-01.jpg")]
     [InlineData("cdn.example.com/img.jpg", "https://example.com/a/b/cdn.example.com/img.jpg", "https://example.com/a/b/post")]
     [InlineData("../assets/cover.webp?width=800&format=webp", "https://example.com/a/assets/cover.webp?width=800&format=webp", "https://example.com/a/b/post")]
@@ -59,11 +66,23 @@ public class ImageUrlPolicyTests
 
     [Theory]
     [InlineData("localhost:5000/img.jpg")]
+    [InlineData("http://localhost/img.jpg")]
+    [InlineData("https://LOCALHOST/img.jpg")]
+    [InlineData("//localhost/img.jpg")]
+    [InlineData("http://127.0.0.1/img.jpg")]
     [InlineData("https://192.168.1.1/img.jpg")]
     [InlineData("https://[::1]/img.jpg")]
     public void AdjustRejectsLocalhostAndIpHosts(string input)
     {
         Assert.Throws<DomainExceptions.ImageHostNotAllowedException>(() => DomainPolicies.ImageUrlPolicy.Adjust(input, "https://example.com/a/b/post"));
+    }
+
+    [Theory]
+    [InlineData("/img/a.jpg", "https://192.168.1.1/post")]
+    [InlineData("/img/a.jpg", "http://localhost/post")]
+    public void AdjustRejectsRelativeReferencesResolvedAgainstLocalhostOrIpBases(string input, string baseUrl)
+    {
+        Assert.Throws<DomainExceptions.ImageHostNotAllowedException>(() => DomainPolicies.ImageUrlPolicy.Adjust(input, baseUrl));
     }
 
     [Fact]

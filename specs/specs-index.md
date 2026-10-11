@@ -7,7 +7,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
 | S2.3 — Validación de `UrlOriginal` e `Image` | [spec.md](s2.3-validacion-de-urls/spec.md) | [plan.md](s2.3-validacion-de-urls/plan.md) | [tasks.md](s2.3-validacion-de-urls/tasks.md#aceptaci%C3%B3n-y-cierre) |
-| S2.4 — Normalización de URL (`UrlNormalized`) y regla de duplicados | [spec.md](s2.4-normalizacion-de-urls/spec.md) | — | — |
+| S2.4 — Normalización de URL (`UrlNormalized`) | [spec.md](s2.4-normalizacion-de-urls/spec.md) | [plan.md](s2.4-normalizacion-de-urls/plan.md) | [tasks.md](s2.4-normalizacion-de-urls/tasks.md#aceptaci%C3%B3n-y-cierre) |
 
 ## Trabajos archivados
 

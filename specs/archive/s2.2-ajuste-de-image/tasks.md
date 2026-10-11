@@ -62,6 +62,10 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no se registra
 - Criterios sin evidencia satisfactoria: ninguno.
 - Bloqueos y riesgos restantes: ninguno.
 - Aceptación humana: DLG, 10-X-2026 («Funciona»).
+- Corrección posterior a la aceptación (11-X-2026, a petición de DLG; la aceptación anterior no se modifica):
+  - `ImageUrlPolicy` ya no conserva el puerto 80 al cambiar `http` a `https`: una referencia relativa resuelta contra una base `http` daba `https://example.com:80/...`. El cambio de esquema se hace solo en la URI absoluta, y un puerto por defecto se elimina; los puertos no estándar se conservan ([specifications.md → «Ajuste de `Image`»](../../../context/specifications.md#ajuste-de-image)).
+  - Efecto indirecto por S2.3: la detección de host y puerto usa `UrlHostPolicy`, que ahora exige un dominio de primer nivel solo de letras (o `xn--`), IPv4 con cuatro grupos decimales y reconoce `://` como esquema solo antes del primer `/`, `?` o `#`. Detalle en [S2.3 → «Aceptación y cierre»](../../s2.3-validacion-de-urls/tasks.md#aceptación-y-cierre).
+  - Pruebas: `ImageUrlPolicyTests` pasa a 31 casos, con `HTTP://` en mayúsculas, `http` con puerto 80 y 8080, `//`, host con puerto, bases `http`, y `localhost` e IP rechazados en varias formas y como base. Suite completa 420/420 y build sin errores ni warnings.
 - Archivado: solicitado.
 - Ubicación archivada: `specs/archive/s2.2-ajuste-de-image/`.
 - Fecha efectiva de archivado: 10-X-2026.
