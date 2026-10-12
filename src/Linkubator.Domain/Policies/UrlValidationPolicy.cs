@@ -1,4 +1,3 @@
-using System.Net;
 using DomainExceptions = Linkubator.Domain.Exceptions;
 
 namespace Linkubator.Domain.Policies;
@@ -14,11 +13,7 @@ public static class UrlValidationPolicy
             throw new DomainExceptions.UrlNotAbsoluteException();
         }
 
-        if (!input.Contains("://", StringComparison.Ordinal))
-        {
-            throw new DomainExceptions.UrlNotAbsoluteException();
-        }
-
+        // Esquema explícito no permitido: mailto:, javascript:, ftp:, file:, etc.
         if (!string.Equals(uri.Scheme, "http", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
         {
@@ -31,6 +26,7 @@ public static class UrlValidationPolicy
         }
 
         string host = uri.IdnHost;
+
         if (uri.HostNameType == UriHostNameType.IPv4
             && (!UrlHostPolicy.TryExtractHost(input, out string? writtenHost)
                 || writtenHost is null
@@ -39,7 +35,9 @@ public static class UrlValidationPolicy
             throw new DomainExceptions.UrlHostInvalidException();
         }
 
-        if (!UrlHostPolicy.IsValidHost(host) && !UrlHostPolicy.IsValidHost($"[{host}]") && !UrlHostPolicy.IsValidHost($"[{uri.Host}]") )
+        if (!UrlHostPolicy.IsValidHost(host)
+            && !UrlHostPolicy.IsValidHost($"[{host}]")
+            && !UrlHostPolicy.IsValidHost($"[{uri.Host}]"))
         {
             throw new DomainExceptions.UrlHostInvalidException();
         }
