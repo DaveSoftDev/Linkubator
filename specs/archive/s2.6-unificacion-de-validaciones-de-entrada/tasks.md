@@ -61,6 +61,6 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no se registra
 - Bloqueos y riesgos restantes: véase [plan → Decisiones técnicas y riesgos](plan.md#decisiones-técnicas-y-riesgos); la duplicación de esquema queda diferida a S3a.
 - Aceptación humana: aprobado por DLG el 11-X-2026 («Unificación completada»).
 - Archivado: completado el 12-X-2026.
-- Ubicación archivada: [specs/archive/s2.6-unificacion-de-validaciones-de-entrada/](.).
+- Ubicación archivada: [specs/archive/s2.6-unificacion-de-validaciones-de-entrada/](../s2.6-unificacion-de-validaciones-de-entrada).
 - Fecha efectiva de archivado y comprobación de enlaces: 12-X-2026; rutas entrantes y salientes verificadas tras el traslado.
 - Siguiente paso: trabajo archivado; no quedan acciones de cierre pendientes.

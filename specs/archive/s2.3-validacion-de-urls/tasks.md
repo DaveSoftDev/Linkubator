@@ -66,6 +66,6 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no registrar r
 - Aceptación humana: aceptada por DLG el 11-X-2026 («Aceptado»).
 - Corrección posterior a la aceptación (11-X-2026, a petición de DLG): `UrlValidationPolicy` aplica las comprobaciones en el orden del plan; `UrlHostPolicy.IsValidHost` exige un dominio de primer nivel solo de letras (o `xn--`) y IPv4 con cuatro grupos decimales; `UrlValidationPolicy` rechaza la IPv4 abreviada escrita en la URL; `UrlHostPolicy.TryExtractHost` y `LinkUrlPolicy` solo reconocen `://` como esquema antes del primer `/`, `?` o `#`; y `LinkUrlPolicy` añade `http://` a `localhost` sin esquema, según [specifications.md → «Ajuste de URL»](../../../context/specifications.md#ajuste-de-url); `ImageUrlPolicy` ya no conserva el puerto 80 al cambiar `http` a `https`, según [specifications.md → «Ajuste de `Image`»](../../../context/specifications.md#ajuste-de-image). Suite completa 420/420 y build sin errores ni warnings; pruebas de URL (`UrlValidationPolicyTests`, `UrlHostPolicyTests`, `UrlPoliciesTests`, `ImageUrlPolicyTests`, `UrlNormalizationPolicyTests`) 212/212.
 - Archivado: completado el 12-X-2026.
-- Ubicación archivada: [specs/archive/s2.3-validacion-de-urls/](.).
+- Ubicación archivada: [specs/archive/s2.3-validacion-de-urls/](../s2.3-validacion-de-urls).
 - Fecha efectiva de archivado y comprobación de enlaces: 12-X-2026; rutas entrantes y salientes verificadas tras el traslado.
 - Siguiente paso: trabajo archivado; no quedan acciones de cierre pendientes.

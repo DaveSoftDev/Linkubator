@@ -1,4 +1,4 @@
-# Índice de specs
+﻿# Índice de specs
 
 Este índice permite localizar los trabajos documentados en `specs/`. El procedimiento de Spec-Driven Development y archivado está en [sdd-writer](../skills/sdd-writer/SKILL.md).
 
@@ -6,20 +6,11 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
-| S3.1 — Entidades `User`, `Collection` y `Link` | [spec.md](s3.1-entidades-user-collection-link/spec.md) | [plan.md](s3.1-entidades-user-collection-link/plan.md) | [tasks.md](s3.1-entidades-user-collection-link/tasks.md) |
-| S3.4 — Tests de invariantes del dominio | [spec.md](s3.4-tests-invariantes/spec.md) | [plan.md](s3.4-tests-invariantes/plan.md) | [tasks.md](s3.4-tests-invariantes/tasks.md) |
-| Tests adicionales de `EmailPolicy`, `ImageUrlPolicy` y `LinkUrlPolicy` | [spec.md](tests-adicionales-policies-email-url/spec.md) | [plan.md](tests-adicionales-policies-email-url/plan.md) | [tasks.md](tests-adicionales-policies-email-url/tasks.md) |
-
-| Tests adicionales de policies URL | [spec.md](tests-cobertura-policies-url/spec.md) | [plan.md](tests-cobertura-policies-url/plan.md) | [tasks.md](tests-cobertura-policies-url/tasks.md) |
 
 ## Trabajos completados
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
-| S3.6 — Revisión y aprobación de invariantes | [spec.md](s3.6-revision-y-aprobacion-de-invariantes/spec.md) | [plan.md](s3.6-revision-y-aprobacion-de-invariantes/plan.md) | [tasks.md](s3.6-revision-y-aprobacion-de-invariantes/tasks.md#aceptación-y-cierre) |
-| S3.5 — Fichas de entidades | [spec.md](s3.5-fichas-entidades/spec.md) | [plan.md](s3.5-fichas-entidades/plan.md) | [tasks.md](s3.5-fichas-entidades/tasks.md#aceptación-y-cierre) |
-| S3.2 — Invariantes de propiedad | [spec.md](s3.2-invariantes-propiedad/spec.md) | [plan.md](s3.2-invariantes-propiedad/plan.md) | [tasks.md](s3.2-invariantes-propiedad/tasks.md#aceptación-y-cierre) |
-| S3.3 — Transiciones público y privado | [spec.md](s3.3-transiciones-publico-privado/spec.md) | [plan.md](s3.3-transiciones-publico-privado/plan.md) | [tasks.md](s3.3-transiciones-publico-privado/tasks.md#aceptación-y-cierre) |
 
 ## Trabajos archivados
 
@@ -50,3 +41,11 @@ El estado y la evidencia de cierre constan en las tareas del trabajo; este índi
 | S2.6 — Unificación de las validaciones de entrada de Domain | [spec.md](archive/s2.6-unificacion-de-validaciones-de-entrada/spec.md) | [plan.md](archive/s2.6-unificacion-de-validaciones-de-entrada/plan.md) | [tasks.md](archive/s2.6-unificacion-de-validaciones-de-entrada/tasks.md#aceptaci%C3%B3n-y-cierre) |
 | S2.7 — Revisión de la normalización con 31 URLs | [spec.md](archive/s2.7-revision-con-urls-reales/spec.md) | [plan.md](archive/s2.7-revision-con-urls-reales/plan.md) | [tasks.md](archive/s2.7-revision-con-urls-reales/tasks.md#aceptaci%C3%B3n-y-cierre) |
 | S2.8 — Resolución de hallazgos de URLs reales | [spec.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/spec.md) | [plan.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/plan.md) | [tasks.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/tasks.md#aceptaci%C3%B3n-y-cierre) |
+| S3.1 — Entidades `User`, `Collection` y `Link` | [spec.md](archive/s3.1-entidades-user-collection-link/spec.md) | [plan.md](archive/s3.1-entidades-user-collection-link/plan.md) | [tasks.md](archive/s3.1-entidades-user-collection-link/tasks.md#aceptación-y-cierre) |
+| S3.2 — Invariantes de propiedad | [spec.md](archive/s3.2-invariantes-propiedad/spec.md) | [plan.md](archive/s3.2-invariantes-propiedad/plan.md) | [tasks.md](archive/s3.2-invariantes-propiedad/tasks.md#aceptación-y-cierre) |
+| S3.3 — Transiciones público y privado | [spec.md](archive/s3.3-transiciones-publico-privado/spec.md) | [plan.md](archive/s3.3-transiciones-publico-privado/plan.md) | [tasks.md](archive/s3.3-transiciones-publico-privado/tasks.md#aceptación-y-cierre) |
+| S3.4 — Tests de invariantes del dominio | [spec.md](archive/s3.4-tests-invariantes/spec.md) | [plan.md](archive/s3.4-tests-invariantes/plan.md) | [tasks.md](archive/s3.4-tests-invariantes/tasks.md#aceptación-y-cierre) |
+| Tests adicionales de policies URL | [spec.md](archive/tests-cobertura-policies-url/spec.md) | [plan.md](archive/tests-cobertura-policies-url/plan.md) | [tasks.md](archive/tests-cobertura-policies-url/tasks.md#aceptación-y-cierre) |
+| Tests adicionales de `EmailPolicy`, `ImageUrlPolicy` y `LinkUrlPolicy` | [spec.md](archive/tests-adicionales-policies-email-url/spec.md) | [plan.md](archive/tests-adicionales-policies-email-url/plan.md) | [tasks.md](archive/tests-adicionales-policies-email-url/tasks.md#aceptación-y-cierre) |
+| S3.5 — Fichas de entidades | [spec.md](archive/s3.5-fichas-entidades/spec.md) | [plan.md](archive/s3.5-fichas-entidades/plan.md) | [tasks.md](archive/s3.5-fichas-entidades/tasks.md#aceptación-y-cierre) |
+| S3.6 — Revisión y aprobación de invariantes | [spec.md](archive/s3.6-revision-y-aprobacion-de-invariantes/spec.md) | [plan.md](archive/s3.6-revision-y-aprobacion-de-invariantes/plan.md) | [tasks.md](archive/s3.6-revision-y-aprobacion-de-invariantes/tasks.md#aceptación-y-cierre) |

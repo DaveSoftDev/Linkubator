@@ -24,23 +24,13 @@ La Definition of Done de S1 está completada. Las tareas y su evidencia se manti
 
 La Definition of Done de S2 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S2: Dominio II (L)»](../plans/mvp0-plan.md#s2-dominio-ii-urls-l).
 
+### Dominio III
+
+La Definition of Done de S3 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S2: Dominio II (L)»](../plans/mvp0-plan.md#s3-dominio-iii-entidades-e-invariantes-M).
+
 ## Now
 
 Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
-
-El trabajo aprobado para ampliar los tests de policies existentes está en [specs/tests-adicionales-policies-email-url/spec.md](../specs/tests-adicionales-policies-email-url/spec.md), [su plan técnico](../specs/tests-adicionales-policies-email-url/plan.md) y [sus tareas](../specs/tests-adicionales-policies-email-url/tasks.md). La implementación y validación se completaron el 12-X-2026; la aceptación de DLG está pendiente. No reabre ni cambia el estado completado de S2.
-
-El trabajo para ampliar la cobertura de las policies URL está en [specs/tests-cobertura-policies-url/spec.md](../specs/tests-cobertura-policies-url/spec.md), [su plan técnico](../specs/tests-cobertura-policies-url/plan.md) y [sus tareas](../specs/tests-cobertura-policies-url/tasks.md). La implementación, validación y aceptación se completaron el 12-X-2026 («Completada»); la corrección posterior autorizada y validada dejó `UrlValidationPolicy` en 94,50% de cobertura de líneas. No modifica ni reabre los trabajos S2 aceptados.
-
-La especificación aprobada de [S3.2 — Invariantes de propiedad](../specs/s3.2-invariantes-propiedad/spec.md), su [plan técnico aprobado](../specs/s3.2-invariantes-propiedad/plan.md) y sus [tareas aprobadas](../specs/s3.2-invariantes-propiedad/tasks.md) constituyen el trabajo completado del sprint S3. La implementación y la validación técnica se completaron el 12-X-2026 y fueron aprobadas por DLG con la referencia «Confirmado».
-
-La especificación y el plan técnico de [S3.3 — Transiciones público y privado](../specs/s3.3-transiciones-publico-privado/spec.md) fueron aprobados por DLG; sus [tareas](../specs/s3.3-transiciones-publico-privado/tasks.md) se aprobaron con «Vamos». La implementación y validación se completaron y DLG aceptó el resultado el 12-X-2026 con la referencia «Implementado»; la evidencia está en las tareas. El trabajo queda cerrado y no archivado.
-
-La especificación de [S3.4 — Tests de invariantes del dominio](../specs/s3.4-tests-invariantes/spec.md) fue aprobada por DLG el 12-X-2026 («Entendido»), su [plan técnico](../specs/s3.4-tests-invariantes/plan.md) fue aprobado el 12-X-2026 («Adelante») y sus [tareas](../specs/s3.4-tests-invariantes/tasks.md) fueron aprobadas por DLG con la referencia «Vamos». La implementación y la validación técnica se completaron el 12-X-2026 con la suite completa verde; la evidencia queda en las tareas.
-
-La implementación documental de [S3.5 — Fichas de entidades](../specs/s3.5-fichas-entidades/spec.md) está completada y aceptada por DLG el 12-X-2026 («Fichas creadas»); sus [tareas y evidencia de cierre](../specs/s3.5-fichas-entidades/tasks.md#aceptación-y-cierre) registran las tres fichas y una discrepancia documental sobre equivalencia de nombres que queda pendiente en su fuente propietaria. S3.5 queda cerrada y no archivada. La revisión de las fichas contra el código y la aprobación de invariantes se completaron en S3.6.
-
-La [spec de S3.6 — Revisión y aprobación de invariantes](../specs/s3.6-revision-y-aprobacion-de-invariantes/spec.md) fue aprobada por DLG el 12-X-2026 («Validado»), y su [plan técnico](../specs/s3.6-revision-y-aprobacion-de-invariantes/plan.md) fue aprobado con «Adelante». Las [tareas](../specs/s3.6-revision-y-aprobacion-de-invariantes/tasks.md) fueron aprobadas por DLG el 12-X-2026 («Vamos») y completadas con la referencia de cierre «Asumido». CA03 se valida dentro del alcance Domain: [Collection.ChangePrivacy](../src/Linkubator.Domain/Entities/Collection.cs) exige el conjunto exacto de enlaces y rechaza subconjuntos y duplicados antes de mutar. Suite y build finales: 553 pruebas correctas; build con `-warnaserror` correcto. DLG aprobó las invariantes revisadas y S3.6 queda cerrada, no archivada. El uso desde Application/Web y la persistencia corresponden a etapas posteriores.
 
 ## Next
 

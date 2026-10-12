@@ -58,6 +58,6 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no se registra
 - Bloqueos técnicos restantes: ninguno.
 - Aceptación humana: DLG, 12-X-2026 («Archiva todas las specs pendientes»).
 - Archivado: completado el 12-X-2026.
-- Ubicación archivada: [specs/archive/s2.8-resolucion-de-hallazgos-de-urls-reales/](.).
+- Ubicación archivada: [specs/archive/s2.8-resolucion-de-hallazgos-de-urls-reales/](../s2.8-resolucion-de-hallazgos-de-urls-reales).
 - Fecha efectiva de archivado y comprobación de enlaces: 12-X-2026; rutas entrantes y salientes verificadas tras el traslado.
 - Siguiente paso: trabajo archivado; no quedan acciones de cierre pendientes.
