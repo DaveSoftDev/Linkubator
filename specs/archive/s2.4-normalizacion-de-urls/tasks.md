@@ -62,6 +62,6 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no registrar r
 - Bloqueos y riesgos restantes: ninguno comprobado; los riesgos técnicos están en el [plan → Decisiones técnicas y riesgos](plan.md#decisiones-técnicas-y-riesgos).
 - Aceptación humana: aceptada por DLG, 11-X-2026 («Implementado»).
 - Archivado: completado el 12-X-2026.
-- Ubicación archivada: [specs/archive/s2.4-normalizacion-de-urls/](.).
+- Ubicación archivada: [specs/archive/s2.4-normalizacion-de-urls/](../s2.4-normalizacion-de-urls).
 - Fecha efectiva de archivado y comprobación de enlaces: 12-X-2026; rutas entrantes y salientes verificadas tras el traslado.
 - Siguiente paso: trabajo archivado; no quedan acciones de cierre pendientes.

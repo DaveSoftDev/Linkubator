@@ -2,8 +2,8 @@
 
 ## Estado y aprobación
 
-- Estado: aprobada por DLG el 09-X-2026.
-- Referencia de aprobación: «Ok». Las decisiones sobre el alcance y sobre el ejemplo `Anna_López!` se tomaron con DLG el 09-X-2026.
+- Estado: aprobada por DLG el 9-X-2026.
+- Referencia de aprobación: «Ok». Las decisiones sobre el alcance y sobre el ejemplo `Anna_López!` se tomaron con DLG el 9-X-2026.
 
 ## Objetivo
 
@@ -66,9 +66,9 @@ Que todos los ejemplos y casos concretos de las fuentes de generación de alias 
 
 | Pregunta o contradicción | Fuente afectada | Criterio bloqueado | Decisión humana necesaria |
 | --- | --- | --- | --- |
-| Ninguno pendiente. DLG confirmó el 09-X-2026 que S1.5 cubre también los ejemplos de la transformación común y de la tabla de símbolos, además de los de las dos secciones que nombra el plan. | — | — | — |
+| Ninguno pendiente. DLG confirmó el 9-X-2026 que S1.5 cubre también los ejemplos de la transformación común y de la tabla de símbolos, además de los de las dos secciones que nombra el plan. | — | — | — |
 
-Nota de trazabilidad: los ejemplos de la transformación de [«Transformación común a ASCII»](../../../context/specifications.md#transformación-común-a-ascii) se tratan como ejemplos del generador. Los que dan un resultado fuera del rango del alias, como `Ana_López!` (`ana-lopez`), se comprueban con el generador y con el rechazo por longitud en la política de alias, no como alias válidos. El ejemplo de alias de S1.4 pasó a `Anna_López!` (`anna-lopez`, 10 caracteres) por indicación de DLG el 09-X-2026.
+Nota de trazabilidad: los ejemplos de la transformación de [«Transformación común a ASCII»](../../../context/specifications.md#transformación-común-a-ascii) se tratan como ejemplos del generador. Los que dan un resultado fuera del rango del alias, como `Ana_López!` (`ana-lopez`), se comprueban con el generador y con el rechazo por longitud en la política de alias, no como alias válidos. El ejemplo de alias de S1.4 pasó a `Anna_López!` (`anna-lopez`, 10 caracteres) por indicación de DLG el 9-X-2026.
 
 ## Artefactos relacionados
 

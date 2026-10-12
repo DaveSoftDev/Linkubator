@@ -2,6 +2,7 @@ using DomainEnums = Linkubator.Domain.Enums;
 
 namespace Linkubator.Tests.Domain.Enums;
 
+[Trait("Category", "Enums")]
 public class DomainEnumerationsTests
 {
     [Fact]

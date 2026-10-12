@@ -2,6 +2,7 @@ using DomainExceptions = Linkubator.Domain.Exceptions;
 
 namespace Linkubator.Tests.Domain.Exceptions;
 
+[Trait("Category", "Exceptions")]
 public class DomainExceptionTests
 {
     [Fact]

@@ -2,9 +2,9 @@
 
 ## Estado y aprobación
 
-- Estado: aprobada por DLG el 09-X-2026.
+- Estado: aprobada por DLG el 9-X-2026.
 - Referencia de aprobación: «Excepciones de dominio identificadas».
-- Actualización del contrato: aprobada por DLG el 09-X-2026 («hazlo con la base y las específicas»).
+- Actualización del contrato: aprobada por DLG el 9-X-2026 («hazlo con la base y las específicas»).
 - Este documento describe el resultado esperado; el diseño y la evidencia de implementación pertenecerán a los artefactos relacionados cuando existan.
 
 ## Objetivo

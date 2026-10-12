@@ -116,6 +116,6 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no se registra
 - Aceptación humana: DLG el 12-X-2026, referencia «Con errores». Tabla completada con veredictos: 28 URLs "Correcto", 3 URLs con hallazgos (H01, H02, H03). Hallazgos documentados para S2.8.
 - Aceptación humana: DLG el 12-X-2026 («Archiva también la S2.7»); se acepta la revisión sobre las 31 URLs registradas.
 - Archivado: completado el 12-X-2026.
-- Ubicación archivada: [specs/archive/s2.7-revision-con-urls-reales/](.).
+- Ubicación archivada: [specs/archive/s2.7-revision-con-urls-reales/](../s2.7-revision-con-urls-reales).
 - Fecha efectiva de archivado y comprobación de enlaces: 12-X-2026; rutas entrantes y salientes verificadas tras el traslado.
 - Siguiente paso: trabajo archivado; no quedan acciones de cierre pendientes.

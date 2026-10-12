@@ -3,6 +3,7 @@ using DomainPolicies = Linkubator.Domain.Policies;
 
 namespace Linkubator.Tests.Domain.Policies;
 
+[Trait("Category", "Slugs")]
 public class SlugPolicyTests
 {
     [Theory]

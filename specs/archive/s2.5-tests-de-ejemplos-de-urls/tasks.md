@@ -57,6 +57,6 @@ Todos los resultados tienen evidencia verificada y no son proyecciones ni espera
 - Bloqueos y riesgos restantes: ninguno comprobado; véase [plan → Decisiones técnicas y riesgos](plan.md#decisiones-técnicas-y-riesgos).
 - Aceptación humana: DLG, 11-X-2026 («Implementado»).
 - Archivado: completado el 12-X-2026.
-- Ubicación archivada: [specs/archive/s2.5-tests-de-ejemplos-de-urls/](.).
+- Ubicación archivada: [specs/archive/s2.5-tests-de-ejemplos-de-urls/](../s2.5-tests-de-ejemplos-de-urls).
 - Fecha efectiva de archivado y comprobación de enlaces: 12-X-2026; rutas entrantes y salientes verificadas tras el traslado.
 - Siguiente paso: trabajo archivado; no quedan acciones de cierre pendientes.

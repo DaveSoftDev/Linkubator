@@ -2,9 +2,9 @@
 
 ## Estado y aprobación
 
-- Estado: aprobada por DLG el 09-X-2026.
+- Estado: aprobada por DLG el 9-X-2026.
 - Referencia de aprobación: «Se han estudidado todos los casos».
-- Historial: reabierta el 09-X-2026 para ampliar el alcance. La aprobación anterior de DLG («Especificación confirmada») cubría solo la generación de slugs y quedó sustituida por esta.
+- Historial: reabierta el 9-X-2026 para ampliar el alcance. La aprobación anterior de DLG («Especificación confirmada») cubría solo la generación de slugs y quedó sustituida por esta.
 
 ## Objetivo
 
@@ -75,7 +75,7 @@ Proporcionar en Domain una única transformación a ASCII, compartida por `User.
 
 | Pregunta o contradicción | Fuente afectada | Criterio bloqueado | Decisión humana necesaria |
 | --- | --- | --- | --- |
-| Ninguno identificado. Las decisiones de este alcance se tomaron con DLG el 09-X-2026 y están recogidas en las fuentes enlazadas. | — | — | — |
+| Ninguno identificado. Las decisiones de este alcance se tomaron con DLG el 9-X-2026 y están recogidas en las fuentes enlazadas. | — | — | — |
 
 ## Artefactos relacionados
 

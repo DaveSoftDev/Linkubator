@@ -2,6 +2,7 @@ using System.Xml.Linq;
 
 namespace Linkubator.Tests;
 
+[Trait("Category", "Architecture")]
 public class ProjectReferenceMatrixTests
 {
     private static readonly IReadOnlyDictionary<string, string[]> _allowedProjectReferences =

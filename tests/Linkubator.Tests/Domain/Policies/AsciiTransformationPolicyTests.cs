@@ -4,6 +4,7 @@ using DomainPolicies = Linkubator.Domain.Policies;
 
 namespace Linkubator.Tests.Domain.Policies;
 
+[Trait("Category", "AsciiTransformations")]
 public class AsciiTransformationPolicyTests
 {
     [Theory]

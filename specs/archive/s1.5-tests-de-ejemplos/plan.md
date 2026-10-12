@@ -2,10 +2,10 @@
 
 ## Estado y aprobación del plan
 
-- Estado: aprobado por DLG el 09-X-2026.
+- Estado: aprobado por DLG el 9-X-2026.
 - Aprobaciones:
-  - Especificación: [spec.md](spec.md), aprobada por DLG, 09-X-2026 («Ok»).
-  - Plan: aprobado por DLG, 09-X-2026 («Entendido»).
+  - Especificación: [spec.md](spec.md), aprobada por DLG, 9-X-2026 («Ok»).
+  - Plan: aprobado por DLG, 9-X-2026 («Entendido»).
 
 ## Diseño de implementación
 
@@ -47,9 +47,9 @@
 
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
-| S1.5 cubre también los ejemplos de la transformación común y de la tabla de símbolos | Confirmada | [spec.md → «Bloqueos y preguntas pendientes»](spec.md#bloqueos-y-preguntas-pendientes), DLG, 09-X-2026 | Amplía la auditoría a las cuatro secciones fuente. |
-| `Ana_López!` se trata como ejemplo del generador y su rechazo por longitud se comprueba en la política de alias | Confirmada | [spec.md → «Bloqueos y preguntas pendientes»](spec.md#bloqueos-y-preguntas-pendientes), DLG, 09-X-2026 | Evita presentarlo como alias válido. |
-| Clase nueva `GenerationExamplesTests` en lugar de ampliar solo las clases existentes | Confirmada | Convenciones de [`tests/Linkubator.Tests/Domain/Policies`](../../../tests/Linkubator.Tests/Domain/Policies); aprobada con el plan por DLG, 09-X-2026 | Reúne los ejemplos de las fuentes en un único lugar trazable; puede haber ejemplos duplicados con las pruebas aceptadas, lo que no afecta a su validez. Si DLG prefiere ampliar las clases existentes, solo cambia la ubicación. |
+| S1.5 cubre también los ejemplos de la transformación común y de la tabla de símbolos | Confirmada | [spec.md → «Bloqueos y preguntas pendientes»](spec.md#bloqueos-y-preguntas-pendientes), DLG, 9-X-2026 | Amplía la auditoría a las cuatro secciones fuente. |
+| `Ana_López!` se trata como ejemplo del generador y su rechazo por longitud se comprueba en la política de alias | Confirmada | [spec.md → «Bloqueos y preguntas pendientes»](spec.md#bloqueos-y-preguntas-pendientes), DLG, 9-X-2026 | Evita presentarlo como alias válido. |
+| Clase nueva `GenerationExamplesTests` en lugar de ampliar solo las clases existentes | Confirmada | Convenciones de [`tests/Linkubator.Tests/Domain/Policies`](../../../tests/Linkubator.Tests/Domain/Policies); aprobada con el plan por DLG, 9-X-2026 | Reúne los ejemplos de las fuentes en un único lugar trazable; puede haber ejemplos duplicados con las pruebas aceptadas, lo que no afecta a su validez. Si DLG prefiere ampliar las clases existentes, solo cambia la ubicación. |
 | El resultado esperado de cada política se escribe explícitamente en los datos de la prueba de coherencia | Propuesta | Esta propuesta | Evita reimplementar en el test las reglas de rango y palabras reservadas; si la regla cambia, hay que actualizar los datos. |
 | Una divergencia entre un ejemplo de la fuente y el comportamiento de Domain se registra como bloqueo | Confirmada | [spec.md → «Alcance»](spec.md#alcance) | No se corrige código ni fuente por iniciativa propia; el cambio se tramita en el documento propietario. |
 | La cobertura depende de la lista de ejemplos actual de las fuentes | Pendiente | [specifications.md → «Generación de alias y slugs»](../../../context/specifications.md#generación-de-alias-y-slugs) | Si la fuente cambia durante el trabajo, la lista y las pruebas se actualizan con ella. |

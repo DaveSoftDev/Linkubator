@@ -3,7 +3,7 @@ using DomainPolicies = Linkubator.Domain.Policies;
 
 namespace Linkubator.Tests.Domain.Policies;
 
-[Trait("Category", "Image")]
+[Trait("Category", "Images")]
 [Trait("Category", "Examples")]
 public class ImageUrlExamplesTests
 {

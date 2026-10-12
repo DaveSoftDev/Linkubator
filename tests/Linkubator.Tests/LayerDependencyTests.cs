@@ -2,6 +2,7 @@ using NetArchTest.Rules;
 
 namespace Linkubator.Tests;
 
+[Trait("Category", "Architecture")]
 public class LayerDependencyTests
 {
     [Fact]

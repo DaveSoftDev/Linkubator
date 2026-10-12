@@ -3,6 +3,7 @@ using DomainPolicies = Linkubator.Domain.Policies;
 
 namespace Linkubator.Tests.Domain.Policies;
 
+[Trait("Category", "Examples")]
 public class GenerationExamplesTests
 {
     [Fact]
@@ -27,7 +28,9 @@ public class GenerationExamplesTests
             ["!!!"] = "",
             ["Media ½ hora"] = "media-1-2-hora",
             ["Temp 20℃"] = "temp-20c",
-            ["日本語-ana"] = "rechazado"
+            ["日本語-ana"] = "rechazado",
+            [""] = "",
+            ["   "] = ""
         };
 
         List<string> rejectsNotValidInput = new() { "", "   " };

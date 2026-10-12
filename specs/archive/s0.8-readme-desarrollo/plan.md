@@ -5,8 +5,8 @@
 - Estado: aprobado.
 - Especificación: [spec.md](spec.md).
 - Aprobaciones:
-  - Especificación: DLG, 07-X-2026 («Readme completado»).
-  - Plan y tareas: DLG, 07-X-2026 («Readme completado»).
+  - Especificación: DLG, 7-X-2026 («Readme completado»).
+  - Plan y tareas: DLG, 7-X-2026 («Readme completado»).
 
 ## Diseño de implementación
 

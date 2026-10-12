@@ -233,12 +233,13 @@ La tabla se aplica al texto ya normalizado y en minúsculas, por lo que solo con
 
 - Se guarda y se compara sin espacios al principio ni al final y en minúsculas: `Ana@Example.com` y `ana@example.com` son el mismo email.
 - No se alteran los puntos ni el signo `+` de la parte local.
-- La sintaxis de la dirección se valida según la gramática `addr-spec` de [RFC 5322, sección 3.4.1](https://www.rfc-editor.org/rfc/rfc5322#section-3.4.1): `local-part@domain`. RFC 5322 define esta gramática en ABNF, no una expresión regular normativa única. Se valida la dirección completa, no una coincidencia parcial. El límite de longitud de la aplicación sigue aplicándose por separado.
-- Esta expresión regular anclada ilustra la forma común `addr-spec` sin CFWS ni sintaxis obsoleta; cubre `dot-atom` o `quoted-string` sin FWS en la parte local y `dot-atom` o `domain-literal` en el dominio:
+- La sintaxis de la dirección se valida contra un subconjunto de la gramática `addr-spec` de [RFC 5322, sección 3.4.1](https://www.rfc-editor.org/rfc/rfc5322#section-3.4.1): `local-part@domain`. El subconjunto admitido es el que define la expresión regular siguiente. Se valida la dirección completa, no una coincidencia parcial. El límite de longitud de la aplicación sigue aplicándose por separado.
+- Esta expresión regular anclada define la forma admitida: `dot-atom` o `quoted-string` sin FWS en la parte local y `dot-atom` o `domain-literal` en el dominio:
   ```text
   \A(?:[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x21\x23-\x5B\x5D-\x7E]|\\[\x09\x20-\x7E])*")@(?:[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\[[\x21-\x5A\x5E-\x7E]*\])\z
   ```
-- La expresión regular es orientativa y no basta por sí sola para validar toda la gramática RFC 5322: no cubre CFWS de la sección 3.2.2 (incluidos comentarios anidados) ni las formas obsoletas de la sección 4, que un parser conforme debe interpretar. La conformidad se determina con la gramática RFC 5322; no se rechaza una dirección válida solo porque no coincida con esta expresión. La normalización a minúsculas es una regla de identidad de la aplicación, no una regla de sintaxis de RFC 5322.
+- Se rechazan las direcciones que usan CFWS de la sección 3.2.2 (comentarios y espacios plegables) o las formas obsoletas de la sección 4, aunque RFC 5322 las considere válidas (motivo en [decisions.md → «Datos, URLs y búsqueda»](decisions.md#datos-urls-y-búsqueda)).
+- La normalización a minúsculas es una regla de identidad de la aplicación, no una regla de sintaxis de RFC 5322.
 
 ## Contraseñas
 

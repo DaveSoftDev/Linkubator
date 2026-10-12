@@ -3,6 +3,8 @@ using DomainPolicies = Linkubator.Domain.Policies;
 
 namespace Linkubator.Tests.Domain.Policies;
 
+[Trait("Category", "URLs")]
+[Trait("Category", "Links")]
 public class UrlPoliciesTests
 {
     #region Hosts
@@ -51,9 +53,14 @@ public class UrlPoliciesTests
     [Theory]
     [InlineData("localhost:5000/path", true, false, null, "localhost")]
     [InlineData("example.com:8080/x", true, false, null, "example.com")]
+    [InlineData("example.com:8080?x=1", true, false, null, "example.com")]
+    [InlineData("example.com:8080#section", true, false, null, "example.com")]
     [InlineData("https://example.com/path", true, true, "https", "example.com")]
+    [InlineData("https:example.com", false, true, "https", null)]
     [InlineData("intranet:8080", false, true, "intranet", null)]
     [InlineData("mailto:ana@example.com", false, true, "mailto", null)]
+    [InlineData("bad_scheme:value", false, false, null, null)]
+    [InlineData("not a host", false, false, null, null)]
     public void DetectClassifiesHostAndExplicitSchemeInputs(
         string input,
         bool expectedHostPort,
@@ -92,6 +99,9 @@ public class UrlPoliciesTests
     [InlineData("localhost:5000/r?u=http://x.com", "http://localhost:5000/r?u=http://x.com")]
     [InlineData("https://example.com/r?u=ftp://x.com", "https://example.com/r?u=ftp://x.com")]
     [InlineData("example.com:8080/x", "https://example.com:8080/x")]
+    [InlineData("example.com:8080?x=1", "https://example.com:8080?x=1")]
+    [InlineData("example.com:8080#section", "https://example.com:8080#section")]
+    [InlineData("https://example.com", "https://example.com")]
     [InlineData("https://Example.com/a", "https://Example.com/a")]
     public void AdjustReturnsTheAdjustedUrl(string input, string expected)
     {
@@ -138,10 +148,47 @@ public class UrlPoliciesTests
 
     [Trait("Category", "Links")]
     [Fact]
+    public void AdjustRejectsSchemeCandidateWithUnsupportedCharactersAsInvalidHost()
+    {
+        Assert.Throws<DomainExceptions.UrlHostInvalidException>(() =>
+            DomainPolicies.LinkUrlPolicy.Adjust("bad_scheme:value"));
+    }
+
+    [Trait("Category", "Links")]
+    [Fact]
+    public void AdjustRejectsMalformedUnicode()
+    {
+        Assert.Throws<DomainExceptions.TextContainsUnsupportedCharactersException>(() =>
+            DomainPolicies.LinkUrlPolicy.Adjust("\uD800"));
+    }
+
+    [Trait("Category", "Links")]
+    [Fact]
     public void AdjustRejectsUrlsThatExceedTheMaximumLength()
     {
         string url = "https://" + new string('a', 2048);
-        Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() => DomainPolicies.LinkUrlPolicy.Adjust(url));
+        Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() =>
+            DomainPolicies.LinkUrlPolicy.Adjust(url));
+    }
+
+    [Trait("Category", "Links")]
+    [Fact]
+    public void AdjustAcceptsUrlAtMaximumLength()
+    {
+        string prefix = "https://example.com/";
+        string url = prefix + new string('a', 2048 - prefix.Length);
+
+        Assert.Equal(2048, url.Length);
+        Assert.Equal(url, DomainPolicies.LinkUrlPolicy.Adjust(url));
+    }
+
+    [Trait("Category", "Links")]
+    [Fact]
+    public void AdjustTrimsWhitespaceAroundAbsoluteUrl()
+    {
+        Assert.Equal(
+            "https://example.com/path?x=1",
+            DomainPolicies.LinkUrlPolicy.Adjust("  https://example.com/path?x=1  "));
     }
 
     #endregion
