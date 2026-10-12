@@ -135,17 +135,17 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 | S2.4 | Implementar `UrlNormalized` con `%23`, `%26`, `%2520` y `+` ([«Normalización para duplicados»](../context/specifications.md#normalización-para-duplicados)) | IA |
 | S2.5 | Escribir tests con todos los ejemplos de las especificaciones, separando `UrlOriginal` e `Image` | IA |
 | S2.6 | Unificar las validaciones de entrada de Domain (por ejemplo, `ThrowIfNullOrWhiteSpace` en alias y slugs) y lo que surja durante el sprint | IA |
-| S2.7 | Proporcionar 30 URLs reales (favoritos propios) y revisar su normalización | Humano |
+| S2.7 | Revisar las 31 URLs del conjunto de origen «script S2.7» y registrar el juicio de DLG sobre su normalización | Humano |
 | S2.8 | Decidir los casos dudosos y registrarlos | Humano |
 
 **Definition of Done**
 
-- [ ] Ajuste y validación de `UrlOriginal` pasan todos los ejemplos.
-- [ ] Ajuste y validación de `Image` pasan todos los ejemplos, por separado.
-- [ ] `UrlNormalized` cubre todos los ejemplos, incluidos los caracteres codificados.
-- [ ] El humano ha comparado las 30 URLs reales con el resultado.
-- [ ] Los casos dudosos están decididos y registrados.
-- [ ] Las validaciones de entrada de Domain están unificadas.
+- [x] Ajuste y validación de `UrlOriginal` pasan todos los ejemplos.
+- [x] Ajuste y validación de `Image` pasan todos los ejemplos, por separado.
+- [x] `UrlNormalized` cubre todos los ejemplos, incluidos los caracteres codificados.
+- [x] DLG ha comparado las 31 URLs del conjunto «script S2.7» con el resultado y ha registrado sus juicios.
+- [x] Los casos dudosos están decididos y registrados.
+- [x] Las validaciones de entrada de Domain están unificadas.
 
 ### S3: Dominio III: entidades e invariantes (M)
 

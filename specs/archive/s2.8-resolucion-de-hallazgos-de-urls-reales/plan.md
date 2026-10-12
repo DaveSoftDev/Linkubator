@@ -11,11 +11,11 @@
 
 ### Componentes y contratos
 
-- **Fuente propietaria.** La regla y la lista viven en [specifications.md → «Normalización para duplicados»](../../context/specifications.md#normalización-para-duplicados). H01 amplía esa lista con `gclsrc`; no requiere una entrada en [decisions.md](../../context/decisions.md), pues no añade una justificación de producto distinta de incluir el parámetro en la lista.
-- **Domain.** [UrlNormalizationPolicy.cs](../../src/Linkubator.Domain/Policies/UrlNormalizationPolicy.cs) incorpora `gclsrc` a su conjunto de parámetros de marketing. No cambia el tratamiento de puertos, de los caracteres Unicode ni la firma pública de la política.
-- **Tests H01.** Se actualiza el caso existente de la URL de la fila 6 en [UrlNormalizationPolicyTests](../../tests/Linkubator.Tests/Domain/Policies/UrlNormalizationPolicyTests.cs), y se conserva su resultado esperado derivado de la regla: el parámetro nuevo no contribuye a la clave.
+- **Fuente propietaria.** La regla y la lista viven en [specifications.md → «Normalización para duplicados»](../../../context/specifications.md#normalización-para-duplicados). H01 amplía esa lista con `gclsrc`; no requiere una entrada en [decisions.md](../../../context/decisions.md), pues no añade una justificación de producto distinta de incluir el parámetro en la lista.
+- **Domain.** [UrlNormalizationPolicy.cs](../../../src/Linkubator.Domain/Policies/UrlNormalizationPolicy.cs) incorpora `gclsrc` a su conjunto de parámetros de marketing. No cambia el tratamiento de puertos, de los caracteres Unicode ni la firma pública de la política.
+- **Tests H01.** Se actualiza el caso existente de la URL de la fila 6 en [UrlNormalizationPolicyTests](../../../tests/Linkubator.Tests/Domain/Policies/UrlNormalizationPolicyTests.cs), y se conserva su resultado esperado derivado de la regla: el parámetro nuevo no contribuye a la clave.
 - **Diagnóstico H02.** Se añade un test para la URL percent-encoded de la fila 25 y su equivalente con la ruta Unicode. El test compara cada salida con la clave derivada de la fuente y entre sí, evitando pasar el resultado por la consola o por una codificación de salida intermedia. Si falla, se inspecciona el valor en memoria y se corrige solo la divergencia en Domain; si pasa, no se cambia Domain y se registra que el mojibake pertenece a la captura, almacenamiento o representación de la salida de S2.7. En ambos casos, la semántica Unicode de la fuente se conserva.
-- **H03.** No requiere cambio de regla, código ni una nueva decisión. La equivalencia de `https://fotok.es/?aff=y2336`, `https://fotok.es:443/?aff=y2336` y `https://fotok.es/?aff=y2336&utm_source=error` se deriva de dos reglas existentes: descartar el puerto HTTPS predeterminado y quitar parámetros de marketing. Se registra el cierre enlazando el paso del puerto, el ejemplo de puertos predeterminados y la lista de marketing de [«Normalización para duplicados»](../../context/specifications.md#normalización-para-duplicados), más el riesgo de clave plana en [decisions.md → «Riesgos aceptados»](../../context/decisions.md#riesgos-aceptados). No se añade una entrada redundante a `decisions.md`.
+- **H03.** No requiere cambio de regla, código ni una nueva decisión. La equivalencia de `https://fotok.es/?aff=y2336`, `https://fotok.es:443/?aff=y2336` y `https://fotok.es/?aff=y2336&utm_source=error` se deriva de dos reglas existentes: descartar el puerto HTTPS predeterminado y quitar parámetros de marketing. Se registra el cierre enlazando el paso del puerto, el ejemplo de puertos predeterminados y la lista de marketing de [«Normalización para duplicados»](../../../context/specifications.md#normalización-para-duplicados), más el riesgo de clave plana en [decisions.md → «Riesgos aceptados»](../../../context/decisions.md#riesgos-aceptados). No se añade una entrada redundante a `decisions.md`.
 - **Histórico S2.7.** No se reescriben las filas aceptadas de S2.7. El resultado verificable de H02 y la conclusión sobre la capa que produjo el mojibake quedan como evidencia nueva en las tareas de S2.8.
 
 ### Flujos internos
@@ -38,7 +38,7 @@
 
 - Las claves esperadas se derivan de la fuente y no de la salida de la implementación bajo prueba.
 - La comprobación de H02 compara valores en memoria y no interpreta el texto mostrado por la consola como evidencia del contenido devuelto por Domain.
-- H02 no altera la conservación de caracteres Unicode que determina [specifications.md → «Normalización para duplicados»](../../context/specifications.md#normalización-para-duplicados). Si el análisis apunta a un cambio de esa regla, se detiene el trabajo y se solicita una decisión explícita antes de cambiarla.
+- H02 no altera la conservación de caracteres Unicode que determina [specifications.md → «Normalización para duplicados»](../../../context/specifications.md#normalización-para-duplicados). Si el análisis apunta a un cambio de esa regla, se detiene el trabajo y se solicita una decisión explícita antes de cambiarla.
 - No se modifican otras políticas de Domain ni se introducen dependencias nuevas.
 
 ## Decisiones técnicas y riesgos
@@ -47,7 +47,7 @@
 | --- | --- | --- | --- |
 | `gclsrc` se incorpora a la lista de parámetros de marketing | Confirmado | Instrucción de DLG, 12-X-2026; [spec.md → «Alcance»](spec.md#alcance) | Actualizar fuente, política y test de la URL de la fila 6. |
 | H02 puede originarse en Domain o en la captura/representación de la salida | Pendiente de comprobación | [S2.7 → «Hallazgos para S2.8»](../s2.7-revision-con-urls-reales/tasks.md#hallazgos-para-s28) | El test independiente separa ambos casos; solo se corrige Domain si el valor en memoria contradice la fuente. |
-| H03 es una equivalencia ya especificada y no una decisión nueva | Confirmado | [specifications.md → «Normalización para duplicados»](../../context/specifications.md#normalización-para-duplicados); [decisions.md → «Riesgos aceptados»](../../context/decisions.md#riesgos-aceptados) | Cerrar por referencia; no añadir decisión ni cambio de comportamiento. |
+| H03 es una equivalencia ya especificada y no una decisión nueva | Confirmado | [specifications.md → «Normalización para duplicados»](../../../context/specifications.md#normalización-para-duplicados); [decisions.md → «Riesgos aceptados»](../../../context/decisions.md#riesgos-aceptados) | Cerrar por referencia; no añadir decisión ni cambio de comportamiento. |
 | La línea base y el filtro de tests deben verificarse en el entorno actual | Pendiente | Esta propuesta | Detectarlo al inicio; si el filtro no funciona, ejecutar el proyecto de tests completo. |
 
 ## Estrategia de validación

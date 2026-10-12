@@ -41,7 +41,7 @@
 ### Garantías técnicas
 
 - Las reglas de las fuentes de [spec.md → «Fuentes»](spec.md#fuentes) no cambian: el cambio se limita al tipo de error de la precondición y a los dos casos de CA03 y CA04.
-- El aislamiento de Domain se mantiene conforme a [architecture.md → «Arquitectura»](../../context/architecture.md#arquitectura).
+- El aislamiento de Domain se mantiene conforme a [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura).
 - Los mensajes de error no incluyen la entrada ni datos sensibles.
 
 ## Decisiones técnicas y riesgos
@@ -52,7 +52,7 @@
 | `AsciiTransformationPolicy.Transform` e `ImageUrlPolicy.Adjust` lanzan en entrada vacía o en blanco en lugar de devolver cadena vacía | Confirmada | [spec.md → CA03 y CA04](spec.md#criterios-de-aceptación) | Cambio explícito de comportamiento; los llamadores deben no invocar con vacío. |
 | La comprobación vive como método estático en `UserTextPolicy` | Propuesta | Esta propuesta, según [spec.md → CA07](spec.md#criterios-de-aceptación) | Evita repetir la condición en cada método; si DLG prefiere otro lugar o nombre, solo cambia la ubicación. |
 | Actualizar las pruebas existentes en lugar de crear clases nuevas | Propuesta | Esta propuesta, según [spec.md → CA09](spec.md#criterios-de-aceptación) | Mantiene cada prueba junto a su política; si DLG prefiere una clase dedicada, solo cambia la ubicación. |
-| Código y pruebas de la unificación escritos antes de aprobar este plan y las tareas | Pendiente | Orden de [sdd-writer](../../skills/sdd-writer/SKILL.md) | Se tratan como borrador: `tasks.md` los verifica contra este plan, completa la limpieza de CA07 y, si DLG ajusta el diseño, se rehacen. |
+| Código y pruebas de la unificación escritos antes de aprobar este plan y las tareas | Pendiente | Orden de [sdd-writer](../../../skills/sdd-writer/SKILL.md) | Se tratan como borrador: `tasks.md` los verifica contra este plan, completa la limpieza de CA07 y, si DLG ajusta el diseño, se rehacen. |
 | La detección de esquema de `LinkUrlPolicy` sigue duplicando la de `UriSchemePolicy` | Confirmada | [spec.md → «Bloqueos y preguntas pendientes»](spec.md#bloqueos-y-preguntas-pendientes) | Queda para S3a; no se toca aquí. |
 
 ## Estrategia de validación

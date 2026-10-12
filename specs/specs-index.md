@@ -6,10 +6,6 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
-| S2.3 — Validación de `UrlOriginal` e `Image` | [spec.md](s2.3-validacion-de-urls/spec.md) | [plan.md](s2.3-validacion-de-urls/plan.md) | [tasks.md](s2.3-validacion-de-urls/tasks.md#aceptaci%C3%B3n-y-cierre) |
-| S2.4 — Normalización de URL (`UrlNormalized`) | [spec.md](s2.4-normalizacion-de-urls/spec.md) | [plan.md](s2.4-normalizacion-de-urls/plan.md) | [tasks.md](s2.4-normalizacion-de-urls/tasks.md#aceptaci%C3%B3n-y-cierre) |
-| S2.5 — Tests de los ejemplos de URL | [spec.md](s2.5-tests-de-ejemplos-de-urls/spec.md) | [plan.md](s2.5-tests-de-ejemplos-de-urls/plan.md) | [tasks.md](s2.5-tests-de-ejemplos-de-urls/tasks.md#aceptaci%C3%B3n-y-cierre) |
-| S2.8 — Resolución de hallazgos de URLs reales | [spec.md](s2.8-resolucion-de-hallazgos-de-urls-reales/spec.md) | [plan.md](s2.8-resolucion-de-hallazgos-de-urls-reales/plan.md) | [tasks.md](s2.8-resolucion-de-hallazgos-de-urls-reales/tasks.md#aceptaci%C3%B3n-y-cierre) |
 
 ## Trabajos archivados
 
@@ -38,4 +34,5 @@ El estado y la evidencia de cierre constan en las tareas del trabajo; este índi
 | S2.4 — Normalización de URL (`UrlNormalized`) | [spec.md](archive/s2.4-normalizacion-de-urls/spec.md) | [plan.md](archive/s2.4-normalizacion-de-urls/plan.md) | [tasks.md](archive/s2.4-normalizacion-de-urls/tasks.md#aceptaci%C3%B3n-y-cierre) |
 | S2.5 — Tests de los ejemplos de URL | [spec.md](archive/s2.5-tests-de-ejemplos-de-urls/spec.md) | [plan.md](archive/s2.5-tests-de-ejemplos-de-urls/plan.md) | [tasks.md](archive/s2.5-tests-de-ejemplos-de-urls/tasks.md#aceptaci%C3%B3n-y-cierre) |
 | S2.6 — Unificación de las validaciones de entrada de Domain | [spec.md](archive/s2.6-unificacion-de-validaciones-de-entrada/spec.md) | [plan.md](archive/s2.6-unificacion-de-validaciones-de-entrada/plan.md) | [tasks.md](archive/s2.6-unificacion-de-validaciones-de-entrada/tasks.md#aceptaci%C3%B3n-y-cierre) |
-| S2.7 — Revisión de la normalización con 30 URLs reales | [spec.md](archive/s2.7-revision-con-urls-reales/spec.md) | [plan.md](archive/s2.7-revision-con-urls-reales/plan.md) | [tasks.md](archive/s2.7-revision-con-urls-reales/tasks.md#aceptaci%C3%B3n-y-cierre) |
+| S2.7 — Revisión de la normalización con 31 URLs | [spec.md](archive/s2.7-revision-con-urls-reales/spec.md) | [plan.md](archive/s2.7-revision-con-urls-reales/plan.md) | [tasks.md](archive/s2.7-revision-con-urls-reales/tasks.md#aceptaci%C3%B3n-y-cierre) |
+| S2.8 — Resolución de hallazgos de URLs reales | [spec.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/spec.md) | [plan.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/plan.md) | [tasks.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/tasks.md#aceptaci%C3%B3n-y-cierre) |

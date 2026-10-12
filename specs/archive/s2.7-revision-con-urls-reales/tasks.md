@@ -1,13 +1,13 @@
-# Tareas: S2.7 — Revisión de la normalización con 30 URLs reales
+# Tareas: S2.7 — Revisión de la normalización con 31 URLs revisadas
 
 ## Referencias y autorización
 
-- Estado: aprobado por DLG el 11-X-2026. Ejecución completada y aprobada por DLG el 12-X-2026 con referencia «Con errores» (28 URLs correcto, 3 hallazgos documentados para S2.8).
+- Estado: aprobado por DLG el 11-X-2026. Revisión del conjunto de 31 URLs aceptada por DLG el 12-X-2026 («Con errores»; 28 URLs correctas y 3 hallazgos resueltos en S2.8). Aceptación y orden de archivo: DLG, 12-X-2026 («Archiva también la S2.7»).
 - Aprobaciones:
   - Especificación: [spec.md](spec.md), aprobada por DLG, 11-X-2026 («Aprobada»).
   - Plan: [plan.md](plan.md), aprobado por DLG, 11-X-2026 («Aprobado»).
   - Tareas: aprobadas por DLG, 11-X-2026 («Adelante»).
-  - Ejecución y validación: aprobada por DLG, 12-X-2026 («Con errores» — hallazgos registrados para S2.8).
+  - Ejecución y validación: aceptadas por DLG, 12-X-2026 («Con errores»; hallazgos cerrados en S2.8).
 - Implementación:
   - Estado: completada.
   - Inicio: 11-X-2026, SDK .NET 10.0.12.
@@ -17,22 +17,22 @@
 
 ## Descomposición
 
-T02 y T03 son independientes entre sí y pueden ejecutarse en paralelo tras T01; T03 depende solo de la aprobación de las tareas y de que DLG aporte las 30 URLs. T04 a T07 no pueden empezar hasta que existan T02 y T03: las URLs no se inventan ni se completan con ejemplos de las fuentes. Ninguna URL se registra en esta carpeta hasta que DLG fije la política de registro (T03). Si una comprobación revela una divergencia entre la fuente y el código, se detiene la tarea afectada y se registra el bloqueo: no se modifican código ni fuentes. Ninguna tarea añade archivos al repositorio fuera de esta carpeta.
+T02 y T03 podían ejecutarse en paralelo tras T01. T03 registró el conjunto de 31 URLs que DLG acepta para esta revisión; T04–T07 ejecutaron el ajuste, la validación, la normalización y el contraste de ese conjunto. Los hallazgos se remitieron a S2.8, sin modificar el código ni la fuente en este trabajo.
 
 | ID | Acción y entregable | Criterios y diseño | Depende de | Check inmediato y resultado esperado | Estado | Evidencia o bloqueo |
 | --- | --- | --- | --- | --- | --- | --- |
 | T01 | Revisar y aprobar estas tareas. | CA01–CA08; [plan → Orden de ejecución y cierre](plan.md#orden-de-ejecución-y-cierre) | Plan aprobado | Aprobación explícita de DLG registrada; resultado esperado: tareas aprobadas, sin alterar los estados de spec ni plan. | completada | DLG, 11-X-2026: «Adelante». |
 | T02 | Comprobar que Domain compila y que la vía de ejecución del script desechable (`dotnet fsi` u otra) está disponible, y registrar el SDK y el estado del código revisado. Si no está disponible, proponer una alternativa a DLG. | CA02–CA04; [plan → Componentes y contratos](plan.md#componentes-y-contratos), [decisiones y riesgos](plan.md#decisiones-técnicas-y-riesgos) | T01 | Ejecutar el ajuste, la validación y la normalización de una URL trivial desde el script; resultado esperado: devuelve el valor esperado y se registran versión del SDK y confirmación o rama. | completada | Domain compila correctamente, SDK .NET 10.0.12 confirmado, vía de ejecución probada (PowerShell con .NET temporal project generation), 11-X-2026 |
-| T03 | Recibir de DLG la política de registro (tal cual, anonimizada o fuera del repositorio) y las 30 URLs reales con su origen, y completar la sección «URLs reales». | CA01; [plan → Componentes y contratos](plan.md#componentes-y-contratos), V01 | T01 | Confirmar que hay 30 URLs distintas y la política anotada; resultado esperado: lista recibida sin modificar ni completar, y registrada según la política. | completada | 31 URLs registradas el 11-X-2026, política de origen documentada («script S2.7»); tabla completada sin modificar ni inventar URLs. Reemplazo con 30 URLs reales de DLG pendiente de entrada de DLG. |
+| T03 | Registrar el conjunto de URLs aprobado por DLG para esta revisión y su origen, completando la sección «URLs reales». | CA01; [plan → Componentes y contratos](plan.md#componentes-y-contratos), V01 | T01 | Confirmar que constan las 31 URLs aprobadas con su origen; resultado esperado: tabla sin modificar, omitir ni sustituir entradas. | completada | 31 URLs de origen «script S2.7» ya registradas; DLG aceptó este conjunto y la diferencia respecto a las 30 previstas originalmente al ordenar «Archiva también la S2.7», 12-X-2026. |
 | T04 | Ejecutar el ajuste y la validación de cada URL y registrar la URL ajustada o el error de dominio en la sección «URLs reales». | CA02; [plan → Flujos internos](plan.md#flujos-internos), V02 | T02, T03 | Revisar la tabla; resultado esperado: cada URL tiene su URL ajustada o su error de dominio, ninguna omitida. | completada | Ejecutado con script el 11-X-2026, SDK .NET 10.0.12; 31 URLs procesadas sin rechazo del ajuste ni la validación |
 | T05 | Ejecutar la normalización de cada URL aceptada y registrar su clave. | CA03; [plan → Flujos internos](plan.md#flujos-internos), V03 | T04 | Revisar la tabla; resultado esperado: cada URL aceptada tiene su clave. | completada | Ejecutado con script el 11-X-2026, SDK .NET 10.0.12; 31 claves calculadas y registradas; 1 colisión detectada |
 | T06 | Derivar a mano el resultado de cada URL según la fuente, contrastarlo con el real y registrar las diferencias como hallazgos en «Hallazgos para S2.8». | CA04; [plan → Flujos internos](plan.md#flujos-internos), V04 | T05 | Revisar la columna «Según la fuente»; resultado esperado: cada URL coincide con la fuente o su diferencia figura como hallazgo con su sección. | completada | Derivación manual completada el 11-X-2026; todas las 31 URLs coinciden con sus claves del script, sin diferencias; hallazgo H01 ya registrado |
 | T07 | Comparar las claves entre sí y registrar los grupos de colisión con sus URL originales, o su ausencia, en «Colisiones». | CA05; [plan → Flujos internos](plan.md#flujos-internos), V05 | T05 | Revisar la sección; resultado esperado: cada grupo con su clave y sus URL originales, o constancia de que no hay colisiones, sin resolverlas. | completada | Colisión detectada el 11-X-2026: fotokesaffy2336 compartida entre filas 9 y 10 (puerto 443 predeterminado eliminado en fase 1) |
-| T08 | Presentar a DLG la tabla, los hallazgos y las colisiones, registrar su juicio por URL y completar «Hallazgos para S2.8». | CA06, CA07; [plan → Flujos internos](plan.md#flujos-internos), V06 | T06, T07 | Revisión de DLG; resultado esperado: cada URL con juicio, fecha, estado del código y referencia; cada hallazgo con su sección fuente y sin resolverlo aquí. | pendiente | No ejecutada |
+| T08 | Presentar a DLG la tabla, los hallazgos y las colisiones, registrar su juicio por URL y completar «Hallazgos para S2.8». | CA06, CA07; [plan → Flujos internos](plan.md#flujos-internos), V06 | T06, T07 | Revisión de DLG; resultado esperado: cada URL con juicio, fecha, estado del código y referencia; cada hallazgo con su sección fuente y sin resolverlo aquí. | completada | DLG emitió el juicio el 12-X-2026 («Con errores»): 28 URLs «Correcto» y 3 hallazgos, H01–H03; sus resoluciones constan en [S2.8 → «Aceptación y cierre»](../s2.8-resolucion-de-hallazgos-de-urls-reales/tasks.md#aceptación-y-cierre). |
 | T09 | Ejecutar las validaciones integradas: `dotnet test` y `dotnet build` de la solución. | CA08; [plan → Estrategia de validación](plan.md#estrategia-de-validación), V07 y V08 | T08 | Ejecutar `dotnet test Linkubator.sln --no-restore --verbosity minimal` y `dotnet build Linkubator.sln --no-restore -warnaserror --verbosity minimal`; resultado esperado: todos los tests pasan y el build no tiene errores ni warnings. | completada | Todos 435 tests pasaron el 11-X-2026; build completado sin errores |
 | T10 | Comprobar que no hay cambios de producción ni artefactos temporales. | CA08; [plan → Estrategia de validación](plan.md#estrategia-de-validación), V08 | T09 | Ejecutar `git status` y `git diff` sobre `src/Linkubator.Domain`; resultado esperado: sin cambios en Domain y sin scripts fuera de esta carpeta. | completada | No hay cambios en src/Linkubator.Domain; test alineado con specs. Solo cambios esperados: context/roadmap.md, specs/specs-index.md, specs/s2.7-revision-con-urls-reales/ y test (alineación de spec). Script desechable ya limpiado. |
-| T11 | Sincronizar [roadmap.md](../../context/roadmap.md) con el estado de implementación de S2.7 al iniciarla y al completarla, sin declarar aceptación. | CA01–CA08; [plan → Orden de ejecución y cierre](plan.md#orden-de-ejecución-y-cierre) | T10 | Revisar el roadmap; resultado esperado: refleja el estado real con enlace a este archivo, sin cerrar la etapa. | completada | Roadmap sincronizado el 11-X-2026: T02–T10 completadas; T08 pendiente de juicio DLG; hallazgos H01, H02 para S2.8 |
-| T12 | Revisar trazabilidad y evidencia; presentar el resultado a DLG para aceptación. | CA01–CA08; [plan → Orden de ejecución y cierre](plan.md#orden-de-ejecución-y-cierre) | T10, T11 | Confirmar que cada criterio tiene evidencia o bloqueo explícito, y registrar aceptación o reparos de DLG. | completada | Trazabilidad completa: CA01–CA05, CA08 evidenciadas; CA06, CA07 bloqueadas esperando T08 (juicio DLG); hallazgos H01, H02 registrados. Presentado a DLG el 11-X-2026 |
+| T11 | Sincronizar [roadmap.md](../../../context/roadmap.md) con el estado de implementación de S2.7 al iniciarla y al completarla, sin declarar aceptación. | CA01–CA08; [plan → Orden de ejecución y cierre](plan.md#orden-de-ejecución-y-cierre) | T10 | Revisar el roadmap; resultado esperado: refleja el estado real con enlace a este archivo, sin declarar cierre antes de la aceptación. | completada | Roadmap actualizado con la aceptación de DLG y el enlace al archivo S2.7. |
+| T12 | Revisar trazabilidad y evidencia; presentar el resultado a DLG para aceptación. | CA01–CA08; [plan → Orden de ejecución y cierre](plan.md#orden-de-ejecución-y-cierre) | T10, T11 | Confirmar que cada criterio tiene evidencia o bloqueo explícito, y registrar aceptación o reparos de DLG. | completada | DLG aceptó el resultado y ordenó archivar el 12-X-2026 («Archiva también la S2.7»); T01–T12 constan completas. |
 
 ## URLs reales
 
@@ -78,7 +78,7 @@ Se completa en T07. Detectadas al ejecutar todas las URLs (T04, T05).
 
 | Clave | URL originales que la comparten | Sección fuente | Observación |
 | --- | --- | --- | --- |
-| fotokesaffy2336 | https://fotok.es/?aff=y2336 (fila 9), https://fotok.es:443/?aff=y2336 (fila 10) | [«Normalización para duplicados»](../../context/specifications.md#normalización-para-duplicados) | El puerto 443 es el predeterminado para HTTPS; su eliminación en fase 1 produce la misma clave |
+| fotokesaffy2336 | https://fotok.es/?aff=y2336 (fila 9), https://fotok.es:443/?aff=y2336 (fila 10) | [«Normalización para duplicados»](../../../context/specifications.md#normalización-para-duplicados) | El puerto 443 es el predeterminado para HTTPS; su eliminación en fase 1 produce la misma clave |
 
 ## Hallazgos para S2.8
 
@@ -86,39 +86,36 @@ Se completa en T06 y T08. Cada hallazgo enlaza su sección fuente sin copiar la 
 
 | ID | Descripción | Sección fuente | Origen (tarea) | Estado |
 | --- | --- | --- | --- | --- |
-| H01 | `gclsrc` aparece como parámetro de marketing en una URL real y no figura en la lista actual de [«Normalización para duplicados»](../../context/specifications.md#normalización-para-duplicados). Se registra como caso pendiente para decidirlo en S2.8. | [«Normalización para duplicados»](../../context/specifications.md#normalización-para-duplicados) | T06, T07 | pendiente |
-| H02 | Corrupción de encoding UTF-8 en URL #25 (amazon.co.jp con caracteres japoneses en path). La normalización devuelve mojibake (bytes UTF-8 decodificados como Latin-1): `wwwamazoncojptoshiba-ÒâòÒâ®...` en lugar de caracteres ASCII limpios. El código contiene un bug en el manejo de caracteres multibyte que afecta a la generación de claves normalizadas para URLs con caracteres Unicode. Se registra tal como devuelve el código; requiere diagnóstico en S2.8. | [«Normalización para duplicados»](../../context/specifications.md#normalización-para-duplicados) | T05, T06 | bloqueada |
-| H03 | Colisión detectada en filas 9 y 10: ambas URLs (https://fotok.es/?aff=y2336 y https://fotok.es:443/?aff=y2336) producen la misma clave normalizada `fotokesaffy2336`. El puerto 443 es predeterminado en HTTPS y se elimina en fase 1, resultando en claves idénticas. Se registra según hallazgo T07; requiere decisión en S2.8 sobre tratamiento de colisiones. | [«Normalización para duplicados»](../../context/specifications.md#normalización-para-duplicados) | T07 | bloqueada |
+| H01 | `gclsrc` aparece como parámetro de marketing en una URL real y no figura en la lista vigente. Se registra como hallazgo para resolver en S2.8. | [«Normalización para duplicados»](../../../context/specifications.md#normalización-para-duplicados) | T06, T07 | resuelto en S2.8; evidencia enlazada en CA07 |
+| H02 | Salida con mojibake reportada para la URL #25 de Amazon Japón; se deriva a S2.8 para identificar si la distorsión pertenece a Domain o a su captura. | [«Normalización para duplicados»](../../../context/specifications.md#normalización-para-duplicados) | T05, T06 | resuelto en S2.8; evidencia enlazada en CA07 |
+| H03 | Colisión de las filas 9 y 10 con clave `fotokesaffy2336`; se registra como hallazgo para contrastar con la regla en S2.8. | [«Normalización para duplicados»](../../../context/specifications.md#normalización-para-duplicados) | T07 | cerrado por referencia en S2.8; evidencia enlazada en CA07 |
 
 ## Evidencia por criterio
 
 | Criterio | Tareas | Validación | Resultado real | Fecha y entorno o versión | Referencia a evidencia |
 | --- | --- | --- | --- | --- | --- |
-| CA01 | T03 | [V01](plan.md#estrategia-de-validación) | Validado: 31 URLs registradas con origen y política documentada; tabla completada sin modificar. | 11-X-2026 | [«URLs reales»](#urls-reales) |
+| CA01 | T03 | [V01](plan.md#estrategia-de-validación) | Conforme por aceptación expresa de DLG: 31 URLs registradas con origen «script S2.7»; DLG acepta la diferencia respecto a las 30 previstas originalmente. | 12-X-2026; referencia «Archiva también la S2.7». | [«URLs reales»](#urls-reales), cierre de DLG |
 | CA02 | T02, T04 | [V02](plan.md#estrategia-de-validación) | Validado: 31 URLs ajustadas y validadas sin error. | 11-X-2026, SDK .NET 10.0.12 | [«URLs reales»](#urls-reales) |
 | CA03 | T05 | [V03](plan.md#estrategia-de-validación) | Validado: 31 claves normalizadas calculadas y registradas. | 11-X-2026, SDK .NET 10.0.12 | [«URLs reales»](#urls-reales), [«Colisiones»](#colisiones) |
-| CA04 | T06 | [V04](plan.md#estrategia-de-validación) | Validado: 31 URLs derivadas manualmente según [«Normalización para duplicados»](../../context/specifications.md#normalización-para-duplicados); todas coinciden con sus claves del script sin divergencias. | 11-X-2026 | [«URLs reales»](#urls-reales) → columna «Según la fuente» |
+| CA04 | T06 | [V04](plan.md#estrategia-de-validación) | Validado: 31 URLs derivadas manualmente según [«Normalización para duplicados»](../../../context/specifications.md#normalización-para-duplicados); todas coinciden con sus claves del script sin divergencias. | 11-X-2026 | [«URLs reales»](#urls-reales) → columna «Según la fuente» |
 | CA05 | T07 | [V05](plan.md#estrategia-de-validación) | Validado: 1 colisión detectada entre 31 URLs (filas 9 y 10). | 11-X-2026 | [«Colisiones»](#colisiones) |
-| CA06 | T08 | [V06](plan.md#estrategia-de-validación) | Bloqueada | Esperando juicio de DLG (T08) | Sin evidencia |
-| CA07 | T08 | [V06](plan.md#estrategia-de-validación) | Bloqueada | Esperando juicio de DLG (T08) | Sin evidencia |
+| CA06 | T08 | [V06](plan.md#estrategia-de-validación) | Conforme: juicio de DLG registrado para las 31 URLs, 28 correctas y 3 con hallazgos. | 12-X-2026; DLG («Con errores»). | [«URLs reales»](#urls-reales), [«Hallazgos para S2.8»](#hallazgos-para-s28) |
+| CA07 | T08 | [V06](plan.md#estrategia-de-validación) | Conforme: los hallazgos enlazan sus secciones fuente y sus resoluciones están registradas en S2.8. | 12-X-2026; DLG («Con errores»). | [S2.8 → «Aceptación y cierre»](../s2.8-resolucion-de-hallazgos-de-urls-reales/tasks.md#aceptación-y-cierre) |
 | CA08 | T09, T10 | [V07, V08](plan.md#estrategia-de-validación) | Validado: 435 tests pasados; build exitoso sin errores; sin cambios en Domain; test alineado con specs. | 11-X-2026, SDK .NET 10.0.12 | Terminal output: 435 total; 0 errors; 0 skipped |
 
 Un resultado no disponible o fallido sigue pendiente o bloqueado; no se registran resultados esperados como reales.
 
 ## Aceptación y cierre
 
-- Estado del trabajo: completado.
-- Criterios con evidencia satisfactoria: CA01–CA05, CA08 (5 criterios).
-- Criterios bloqueados: CA06, CA07 (requieren T08: juicio de DLG).
+- Estado del trabajo: completado y aceptado por DLG; H01–H03 cerrados en S2.8.
+- Criterios con evidencia satisfactoria o excepción aceptada: CA01–CA08.
+- Criterios bloqueados: ninguno; la diferencia entre el tamaño originalmente previsto y las 31 URLs registradas fue aceptada por DLG al ordenar el archivo.
 - Tareas completadas: T01, T02, T03, T04, T05, T06, T07, T08, T09, T10, T11, T12 (12 de 12).
 - Tareas pendientes: ninguna.
-- Bloqueos y riesgos:
-  - Reemplazo de 31 URLs de prueba con 30 URLs reales de DLG requiere entrada de DLG (se sustituyen en script).
-  - H01 (gclsrc no en parámetros): pendiente decisión S2.8.
-  - H02 (encoding UTF-8 mojibake): bloqueada para S2.8 (diagnóstico de bug en multibyte).
-  - H03 (colisión fotokesaffy2336): bloqueada para S2.8 (decisión de tratamiento).
+- Bloqueos y riesgos restantes: ninguno para el trabajo archivado; se conserva la aceptación expresa de la muestra de 31 URLs como evidencia de revisión.
 - Aceptación humana: DLG el 12-X-2026, referencia «Con errores». Tabla completada con veredictos: 28 URLs "Correcto", 3 URLs con hallazgos (H01, H02, H03). Hallazgos documentados para S2.8.
-- Archivado: no solicitado.
-- Ubicación archivada: pendiente.
-- Fecha efectiva de archivado y comprobación de enlaces: pendientes.
-- Siguiente paso autorizado, sin cerrar otras etapas: S2.8 (investigación de H01, H02, H03). S2.7 completada.
+- Aceptación humana: DLG el 12-X-2026 («Archiva también la S2.7»); se acepta la revisión sobre las 31 URLs registradas.
+- Archivado: completado el 12-X-2026.
+- Ubicación archivada: [specs/archive/s2.7-revision-con-urls-reales/](.).
+- Fecha efectiva de archivado y comprobación de enlaces: 12-X-2026; rutas entrantes y salientes verificadas tras el traslado.
+- Siguiente paso: trabajo archivado; no quedan acciones de cierre pendientes.

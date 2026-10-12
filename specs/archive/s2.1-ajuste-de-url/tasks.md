@@ -59,7 +59,7 @@ T03 y T02 son secuenciales porque `UrlHostPolicy` lanza una excepción creada en
 - Corrección posterior a la aceptación (11-X-2026, a petición de DLG; la aceptación anterior no se modifica):
   - `LinkUrlPolicy` antepone `http://` a una entrada sin esquema cuyo host es `localhost` (`localhost:5000/admin` da `http://localhost:5000/admin`) y `https://` en cualquier otro caso, según [specifications.md → «Ajuste de URL»](../../../context/specifications.md#ajuste-de-url). Antes daba siempre `https://`, y una prueba de `UrlPoliciesTests` fijaba ese resultado.
   - `LinkUrlPolicy` y `UrlHostPolicy.TryExtractHost` reconocen `://` como esquema solo si aparece antes del primer `/`, `?` o `#`. Antes, una entrada sin esquema como `example.com/r?u=https://x.com` se rechazaba como esquema no permitido.
-  - Efecto indirecto por S2.3: `UrlHostPolicy.IsValidHost` exige un dominio de primer nivel solo de letras (o `xn--`) e IPv4 con cuatro grupos decimales. Detalle en [S2.3 → «Aceptación y cierre»](../../s2.3-validacion-de-urls/tasks.md#aceptación-y-cierre).
+  - Efecto indirecto por S2.3: `UrlHostPolicy.IsValidHost` exige un dominio de primer nivel solo de letras (o `xn--`) e IPv4 con cuatro grupos decimales. Detalle en [S2.3 → «Aceptación y cierre»](../s2.3-validacion-de-urls/tasks.md#aceptación-y-cierre).
   - Pruebas: `UrlPoliciesTests` (45) y `UrlHostPolicyTests` (33) amplían los casos anteriores; suite completa 420/420 y build sin errores ni warnings.
 - Archivado: completado; fecha de archivado (10-X-2026) según [roadmap.md](../../../context/roadmap.md).
 - Ubicación archivada: `specs/archive/s2.1-ajuste-de-url/`; no existe carpeta activa con el mismo nombre.
