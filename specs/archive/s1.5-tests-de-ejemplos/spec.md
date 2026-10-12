@@ -18,7 +18,7 @@ Que todos los ejemplos y casos concretos de las fuentes de generación de alias 
 - [specifications.md → «Tabla de conversión de símbolos»](../../../context/specifications.md#tabla-de-conversión-de-símbolos): sustituciones y ejemplos de la tabla.
 - [specifications.md → «Longitudes máximas»](../../../context/specifications.md#longitudes-máximas): rangos y unidad de conteo.
 - [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura): aislamiento de Domain.
-- [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación): estado de la etapa.
+- [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho): estado de la etapa.
 
 ## Alcance
 
@@ -44,7 +44,7 @@ Que todos los ejemplos y casos concretos de las fuentes de generación de alias 
 ## Dependencias y prerrequisitos
 
 - Existen `Linkubator.Domain` y el proyecto de tests con las pruebas de [AsciiTransformationPolicyTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/AsciiTransformationPolicyTests.cs), [AliasPolicyTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/AliasPolicyTests.cs) y [SlugPolicyTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/SlugPolicyTests.cs).
-- S1.1, S1.2, S1.3 y S1.4 están aceptadas según [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación).
+- S1.1, S1.2, S1.3 y S1.4 están aceptadas según [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho).
 - La existencia de pruebas no demuestra que cada ejemplo esté cubierto: la cobertura se determina en la auditoría de este trabajo.
 
 ## Criterios de aceptación

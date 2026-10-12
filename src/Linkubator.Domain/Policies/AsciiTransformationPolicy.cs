@@ -52,7 +52,7 @@ public static class AsciiTransformationPolicy
 
     public static string Transform(string text)
     {
-        ArgumentNullException.ThrowIfNull(text);
+        UserTextPolicy.ThrowIfNullOrWhiteSpace(text);
 
         string normalized = Normalize(text);
         RejectControlsAndSeparators(normalized);

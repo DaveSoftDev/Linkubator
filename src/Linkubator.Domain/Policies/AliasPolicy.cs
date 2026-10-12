@@ -16,7 +16,7 @@ public static class AliasPolicy
 
     public static string Generate(string candidate)
     {
-        ArgumentNullException.ThrowIfNull(candidate);
+        UserTextPolicy.ThrowIfNullOrWhiteSpace(candidate);
 
         string alias = AsciiTransformationPolicy.Transform(candidate);
 

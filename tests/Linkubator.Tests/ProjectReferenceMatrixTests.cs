@@ -4,7 +4,7 @@ namespace Linkubator.Tests;
 
 public class ProjectReferenceMatrixTests
 {
-    private static readonly IReadOnlyDictionary<string, string[]> AllowedProjectReferences =
+    private static readonly IReadOnlyDictionary<string, string[]> _allowedProjectReferences =
         new Dictionary<string, string[]>
         {
             ["src/Linkubator.Domain/Linkubator.Domain.csproj"] = [],
@@ -36,7 +36,7 @@ public class ProjectReferenceMatrixTests
     {
         string repositoryRoot = FindRepositoryRoot();
 
-        foreach (KeyValuePair<string, string[]> matrixEntry in AllowedProjectReferences)
+        foreach (KeyValuePair<string, string[]> matrixEntry in _allowedProjectReferences)
         {
             string? projectPath = Path.Combine(repositoryRoot, ToPlatformPath(matrixEntry.Key));
             string? projectDirectory = Path.GetDirectoryName(projectPath)!;

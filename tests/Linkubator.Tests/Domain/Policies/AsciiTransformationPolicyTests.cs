@@ -22,8 +22,6 @@ public class AsciiTransformationPolicyTests
     [InlineData("Saltó la raña al charço!!! I luego, croo", "salto-la-rana-al-charco-i-luego-croo")]
     [InlineData("Ana°López©", "analopez")]
     [InlineData("!!!", "")]
-    [InlineData("", "")]
-    [InlineData("   ", "")]
     public void TransformAppliesTheCommonStepsOfTheSource(string text, string expected)
     {
         Assert.Equal(expected, DomainPolicies.AsciiTransformationPolicy.Transform(text));
@@ -212,6 +210,8 @@ public class AsciiTransformationPolicyTests
     [Fact]
     public void TransformRejectsANullText()
     {
-        Assert.Throws<ArgumentNullException>(() => DomainPolicies.AsciiTransformationPolicy.Transform(null!));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.AsciiTransformationPolicy.Transform(null!));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.AsciiTransformationPolicy.Transform(string.Empty));
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.AsciiTransformationPolicy.Transform("   "));
     }
 }

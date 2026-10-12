@@ -4,7 +4,8 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 ## Trabajos activos
 
-No hay trabajos activos.
+| Trabajo | Especificación | Plan técnico | Tareas y cierre |
+| --- | --- | --- | --- |
 
 ## Trabajos archivados
 
@@ -27,3 +28,11 @@ El estado y la evidencia de cierre constan en las tareas del trabajo; este índi
 | S1.5 — Tests de los ejemplos de alias y slugs | [spec.md](archive/s1.5-tests-de-ejemplos/spec.md) | [plan.md](archive/s1.5-tests-de-ejemplos/plan.md) | [tasks.md](archive/s1.5-tests-de-ejemplos/tasks.md#aceptación-y-cierre) |
 | S1.6 — Revisión de la tabla de símbolos y prueba con nombres reales | [spec.md](archive/s1.6-revision-de-simbolos-y-nombres-reales/spec.md) | [plan.md](archive/s1.6-revision-de-simbolos-y-nombres-reales/plan.md) | [tasks.md](archive/s1.6-revision-de-simbolos-y-nombres-reales/tasks.md#aceptación-y-cierre) |
 | S1.7 — Resolución de ambigüedades y aprobación del comportamiento | [spec.md](archive/s1.7-resolucion-de-ambiguedades-y-aprobacion/spec.md) | [plan.md](archive/s1.7-resolucion-de-ambiguedades-y-aprobacion/plan.md) | [tasks.md](archive/s1.7-resolucion-de-ambiguedades-y-aprobacion/tasks.md#aceptación-y-cierre) |
+| S2.1 — Detección de esquema URI y ajuste de `UrlOriginal` | [spec.md](archive/s2.1-ajuste-de-url/spec.md) | [plan.md](archive/s2.1-ajuste-de-url/plan.md) | [tasks.md](archive/s2.1-ajuste-de-url/tasks.md#aceptación-y-cierre) |
+| S2.2 — Ajuste de `Image` | [spec.md](archive/s2.2-ajuste-de-image/spec.md) | [plan.md](archive/s2.2-ajuste-de-image/plan.md) | [tasks.md](archive/s2.2-ajuste-de-image/tasks.md#aceptación-y-cierre) |
+| S2.3 — Validación de `UrlOriginal` e `Image` | [spec.md](archive/s2.3-validacion-de-urls/spec.md) | [plan.md](archive/s2.3-validacion-de-urls/plan.md) | [tasks.md](archive/s2.3-validacion-de-urls/tasks.md#aceptaci%C3%B3n-y-cierre) |
+| S2.4 — Normalización de URL (`UrlNormalized`) | [spec.md](archive/s2.4-normalizacion-de-urls/spec.md) | [plan.md](archive/s2.4-normalizacion-de-urls/plan.md) | [tasks.md](archive/s2.4-normalizacion-de-urls/tasks.md#aceptaci%C3%B3n-y-cierre) |
+| S2.5 — Tests de los ejemplos de URL | [spec.md](archive/s2.5-tests-de-ejemplos-de-urls/spec.md) | [plan.md](archive/s2.5-tests-de-ejemplos-de-urls/plan.md) | [tasks.md](archive/s2.5-tests-de-ejemplos-de-urls/tasks.md#aceptaci%C3%B3n-y-cierre) |
+| S2.6 — Unificación de las validaciones de entrada de Domain | [spec.md](archive/s2.6-unificacion-de-validaciones-de-entrada/spec.md) | [plan.md](archive/s2.6-unificacion-de-validaciones-de-entrada/plan.md) | [tasks.md](archive/s2.6-unificacion-de-validaciones-de-entrada/tasks.md#aceptaci%C3%B3n-y-cierre) |
+| S2.7 — Revisión de la normalización con 31 URLs | [spec.md](archive/s2.7-revision-con-urls-reales/spec.md) | [plan.md](archive/s2.7-revision-con-urls-reales/plan.md) | [tasks.md](archive/s2.7-revision-con-urls-reales/tasks.md#aceptaci%C3%B3n-y-cierre) |
+| S2.8 — Resolución de hallazgos de URLs reales | [spec.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/spec.md) | [plan.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/plan.md) | [tasks.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/tasks.md#aceptaci%C3%B3n-y-cierre) |

@@ -39,7 +39,7 @@ Este plan organiza la construcción del MVP0 en sprints de 1 semana, con la IA g
 - Sin la aprobación explícita del humano (S4.5), la IA no implementa ningún caso de uso, repositorio concreto ni página Razor.
 - Los criterios aprobados son la fuente de los tests de aplicación (S4), de integración HTTP (S8–S11) y de las guías manuales.
 - Los sprints S5–S11 no redefinen criterios. Si descubren un hueco, la IA propone el cambio y el humano lo aprueba antes de implementarlo.
-- Los criterios se guardan en [`plans/acceptance-criteria.md`](acceptance-criteria.md), fuera de `context/`, y enlazan a las reglas sin copiarlas.
+- Se prevé guardar los criterios en `plans/acceptance-criteria.md`, fuera de `context/`, con enlaces a las reglas y sin copiarlas.
 
 ## 2. Resumen de sprints
 
@@ -47,8 +47,9 @@ Este plan organiza la construcción del MVP0 en sprints de 1 semana, con la IA g
 |---|---|---|---|---|
 | S0 | Fundaciones | M | Transversal | Solución con 5 proyectos, Serilog, Tailwind CLI, tests base, README de desarrollo |
 | S1 | Dominio I: textos, alias y slugs | L | Domain | Recorte y longitudes, generación de alias y de slugs, y sus tests |
-| S2 | Dominio II: URLs | L | Domain | Ajuste de URL y de `Image`, validación, `UrlNormalized`, duplicados, y sus tests |
+| S2 | Dominio II: URLs | L | Domain | Ajuste de URL y de `Image`, validación, `UrlNormalized` y sus tests |
 | S3 | Dominio III: entidades e invariantes | M | Domain | `User`, `Collection` y `Link`, propiedad, público/privado, tests de invariantes |
+| S3a | Dominio IV: Refactor de dominio | M | Domain | Refactorizar Domain para mejorar su rendimiento y legibilidad del código |
 | S4 | Aplicación: casos de uso | L | Application | `Result`, contratos, criterios de aceptación aprobados (puerta), abstracciones de repos y UoW, casos de uso con fakes, contrato de identidad de desarrollo |
 | S5 | Persistencia I: SQLite y transacciones | L | Infrastructure | Esquema versionado, PRAGMAs, colación `es-ES`, UoW con `BEGIN IMMEDIATE`, repositorios Dapper, SQL local de desarrollo, proveedor de identidad |
 | S6 | Persistencia II: FTS5 | L | Infrastructure | Proyecciones de enlaces y de colecciones, sincronización atómica, consulta de búsqueda, comando de reconstrucción |
@@ -131,18 +132,20 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 | S2.1 | Implementar la detección de esquema URI y el ajuste de `UrlOriginal` ([«Ajuste de URL»](../context/specifications.md#ajuste-de-url)) | IA |
 | S2.2 | Implementar el ajuste de `Image` (`https`, rechazo de `localhost` e IP, `//` → `https:`) ([«Ajuste de `Image`»](../context/specifications.md#ajuste-de-image)) | IA |
 | S2.3 | Implementar la validación de ambas ([«Validación»](../context/specifications.md#validación)) | IA |
-| S2.4 | Implementar `UrlNormalized` con `%23`, `%26`, `%2520`, `+` y la regla de duplicados ([«Normalización para duplicados»](../context/specifications.md#normalización-para-duplicados) y [«Duplicados»](../context/specifications.md#duplicados)) | IA |
+| S2.4 | Implementar `UrlNormalized` con `%23`, `%26`, `%2520` y `+` ([«Normalización para duplicados»](../context/specifications.md#normalización-para-duplicados)) | IA |
 | S2.5 | Escribir tests con todos los ejemplos de las especificaciones, separando `UrlOriginal` e `Image` | IA |
-| S2.6 | Proporcionar 30 URLs reales (favoritos propios) y revisar su normalización | Humano |
-| S2.7 | Decidir los casos dudosos y registrarlos | Humano |
+| S2.6 | Unificar las validaciones de entrada de Domain (por ejemplo, `ThrowIfNullOrWhiteSpace` en alias y slugs) y lo que surja durante el sprint | IA |
+| S2.7 | Revisar las 31 URLs del conjunto de origen «script S2.7» y registrar el juicio de DLG sobre su normalización | Humano |
+| S2.8 | Decidir los casos dudosos y registrarlos | Humano |
 
 **Definition of Done**
 
-- [ ] Ajuste y validación de `UrlOriginal` pasan todos los ejemplos.
-- [ ] Ajuste y validación de `Image` pasan todos los ejemplos, por separado.
-- [ ] `UrlNormalized` y la detección de duplicados cubren todos los ejemplos, incluidos los caracteres codificados.
-- [ ] El humano ha comparado las 30 URLs reales con el resultado.
-- [ ] Los casos dudosos están decididos y registrados.
+- [x] Ajuste y validación de `UrlOriginal` pasan todos los ejemplos.
+- [x] Ajuste y validación de `Image` pasan todos los ejemplos, por separado.
+- [x] `UrlNormalized` cubre todos los ejemplos, incluidos los caracteres codificados.
+- [x] DLG ha comparado las 31 URLs del conjunto «script S2.7» con el resultado y ha registrado sus juicios.
+- [x] Los casos dudosos están decididos y registrados.
+- [x] Las validaciones de entrada de Domain están unificadas.
 
 ### S3: Dominio III: entidades e invariantes (M)
 
@@ -164,6 +167,20 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 - [ ] Las fichas de entidad coinciden con el código.
 - [ ] El humano ha aprobado el modelo.
 
+### S3a: Dominio IV: refactor (M)
+
+**Objetivo:** refactorizar todo el Domain para mejorar en rendimiento y legibilidad del código.
+
+| ID | Tarea | Resp. |
+|---|---|---|
+| S3a.1 | Refactorizar las Policies | Humano |
+| S3a.2 | Refactorizar las entidades | Humano |
+
+**Definition of Done**
+
+- [ ] Dominio sigue funcionando como hasta ahora.
+- [ ] El humano ha aprobado el nuevo Domain.
+
 ### S4: Aplicación: casos de uso (L)
 
 **Objetivo:** definir los contratos y los criterios de aceptación, obtener su aprobación y solo entonces implementar los casos de uso con repositorios en memoria.
@@ -173,7 +190,7 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 | S4.1 | Definir `Result`, errores de aplicación, DTOs y validadores | IA | — |
 | S4.2 | Definir las interfaces de repositorios y de Unit of Work, y la abstracción del usuario identificado | IA | S4.1 |
 | S4.3 | Definir el contrato del proveedor de identidad de desarrollo ([«Identidad de desarrollo»](../context/decisions.md#identidad-de-desarrollo)) | IA | S4.2 |
-| S4.4 | Redactar criterios de aceptación (dado/cuando/entonces) de cada caso de uso en [`plans/acceptance-criteria.md`](acceptance-criteria.md), enlazados a su regla | IA | S4.1 |
+| S4.4 | Redactar criterios de aceptación (dado/cuando/entonces) de cada caso de uso en el archivo previsto `plans/acceptance-criteria.md`, enlazados a su regla | IA | S4.1 |
 | S4.5 | **Puerta:** revisar y aprobar los criterios de aceptación, dejando constancia por escrito | Humano | S4.4 |
 | S4.6 | Implementar los casos de uso de colecciones: crear, renombrar con regeneración de slug, cambiar visibilidad, eliminar (no la última ni con enlaces) y listar | IA | S4.5 |
 | S4.7 | Implementar los casos de uso de enlaces: crear con duplicados, editar, mover, cambiar visibilidad, eliminar y listar | IA | S4.5 |

@@ -18,7 +18,7 @@ Cerrar las decisiones pendientes de la revisión de la [tabla de conversión de 
 - [specifications.md → «Longitudes máximas»](../../../context/specifications.md#longitudes-máximas): límites de los slugs y del texto introducido por el usuario.
 - [decisions.md → «Riesgos aceptados»](../../../context/decisions.md#riesgos-aceptados): riesgo aceptado para las transformaciones de alias y slug.
 - [specs/archive/s1.6-revision-de-simbolos-y-nombres-reales/tasks.md → «Hallazgos para S1.7»](../s1.6-revision-de-simbolos-y-nombres-reales/tasks.md#hallazgos-para-s17): lista de resultados no aceptados o ambiguos que requiere decisión humana.
-- [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación): estado del trabajo activo y la revisión de la etapa.
+- [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho): estado del trabajo activo y la revisión de la etapa.
 
 ## Alcance
 
@@ -56,7 +56,7 @@ Cerrar las decisiones pendientes de la revisión de la [tabla de conversión de 
 | CA03 | [specifications.md → «Generación de slugs»](../../../context/specifications.md#generación-de-slugs) y [specifications.md → «Longitudes máximas»](../../../context/specifications.md#longitudes-máximas) | Los nombres reales y los resultados no aceptados de la revisión. | DLG aprueba o rechaza un resultado. | Cada caso resuelto tiene una decisión final con su justificación y la referencia del responsable. |
 | CA04 | [specifications.md → «Generación de slugs»](../../../context/specifications.md#generación-de-slugs) | Los casos de nombres reales con resultados sorprendentes o ambiguos. | Se refuerza la decisión del comportamiento con prueba de ejemplo. | Queda registrado si el caso se acepta como comportamiento válido, exige un ajuste de la regla o se deja como caso fuera del alcance del MVP0. |
 | CA05 | [decisions.md → «Riesgos aceptados»](../../../context/decisions.md#riesgos-aceptados) | Los riesgos aceptados y los casos de ambigüedad. | Se evalúan los resultados no previstos con la fuente. | La decisión de DLG confirma si el riesgo se acepta o si requiere cambiar la regla antes de continuar. |
-| CA06 | [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación) | La etapa S1 y el cierre de su definición. | Se revisa la evidencia de la decisión. | Quedan resueltas todas las ambigüedades de S1.6, sin casos abiertos pendientes de trámite, y la etapa puede dejarse cerrada en la documentación de recorrido del sprint. |
+| CA06 | [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho) | La etapa S1 y el cierre de su definición. | Se revisa la evidencia de la decisión. | Quedan resueltas todas las ambigüedades de S1.6, sin casos abiertos pendientes de trámite, y la etapa puede dejarse cerrada en la documentación de recorrido del sprint. |
 
 ## Bloqueos y preguntas pendientes
 
@@ -70,4 +70,4 @@ Cerrar las decisiones pendientes de la revisión de la [tabla de conversión de 
 - [Plan técnico](plan.md).
 - [Especificación de S1.6](../s1.6-revision-de-simbolos-y-nombres-reales/spec.md).
 - [Hallazgos para S1.7](../s1.6-revision-de-simbolos-y-nombres-reales/tasks.md#hallazgos-para-s17).
-- [Roadmap del sprint S1](../../../context/roadmap.md#dominio-y-aplicación).
+- [Roadmap del sprint S1](../../../context/roadmap.md#hecho).
