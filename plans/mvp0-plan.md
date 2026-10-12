@@ -162,10 +162,10 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 
 **Definition of Done**
 
-- [ ] Las invariantes aplicables al MVP0 tienen test.
-- [ ] No existe ningún camino de dominio para hacer público un enlace de una colección privada.
-- [ ] Las fichas de entidad coinciden con el código.
-- [ ] El humano ha aprobado el modelo.
+- [X] Las invariantes aplicables al MVP0 tienen test.
+- [x] No existe ningún camino de dominio para hacer público un enlace de una colección privada.
+- [x] Las fichas de entidad coinciden con el código.
+- [x] El humano ha aprobado el modelo.
 
 ### S3a: Dominio IV: refactor (M)
 
