@@ -14,6 +14,7 @@ public static class UrlNormalizationPolicy
         "utm_campaign",
         "utm_term",
         "utm_content",
+        "gclsrc",
         "gclid",
         "wbraid",
         "gbraid",
@@ -37,10 +38,7 @@ public static class UrlNormalizationPolicy
     {
         UserTextPolicy.ThrowIfNullOrWhiteSpace(url);
 
-        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) || uri is null)
-        {
-            throw new ArgumentException("Input must be an absolute URI.", nameof(url));
-        }
+        Uri uri = ParseAbsoluteUri(url);
 
         string host = uri.IdnHost;
         string port = uri.IsDefaultPort ? string.Empty : $":{uri.Port}";
@@ -49,6 +47,83 @@ public static class UrlNormalizationPolicy
 
         string combined = host + port + path + query;
         return Canonicalize(combined);
+    }
+
+    private static Uri ParseAbsoluteUri(string url)
+    {
+        string parseableUrl = EscapePathUnicode(url);
+
+        if (!Uri.TryCreate(parseableUrl, UriKind.Absolute, out Uri? uri) || uri is null)
+        {
+            throw new ArgumentException("Input must be an absolute URI.", nameof(url));
+        }
+
+        return uri;
+    }
+
+    private static string EscapePathUnicode(string url)
+    {
+        if (string.IsNullOrEmpty(url))
+        {
+            return url;
+        }
+
+        int separatorIndex = url.IndexOfAny(['?', '#']);
+        string preSeparator = separatorIndex >= 0 ? url[..separatorIndex] : url;
+        string postSeparator = separatorIndex >= 0 ? url[separatorIndex..] : string.Empty;
+
+        int schemeIndex = preSeparator.IndexOf("://", StringComparison.Ordinal);
+        if (schemeIndex < 0)
+        {
+            return url;
+        }
+
+        int pathStartIndex = preSeparator.IndexOf('/', schemeIndex + 3);
+        if (pathStartIndex < 0)
+        {
+            return url;
+        }
+
+        string authority = preSeparator[..pathStartIndex];
+        string path = preSeparator[pathStartIndex..];
+
+        StringBuilder escapedPath = new(path.Length);
+        for (int index = 0; index < path.Length; index++)
+        {
+            char character = path[index];
+            if (character == '%' && index + 2 < path.Length && IsHexDigit(path[index + 1]) && IsHexDigit(path[index + 2]))
+            {
+                escapedPath.Append(character);
+                continue;
+            }
+
+            if (IsPathSafeCharacter(character))
+            {
+                escapedPath.Append(character);
+                continue;
+            }
+
+            escapedPath.Append(Uri.EscapeDataString(character.ToString()));
+        }
+
+        return authority + escapedPath + postSeparator;
+    }
+
+    private static bool IsPathSafeCharacter(char character)
+    {
+        return character switch
+        {
+            >= 'a' and <= 'z' => true,
+            >= 'A' and <= 'Z' => true,
+            >= '0' and <= '9' => true,
+            '-' or '.' or '_' or '~' or '!' or '$' or '&' or '\'' or '(' or ')' or '*' or '+' or ',' or ';' or '=' or ':' or '@' or '/' => true,
+            _ => false
+        };
+    }
+
+    private static bool IsHexDigit(char character)
+    {
+        return char.IsAsciiHexDigit(character);
     }
 
     private static string NormalizeQuery(string query)
