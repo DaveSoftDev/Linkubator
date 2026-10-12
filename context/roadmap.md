@@ -18,7 +18,7 @@ La Definition of Done de S0 está completada. Las tareas y su evidencia se manti
 
 ### Dominio I
 
-La Definition of Done de S1 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S1: Dominio I (L)»](../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugsl).
+La Definition of Done de S1 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S1: Dominio I (L)»](../plans/mvp0-plan.md#s1-dominio-i-textos-alias-y-slugs-l).
 
 ### Dominio II
 

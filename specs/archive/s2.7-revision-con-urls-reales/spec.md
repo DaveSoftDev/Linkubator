@@ -20,7 +20,7 @@ Que DLG compruebe, con evidencia registrada, que el ajuste, la validación y la 
 - [decisions.md → «Riesgos aceptados»](../../../context/decisions.md#riesgos-aceptados): colisiones y límites aceptados de la clave plana.
 - [domain-model.md → «Link»](../../../context/domain-model.md#link): naturaleza de `UrlOriginal` y `UrlNormalized`.
 - [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura): aislamiento de Domain.
-- [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación): estado de la etapa.
+- [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho): estado de la etapa.
 
 ## Alcance
 
@@ -49,7 +49,7 @@ Que DLG compruebe, con evidencia registrada, que el ajuste, la validación y la 
 ## Dependencias y prerrequisitos
 
 - Existen `Linkubator.Domain` y el proyecto de tests con [LinkUrlPolicy.cs](../../../src/Linkubator.Domain/Policies/LinkUrlPolicy.cs), [UrlValidationPolicy.cs](../../../src/Linkubator.Domain/Policies/UrlValidationPolicy.cs) y [UrlNormalizationPolicy.cs](../../../src/Linkubator.Domain/Policies/UrlNormalizationPolicy.cs).
-- S2.3, S2.4, S2.5 y S2.6 están aceptadas por DLG según [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación).
+- S2.3, S2.4, S2.5 y S2.6 están aceptadas por DLG según [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho).
 - Las 31 URLs evaluadas constan en la tabla de `tasks.md`; DLG acepta el conjunto registrado mediante la instrucción de archivo del 12-X-2026.
 
 ## Criterios de aceptación

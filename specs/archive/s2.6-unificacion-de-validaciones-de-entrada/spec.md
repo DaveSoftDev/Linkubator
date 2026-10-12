@@ -17,7 +17,7 @@ Que todos los puntos de entrada públicos de `Linkubator.Domain` que reciben tex
 - [specifications.md → «Transformación común a ASCII»](../../../context/specifications.md#transformación-común-a-ascii), [«Generación del alias»](../../../context/specifications.md#generación-del-alias) y [«Generación de slugs»](../../../context/specifications.md#generación-de-slugs): el texto llega ya recortado y un resultado vacío tras la transformación se rechaza.
 - [specifications.md → «Ajuste de URL»](../../../context/specifications.md#ajuste-de-url), [«Ajuste de `Image`»](../../../context/specifications.md#ajuste-de-image), [«Validación»](../../../context/specifications.md#validación) y [«Normalización para duplicados»](../../../context/specifications.md#normalización-para-duplicados): comportamiento que debe conservarse.
 - [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura): aislamiento de Domain.
-- [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación): estado de la etapa.
+- [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho): estado de la etapa.
 
 ## Alcance
 
@@ -44,7 +44,7 @@ Que todos los puntos de entrada públicos de `Linkubator.Domain` que reciben tex
 ## Dependencias y prerrequisitos
 
 - Existen `Linkubator.Domain` y el proyecto de pruebas con las pruebas de las políticas, incluidas las de ejemplos de S1.5 y S2.5.
-- S1.3, S1.4 y S2.1 a S2.5 están aceptadas por DLG según [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación).
+- S1.3, S1.4 y S2.1 a S2.5 están aceptadas por DLG según [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho).
 - S2.6 no depende de S2.7 ni de S2.8; al contrario, la revisión humana con URLs reales se hace sobre el código ya unificado.
 - Los archivos de S1.3, S1.4 y S2.1 a S2.5 que citan la unificación como S2.8 y la revisión humana como S2.6 y S2.7 conservan la numeración anterior del [mvp0-plan.md](../../../plans/mvp0-plan.md#s2-dominio-ii-urls-l); el plan es la fuente vigente de la numeración.
 

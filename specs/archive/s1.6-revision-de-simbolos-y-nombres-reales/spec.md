@@ -18,7 +18,7 @@ Que DLG compruebe, con evidencia registrada, que la [«Tabla de conversión de s
 - [specifications.md → «Longitudes máximas»](../../../context/specifications.md#longitudes-máximas): rango del slug.
 - [decisions.md → «Riesgos aceptados»](../../../context/decisions.md#riesgos-aceptados): riesgo aceptado de la conversión a ASCII del alias y de los slugs.
 - [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura): aislamiento de Domain.
-- [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación): estado de la etapa.
+- [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho): estado de la etapa.
 
 ## Alcance
 
@@ -45,7 +45,7 @@ Que DLG compruebe, con evidencia registrada, que la [«Tabla de conversión de s
 ## Dependencias y prerrequisitos
 
 - Existen `Linkubator.Domain` y el proyecto de tests con [AsciiTransformationPolicy.cs](../../../src/Linkubator.Domain/Policies/AsciiTransformationPolicy.cs) y [SlugPolicy.cs](../../../src/Linkubator.Domain/Policies/SlugPolicy.cs).
-- S1.4 y S1.5 están aceptadas según [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación).
+- S1.4 y S1.5 están aceptadas según [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho).
 - Los 20 nombres reales de colecciones los aporta DLG; no se inventan ni se completan con ejemplos de las fuentes. Hasta que existan, CA03–CA06 no pueden ejecutarse.
 
 ## Criterios de aceptación

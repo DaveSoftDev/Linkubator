@@ -19,7 +19,7 @@ Que todos los ejemplos y casos concretos de las fuentes de ajuste, validación y
 - [specifications.md → «Normalización para duplicados»](../../../context/specifications.md#normalización-para-duplicados): ejemplos de `UrlNormalized`, derivaciones citadas y colisión aceptada.
 - [domain-model.md → «Link»](../../../context/domain-model.md#link): naturaleza de `UrlOriginal`, `Image` y `UrlNormalized`.
 - [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura): aislamiento de Domain.
-- [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación): estado de la etapa.
+- [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho): estado de la etapa.
 
 ## Alcance
 
@@ -45,7 +45,7 @@ Que todos los ejemplos y casos concretos de las fuentes de ajuste, validación y
 ## Dependencias y prerrequisitos
 
 - Existen `Linkubator.Domain` y el proyecto de tests con las pruebas de [UrlPoliciesTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/UrlPoliciesTests.cs), [ImageUrlPolicyTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/ImageUrlPolicyTests.cs), [UrlValidationPolicyTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/UrlValidationPolicyTests.cs), [UrlHostPolicyTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/UrlHostPolicyTests.cs) y [UrlNormalizationPolicyTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/UrlNormalizationPolicyTests.cs).
-- S2.1, S2.2, S2.3 y S2.4 están aceptadas por DLG según [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación).
+- S2.1, S2.2, S2.3 y S2.4 están aceptadas por DLG según [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho).
 - La existencia de pruebas no demuestra que cada ejemplo esté cubierto: la cobertura se determina en la auditoría de este trabajo.
 
 ## Criterios de aceptación

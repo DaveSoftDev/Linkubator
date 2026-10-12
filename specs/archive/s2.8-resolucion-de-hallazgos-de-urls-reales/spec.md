@@ -20,7 +20,7 @@ Resolver los hallazgos H01 y H02 de la revisión S2.7 alineando la regla vigente
 - [decisions.md → «Riesgos aceptados»](../../../context/decisions.md#riesgos-aceptados): riesgos aceptados de la clave plana.
 - [domain-model.md → «Link»](../../../context/domain-model.md#link): naturaleza de `UrlOriginal` y `UrlNormalized`.
 - [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura): responsabilidad y aislamiento de Domain.
-- [roadmap.md → «Dominio y aplicación»](../../../context/roadmap.md#dominio-y-aplicación): trazabilidad de S2.
+- [roadmap.md → «Hecho»](../../../context/roadmap.md#hecho): trazabilidad de S2.
 
 ## Alcance
 
