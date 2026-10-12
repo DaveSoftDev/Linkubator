@@ -4,8 +4,8 @@
 
 - Estado: aprobado.
 - Aprobaciones:
-	- Especificación: [spec.md](spec.md) aprobada por DLG, 07-X-2026.
-	- Plan: aprobado por DLG, 08-X-2026 («Confirmado»).
+	- Especificación: [spec.md](spec.md) aprobada por DLG, 7-X-2026.
+	- Plan: aprobado por DLG, 8-X-2026 («Confirmado»).
 
 ## Diseño de implementación
 

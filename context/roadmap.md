@@ -28,6 +28,12 @@ La Definition of Done de S2 está completada. Las tareas y su evidencia se manti
 
 Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 
+El trabajo aprobado para ampliar los tests de policies existentes está en [specs/tests-adicionales-policies-email-url/spec.md](../specs/tests-adicionales-policies-email-url/spec.md), [su plan técnico](../specs/tests-adicionales-policies-email-url/plan.md) y [sus tareas](../specs/tests-adicionales-policies-email-url/tasks.md). La implementación y validación se completaron el 12-X-2026; la aceptación de DLG está pendiente. No reabre ni cambia el estado completado de S2.
+
+El trabajo para ampliar la cobertura de las policies URL está en [specs/tests-cobertura-policies-url/spec.md](../specs/tests-cobertura-policies-url/spec.md), [su plan técnico](../specs/tests-cobertura-policies-url/plan.md) y [sus tareas](../specs/tests-cobertura-policies-url/tasks.md). La implementación, validación y aceptación se completaron el 12-X-2026 («Completada»); la corrección posterior autorizada y validada dejó `UrlValidationPolicy` en 94,50% de cobertura de líneas. No modifica ni reabre los trabajos S2 aceptados.
+
+La especificación aprobada de [S3.2 — Invariantes de propiedad](../specs/s3.2-invariantes-propiedad/spec.md), su [plan técnico aprobado](../specs/s3.2-invariantes-propiedad/plan.md) y sus [tareas aprobadas](../specs/s3.2-invariantes-propiedad/tasks.md) constituyen el trabajo completado del sprint S3. La implementación y la validación técnica se completaron el 12-X-2026 y fueron aprobadas por DLG con la referencia «Confirmado».
+
 ## Next
 
 ### Persistencia

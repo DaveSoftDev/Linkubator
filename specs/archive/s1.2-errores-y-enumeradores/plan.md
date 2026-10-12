@@ -2,11 +2,11 @@
 
 ## Estado y aprobación del plan
 
-- Estado: aprobado por DLG el 09-X-2026.
+- Estado: aprobado por DLG el 9-X-2026.
 - Aprobaciones:
-  - Especificación: [spec.md](spec.md) aprobada por DLG, 09-X-2026 («Excepciones de dominio identificadas»).
-  - Plan: aprobado por DLG, 09-X-2026 («Listo para tareas»).
-  - Actualización del contrato: aprobada por DLG, 09-X-2026 («hazlo con la base y las específicas»).
+  - Especificación: [spec.md](spec.md) aprobada por DLG, 9-X-2026 («Excepciones de dominio identificadas»).
+  - Plan: aprobado por DLG, 9-X-2026 («Listo para tareas»).
+  - Actualización del contrato: aprobada por DLG, 9-X-2026 («hazlo con la base y las específicas»).
 
 ## Diseño de implementación
 
@@ -44,7 +44,7 @@
 
 | Decisión o riesgo | Estado | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
-| Usar una `DomainException` abstracta y un subtipo específico por regla, conservando `Code` | Confirmada por DLG, 09-X-2026 («hazlo con la base y las específicas») | [spec.md → «Alcance»](spec.md#alcance) | Permite capturar errores conjuntamente o por regla concreta y conserva un identificador estable para su mapeo. |
+| Usar una `DomainException` abstracta y un subtipo específico por regla, conservando `Code` | Confirmada por DLG, 9-X-2026 («hazlo con la base y las específicas») | [spec.md → «Alcance»](spec.md#alcance) | Permite capturar errores conjuntamente o por regla concreta y conserva un identificador estable para su mapeo. |
 | Limitar los identificadores de error de S1.2 a `TextExceedsMaximumLength` | Definido | [spec.md → «Alcance»](spec.md#alcance) | Los errores de alias y slug se añadirán en sus trabajos propietarios, sin ampliar este contrato por anticipado. |
 | Usar `Purpose` para los propósitos de token | Propuesta | [specifications.md → «Tokens»](../../../context/specifications.md#tokens) | Sus valores técnicos serán `CompleteRegistration`, `PasswordReset`, `EmailChange` y `AccountDeletion`; requiere aprobación del plan. |
 | No lanzar excepciones desde entidades en S1.2 | Definido | [spec.md → «Alcance»](spec.md#alcance) | S1.2 prueba la jerarquía; S3 prueba que las entidades lanzan la excepción específica ante exceso de longitud. |

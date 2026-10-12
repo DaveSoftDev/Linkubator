@@ -9,40 +9,46 @@ public static class LinkUrlPolicy
 
     public static string Adjust(string input)
     {
-        UserTextPolicy.ThrowIfNullOrWhiteSpace(input);
+        if (input is null)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
 
-        if (input.Any(char.IsWhiteSpace) || ContainsControls(input))
+        string trimmedInput = input.Trim();
+        UserTextPolicy.ThrowIfNullOrWhiteSpace(trimmedInput);
+
+        if (trimmedInput.Any(char.IsWhiteSpace) || ContainsControls(trimmedInput))
         {
             throw new DomainExceptions.TextContainsUnsupportedCharactersException();
         }
 
-        if (input.Length > MaximumLength)
+        if (trimmedInput.Length > MaximumLength)
         {
             throw new DomainExceptions.TextExceedsMaximumLengthException();
         }
 
         try
         {
-            _ = input.Normalize();
+            _ = trimmedInput.Normalize();
         }
         catch (ArgumentException)
         {
             throw new DomainExceptions.TextContainsUnsupportedCharactersException();
         }
 
-        if (input.StartsWith("//", StringComparison.Ordinal))
+        if (trimmedInput.StartsWith("//", StringComparison.Ordinal))
         {
-            return "https://" + input[2..];
+            return "https://" + trimmedInput[2..];
         }
 
-        int separatorIndex = input.IndexOf("://", StringComparison.Ordinal);
-        int firstDelimiterIndex = input.IndexOfAny(['/', '?', '#']);
+        int separatorIndex = trimmedInput.IndexOf("://", StringComparison.Ordinal);
+        int firstDelimiterIndex = trimmedInput.IndexOfAny(['/', '?', '#']);
 
         if (separatorIndex >= 0 && (firstDelimiterIndex < 0 || separatorIndex < firstDelimiterIndex))
         {
             int index = separatorIndex;
-            string scheme = input[..index];
-            string remainder = input[(index + 3)..];
+            string scheme = trimmedInput[..index];
+            string remainder = trimmedInput[(index + 3)..];
 
             if (!IsAllowedScheme(scheme))
             {
@@ -54,15 +60,15 @@ public static class LinkUrlPolicy
                 throw new DomainExceptions.UrlAuthorityMissingException();
             }
 
-            return input;
+            return trimmedInput;
         }
 
-        int colonIndex = input.IndexOf(':');
+        int colonIndex = trimmedInput.IndexOf(':');
         if (colonIndex > 0)
         {
-            string schemeCandidate = input[..colonIndex];
-            string afterColon = input[(colonIndex + 1)..];
-            bool isHostPort = afterColon.Length > 0 && char.IsDigit(afterColon[0]) && UrlHostPolicy.TryExtractValidHost(input, out _);
+            string schemeCandidate = trimmedInput[..colonIndex];
+            string afterColon = trimmedInput[(colonIndex + 1)..];
+            bool isHostPort = afterColon.Length > 0 && char.IsDigit(afterColon[0]) && UrlHostPolicy.TryExtractValidHost(trimmedInput, out _);
 
             if (!isHostPort)
             {
@@ -78,9 +84,9 @@ public static class LinkUrlPolicy
             }
         }
 
-        if (UrlHostPolicy.TryExtractValidHost(input, out string? host))
+        if (UrlHostPolicy.TryExtractValidHost(trimmedInput, out string? host))
         {
-            return (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ? "http://" : "https://") + input;
+            return (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ? "http://" : "https://") + trimmedInput;
         }
 
         throw new DomainExceptions.UrlHostInvalidException();

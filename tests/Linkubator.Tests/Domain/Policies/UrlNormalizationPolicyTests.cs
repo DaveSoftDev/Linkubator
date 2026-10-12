@@ -4,6 +4,7 @@ using Linkubator.Domain.Policies;
 
 namespace Linkubator.Tests.Domain.Policies;
 
+[Trait("Category", "Normalization")]
 public class UrlNormalizationPolicyTests
 {
     [Trait("Category", "Validation")]
@@ -56,6 +57,47 @@ public class UrlNormalizationPolicyTests
         }
 
         Assert.Equal(invariantResult, turkishResult);
+    }
+
+    [Fact]
+    public void NormalizePreservesAndOrdersRepeatedQueryParameters()
+    {
+        string first = UrlNormalizationPolicy.Normalize("https://example.com/path?q=Z&q=a&q=a");
+        string reordered = UrlNormalizationPolicy.Normalize("https://example.com/path?q=a&q=a&q=Z");
+
+        Assert.Equal("examplecompathqaqaqz", first);
+        Assert.Equal(first, reordered);
+    }
+
+    [Fact]
+    public void NormalizeHandlesAQueryParameterWithoutValue()
+    {
+        Assert.Equal("examplecompathflag", UrlNormalizationPolicy.Normalize("https://example.com/path?flag"));
+    }
+
+    [Fact]
+    public void NormalizeHandlesUrlWithoutPath()
+    {
+        Assert.Equal("examplecom", UrlNormalizationPolicy.Normalize("https://example.com"));
+    }
+
+    [Fact]
+    public void NormalizeRemovesMarketingParametersWithoutCaseSensitivity()
+    {
+        string actual = UrlNormalizationPolicy.Normalize("https://example.com/path?UTM_SOURCE=Google&id=10");
+
+        Assert.Equal("examplecompathid10", actual);
+    }
+
+    [Fact]
+    public void NormalizeTreatsPlusAsSpaceOnlyInQueryDecoding()
+    {
+        string plusAsSpace = UrlNormalizationPolicy.Normalize("https://example.com/path?q=hello+world");
+        string encodedPlus = UrlNormalizationPolicy.Normalize("https://example.com/path?q=hello%2Bworld");
+
+        Assert.Equal("examplecompathqhello-world", plusAsSpace);
+        Assert.Equal("examplecompathqhelloworld", encodedPlus);
+        Assert.NotEqual(plusAsSpace, encodedPlus);
     }
 
     [Trait("Category", "Validation")]

@@ -25,7 +25,7 @@ Este documento describe cómo se construirá Linkubator: tecnologías, arquitect
 
 ### Domain
 
-- Entidades del dominio (heredan de `BaseEntity`).
+- Entidades del dominio. Las que tienen `Id` propio heredan de `BaseEntity`, que reúne las propiedades `Id` y `CreatedAt`. `LinkTag` no hereda de ella: es una relación identificada por la pareja `LinkId + TagId` (ver [domain-model.md → «LinkTag»](domain-model.md#linktag) y [decisions.md → «Tecnología»](decisions.md#tecnología)).
 - DTOs de entrada y salida.
 - POCOs / ViewModels.
 - Enumeraciones.
@@ -36,6 +36,7 @@ Este documento describe cómo se construirá Linkubator: tecnologías, arquitect
   - La de `Link.UrlOriginal` (ver [specifications.md → «Ajuste de URL»](specifications.md#ajuste-de-url) y [specifications.md → «Validación»](specifications.md#validación)).
   - La de `Link.UrlNormalized` (ver [specifications.md → «Normalización para duplicados»](specifications.md#normalización-para-duplicados)).
   - La de `Link.Image` (ver [specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image) y [specifications.md → «Validación»](specifications.md#validación)).
+  - La de `User.Email` (ver [specifications.md → «Email»](specifications.md#email)).
 - No conoce SQLite, Dapper, HTTP, Razor Pages ni detalles de infraestructura.
 
 ### Application

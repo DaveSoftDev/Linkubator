@@ -5,8 +5,8 @@
 - Estado: aprobado.
 - Especificación: [spec.md](spec.md).
 - Aprobaciones:
-  - Especificación: DLG, 07-X-2026 («Pruebas completadas»).
-  - Plan y tareas: DLG, 07-X-2026 («Pruebas completadas»).
+  - Especificación: DLG, 7-X-2026 («Pruebas completadas»).
+  - Plan y tareas: DLG, 7-X-2026 («Pruebas completadas»).
 
 ## Diseño de implementación
 

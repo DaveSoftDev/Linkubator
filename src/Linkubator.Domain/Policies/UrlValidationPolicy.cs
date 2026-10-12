@@ -26,11 +26,6 @@ public static class UrlValidationPolicy
             throw new DomainExceptions.UrlSchemeNotAllowedException();
         }
 
-        if (string.IsNullOrEmpty(uri.Host))
-        {
-            throw new DomainExceptions.UrlHostInvalidException();
-        }
-
         string host = uri.IdnHost;
         if (uri.HostNameType == UriHostNameType.IPv4
             && (!UrlHostPolicy.TryExtractHost(input, out string? writtenHost)
@@ -89,11 +84,6 @@ public static class UrlValidationPolicy
         if (pathIndex >= 0)
         {
             candidate = candidate[..pathIndex];
-        }
-
-        if (string.IsNullOrEmpty(candidate))
-        {
-            return false;
         }
 
         if (candidate.StartsWith("[", StringComparison.Ordinal))

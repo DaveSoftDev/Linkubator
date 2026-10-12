@@ -2,7 +2,7 @@
 
 ## Estado y aprobación
 
-- Estado: aprobada por DLG el 07-X-2026.
+- Estado: aprobada por DLG el 7-X-2026.
 - Referencia de aprobación: «Comprobada la lógica de las necesidades».
 - Este documento describe el resultado esperado; el diseño y la evidencia de implementación pertenecen a los artefactos relacionados.
 

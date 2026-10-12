@@ -3,6 +3,8 @@ using DomainPolicies = Linkubator.Domain.Policies;
 
 namespace Linkubator.Tests.Domain.Policies;
 
+[Trait("Category", "URLs")]
+[Trait("Category", "Validation")]
 public class UrlValidationPolicyTests
 {
     [Trait("Category", "Validation")]
@@ -89,6 +91,7 @@ public class UrlValidationPolicyTests
     [InlineData("https://exa mple.com")]
     [InlineData("https://example.com:70000")]
     [InlineData("https://example.com:abc")]
+    [InlineData("https://[2001:db8::1]:65536/")]
     public void ValidateRejectsNonAbsoluteUris(string input)
     {
         Assert.Throws<DomainExceptions.UrlNotAbsoluteException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));
@@ -100,6 +103,8 @@ public class UrlValidationPolicyTests
     [InlineData("javascript:alert(1)")]
     [InlineData("mailto:ana@example.com")]
     [InlineData("file:///c:/datos.txt")]
+    [InlineData("//example.com/path")]
+    [InlineData("foo+bar://example.com")]
     public void ValidateRejectsSchemesOtherThanHttpAndHttps(string input)
     {
         Assert.Throws<DomainExceptions.UrlSchemeNotAllowedException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));
@@ -174,6 +179,7 @@ public class UrlValidationPolicyTests
     [InlineData("https://example.com:8443/x")]
     [InlineData("https://example.com:65535")]
     [InlineData("http://[2001:db8::1]:8080/")]
+    [InlineData("http://[2001:db8::1]:65535/")]
     public void ValidateAcceptsMissingOrValidPorts(string input)
     {
         Assert.Null(Record.Exception(() => DomainPolicies.UrlValidationPolicy.Validate(input)));
@@ -187,6 +193,24 @@ public class UrlValidationPolicyTests
     public void ValidateRejectsAPortOutsideTheValidRange(string input)
     {
         Assert.Throws<DomainExceptions.UrlPortInvalidException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));
+    }
+
+    [Trait("Category", "Validation")]
+    [Theory]
+    [InlineData("https://example.com:/path")]
+    [InlineData("https://[2001:db8::1]:/path")]
+    public void ValidateRejectsAnEmptyPort(string input)
+    {
+        Assert.Throws<DomainExceptions.UrlPortInvalidException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));
+    }
+
+    [Trait("Category", "Validation")]
+    [Fact]
+    public void ValidateUsesSystemUriHostForBracketedIpv6Authority()
+    {
+        string input = "https://[2001:db8::1]x/path";
+
+        Assert.Null(Record.Exception(() => DomainPolicies.UrlValidationPolicy.Validate(input)));
     }
 
     [Trait("Category", "Validation")]

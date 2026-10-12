@@ -3,6 +3,8 @@ using DomainPolicies = Linkubator.Domain.Policies;
 
 namespace Linkubator.Tests.Domain.Policies;
 
+[Trait("Category", "Images")]
+[Trait("Category", "URLs")]
 public class ImageUrlPolicyTests
 {
     [Theory]
@@ -55,9 +57,20 @@ public class ImageUrlPolicyTests
     [InlineData("javascript:alert(1)")]
     [InlineData("mailto:ana@example.com")]
     [InlineData("ftp://example.com")]
-    public void AdjustRejectsUnsupportedSchemes(string input)
+    [InlineData("https://")]
+    public void AdjustRejectsUnsupportedSchemesOrMissingAuthority(string input)
     {
-        Assert.Throws<DomainExceptions.UrlSchemeNotAllowedException>(() => DomainPolicies.ImageUrlPolicy.Adjust(input, "https://example.com/a/b/post"));
+        DomainExceptions.DomainException exception = Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
+            DomainPolicies.ImageUrlPolicy.Adjust(input, "https://example.com/a/b/post"));
+
+        if (input == "https://")
+        {
+            Assert.IsType<DomainExceptions.UrlHostInvalidException>(exception);
+        }
+        else
+        {
+            Assert.IsType<DomainExceptions.UrlSchemeNotAllowedException>(exception);
+        }
     }
 
     [Theory]
@@ -82,9 +95,54 @@ public class ImageUrlPolicyTests
     }
 
     [Fact]
+    public void AdjustRejectsMalformedBaseUrlForRelativeReference()
+    {
+        Assert.Throws<DomainExceptions.UrlHostInvalidException>(() =>
+            DomainPolicies.ImageUrlPolicy.Adjust("image.jpg", "not-a-url"));
+    }
+
+    [Fact]
     public void AdjustRejectsUrlsThatExceedTheMaximumLength()
     {
         string url = "https://example.com/" + new string('a', 2048);
-        Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() => DomainPolicies.ImageUrlPolicy.Adjust(url, "https://example.com/a/b/post"));
+        Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() =>
+            DomainPolicies.ImageUrlPolicy.Adjust(url, "https://example.com/a/b/post"));
+    }
+
+    [Fact]
+    public void AdjustAcceptsUrlAtMaximumLength()
+    {
+        string prefix = "https://example.com/";
+        string url = prefix + new string('a', 2048 - prefix.Length);
+
+        Assert.Equal(2048, url.Length);
+        Assert.Equal(url, DomainPolicies.ImageUrlPolicy.Adjust(url, "https://example.com/a/b/post"));
+    }
+
+    [Fact]
+    public void AdjustTrimsWhitespaceAroundAbsoluteUrl()
+    {
+        string actual = DomainPolicies.ImageUrlPolicy.Adjust(
+            "  https://cdn.example.com/img.jpg  ",
+            "https://example.com/a/b/post");
+
+        Assert.Equal("https://cdn.example.com/img.jpg", actual);
+    }
+
+    [Fact]
+    public void AdjustRejectsMalformedUnicode()
+    {
+        Assert.Throws<DomainExceptions.TextContainsUnsupportedCharactersException>(() =>
+            DomainPolicies.ImageUrlPolicy.Adjust("\uD800", "https://example.com/a/b/post"));
+    }
+
+    [Fact]
+    public void AdjustResolvesFragmentOnlyReferenceAgainstHttpBase()
+    {
+        string actual = DomainPolicies.ImageUrlPolicy.Adjust(
+            "#new-section",
+            "http://example.com:8080/a/b/post?width=800#old-section");
+
+        Assert.Equal("https://example.com:8080/a/b/post?width=800#new-section", actual);
     }
 }

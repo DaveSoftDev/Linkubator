@@ -2,10 +2,10 @@
 
 ## Estado y aprobación del plan
 
-- Estado: aprobado por DLG el 09-X-2026.
+- Estado: aprobado por DLG el 9-X-2026.
 - Aprobaciones:
-  - Especificación: [spec.md](spec.md), aprobada por DLG, 09-X-2026 («Se han estudidado todos los casos»).
-  - Plan: aprobado por DLG, 09-X-2026 («Plan aprobado»).
+  - Especificación: [spec.md](spec.md), aprobada por DLG, 9-X-2026 («Se han estudidado todos los casos»).
+  - Plan: aprobado por DLG, 9-X-2026 («Plan aprobado»).
 
 ## Diseño de implementación
 
@@ -47,12 +47,12 @@
 
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
-| Un único generador, sin parámetro de origen, para alias, slug de colección y slug de etiqueta | Confirmada | [spec.md → «Alcance»](spec.md#alcance), DLG, 09-X-2026 | Un solo punto de entrada evita divergencias entre las tres transformaciones. |
-| `AliasPolicy` deja de recortar y llama al generador común | Confirmada | [spec.md → «Alcance»](spec.md#alcance), DLG, 09-X-2026 | Cambia el comportamiento aceptado en S1.3; se valida con la actualización de sus tests (CA09). |
-| Política de slugs separada del generador, que valida el rango | Confirmada | DLG, 09-X-2026 | El generador solo transforma y rechaza caracteres; cada política añade su validación. |
+| Un único generador, sin parámetro de origen, para alias, slug de colección y slug de etiqueta | Confirmada | [spec.md → «Alcance»](spec.md#alcance), DLG, 9-X-2026 | Un solo punto de entrada evita divergencias entre las tres transformaciones. |
+| `AliasPolicy` deja de recortar y llama al generador común | Confirmada | [spec.md → «Alcance»](spec.md#alcance), DLG, 9-X-2026 | Cambia el comportamiento aceptado en S1.3; se valida con la actualización de sus tests (CA09). |
+| Política de slugs separada del generador, que valida el rango | Confirmada | DLG, 9-X-2026 | El generador solo transforma y rechaza caracteres; cada política añade su validación. |
 | Normalización con `string.Normalize(NormalizationForm.FormKD)` y categorías Unicode (`UnicodeCategory`) | Propuesta | [specifications.md → «Transformación común a ASCII»](../../../context/specifications.md#transformación-común-a-ascii) | Permite reducir ancho completo, superíndices y compatibilidad; los efectos sorprendentes (`™` a `tm`, `½` a `1-2`) están aceptados en [decisions.md → «Datos, URLs y búsqueda»](../../../context/decisions.md#datos-urls-y-búsqueda). |
 | Criterio de rechazo previo a minúsculas: toda categoría de control (`Cc`) y de separador distinta del espacio U+0020 tras NFKD; y posterior a la tabla: toda categoría de letra (`L*`) o número (`N*`) no ASCII | Propuesta | [specifications.md → «Transformación común a ASCII»](../../../context/specifications.md#transformación-común-a-ascii) | Concreta las categorías para implementar los pasos 2 y 7 de la fuente. Si la revisión de S1.6 o S1.7 detecta un caso ambiguo, se tramita en el documento propietario antes de cambiar el comportamiento. |
-| Un solo subtipo de excepción para controles, separadores y no ASCII | Propuesta | DLG, 09-X-2026 (nombre general) | El motivo concreto no se distingue por tipo; si S3 lo necesita, se separa entonces. |
+| Un solo subtipo de excepción para controles, separadores y no ASCII | Propuesta | DLG, 9-X-2026 (nombre general) | El motivo concreto no se distingue por tipo; si S3 lo necesita, se separa entonces. |
 | Mantener la detección de colisión y la asociación de la etiqueta existente fuera de S1.4 | Confirmada | [spec.md → «Alcance»](spec.md#alcance) | No se añade dependencia de repositorio ni se simula unicidad antes de S3–S5. |
 | Los tests de alias de S1.3 cambian de resultado (`Ana_López!123` pasa a `ana-lopez123`; los alias con otros alfabetos pasan de eliminarse a rechazarse) | Confirmada | [specifications.md → «Generación del alias»](../../../context/specifications.md#generación-del-alias) | Se actualizan los tests afectados y se registran en las tareas; la evidencia de S1.3 corresponde al comportamiento anterior. |
 

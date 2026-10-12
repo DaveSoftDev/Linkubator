@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Linkubator.Tests;
 
+[Trait("Category", "Web")]
 public class WebStartupTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;

@@ -2,6 +2,8 @@ using DomainPolicies = Linkubator.Domain.Policies;
 
 namespace Linkubator.Tests.Domain.Policies;
 
+[Trait("Category", "Users")]
+[Trait("Category", "Text")]
 public class UserTextPolicyTests
 {
     [Theory]

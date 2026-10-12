@@ -5,8 +5,8 @@
 - Estado: aprobado.
 - Especificación: [spec.md](spec.md).
 - Aprobaciones:
-  - Especificación: DLG, 07-X-2026 («Leído y comprendido»).
-  - Plan y tareas: DLG, 07-X-2026 («Plan revisado y correcto»). Esta aprobación no implica ejecución de tareas ni aceptación del resultado.
+  - Especificación: DLG, 7-X-2026 («Leído y comprendido»).
+  - Plan y tareas: DLG, 7-X-2026 («Plan revisado y correcto»). Esta aprobación no implica ejecución de tareas ni aceptación del resultado.
 
 ## Diseño de implementación
 

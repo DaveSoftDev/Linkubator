@@ -2,7 +2,7 @@
 
 ## Estado y aprobación
 
-- Estado: aprobada por DLG el 09-X-2026.
+- Estado: aprobada por DLG el 9-X-2026.
 - Referencia de aprobación: «Requisitos entendidos».
 
 ## Objetivo

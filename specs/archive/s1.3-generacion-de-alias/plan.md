@@ -2,10 +2,10 @@
 
 ## Estado y aprobación del plan
 
-- Estado: aprobado por DLG el 09-X-2026.
+- Estado: aprobado por DLG el 9-X-2026.
 - Aprobaciones:
-  - Especificación: [spec.md](spec.md) aprobada por DLG, 09-X-2026 («Requisitos entendidos»).
-  - Plan: aprobado por DLG, 09-X-2026 («Listo para tareas»).
+  - Especificación: [spec.md](spec.md) aprobada por DLG, 9-X-2026 («Requisitos entendidos»).
+  - Plan: aprobado por DLG, 9-X-2026 («Listo para tareas»).
 
 ## Diseño de implementación
 

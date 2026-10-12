@@ -153,7 +153,7 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 
 | ID | Tarea | Resp. |
 |---|---|---|
-| S3.1 | Implementar `User` (estado completado), `Collection` y `Link` según [domain-model.md](../context/domain-model.md) | IA |
+| S3.1 | Implementar `User` (estado completado), `Collection` y `Link` según [domain-model.md](../context/domain-model.md), incluida la normalización y validación del email ([«Email»](../context/specifications.md#email)) | IA |
 | S3.2 | Implementar las invariantes de [«Propiedad de los datos»](../context/domain-model.md#propiedad-de-los-datos), incluida la igualdad de `UserId` entre enlace y colección | IA |
 | S3.3 | Implementar las invariantes y transiciones de [«Público y privado»](../context/domain-model.md#público-y-privado) | IA |
 | S3.4 | Escribir tests de invariantes: propiedad entre usuarios, público/privado y transiciones | IA |

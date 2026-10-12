@@ -3,6 +3,8 @@ using DomainPolicies = Linkubator.Domain.Policies;
 
 namespace Linkubator.Tests.Domain.Policies;
 
+[Trait("Category", "Users")]
+[Trait("Category", "Alias")]
 public class AliasPolicyTests
 {
     [Theory]

@@ -5,8 +5,8 @@
 - Estado: aprobado.
 - Especificación: [spec.md](spec.md).
 - Aprobaciones:
-  - Especificación: DLG, 07-X-2026 («Convenciones correctas»).
-  - Plan y tareas: DLG, 07-X-2026 («Convenciones correctas»).
+  - Especificación: DLG, 7-X-2026 («Convenciones correctas»).
+  - Plan y tareas: DLG, 7-X-2026 («Convenciones correctas»).
 
 ## Diseño de implementación
 

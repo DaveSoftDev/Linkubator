@@ -6,6 +6,16 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| S3.1 — Entidades `User`, `Collection` y `Link` | [spec.md](s3.1-entidades-user-collection-link/spec.md) | [plan.md](s3.1-entidades-user-collection-link/plan.md) | [tasks.md](s3.1-entidades-user-collection-link/tasks.md) |
+| Tests adicionales de `EmailPolicy`, `ImageUrlPolicy` y `LinkUrlPolicy` | [spec.md](tests-adicionales-policies-email-url/spec.md) | [plan.md](tests-adicionales-policies-email-url/plan.md) | [tasks.md](tests-adicionales-policies-email-url/tasks.md) |
+
+| Tests adicionales de policies URL | [spec.md](tests-cobertura-policies-url/spec.md) | [plan.md](tests-cobertura-policies-url/plan.md) | [tasks.md](tests-cobertura-policies-url/tasks.md) |
+
+## Trabajos completados
+
+| Trabajo | Especificación | Plan técnico | Tareas y cierre |
+| --- | --- | --- | --- |
+| S3.2 — Invariantes de propiedad | [spec.md](s3.2-invariantes-propiedad/spec.md) | [plan.md](s3.2-invariantes-propiedad/plan.md) | [tasks.md](s3.2-invariantes-propiedad/tasks.md#aceptación-y-cierre) |
 
 ## Trabajos archivados
 
