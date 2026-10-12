@@ -13,7 +13,13 @@ public static class UrlValidationPolicy
             throw new DomainExceptions.UrlNotAbsoluteException();
         }
 
-        // Esquema explícito no permitido: mailto:, javascript:, ftp:, file:, etc.
+        if (HasExplicitScheme(input)
+            && !string.Equals(uri.Scheme, "http", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new DomainExceptions.UrlSchemeNotAllowedException();
+        }
+
         if (!string.Equals(uri.Scheme, "http", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
         {
@@ -26,7 +32,6 @@ public static class UrlValidationPolicy
         }
 
         string host = uri.IdnHost;
-
         if (uri.HostNameType == UriHostNameType.IPv4
             && (!UrlHostPolicy.TryExtractHost(input, out string? writtenHost)
                 || writtenHost is null
@@ -35,9 +40,7 @@ public static class UrlValidationPolicy
             throw new DomainExceptions.UrlHostInvalidException();
         }
 
-        if (!UrlHostPolicy.IsValidHost(host)
-            && !UrlHostPolicy.IsValidHost($"[{host}]")
-            && !UrlHostPolicy.IsValidHost($"[{uri.Host}]"))
+        if (!UrlHostPolicy.IsValidHost(host) && !UrlHostPolicy.IsValidHost($"[{host}]") && !UrlHostPolicy.IsValidHost($"[{uri.Host}]") )
         {
             throw new DomainExceptions.UrlHostInvalidException();
         }
@@ -51,6 +54,20 @@ public static class UrlValidationPolicy
         {
             throw new DomainExceptions.UrlPortInvalidException();
         }
+    }
+
+    private static bool HasExplicitScheme(string input)
+    {
+        int colonIndex = input.IndexOf(':');
+        if (colonIndex <= 0)
+        {
+            return false;
+        }
+
+        return input[..colonIndex].All(character =>
+            char.IsLetter(character)
+            || char.IsDigit(character)
+            || character is '+' or '-' or '.');
     }
 
     private static bool HasInvalidPort(string input)
