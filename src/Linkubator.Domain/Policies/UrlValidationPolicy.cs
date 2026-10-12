@@ -14,6 +14,11 @@ public static class UrlValidationPolicy
             throw new DomainExceptions.UrlNotAbsoluteException();
         }
 
+        if (!input.Contains("://", StringComparison.Ordinal))
+        {
+            throw new DomainExceptions.UrlNotAbsoluteException();
+        }
+
         if (!string.Equals(uri.Scheme, "http", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
         {
