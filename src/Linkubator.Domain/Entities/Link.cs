@@ -11,6 +11,8 @@ public sealed class Link : Bases.BaseEntity
     private const int MaximumDescriptionLength = 1000;
     private const int MaximumImageLength = 2048;
 
+    private Collection? _collection;
+
     private Link()
     {
     }
@@ -33,13 +35,90 @@ public sealed class Link : Bases.BaseEntity
 
     public DomainEnums.ScrapingStatus ScrapingStatus { get; private set; }
 
-    public static Link Create(long userId, long collectionId, string urlOriginal, string? title, string? description, string? image)
+    public static Link Create(long userId, Collection collection, string urlOriginal, string? title, string? description, string? image, bool isPublic = false)
     {
-        if (userId <= 0 || collectionId <= 0)
+        if (collection is null)
         {
             throw new DomainExceptions.NotValidInputException();
         }
 
+        if (userId <= 0 || collection.Id <= 0 || collection.UserId != userId)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        if (isPublic && !collection.IsPublic)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        Link link = CreateInternal(userId, collection.Id, urlOriginal, title, description, image, isPublic);
+        collection.AddLink(link);
+        link._collection = collection;
+        return link;
+    }
+
+    public void ChangePrivacy(bool isPublic, Collection collection)
+    {
+        if (collection is null)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        if (collection.Id <= 0 || collection.UserId != UserId || collection.Id != CollectionId)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        if (isPublic && !collection.IsPublic)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        IsPublic = isPublic;
+    }
+
+    public void MoveToCollection(Collection destinationCollection)
+    {
+        if (destinationCollection is null)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        if (destinationCollection.Id <= 0 || destinationCollection.UserId != UserId)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        if (_collection is not null && _collection.Id == CollectionId && _collection.Id != destinationCollection.Id)
+        {
+            _collection.RemoveLink(this);
+        }
+
+        CollectionId = destinationCollection.Id;
+
+        if (!ReferenceEquals(_collection, destinationCollection))
+        {
+            destinationCollection.AddLink(this);
+        }
+
+        _collection = destinationCollection;
+        IsPublic = false;
+    }
+
+    public void Edit(string? title, string? description, string? image)
+    {
+        string? nextTitle = NormalizeOptionalText(title, MaximumTitleLength);
+        string? nextDescription = NormalizeOptionalText(description, MaximumDescriptionLength);
+        string? nextImage = NormalizeOptionalImage(image, UrlOriginal, MaximumImageLength);
+
+        Title = nextTitle;
+        Description = nextDescription;
+        Image = nextImage;
+    }
+
+    private static Link CreateInternal(long userId, long collectionId, string urlOriginal, string? title, string? description, string? image, bool isPublic)
+    {
         string adjustedUrl = DomainPolicies.LinkUrlPolicy.Adjust(urlOriginal);
         DomainPolicies.UrlValidationPolicy.Validate(adjustedUrl);
 
@@ -58,50 +137,9 @@ public sealed class Link : Bases.BaseEntity
             Title = nextTitle,
             Description = nextDescription,
             Image = nextImage,
-            IsPublic = false,
+            IsPublic = isPublic,
             ScrapingStatus = DomainEnums.ScrapingStatus.NotRequested,
         };
-    }
-
-    public static Link Create(long userId, Collection collection, string urlOriginal, string? title, string? description, string? image)
-    {
-        if (collection is null)
-        {
-            throw new DomainExceptions.NotValidInputException();
-        }
-
-        if (userId <= 0 || collection.Id <= 0 || collection.UserId != userId)
-        {
-            throw new DomainExceptions.NotValidInputException();
-        }
-
-        return Create(userId, collection.Id, urlOriginal, title, description, image);
-    }
-
-    public void MoveToCollection(Collection destinationCollection)
-    {
-        if (destinationCollection is null)
-        {
-            throw new DomainExceptions.NotValidInputException();
-        }
-
-        if (destinationCollection.Id <= 0 || destinationCollection.UserId != UserId)
-        {
-            throw new DomainExceptions.NotValidInputException();
-        }
-
-        CollectionId = destinationCollection.Id;
-    }
-
-    public void Edit(string? title, string? description, string? image)
-    {
-        string? nextTitle = NormalizeOptionalText(title, MaximumTitleLength);
-        string? nextDescription = NormalizeOptionalText(description, MaximumDescriptionLength);
-        string? nextImage = NormalizeOptionalImage(image, UrlOriginal, MaximumImageLength);
-
-        Title = nextTitle;
-        Description = nextDescription;
-        Image = nextImage;
     }
 
     private static string? NormalizeOptionalText(string? input, int maximumLength)

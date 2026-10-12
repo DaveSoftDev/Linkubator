@@ -136,4 +136,91 @@ public class CollectionTests
         Assert.Equal("Renamed Collection", collection.Name);
         Assert.Equal("renamed-collection", collection.Slug);
     }
+
+    [Fact]
+    public void Create_WhenPublicRequested_SetsPublicCollectionState()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", "desc", true);
+
+        Assert.True(collection.IsPublic);
+    }
+
+    [Fact]
+    public void ChangePrivacy_WhenMakingPrivate_UpdatesLinksAndPreservesPublicState()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", "desc", true);
+        SetEntityId(collection, 12);
+
+        DomainEntities.Link first = DomainEntities.Link.Create(7, collection, "https://example.com/1", null, null, null, true);
+        DomainEntities.Link second = DomainEntities.Link.Create(7, collection, "https://example.com/2", null, null, null, false);
+
+        collection.ChangePrivacy(false, new[] { first, second });
+
+        Assert.False(collection.IsPublic);
+        Assert.False(first.IsPublic);
+        Assert.False(second.IsPublic);
+
+        collection.ChangePrivacy(true, new[] { first, second });
+
+        Assert.True(collection.IsPublic);
+        Assert.False(first.IsPublic);
+        Assert.False(second.IsPublic);
+    }
+
+    [Fact]
+    public void ChangePrivacy_WhenLinkDoesNotBelongToCollection_ThrowsWithoutPartialMutation()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", "desc", true);
+        SetEntityId(collection, 12);
+        DomainEntities.Link associatedLink = DomainEntities.Link.Create(7, collection, "https://example.com/1", null, null, null, true);
+
+        DomainEntities.Collection otherCollection = DomainEntities.Collection.Create(7, "Other Collection", null);
+        SetEntityId(otherCollection, 13);
+        DomainEntities.Link unrelatedLink = DomainEntities.Link.Create(7, otherCollection, "https://example.com/2", null, null, null);
+
+        Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
+            collection.ChangePrivacy(false, new[] { associatedLink, unrelatedLink }));
+
+        Assert.True(collection.IsPublic);
+        Assert.True(associatedLink.IsPublic);
+        Assert.False(unrelatedLink.IsPublic);
+    }
+
+    [Fact]
+    public void ChangePrivacy_WhenSubsetOfLinksIsProvided_ThrowsWithoutPartialMutation()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", "desc", true);
+        SetEntityId(collection, 12);
+        DomainEntities.Link first = DomainEntities.Link.Create(7, collection, "https://example.com/1", null, null, null, true);
+        DomainEntities.Link second = DomainEntities.Link.Create(7, collection, "https://example.com/2", null, null, null, true);
+
+        Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
+            collection.ChangePrivacy(false, new[] { first }));
+
+        Assert.True(collection.IsPublic);
+        Assert.True(first.IsPublic);
+        Assert.True(second.IsPublic);
+    }
+
+    [Fact]
+    public void ChangePrivacy_WhenDuplicateLinkReplacesMissingLink_ThrowsWithoutPartialMutation()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", "desc", true);
+        SetEntityId(collection, 12);
+        DomainEntities.Link first = DomainEntities.Link.Create(7, collection, "https://example.com/1", null, null, null, true);
+        DomainEntities.Link second = DomainEntities.Link.Create(7, collection, "https://example.com/2", null, null, null, true);
+
+        Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
+            collection.ChangePrivacy(false, new[] { first, first }));
+
+        Assert.True(collection.IsPublic);
+        Assert.True(first.IsPublic);
+        Assert.True(second.IsPublic);
+    }
+
+    private static void SetEntityId(DomainEntities.Collection collection, long id)
+    {
+        System.Reflection.PropertyInfo? property = typeof(DomainEntities.Collection).BaseType?.GetProperty("Id");
+        property?.SetValue(collection, id);
+    }
 }

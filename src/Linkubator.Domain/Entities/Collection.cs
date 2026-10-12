@@ -9,6 +9,8 @@ public sealed class Collection : Bases.BaseEntity
     private const int MaximumNameLength = 50;
     private const int MaximumDescriptionLength = 250;
 
+    private readonly List<Link> _links = new();
+
     private Collection()
     {
     }
@@ -23,7 +25,7 @@ public sealed class Collection : Bases.BaseEntity
 
     public bool IsPublic { get; private set; }
 
-    public static Collection Create(long userId, string name, string? description)
+    public static Collection Create(long userId, string name, string? description, bool isPublic = false)
     {
         if (userId <= 0)
         {
@@ -53,8 +55,69 @@ public sealed class Collection : Bases.BaseEntity
             Name = trimmedName,
             Slug = slug,
             Description = trimmedDescription,
-            IsPublic = false,
+            IsPublic = isPublic,
         };
+    }
+
+    public void ChangePrivacy(bool isPublic, IEnumerable<Link> links)
+    {
+        if (links is null)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        List<Link> associatedLinks = links.ToList();
+        HashSet<Link> suppliedLinks = new(associatedLinks);
+        if (suppliedLinks.Count != associatedLinks.Count || !suppliedLinks.SetEquals(_links))
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        foreach (Link link in associatedLinks)
+        {
+            if (link is null || link.UserId != UserId || link.CollectionId != Id)
+            {
+                throw new DomainExceptions.NotValidInputException();
+            }
+        }
+
+        if (!isPublic)
+        {
+            foreach (Link link in associatedLinks)
+            {
+                link.ChangePrivacy(false, this);
+            }
+        }
+
+        IsPublic = isPublic;
+    }
+
+    internal void AddLink(Link link)
+    {
+        if (link is null)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        if (link.UserId != UserId || link.CollectionId != Id)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        if (!_links.Contains(link))
+        {
+            _links.Add(link);
+        }
+    }
+
+    internal void RemoveLink(Link link)
+    {
+        if (link is null)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        _links.Remove(link);
     }
 
     public void Rename(string name)
