@@ -386,7 +386,7 @@ Esta regla se aplica al ajuste de `UrlOriginal` y `Image`:
 El formulario conserva la URL introducida para mostrar los errores. El ajuste produce una URL ajustada o string vacío `""`.
 
 1. Recortar los espacios del principio y del final.
-2. Si queda vacía o contiene caracteres de control o saltos de línea, rechazar.
+2. Si queda vacía o contiene caracteres de control o saltos de línea, rechazar. También se rechaza cualquier espacio que haya quedado en el interior, incluido el espacio normal y los espacios Unicode, porque el analizador de URI los reescribiría después en silencio.
 3. Si empieza por `//`, añadir `https:`.
 4. Si tiene un esquema URI explícito, según [«Detección de esquema URI»](#detección-de-esquema-uri), solo se aceptan `http` y `https`, sin distinguir mayúsculas. Cualquier otro esquema (`ftp`, `file`, `text`, `javascript`, `data`, `mailto`, `vbscript` y similares) se rechaza.
 5. Si no tiene esquema, añadir `http://` cuando el host es `localhost` y `https://` en cualquier otro caso.
@@ -419,7 +419,7 @@ El formulario conserva la URL de imagen introducida para mostrar los errores. El
 
 1. Recortar los espacios del principio y del final.
 2. Si queda vacía, tratarla como no informada y no continuar a validación.
-3. Si contiene caracteres de control o saltos de línea, rechazar el ajuste.
+3. Si contiene caracteres de control o saltos de línea, rechazar el ajuste. También se rechaza cualquier espacio que haya quedado en el interior, incluido el espacio normal y los espacios Unicode, porque el analizador de URI los reescribiría después en silencio.
 4. Si empieza por `//`, añadir `https:`.
 5. Si tiene un esquema URI explícito, según [«Detección de esquema URI»](#detección-de-esquema-uri), cambiar `http` a `https`; aceptar `https` sin distinguir mayúsculas y rechazar cualquier otro esquema (`ftp`, `file`, `text`, `javascript`, `data`, `mailto`, `vbscript` y similares).
 6. Si tiene la forma host y puerto reconocida en [«Detección de esquema URI»](#detección-de-esquema-uri), tratarla como autoridad y añadir `https://`.

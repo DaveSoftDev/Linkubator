@@ -63,6 +63,24 @@ public class DomainExceptionTests
     }
 
     [Fact]
+    public void NotValidInputExceptionExposesItsStableCode()
+    {
+        DomainExceptions.NotValidInputException exception = new();
+
+        Assert.Equal("NotValidInput", exception.Code);
+        Assert.IsAssignableFrom<DomainExceptions.DomainException>(exception);
+    }
+
+    [Fact]
+    public void InvalidEmailExceptionExposesItsStableCode()
+    {
+        DomainExceptions.InvalidEmailException exception = new();
+
+        Assert.Equal("InvalidEmail", exception.Code);
+        Assert.IsAssignableFrom<DomainExceptions.DomainException>(exception);
+    }
+
+    [Fact]
     public void UnsupportedCharactersExceptionDoesNotAcceptOrExposeUserData()
     {
         System.Reflection.ConstructorInfo[] constructors = typeof(DomainExceptions.TextContainsUnsupportedCharactersException).GetConstructors();
@@ -100,6 +118,28 @@ public class DomainExceptionTests
         public TestDomainException(string code)
             : base(code)
         {
+        }
+    }
+
+    [Fact]
+    public void EveryDomainExceptionExposesACodeMatchingItsTypeNameWithoutTheExceptionSuffix()
+    {
+        System.Reflection.Assembly assembly = typeof(DomainExceptions.DomainException).Assembly;
+        System.Type[] exceptionTypes = assembly.GetTypes()
+            .Where(type => typeof(DomainExceptions.DomainException).IsAssignableFrom(type))
+            .Where(type => type != typeof(DomainExceptions.DomainException))
+            .ToArray();
+
+        Assert.NotEmpty(exceptionTypes);
+
+        foreach (System.Type type in exceptionTypes)
+        {
+            DomainExceptions.DomainException exception = (DomainExceptions.DomainException)System.Activator.CreateInstance(type)!;
+            string expectedCode = type.Name.EndsWith("Exception", StringComparison.Ordinal)
+                ? type.Name[..^"Exception".Length]
+                : type.Name;
+
+            Assert.Equal(expectedCode, exception.Code);
         }
     }
 }

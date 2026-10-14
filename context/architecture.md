@@ -29,7 +29,7 @@ Este documento describe cómo se construirá Linkubator: tecnologías, arquitect
 - DTOs de entrada y salida.
 - POCOs / ViewModels.
 - Enumeraciones.
-- Excepciones de dominio.
+- Excepciones de dominio, y solo excepciones de dominio: todo lo que Domain rechaza se lanza como una excepción derivada de `DomainException`, nunca como una excepción genérica, para que quien captura en la frontera de la capa solo necesite conocer `DomainException` y su `Code` (ver [decisions.md → «Tecnología»](decisions.md#tecnología)).
 - Independiente de frameworks externos.
 - Transformaciones de texto sin dependencias de infraestructura.
   - La generación de `User.Alias`, `Collection.Slug` y `Tag.Slug`, que comparten una única transformación (ver [specifications.md → «Transformación común a ASCII»](specifications.md#transformación-común-a-ascii), [«Generación del alias»](specifications.md#generación-del-alias) y [«Generación de slugs»](specifications.md#generación-de-slugs)).

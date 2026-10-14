@@ -37,7 +37,6 @@ dotnet_naming_style.underscore_camel_case.required_prefix = _
 dotnet_naming_style.interface_pascal_case.capitalization = pascal_case
 dotnet_naming_style.interface_pascal_case.required_prefix = I
 dotnet_naming_style.async_pascal_case.capitalization = pascal_case
-dotnet_naming_style.async_pascal_case.required_suffix = Async
 
 # ─── Naming: grupos de símbolos ────────────────────────
 dotnet_naming_symbols.types.applicable_kinds = class, struct, enum

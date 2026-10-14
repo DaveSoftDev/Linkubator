@@ -2,8 +2,21 @@ using DomainExceptions = Linkubator.Domain.Exceptions;
 
 namespace Linkubator.Domain.Policies;
 
+/// <summary>
+/// Política para validación de URLs de enlaces.
+/// </summary>
 public static class UrlValidationPolicy
 {
+    /// <summary>
+    /// Valida que la URL cumple con las restricciones requeridas.
+    /// </summary>
+    /// <param name="input">URL a validar.</param>
+    /// <exception cref="DomainExceptions.NotValidInputException">Si la URL es nula, vacía o solo espacios.</exception>
+    /// <exception cref="DomainExceptions.UrlNotAbsoluteException">Si la URL no es absoluta.</exception>
+    /// <exception cref="DomainExceptions.UrlSchemeNotAllowedException">Si el esquema no está permitido.</exception>
+    /// <exception cref="DomainExceptions.UrlHostInvalidException">Si el host no es válido.</exception>
+    /// <exception cref="DomainExceptions.UrlCredentialsNotAllowedException">Si se incluyen credenciales en la URL.</exception>
+    /// <exception cref="DomainExceptions.UrlPortInvalidException">Si el puerto no es válido.</exception>
     public static void Validate(string input)
     {
         UserTextPolicy.ThrowIfNullOrWhiteSpace(input);
@@ -13,29 +26,21 @@ public static class UrlValidationPolicy
             throw new DomainExceptions.UrlNotAbsoluteException();
         }
 
-        if (HasExplicitScheme(input)
-            && !string.Equals(uri.Scheme, "http", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new DomainExceptions.UrlSchemeNotAllowedException();
-        }
-
-        if (!string.Equals(uri.Scheme, "http", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+        if (!UriAuthorityPolicy.IsAllowedScheme(uri.Scheme))
         {
             throw new DomainExceptions.UrlSchemeNotAllowedException();
         }
 
         string host = uri.IdnHost;
         if (uri.HostNameType == UriHostNameType.IPv4
-            && (!UrlHostPolicy.TryExtractHost(input, out string? writtenHost)
+            && (!UriAuthorityPolicy.TryExtractHost(input, out string? writtenHost)
                 || writtenHost is null
-                || !UrlHostPolicy.IsValidHost(writtenHost)))
+                || !UriAuthorityPolicy.IsValidHost(writtenHost)))
         {
             throw new DomainExceptions.UrlHostInvalidException();
         }
 
-        if (!UrlHostPolicy.IsValidHost(host) && !UrlHostPolicy.IsValidHost($"[{host}]") && !UrlHostPolicy.IsValidHost($"[{uri.Host}]") )
+        if (!UriAuthorityPolicy.IsValidHost(host))
         {
             throw new DomainExceptions.UrlHostInvalidException();
         }
@@ -51,90 +56,18 @@ public static class UrlValidationPolicy
         }
     }
 
-    private static bool HasExplicitScheme(string input)
-    {
-        int colonIndex = input.IndexOf(':');
-        if (colonIndex <= 0)
-        {
-            return false;
-        }
-
-        return input[..colonIndex].All(character =>
-            char.IsLetter(character)
-            || char.IsDigit(character)
-            || character is '+' or '-' or '.');
-    }
-
+    /// <summary>
+    /// Determina si el puerto en la URL es inválido.
+    /// </summary>
+    /// <param name="input">URL a analizar.</param>
+    /// <returns><c>true</c> si el puerto es inválido; de lo contrario, <c>false</c>.</returns>
     private static bool HasInvalidPort(string input)
     {
-        string candidate = input.Trim();
-
-        if (candidate.StartsWith("//", StringComparison.Ordinal))
-        {
-            candidate = candidate[2..];
-        }
-
-        int schemeIndex = candidate.IndexOf("://", StringComparison.Ordinal);
-        if (schemeIndex >= 0)
-        {
-            candidate = candidate[(schemeIndex + 3)..];
-        }
-
-        int pathIndex = candidate.IndexOfAny(['/', '?', '#']);
-        if (pathIndex >= 0)
-        {
-            candidate = candidate[..pathIndex];
-        }
-
-        if (candidate.StartsWith("[", StringComparison.Ordinal))
-        {
-            int closingBracket = candidate.IndexOf(']');
-            if (closingBracket < 0)
-            {
-                return false;
-            }
-
-            if (candidate.Length <= closingBracket + 1)
-            {
-                return false;
-            }
-
-            if (candidate[closingBracket + 1] != ':')
-            {
-                return false;
-            }
-
-            string portText = candidate[(closingBracket + 2)..];
-            bool invalidBracketPort = !TryParsePort(portText, out int bracketPort)
-                || bracketPort < 1
-                || bracketPort > 65535;
-
-            return invalidBracketPort;
-        }
-
-        int lastColonIndex = candidate.LastIndexOf(':');
-        if (lastColonIndex <= 0)
+        if (UriAuthorityPolicy.Analyze(input) is not { } authority)
         {
             return false;
         }
 
-        string portTextCandidate = candidate[(lastColonIndex + 1)..];
-        bool invalidStandardPort = !TryParsePort(portTextCandidate, out int standardPort)
-            || standardPort < 1
-            || standardPort > 65535;
-
-        return invalidStandardPort;
-    }
-
-    private static bool TryParsePort(string? portText, out int port)
-    {
-        port = 0;
-
-        if (string.IsNullOrWhiteSpace(portText) || !portText.All(char.IsDigit))
-        {
-            return false;
-        }
-
-        return int.TryParse(portText, out port);
+        return authority.Port is string portText && !UriAuthorityPolicy.IsValidPort(portText);
     }
 }

@@ -6,6 +6,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| S3a.1 — Refactor de las políticas de URL | [spec.md](s3a-refactor-de-dominio/spec.md) | [plan.md](s3a-refactor-de-dominio/plan.md) | [tasks.md](s3a-refactor-de-dominio/tasks.md) |
 
 ## Trabajos completados
 

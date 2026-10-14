@@ -19,21 +19,21 @@ Todo el código propuesto para esta solución debe ser como si lo hiciera un des
 
 ❌ Incorrecto:
 ```csharp
-public async void ProcessUrl(string url) { }
+public async void GetCollections(long userId) { }
 ```
 
 ✅ Correcto:
 ```csharp
-public async Task ProcessUrl(string url) { }
-public async Task<ShortenedUrl> GetUrl(int id) { }
+public async Task GetCollections(long userId) { }
+public async Task<Collection> GetCollection(long id) { }
 ```
 
 ### Sufijos por tipo de archivo/clase
 - Razor Page models → sufijo `Model` (IndexModel, DisplayUrlsModel)
 - OptionsPattern → sufijo `Options` (AppOptions)
 - Extension methods → sufijo `Extensions` (WebRedirectorExtensions)
-- DTOs de entrada → sufijo `Request` (ShortUrlRequest)
-- DTOs de salida → sufijo `Response` (LongUrlResponse)
+- DTOs de entrada → sufijo `Request` (LinkRequest)
+- DTOs de salida → sufijo `Response` (LinkResponse)
 - Otros DTOs → sufijo `DTO`
 
 ### Métodos de repositorio
@@ -108,9 +108,9 @@ public async Task<IActionResult> OnPostAsync()
         await _service.Link(Request);
         return RedirectToPage();
     }
-    catch (LinkAlreadyExistsException)
+    catch (UrlSchemeNotAllowedException)
     {
-        ModelState.AddModelError(string.Empty, "El link ya existe.");
+        ModelState.AddModelError(string.Empty, "El esquema de la URL no está permitido.");
         return Page();
     }
     // Las excepciones no controladas las gestiona GlobalExceptionHandler
@@ -176,7 +176,7 @@ public record TraceRecord(string EventId, string Description);
 Linkubator.Domain/Extensions/                              # Extensiones de dominio
 Linkubator.Application/Extensions/                         # Extensiones de aplicación
 Linkubator.Infrastructure.Repositories/Extensions/         # Extensiones de repositorios
-Linkubator.Web/Extensions/                             # Extensiones de presentación web
+Linkubator.Web/Extensions/                                 # Extensiones de presentación web
 ```
 
 ##### Nomenclatura de Clases de Extensión
@@ -228,22 +228,22 @@ public class IndexModel : PageModel
 
 - **LogError**: Excepciones y errores críticos
   ```csharp
-  _logger.LogError(ex, "Error loading Index page");
+  _logger.LogError(ex, "Error");
   ```
 
 - **LogWarning**: Situaciones anómalas no críticas
   ```csharp
-  _logger.LogWarning("URL {ShortUrl} está a punto de expirar", shortUrl);
+  _logger.LogWarning("Warning");
   ```
 
 - **LogInformation**: Eventos importantes del flujo
   ```csharp
-  _logger.LogInformation("URL shortened successfully: {ShortUrl}", shortUrl);
+  _logger.LogInformation("Information");
   ```
 
 - **LogDebug**: Información de depuración
   ```csharp
-  _logger.LogDebug("Processing request for URL: {Url}", url);
+  _logger.LogDebug("Debug");
   ```
 
 ### Entidades y Estructura de Domain
@@ -259,8 +259,8 @@ public class IndexModel : PageModel
 ```csharp
 public class Collection : BaseEntity
 {
-    public string Name { get; set; }
-    public string Description { get; set; }
+    public string Name { get; private set; }
+    public string Description { get; private set; }
 }
 ```
 
@@ -270,14 +270,15 @@ Todo vive en `Linkubator.Domain` (no existe un proyecto `Domain.Entities` separa
 
 ```
 Linkubator.Domain/
-├── Entities/       # Entidades del dominio (heredan de BaseEntity)
-│   └── Bases/      # BaseEntity
+├── Constants/      # Constantes del dominio
 ├── DTOs/
 │   ├── Requests/   # DTOs de entrada (sufijo Request)
 │   └── Responses/  # DTOs de salida (sufijo Response)
-├── POCOs/          # ViewModels y otros objetos planos
-├── Enums/          # HitType, ChartTimeScale, CreatedFrom
-└── Exceptions/     # LinkAlreadyExistsException, etc.
+├── Entities/       # Entidades del dominio (heredan de BaseEntity)
+│   └── Bases/      # BaseEntity
+├── Enums/          # ScrapingStatus, Purpose
+├── Exceptions/     # UrlSchemeNotAllowedException, etc.
+└── POCOs/          # ViewModels y otros objetos planos
 ```
 
 ### Razor Pages
@@ -327,15 +328,15 @@ IUnitOfWork uow = _uowFactory.Get(Linkubator.Application.Constants.UnitOfWorkCon
 
 #### Organización de Constants
 
-- Ubicación: `Linkubator.Application/Constants/`
+- Ubicación: `Linkubator.Domain/Constants/`
 - Crear clases estáticas agrupadas por contexto
 
 ✅ Ejemplo:
 ```csharp
-// En Linkubator.Application/Constants/UnitOfWorkContexts.cs
-public static class UnitOfWorkContexts
+// En Linkubator.Domain/Constants/LengthLimitsConstants.cs
+public static class LengthLimitsConstants
 {
-    public const string Linkubator = "Linkubator";
+    public const int UserName = 100;
 }
 ```
 
@@ -365,32 +366,31 @@ await using (IUnitOfWork uow = _unitOfWorkFactory.Get(Linkubator.Application.Con
 
 ✅ Ejemplo:
 ```csharp
-await using (IUnitOfWork uowCommons = _unitOfWorkFactory.Get(Linkubator.Application.Constants.UnitOfWorkContexts.Linkubator))
+await using (IUnitOfWork uowLinkubator = _unitOfWorkFactory.Get(Linkubator.Application.Constants.UnitOfWorkContexts.Linkubator))
 {
-    IEnumerable<Entities.Link> links = await uowCommons.GetRepository<ILinkRepository>().GetAll();
+    IEnumerable<Entities.Link> links = await uowLinkubator.GetRepository<ILinkRepository>().GetAll();
 }
 
-await using (IUnitOfWork uowShortener = _unitOfWorkFactory.Get(Linkubator.Application.Constants.UnitOfWorkContexts.OtherContext))
+await using (IUnitOfWork uowOther = _unitOfWorkFactory.Get(Linkubator.Application.Constants.UnitOfWorkContexts.OtherContext))
 {
-    IEnumerable<Entities.OtherEntity> otherEntities = await uowShortener.GetRepository<IOtherEntityRepository>().GetAll();
+    IEnumerable<Entities.OtherEntity> otherEntities = await uowOther.GetRepository<IOtherEntityRepository>().GetAll();
 }
 ```
-
 
 ### Patrones de Diseño
 
 #### Repository Pattern
-- Las interfaces base genéricas viven en `Redarbor.Infrastructure.Repositories.Base/Contracts/`
-- Repositorios específicos por entidad en `Redarbor.UrlShortener.Infrastructure.Repositories`
+- Las interfaces base genéricas viven en `Linkubator.Infrastructure.Repositories.Base/Contracts/`
+- Repositorios específicos por entidad en `Linkubator.Infrastructure.Repositories`
 - Repository Pattern: `I*Repository` → `*Repository`
 - Los repositorios reciben POCOs/DTOs de entrada y retornan entidades de dominio
-- Ubicación de contratos: `Redarbor.UrlShortener.Application/Contracts/Infrastructure/Repositories/`
+- Ubicación de contratos: `Linkubator.Application/Contracts/Infrastructure/Repositories/`
 
 #### Unit of Work Pattern
 - `IUnitOfWork` implementa `IAsyncDisposable`
 - **Usar `await using`** (no `using` simple) para garantizar el dispose asíncrono
 - Factory para crear instancias: `IUnitOfWorkFactory`
-- Implementaciones: `ShortenerUnitOfWork`, `CommonsUnitOfWork`
+- Implementaciones: `LinkubatorUnitOfWork`, `CommonsUnitOfWork`
 
 #### Factory Pattern
 - `IConnectionFactory` para crear conexiones a base de datos
@@ -401,26 +401,27 @@ await using (IUnitOfWork uowShortener = _unitOfWorkFactory.Get(Linkubator.Applic
 ### Resumen de Mejores Prácticas
 
 #### ✅ Hacer Siempre
-1. Usar tipos explícitos (no `var`)
-2. Usar `await using` para `IUnitOfWork` (`IAsyncDisposable`); `using` para `IDisposable`
-3. Inyectar dependencias por constructor
-4. Todos los servicios implementan interfaces
-5. Usar `try-catch` en endpoints de API; en Razor Pages solo para errores de negocio específicos
-6. Usar alias de using para namespaces internos
-7. Heredar entidades de `BaseEntity`
-8. Usar Factory Pattern para UnitOfWork y conexiones
-9. Usar Options Pattern para configuración
-10. Inyectar `ILogger<T>` donde T es la clase actual
-11. Usar constants en lugar de strings mágicos o números mágicos
-12. Sufijos `Request`/`Response` para DTOs
-13. Sufijo `Model` para modelos de Razor Pages
+1. Usar tipos explícitos (no `var`).
+2. Usar `await using` para `IUnitOfWork` (`IAsyncDisposable`); `using` para `IDisposable`.
+3. Inyectar dependencias por constructor.
+4. Todos los servicios implementan interfaces.
+5. Usar `try-catch` en endpoints de API; en Razor Pages solo para errores de negocio específicos.
+6. Usar alias de using para namespaces internos.
+7. Heredar entidades de `BaseEntity`.
+8. Usar Factory Pattern para UnitOfWork y conexiones.
+9. Usar Options Pattern para configuración.
+10. Inyectar `ILogger<T>` donde T es la clase actual.
+11. Usar constants en lugar de strings mágicos o números mágicos.
+12. Sufijos `Request`/`Response` para DTOs.
+13. Sufijo `Model` para modelos de Razor Pages.
+14. Usa siempre el **estilo Allman** (*Allman brace style*) al escribir **instrucciones de control de flujo** (**control flow statements*) aunque sólo afecte a una línea de código.
 
 #### ❌ Evitar Siempre
-1. `async void`
-2. `var` para declarar variables
-3. Crear conexiones directas sin Factory
-4. Strings o números mágicos en el código
-5. `using` generales a namespaces de la solución (usar alias)
-6. Múltiples responsabilidades en una clase
-7. Dependencias sin interfaces
-8. `try-catch` genérico en Page Model handlers
+1. `async void`.
+2. `var` para declarar variables.
+3. Crear conexiones directas sin Factory.
+4. Strings o números mágicos en el código.
+5. `using` generales a namespaces de la solución (usar alias).
+6. Múltiples responsabilidades en una clase.
+7. Dependencias sin interfaces.
+8. `try-catch` genérico en Page Model handlers.
