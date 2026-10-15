@@ -15,7 +15,7 @@ public sealed class User : Bases.BaseEntity
     }
 
     /// <summary>
-    /// Correo electrónico normalizado y único en todo el sistema.
+    /// Correo electrónico normalizado y único en el sistema.
     /// </summary>
     public string Email { get; private set; } = string.Empty;
 
@@ -25,7 +25,7 @@ public sealed class User : Bases.BaseEntity
     public string? Name { get; private set; }
 
     /// <summary>
-    /// Alias público, mutable y único en todo el sistema, o <c>null</c> mientras el registro está sin completar.
+    /// Alias público, mutable y único en el sistema, o <c>null</c> mientras el registro está sin completar.
     /// </summary>
     public string? Alias { get; private set; }
 

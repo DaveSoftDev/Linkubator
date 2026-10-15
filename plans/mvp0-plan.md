@@ -173,12 +173,12 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 
 | ID | Tarea | Resp. |
 |---|---|---|
-| S3a.1 | Refactorizar Entities y Policies | Humano |
+| S3a.1 | Refactorizar Entities y Policies; el alcance de políticas de URL quedó especificado en [spec.md](../specs/archive/s3a-refactor-de-dominio/spec.md), diseñado en [plan.md](../specs/archive/s3a-refactor-de-dominio/plan.md) y ejecutado/evidenciado en [tasks.md](../specs/archive/s3a-refactor-de-dominio/tasks.md) | Humano; ejecución del alcance de políticas de URL autorizada a IA por DLG el 13-X-2026 |
 
 **Definition of Done**
 
-- [ ] Dominio sigue funcionando como hasta ahora.
-- [ ] El humano ha aprobado el nuevo Domain.
+- [x] El Domain cumple las especificaciones aprobadas y supera las validaciones del trabajo; para el alcance de políticas de URL, consultar [spec.md](../specs/archive/s3a-refactor-de-dominio/spec.md) y su evidencia en [tasks.md](../specs/archive/s3a-refactor-de-dominio/tasks.md).
+- [x] El humano ha aceptado el nuevo Domain.
 
 ### S4: Aplicación: casos de uso (L)
 

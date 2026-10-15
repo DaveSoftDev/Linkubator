@@ -2,7 +2,7 @@
 
 Vista derivada del modelo de dominio. Las propiedades e invariantes tienen como fuente de verdad [domain-model.md](../domain-model.md). Solo se muestran atributos documentados: no se especifican aquí tipos de implementación ni métodos de clase.
 
-La multiplicidad User–Collection contempla todos los estados de la cuenta; la condición para las cuentas completadas está en [domain-model.md → «User»](../domain-model.md#user).
+La multiplicidad User–Collection contempla todos los estados de la cuenta; la condición para las cuentas completadas está en [domain-model.md → «User»](../domain-model.md#user). `LinkTag` se muestra como objeto de asociación, no como entidad; su definición está en [domain-model.md → «LinkTag»](../domain-model.md#linktag).
 
 ```mermaid
 classDiagram
@@ -58,7 +58,7 @@ classDiagram
     }
 
     class LinkTag {
-        <<entity>>
+        <<association>>
         LinkId
         TagId
     }

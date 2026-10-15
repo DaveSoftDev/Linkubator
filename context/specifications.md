@@ -40,7 +40,7 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 ### Registro
 
 - A partir del email introducido por el usuario:
-  - Si no existe ninguna cuenta con ese email, se crea un registro sin completar, que solo contiene el email y el `SecurityStamp` (La base de datos ya asignará `Id` y `CreatedAt`), y se envía el correo de completar registro.
+  - Si no existe ninguna cuenta con ese email, se crea un registro sin completar: aún no tiene perfil completo (`Name`, `Alias` y `Password`); sí contiene el email y el `SecurityStamp`, y puede tener campos operativos como `LastEmailSentAt`. La base de datos asigna `Id` y `CreatedAt`. Se envía el correo de completar registro.
   - Si existe un registro sin completar con ese email, se emite un token nuevo y se vuelve a enviar el correo de completar registro. Volver a registrarse es la forma de pedir el reenvío.
   - Si existe una cuenta completada con ese email, no se crea nada y se envía a esa dirección el correo de aviso de cuenta existente.
 - Un registro sin completar no tiene nombre, alias, contraseña ni colecciones, y no puede iniciar sesión (invariantes de [domain-model.md → «User»](domain-model.md#user)).
@@ -177,9 +177,10 @@ Reglas de los slugs:
 
 - El slug de colección y el de etiqueta no se muestran al usuario.
 - Se regeneran automáticamente cuando cambia el nombre.
+- La equivalencia de nombres para las restricciones de unicidad se determina exclusivamente comparando los slugs generados por esta transformación: dos nombres son equivalentes si y solo si generan el mismo slug. No se aplica una comparación adicional de los nombres originales. Por ejemplo, «Papá» y «papa» generan el mismo slug y colisionan; los símbolos solo causan una colisión si, tras aplicar la transformación, ambos nombres generan exactamente el mismo slug.
 - La colección por defecto «Bandeja de entrada» tiene el slug `bandeja-de-entrada`.
 - Si el resultado queda vacío, o fuera del rango de longitud de «Longitudes máximas», la operación se rechaza. Nunca se trunca.
-- Si el slug colisiona con otro del mismo usuario, al crear o al modificar, la operación se rechaza indicando el nombre de la colección o etiqueta con la que colisiona, aunque se escriba distinto (por ejemplo, «Papá» y «papa»). No se añaden sufijos ni prefijos para resolver colisiones.
+- Si el slug generado colisiona con el de otra colección o etiqueta del mismo usuario, al crear o al modificar, la operación se rechaza indicando el nombre del elemento con el que colisiona. No se añaden sufijos ni prefijos para resolver colisiones.
 - Excepción: al crear una etiqueta desde el formulario de un enlace, si su slug coincide con el de una existente, se asocia esa y se indica al usuario cuál se ha asociado.
 
 ### Tabla de conversión de símbolos
