@@ -12,8 +12,8 @@ Todo el código propuesto para esta solución debe ser como si lo hiciera un des
 - No crear carpetas genéricas ni una carpeta por clase.
 
 ### Async
-- Los métodos asíncronos de `Linkubator` NO terminan en `Async`. Todos son async por defecto.
-- Sólo deben terminar en `Async` los propios métodos del framework de .NET.
+- **Los métodos propios de `Linkubator` NO DEBEN terminar con el sufijo `Async`** — el paradigma del proyecto es que todos los métodos son asíncronos por defecto.
+- Sólo pueden terminar en `Async` los propios métodos del framework de .NET.
 
 **Evitar `async void`** — usar siempre `Task` o `Task<T>`
 

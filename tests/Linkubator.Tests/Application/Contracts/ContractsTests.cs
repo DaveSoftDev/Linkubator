@@ -16,6 +16,16 @@ public class ContractsTests
     }
 
     [Fact]
+    public void DevelopmentIdentityProviderProvidesAsyncResolvedUserId()
+    {
+        var method = typeof(IDevelopmentIdentityProvider).GetMethod(nameof(IDevelopmentIdentityProvider.GetUserId));
+
+        Assert.NotNull(method);
+        Assert.Equal(typeof(Task<long>), method.ReturnType);
+        Assert.Equal(typeof(CancellationToken), Assert.Single(method.GetParameters()).ParameterType);
+    }
+
+    [Fact]
     public void UnitOfWorkFactoryUsesExplicitContextName()
     {
         Assert.Equal("Linkubator", UnitOfWorkContexts.Linkubator);

@@ -46,7 +46,7 @@
 | Definir `Result` y `Result<T>` con errores tipados, en vez de usar excepciones para rechazos esperados | Confirmada por DLG, 15-X-2026 («Comprendido») | [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación), CA02–CA03 | Contrato base aprobado; los tests comprobarán sus invariantes. |
 | Error de aplicación con código, categoría y campo opcional, sin mensaje de usuario | Confirmada por DLG, 15-X-2026 («Comprendido») | [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación), CA03, CA06 y CA08 | El mapeo posterior en Web no debe filtrar recursos ajenos ni duplicar mensajes funcionales. |
 | Los validadores usan componentes de Domain para transformaciones e invariantes existentes | Confirmada por DLG, 15-X-2026 («Comprendido») | [architecture.md → «Domain»](../../context/architecture.md#domain) y [specifications.md → «Generación del alias»](../../context/specifications.md#generación-del-alias) | Los tests verificarán que no se reproducen reglas propietarias de Domain. |
-| Enumerar todos los DTOs de S4.1 a partir del catálogo exacto de casos de uso S4 | Pendiente de inventario en T02 de tasks.md | [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l) | T02 identificará cada operación S4 cubierta y sus DTOs antes de implementarlos; no se añadirán funciones ajenas al MVP0. |
+| Enumerar los DTOs incluidos en S4.1 a partir del catálogo de casos de uso S4 | Confirmada; inventario realizado en T02 | [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l) y [tasks.md → «Matriz de operaciones MVP0 → DTOs»](tasks.md#matriz-de-operaciones-mvp0--dtos) | La matriz identifica las operaciones cubiertas y sus DTOs sin añadir capacidades ajenas al MVP0. |
 | No introducir una biblioteca de validación externa | Confirmada por DLG, 15-X-2026 («Comprendido») | [architecture.md → «Tecnologías»](../../context/architecture.md#tecnologías) | Se mantienen validadores propios en Application sin dependencias externas nuevas. |
 
 ## Estrategia de validación
@@ -65,7 +65,6 @@ V02–V06 no demuestran la corrección de los casos de uso ni la propiedad/atomi
 
 ## Orden de ejecución y cierre
 
-- Tras la aprobación de este plan, crear `tasks.md` desde la plantilla, incluyendo el inventario aprobado de DTOs, contratos, validadores, tests y comprobaciones integradas.
-- La implementación productiva de S4.1 requiere aprobación posterior de `tasks.md`; la implementación de casos de uso de S4.6–S4.10 sigue además bloqueada hasta S4.5.
-- S4.1 se considerará validada cuando CA01–CA08 tengan evidencia satisfactoria y DLG acepte el resultado en las tareas. Esa aceptación no aprueba criterios de casos de uso ni abre por sí sola la puerta S4.5.
+- `tasks.md` se creó después de la aprobación de este plan y fue aprobado por DLG el 15-X-2026 («Vamos»); la implementación y validación de S4.1 están completadas según las tareas.
+- DLG aceptó el resultado de S4.1 el 15-X-2026 al solicitar «Completada». Esa aceptación no aprueba criterios de casos de uso ni abre por sí sola la puerta S4.5.
 - Si la definición de un DTO o validador requiere cambiar una regla funcional, detener la tarea afectada y tramitar el cambio en su fuente propietaria antes de continuar.

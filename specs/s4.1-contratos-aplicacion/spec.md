@@ -41,7 +41,7 @@ Definir los contratos compartidos de Application para representar resultados y e
 ## Dependencias y prerrequisitos
 
 - S3 está completada y las entidades e invariantes aplicables están aceptadas.
-- La solución contiene `Linkubator.Application`, que actualmente está sin contratos de aplicación; la implementación de S4.1 aún no se inicia por el mero hecho de redactar esta especificación.
+- La solución contiene `Linkubator.Application`. La implementación de S4.1 se realizó después de la aprobación de sus tareas y quedó aceptada para el alcance documentado en [tasks.md → «Aceptación y cierre»](tasks.md#aceptación-y-cierre).
 - El alcance de casos de uso es el enumerado en S4 del plan MVP0. Las reglas de comportamiento siguen siendo las fuentes de `context/`; S4.1 no las sustituye.
 - S4.2 depende de los contratos que se aprueben en este trabajo. S4.4 los necesita para redactar criterios, pero ningún caso de uso se implementará antes de la aprobación de S4.5.
 
@@ -69,4 +69,4 @@ Los casos negativos y límites de cada operación se concretarán en los criteri
 ## Artefactos relacionados
 
 - [Plan técnico](plan.md), aprobado por DLG el 15-X-2026 («Comprendido»).
-- [Tareas](tasks.md), pendientes de aprobación.
+- [Tareas](tasks.md), aprobadas por DLG el 15-X-2026 («Vamos»); implementación aceptada por DLG el 15-X-2026 al solicitar «Completada».

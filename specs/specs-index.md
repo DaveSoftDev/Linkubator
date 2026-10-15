@@ -6,13 +6,14 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
-| S4.1 — Result, errores, DTOs y validadores de aplicación | [spec.md](s4.1-contratos-aplicacion/spec.md) | [plan.md](s4.1-contratos-aplicacion/plan.md) | [tasks.md](s4.1-contratos-aplicacion/tasks.md#aceptación-y-cierre) |
 
 ## Trabajos completados
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| S4.1 — Result, errores, DTOs y validadores de aplicación | [spec.md](s4.1-contratos-aplicacion/spec.md) | [plan.md](s4.1-contratos-aplicacion/plan.md) | [tasks.md](s4.1-contratos-aplicacion/tasks.md#aceptación-y-cierre) |
 | S4.2 — Contratos de repositorios, Unit of Work e identidad identificada | [spec.md](s4.2-contratos-repositorios-identidad/spec.md) | [plan.md](s4.2-contratos-repositorios-identidad/plan.md) | [tasks.md](s4.2-contratos-repositorios-identidad/tasks.md#aceptación-y-cierre) |
+| S4.3 — Contrato del proveedor de identidad de desarrollo | [spec.md](s4.3-proveedor-identidad-desarrollo/spec.md) | [plan.md](s4.3-proveedor-identidad-desarrollo/plan.md) | [tasks.md](s4.3-proveedor-identidad-desarrollo/tasks.md#aceptación-y-cierre) |
 
 ## Trabajos archivados
 
