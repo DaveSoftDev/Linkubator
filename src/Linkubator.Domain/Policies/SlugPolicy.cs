@@ -1,31 +1,28 @@
 using DomainExceptions = Linkubator.Domain.Exceptions;
+using Linkubator.Domain.Constants;
 
 namespace Linkubator.Domain.Policies;
 
 /// <summary>
-/// Genera el slug de <c>Collection.Slug</c> y de <c>Tag.Slug</c> a partir del nombre.
-/// Es el único punto de entrada para ambos: no distingue el origen de la llamada.
+/// Política para generación de slugs a partir de nombres.
 /// </summary>
 public static class SlugPolicy
 {
-    private const int MinimumLength = 1;
-    private const int MaximumLength = 150;
-
+    /// <summary>
+    /// Genera un slug válido a partir del nombre proporcionado.
+    /// </summary>
+    /// <param name="name">Nombre a partir del cual generar el slug.</param>
+    /// <returns>Slug generado y validado.</returns>
+    /// <exception cref="DomainExceptions.NotValidInputException">Si el nombre es nulo, vacío o solo espacios.</exception>
+    /// <exception cref="DomainExceptions.TextBelowMinimumLengthException">Si el slug resultante es demasiado corto.</exception>
+    /// <exception cref="DomainExceptions.TextExceedsMaximumLengthException">Si el slug resultante es demasiado largo.</exception>
     public static string Generate(string name)
     {
         UserTextPolicy.ThrowIfNullOrWhiteSpace(name);
 
         string slug = AsciiTransformationPolicy.Transform(name);
 
-        if (slug.Length < MinimumLength)
-        {
-            throw new DomainExceptions.TextBelowMinimumLengthException();
-        }
-
-        if (!UserTextPolicy.IsWithinMaximumLength(slug, MaximumLength))
-        {
-            throw new DomainExceptions.TextExceedsMaximumLengthException();
-        }
+        UserTextPolicy.EnsureWithinRange(slug, LengthLimitsConstants.SlugMinimum, LengthLimitsConstants.SlugMaximum);
 
         return slug;
     }

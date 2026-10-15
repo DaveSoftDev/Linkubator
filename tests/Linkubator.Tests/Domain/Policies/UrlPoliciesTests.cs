@@ -15,9 +15,12 @@ public class UrlPoliciesTests
     [InlineData("localhost:5000/path", "localhost")]
     [InlineData("example.com:8080/x", "example.com")]
     [InlineData("https://EXAMPLE.com:8443", "EXAMPLE.com")]
-    public void ExtractHostReturnsTheHostWithoutPortOrPath(string input, string expected)
+    public void TryExtractHostReturnsTheHostWithoutPortOrPath(string input, string expected)
     {
-        Assert.Equal(expected, DomainPolicies.UrlHostPolicy.ExtractHost(input));
+        bool success = DomainPolicies.UriAuthorityPolicy.TryExtractHost(input, out string? extractedHost);
+
+        Assert.True(success);
+        Assert.Equal(expected, extractedHost);
     }
 
     [Trait("Category", "Hosts")]
@@ -26,9 +29,12 @@ public class UrlPoliciesTests
     [InlineData("https://")]
     [InlineData("http://:8080")]
     [InlineData("https://example.com:abc")]
-    public void ExtractHostRejectsInvalidHosts(string input)
+    public void TryExtractHostRejectsInvalidHosts(string input)
     {
-        Assert.Throws<DomainExceptions.UrlHostInvalidException>(() => DomainPolicies.UrlHostPolicy.ExtractHost(input));
+        bool success = DomainPolicies.UriAuthorityPolicy.TryExtractHost(input, out string? extractedHost);
+
+        Assert.False(success);
+        Assert.Null(extractedHost);
     }
 
     [Trait("Category", "Hosts")]
@@ -36,10 +42,10 @@ public class UrlPoliciesTests
     [InlineData("localhost:5000/path", true, "localhost")]
     [InlineData("example.com:8080/x", true, "example.com")]
     [InlineData("https://example.com/path", true, "example.com")]
-    [InlineData("intranet:8080", true, "intranet")]
+    [InlineData("intranet:8080", false, null)]
     public void TryExtractHostBehavesAsAPredicate(string input, bool expectedSuccess, string? expectedHost)
     {
-        bool success = DomainPolicies.UrlHostPolicy.TryExtractHost(input, out string? extractedHost);
+        bool success = DomainPolicies.UriAuthorityPolicy.TryExtractHost(input, out string? extractedHost);
 
         Assert.Equal(expectedSuccess, success);
         Assert.Equal(expectedHost, extractedHost);
@@ -55,25 +61,30 @@ public class UrlPoliciesTests
     [InlineData("example.com:8080/x", true, false, null, "example.com")]
     [InlineData("example.com:8080?x=1", true, false, null, "example.com")]
     [InlineData("example.com:8080#section", true, false, null, "example.com")]
-    [InlineData("https://example.com/path", true, true, "https", "example.com")]
+    [InlineData("https://example.com/path", false, true, "https", "example.com")]
     [InlineData("https:example.com", false, true, "https", null)]
     [InlineData("intranet:8080", false, true, "intranet", null)]
     [InlineData("mailto:ana@example.com", false, true, "mailto", null)]
     [InlineData("bad_scheme:value", false, false, null, null)]
     [InlineData("not a host", false, false, null, null)]
-    public void DetectClassifiesHostAndExplicitSchemeInputs(
+    [InlineData("cdn.example.com/img.jpg?u=https://x.com", false, false, null, "cdn.example.com")]
+    [InlineData("cdn.example.com/img.jpg#https://x", false, false, null, "cdn.example.com")]
+    [InlineData("cdn.example.com/img.jpg?u=https://x.com&w=1", false, false, null, "cdn.example.com")]
+    public void AuthorityClassificationMatchesHostAndPortAndExplicitScheme(
         string input,
         bool expectedHostPort,
         bool expectedExplicitScheme,
         string? expectedScheme,
         string? expectedHost)
     {
-        var detection = DomainPolicies.UriSchemePolicy.Detect(input);
+        DomainPolicies.UriAuthority? authority = DomainPolicies.UriAuthorityPolicy.Analyze(input);
 
-        Assert.Equal(expectedHostPort, detection.HasHostAndPort);
-        Assert.Equal(expectedExplicitScheme, detection.HasExplicitScheme);
-        Assert.Equal(expectedScheme, detection.Scheme);
-        Assert.Equal(expectedHost, detection.Host);
+        bool hasAuthority = DomainPolicies.UriAuthorityPolicy.IsValidAuthority(authority);
+
+        Assert.Equal(expectedHostPort, hasAuthority && DomainPolicies.UriAuthorityPolicy.IsHostAndPortForm(authority));
+        Assert.Equal(expectedExplicitScheme, authority is not null && authority.HasExplicitScheme);
+        Assert.Equal(expectedScheme, authority?.Scheme);
+        Assert.Equal(expectedHost, hasAuthority ? authority!.Host : null);
     }
 
     #endregion
@@ -129,6 +140,16 @@ public class UrlPoliciesTests
 
     [Trait("Category", "Links")]
     [Theory]
+    [InlineData("example.com/articulo 2")]
+    [InlineData("example.com/articulo\u00A02")]
+    [InlineData("https://example.com/a\u2009b")]
+    public void AdjustRejectsInteriorSpaces(string input)
+    {
+        Assert.Throws<DomainExceptions.TextContainsUnsupportedCharactersException>(() => DomainPolicies.LinkUrlPolicy.Adjust(input));
+    }
+
+    [Trait("Category", "Links")]
+    [Theory]
     [InlineData("javascript:alert(1)")]
     [InlineData("mailto:ana@example.com")]
     [InlineData("ftp://example.com")]
@@ -144,6 +165,63 @@ public class UrlPoliciesTests
     public void AdjustRejectsMissingAuthorityAfterHttpScheme(string input)
     {
         Assert.Throws<DomainExceptions.UrlAuthorityMissingException>(() => DomainPolicies.LinkUrlPolicy.Adjust(input));
+    }
+
+    /// <summary>
+    /// Cada rechazo del ajuste lleva la excepción nombrada según su causa: autoridad que no
+    /// contiene un host, host con un formato no admitido o puerto no válido. «intranet» y
+    /// «https://intranet» comparten rechazo pese a la diferencia de esquema.
+    /// </summary>
+    [Trait("Category", "Links")]
+    [Theory]
+    [InlineData("https://", typeof(DomainExceptions.UrlAuthorityMissingException))]
+    [InlineData("https://intranet", typeof(DomainExceptions.UrlHostInvalidException))]
+    [InlineData("intranet", typeof(DomainExceptions.UrlHostInvalidException))]
+    [InlineData("https://example.com:99999", typeof(DomainExceptions.UrlPortInvalidException))]
+    [InlineData("https://0xC0A80101/x", typeof(DomainExceptions.UrlHostInvalidException))]
+    [InlineData("http://0xC0A80101:8080/", typeof(DomainExceptions.UrlHostInvalidException))]
+    [InlineData("0xC0A80101:8080/x", typeof(DomainExceptions.UrlHostInvalidException))]
+    [InlineData("2130706433/x", typeof(DomainExceptions.UrlHostInvalidException))]
+    [InlineData("https://127.1", typeof(DomainExceptions.UrlHostInvalidException))]
+    public void AdjustNamesEachRejectionAfterItsCause(string input, Type expected)
+    {
+        Exception exception = Assert.ThrowsAny<Exception>(() => DomainPolicies.LinkUrlPolicy.Adjust(input));
+
+        Assert.IsType(expected, exception);
+    }
+
+    /// <summary>
+    /// El ajuste solo admite el host IPv4 escrito como cuatro grupos decimales. La misma
+    /// dirección escrita en las formas que acepta System.Uri (hexadecimal, entero, grupos
+    /// incompletos) se rechaza en lugar de normalizarse en silencio.
+    /// </summary>
+    [Trait("Category", "Links")]
+    [Theory]
+    [InlineData("https://0xC0A80101/x", "https://192.168.1.1/x")]
+    [InlineData("http://0xC0A80101:8080/", "http://192.168.1.1:8080/x")]
+    [InlineData("0xC0A80101:8080/x", "192.168.1.1:8080/x")]
+    [InlineData("2130706433/x", "127.0.0.1/x")]
+    [InlineData("https://127.1", "https://127.0.0.1")]
+    [InlineData("https://192.168.1/x", "https://192.168.0.1/x")]
+    public void AdjustAcceptsTheSameIpv4HostsOnlyWhenTheyAreWrittenAsFourDecimalGroups(string rejected, string accepted)
+    {
+        Assert.Throws<DomainExceptions.UrlHostInvalidException>(() => DomainPolicies.LinkUrlPolicy.Adjust(rejected));
+
+        Assert.Null(Record.Exception(() => DomainPolicies.LinkUrlPolicy.Adjust(accepted)));
+    }
+
+    /// <summary>
+    /// El ajuste es de paso: devuelve la URL con el host IPv4 tal como se escribió, con los
+    /// ceros a la izquierda incluidos, porque la validación solo exige cuatro grupos decimales.
+    /// </summary>
+    [Trait("Category", "Links")]
+    [Theory]
+    [InlineData("https://192.168.1.1/x", "https://192.168.1.1/x")]
+    [InlineData("https://192.168.001.001/x", "https://192.168.001.001/x")]
+    [InlineData("https://127.0.0.1", "https://127.0.0.1")]
+    public void AdjustKeepsTheIpv4HostAsWritten(string input, string expected)
+    {
+        Assert.Equal(expected, DomainPolicies.LinkUrlPolicy.Adjust(input));
     }
 
     [Trait("Category", "Links")]

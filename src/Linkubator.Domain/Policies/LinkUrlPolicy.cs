@@ -1,113 +1,87 @@
-using System.Text;
 using DomainExceptions = Linkubator.Domain.Exceptions;
+using Linkubator.Domain.Constants;
 
 namespace Linkubator.Domain.Policies;
 
+/// <summary>
+/// Política para ajustar URLs de enlaces.
+/// </summary>
 public static class LinkUrlPolicy
 {
-    private const int MaximumLength = 2048;
-
+    /// <summary>
+    /// Ajusta la URL de enlace aplicando las reglas de normalización y validación.
+    /// </summary>
+    /// <param name="input">URL a ajustar.</param>
+    /// <returns>URL ajustada.</returns>
+    /// <exception cref="DomainExceptions.NotValidInputException">Si la URL es nula, vacía o no es válida.</exception>
+    /// <exception cref="DomainExceptions.TextExceedsMaximumLengthException">Si la URL supera la longitud máxima.</exception>
+    /// <exception cref="DomainExceptions.TextContainsUnsupportedCharactersException">Si la URL contiene caracteres no soportados.</exception>
+    /// <exception cref="DomainExceptions.UrlSchemeNotAllowedException">Si el esquema no está permitido.</exception>
+    /// <exception cref="DomainExceptions.UrlAuthorityMissingException">Si falta la autoridad.</exception>
+    /// <exception cref="DomainExceptions.UrlHostInvalidException">Si el host no es válido.</exception>
+    /// <exception cref="DomainExceptions.UrlPortInvalidException">Si el puerto no es válido.</exception>
     public static string Adjust(string input)
     {
-        if (input is null)
-        {
-            throw new DomainExceptions.NotValidInputException();
-        }
-
-        string trimmedInput = input.Trim();
-        UserTextPolicy.ThrowIfNullOrWhiteSpace(trimmedInput);
-
-        if (trimmedInput.Any(char.IsWhiteSpace) || ContainsControls(trimmedInput))
-        {
-            throw new DomainExceptions.TextContainsUnsupportedCharactersException();
-        }
-
-        if (trimmedInput.Length > MaximumLength)
-        {
-            throw new DomainExceptions.TextExceedsMaximumLengthException();
-        }
-
-        try
-        {
-            _ = trimmedInput.Normalize();
-        }
-        catch (ArgumentException)
-        {
-            throw new DomainExceptions.TextContainsUnsupportedCharactersException();
-        }
+        string trimmedInput = UrlInputPolicy.Prepare(input, LengthLimitsConstants.LinkUrl);
 
         if (trimmedInput.StartsWith("//", StringComparison.Ordinal))
         {
-            return "https://" + trimmedInput[2..];
+            return UserTextPolicy.EnsureMaximumLength("https://" + trimmedInput[2..], LengthLimitsConstants.LinkUrl);
         }
 
-        int separatorIndex = trimmedInput.IndexOf("://", StringComparison.Ordinal);
-        int firstDelimiterIndex = trimmedInput.IndexOfAny(['/', '?', '#']);
+        UriAuthority? authority = UriAuthorityPolicy.Analyze(trimmedInput);
 
-        if (separatorIndex >= 0 && (firstDelimiterIndex < 0 || separatorIndex < firstDelimiterIndex))
+        if (authority is not null && authority.HasExplicitScheme)
         {
-            int index = separatorIndex;
-            string scheme = trimmedInput[..index];
-            string remainder = trimmedInput[(index + 3)..];
-
-            if (!IsAllowedScheme(scheme))
+            if (!UriAuthorityPolicy.IsAllowedScheme(authority.Scheme))
             {
                 throw new DomainExceptions.UrlSchemeNotAllowedException();
             }
-
-            if (!UrlHostPolicy.TryExtractValidHost(remainder, out string? parsedHost) || string.IsNullOrEmpty(parsedHost))
+            if (!UriAuthorityPolicy.IsValidAuthority(authority))
             {
-                throw new DomainExceptions.UrlAuthorityMissingException();
+                throw AuthorityRejection(authority);
             }
 
-            return trimmedInput;
+            return UserTextPolicy.EnsureMaximumLength(trimmedInput, LengthLimitsConstants.LinkUrl);
         }
 
-        int colonIndex = trimmedInput.IndexOf(':');
-        if (colonIndex > 0)
+        if (authority is not null && UriAuthorityPolicy.IsValidAuthority(authority) && authority.Host is string host)
         {
-            string schemeCandidate = trimmedInput[..colonIndex];
-            string afterColon = trimmedInput[(colonIndex + 1)..];
-            bool isHostPort = afterColon.Length > 0 && char.IsDigit(afterColon[0]) && UrlHostPolicy.TryExtractValidHost(trimmedInput, out _);
-
-            if (!isHostPort)
-            {
-                if (schemeCandidate.Length > 0 && schemeCandidate.All(character => char.IsLetterOrDigit(character) || character is '+' or '-' or '.'))
-                {
-                    if (!IsAllowedScheme(schemeCandidate))
-                    {
-                        throw new DomainExceptions.UrlSchemeNotAllowedException();
-                    }
-
-                    throw new DomainExceptions.UrlAuthorityMissingException();
-                }
-            }
+            return UserTextPolicy.EnsureMaximumLength(AddDefaultScheme(trimmedInput, host), LengthLimitsConstants.LinkUrl);
         }
 
-        if (UrlHostPolicy.TryExtractValidHost(trimmedInput, out string? host))
-        {
-            return (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ? "http://" : "https://") + trimmedInput;
-        }
-
-        throw new DomainExceptions.UrlHostInvalidException();
+        throw AuthorityRejection(authority);
     }
 
-    private static bool ContainsControls(string input)
+    /// <summary>
+    /// Determina el tipo de rechazo de autoridad según la causa.
+    /// </summary>
+    /// <param name="authority">Autoridad analizada.</param>
+    /// <returns>Excepción de dominio correspondiente al tipo de rechazo.</returns>
+    private static DomainExceptions.DomainException AuthorityRejection(UriAuthority? authority)
     {
-        foreach (char character in input)
+        if (authority is null || authority.Host is null)
         {
-            if (char.IsControl(character))
-            {
-                return true;
-            }
+            return new DomainExceptions.UrlAuthorityMissingException();
         }
 
-        return false;
+        if (!UriAuthorityPolicy.IsValidHost(authority.Host))
+        {
+            return new DomainExceptions.UrlHostInvalidException();
+        }
+
+        return new DomainExceptions.UrlPortInvalidException();
     }
 
-    private static bool IsAllowedScheme(string scheme)
+    /// <summary>
+    /// Añade el esquema por defecto según el host.
+    /// </summary>
+    /// <param name="input">Entrada sin esquema.</param>
+    /// <param name="host">Host identificado.</param>
+    /// <returns>Entrada con esquema añadido.</returns>
+    private static string AddDefaultScheme(string input, string host)
     {
-        return string.Equals(scheme, "http", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(scheme, "https", StringComparison.OrdinalIgnoreCase);
+        string scheme = string.Equals(host, UrlConstants.LocalhostHost, StringComparison.OrdinalIgnoreCase) ? "http://" : "https://";
+        return scheme + input;
     }
 }

@@ -125,7 +125,49 @@ public class UrlNormalizationPolicyTests
     [Fact]
     public void NormalizeDoesNotRevalidateAnAlreadyAdjustedUrl()
     {
-        Assert.Throws<ArgumentException>(() => UrlNormalizationPolicy.Normalize("not a url"));
+        Assert.Throws<DomainExceptions.UrlNotAbsoluteException>(() => UrlNormalizationPolicy.Normalize("not a url"));
+    }
+
+    /// <summary>
+    /// El escapado de la ruta y el tratamiento de la consulta convierten un sustituto suelto
+    /// en texto válido antes de canonicalizar, así que <see cref="UrlNormalizationPolicy.Normalize"/>
+    /// no propaga la <see cref="ArgumentException"/> del proveedor subyacente. Si un cambio
+    /// hiciera llegar el suelto intacto a la canonicalización, este test lo detecta.
+    /// </summary>
+    [Trait("Category", "Validation")]
+    [Theory]
+    [InlineData("https://example.com/path?q=\uD800")]
+    [InlineData("https://example.com/\uD800")]
+    public void NormalizeDoesNotLeakAProviderExceptionForALoneSurrogate(string input)
+    {
+        Assert.Null(Record.Exception(() => UrlNormalizationPolicy.Normalize(input)));
+    }
+
+    [Fact]
+    public void NormalizeHandlesAQueryContainingOnlyTheSeparator()
+    {
+        Assert.Equal("examplecom", UrlNormalizationPolicy.Normalize("https://example.com/?"));
+    }
+
+    [Fact]
+    public void NormalizeIgnoresAParameterWithoutName()
+    {
+        Assert.Equal("examplecom", UrlNormalizationPolicy.Normalize("https://example.com/?=value"));
+    }
+
+    [Fact]
+    public void NormalizeReturnsAnEmptyResultForAUrlWithoutHostPathAndQuery()
+    {
+        Assert.Equal(string.Empty, UrlNormalizationPolicy.Normalize("mailto:"));
+    }
+
+    [Fact]
+    public void EscapePathUnicodeReturnsNullOrEmptyInputUnchanged()
+    {
+        Assert.Null(PrivatePolicyInvoker.InvokeStatic(typeof(UrlNormalizationPolicy), "EscapePathUnicode", new object?[] { null }));
+        Assert.Equal(
+            string.Empty,
+            PrivatePolicyInvoker.InvokeStatic(typeof(UrlNormalizationPolicy), "EscapePathUnicode", new object?[] { string.Empty }) as string);
     }
 
     private sealed class CultureScope : IDisposable

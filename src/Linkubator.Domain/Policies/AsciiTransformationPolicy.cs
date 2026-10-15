@@ -5,14 +5,12 @@ using DomainExceptions = Linkubator.Domain.Exceptions;
 namespace Linkubator.Domain.Policies;
 
 /// <summary>
-/// Transformación común a ASCII de <c>User.Alias</c>, <c>Collection.Slug</c> y <c>Tag.Slug</c>.
-/// No recorta el texto ni valida longitud o palabras reservadas: cada política añade las suyas.
+/// Política de transformación ASCII para alias y slugs.
 /// </summary>
 public static class AsciiTransformationPolicy
 {
     private const char Hyphen = '-';
 
-    // Se aplican tras NFKD, minúsculas y eliminación de marcas diacríticas.
     private static readonly Dictionary<int, string> _symbolWords = new()
     {
         ['+'] = "plus",
@@ -50,6 +48,13 @@ public static class AsciiTransformationPolicy
         ['ŧ'] = "t",
     };
 
+    /// <summary>
+    /// Transforma el texto a un formato ASCII apto para alias y slugs.
+    /// </summary>
+    /// <param name="text">Texto a transformar.</param>
+    /// <returns>Texto transformado.</returns>
+    /// <exception cref="DomainExceptions.NotValidInputException">Si el texto es nulo, vacío o solo espacios.</exception>
+    /// <exception cref="DomainExceptions.TextContainsUnsupportedCharactersException">Si el texto contiene caracteres no soportados.</exception>
     public static string Transform(string text)
     {
         UserTextPolicy.ThrowIfNullOrWhiteSpace(text);
@@ -76,6 +81,12 @@ public static class AsciiTransformationPolicy
         return builder.ToString();
     }
 
+    /// <summary>
+    /// Normaliza el texto utilizando la forma de normalización Unicode FormKD.
+    /// </summary>
+    /// <param name="text">Texto a normalizar.</param>
+    /// <returns>Texto normalizado.</returns>
+    /// <exception cref="DomainExceptions.TextContainsUnsupportedCharactersException">Si el texto contiene caracteres Unicode no válidos.</exception>
     private static string Normalize(string text)
     {
         try
@@ -84,11 +95,15 @@ public static class AsciiTransformationPolicy
         }
         catch (ArgumentException)
         {
-            // Texto con puntos de código Unicode no válidos (por ejemplo, un sustituto suelto).
             throw new DomainExceptions.TextContainsUnsupportedCharactersException();
         }
     }
 
+    /// <summary>
+    /// Rechaza caracteres de control y separadores no permitidos en el texto normalizado.
+    /// </summary>
+    /// <param name="normalized">Texto normalizado a validar.</param>
+    /// <exception cref="DomainExceptions.TextContainsUnsupportedCharactersException">Si se detecta un carácter no permitido.</exception>
     private static void RejectControlsAndSeparators(string normalized)
     {
         foreach (Rune rune in normalized.EnumerateRunes())
@@ -106,6 +121,12 @@ public static class AsciiTransformationPolicy
         }
     }
 
+    /// <summary>
+    /// Añade el rune correspondiente al constructor de resultado según su categoría Unicode.
+    /// </summary>
+    /// <param name="builder">Constructor del resultado.</param>
+    /// <param name="rune">Rune a procesar.</param>
+    /// <param name="category">Categoría Unicode del rune.</param>
     private static void Append(StringBuilder builder, Rune rune, UnicodeCategory category)
     {
         int value = rune.Value;
@@ -146,10 +167,13 @@ public static class AsciiTransformationPolicy
         {
             throw new DomainExceptions.TextContainsUnsupportedCharactersException();
         }
-
-        // Emojis, puntuación y símbolos fuera de la tabla: se eliminan sin conversión.
     }
 
+    /// <summary>
+    /// Determina si la categoría Unicode corresponde a una letra o número.
+    /// </summary>
+    /// <param name="category">Categoría Unicode a evaluar.</param>
+    /// <returns><c>true</c> si es letra o número; de lo contrario, <c>false</c>.</returns>
     private static bool IsLetterOrNumber(UnicodeCategory category)
     {
         return category is UnicodeCategory.UppercaseLetter
@@ -162,6 +186,10 @@ public static class AsciiTransformationPolicy
             or UnicodeCategory.OtherNumber;
     }
 
+    /// <summary>
+    /// Añade un guion medio si el último carácter del constructor no es un guion.
+    /// </summary>
+    /// <param name="builder">Constructor del resultado.</param>
     private static void AppendHyphen(StringBuilder builder)
     {
         if (builder.Length > 0 && builder[^1] != Hyphen)
@@ -170,6 +198,10 @@ public static class AsciiTransformationPolicy
         }
     }
 
+    /// <summary>
+    /// Elimina el guion medio final si está presente.
+    /// </summary>
+    /// <param name="builder">Constructor del resultado.</param>
     private static void TrimTrailingHyphen(StringBuilder builder)
     {
         if (builder.Length > 0 && builder[^1] == Hyphen)

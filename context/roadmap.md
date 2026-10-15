@@ -26,7 +26,11 @@ La Definition of Done de S2 está completada. Las tareas y su evidencia se manti
 
 ### Dominio III
 
-La Definition of Done de S3 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S3: Dominio III (M)»](../plans/mvp0-plan.md#s3-dominio-iii-entidades-e-invariantes-M).
+La Definition of Done de S3 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S3: Dominio III (M)»](../plans/mvp0-plan.md#s3-dominio-iii-entidades-e-invariantes-m).
+
+### Dominio IV
+
+La Definition of Done de S3a está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S3a: Dominio IV (M)»](../plans/mvp0-plan.md#s3-dominio-iv-refactor-m).
 
 ## Now
 

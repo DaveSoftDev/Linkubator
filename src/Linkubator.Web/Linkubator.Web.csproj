@@ -10,16 +10,8 @@
     <ProjectReference Include="..\Linkubator.Infrastructure\Linkubator.Infrastructure.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-  </PropertyGroup>
-
   <Target Name="BuildTailwindCss" BeforeTargets="Build">
-    <Exec Command="&quot;C:\Repos\Tools\TailwindCSS\tailwindcss-windows-x64.exe&quot; -c ../tailwind.config.js -i ./wwwroot/css/develop.css -o ./wwwroot/css/styles.css --minify" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="Exists('C:\Repos\Tools\TailwindCSS\tailwindcss-windows-x64.exe')" />
+    <Exec Command="&quot;$(MSBuildProjectDirectory)\..\..\..\..\..\Tools\TailwindCSS\tailwindcss-windows-x64.exe&quot; -c tailwind.config.js -i ./wwwroot/css/develop.css -o ./wwwroot/css/styles.css --minify" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\Tools\TailwindCSS\tailwindcss-windows-x64.exe')" />
   </Target>
 
 </Project>

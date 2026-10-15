@@ -43,7 +43,7 @@ public class LinkTests
     public void Create_WhenCollectionBelongsToAnotherUser_Throws()
     {
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "Collection", null);
-        SetEntityId(collection, 12);
+        EntityTestFactory.SetId(collection, 12);
 
         Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
             DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null));
@@ -53,16 +53,35 @@ public class LinkTests
     public void MoveToCollection_WhenDestinationBelongsToAnotherUser_ThrowsAndKeepsCurrentCollection()
     {
         DomainEntities.Collection sourceCollection = DomainEntities.Collection.Create(1, "Source", null, true);
-        SetEntityId(sourceCollection, 9);
+        EntityTestFactory.SetId(sourceCollection, 9);
 
         DomainEntities.Link link = DomainEntities.Link.Create(1, sourceCollection, "https://example.com", null, null, null, true);
 
         DomainEntities.Collection destinationCollection = DomainEntities.Collection.Create(2, "Destination", null);
-        SetEntityId(destinationCollection, 21);
+        EntityTestFactory.SetId(destinationCollection, 21);
 
         Assert.ThrowsAny<DomainExceptions.DomainException>(() => link.MoveToCollection(destinationCollection));
         Assert.Equal(9, link.CollectionId);
         Assert.True(link.IsPublic);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void MoveToCollection_WhenDestinationIsTheSameCollection_LeavesStateUnchanged(bool linkIsPublic)
+    {
+        DomainEntities.Collection sourceCollection = DomainEntities.Collection.Create(1, "Source", null, linkIsPublic);
+        EntityTestFactory.SetId(sourceCollection, 9);
+
+        DomainEntities.Link link = DomainEntities.Link.Create(1, sourceCollection, "https://example.com/path", null, null, null, linkIsPublic);
+
+        DomainEntities.Collection destinationCollection = DomainEntities.Collection.Create(1, "Destination", null);
+        EntityTestFactory.SetId(destinationCollection, 9);
+
+        link.MoveToCollection(destinationCollection);
+
+        Assert.Equal(9, link.CollectionId);
+        Assert.Equal(linkIsPublic, link.IsPublic);
     }
 
     [Fact]
@@ -70,6 +89,61 @@ public class LinkTests
     {
         Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
             CreateLink(1, 2, "ftp://example.com/path", null, null, null));
+    }
+
+    [Fact]
+    public void Create_WhenImageContainsCredentials_Throws()
+    {
+        Assert.Throws<DomainExceptions.UrlCredentialsNotAllowedException>(() =>
+            CreateLink(1, 2, "https://example.com/path", null, null, "https://usuario:clave@cdn.example.com/i.png"));
+    }
+
+    [Fact]
+    public void Create_WhenImageHostHasASingleLetterTld_Throws()
+    {
+        Assert.Throws<DomainExceptions.UrlHostInvalidException>(() =>
+            CreateLink(1, 2, "https://example.com/path", null, null, "https://cdn.example.c/i.png"));
+    }
+
+    [Fact]
+    public void Create_WhenImagePortIsZero_Throws()
+    {
+        Assert.Throws<DomainExceptions.UrlPortInvalidException>(() =>
+            CreateLink(1, 2, "https://example.com/path", null, null, "https://cdn.example.com:0/i.png"));
+    }
+
+    [Theory]
+    [InlineData("https://0xC0A80101/x")]
+    [InlineData("http://0xC0A80101:8080/x")]
+    [InlineData("0xC0A80101:8080/x")]
+    [InlineData("2130706433/x")]
+    [InlineData("https://127.1")]
+    [InlineData("https://192.168.1/x")]
+    public void Create_WhenIpv4HostIsNotWrittenAsFourDecimalGroups_Throws(string urlOriginal)
+    {
+        Assert.Throws<DomainExceptions.UrlHostInvalidException>(() =>
+            CreateLink(1, 2, urlOriginal, null, null, null));
+    }
+
+    [Theory]
+    [InlineData("https://192.168.1.1/x")]
+    [InlineData("http://192.168.1.1:8080/x")]
+    [InlineData("https://192.168.001.001/x")]
+    public void Create_WhenIpv4HostIsWrittenAsFourDecimalGroups_KeepsTheWrittenHost(string urlOriginal)
+    {
+        DomainEntities.Link link = CreateLink(1, 2, urlOriginal, null, null, null);
+
+        Assert.Equal(urlOriginal, link.UrlOriginal);
+    }
+
+    [Fact]
+    public void Create_WhenTheSameIpv4HostIsWrittenWithLeadingZeros_ProducesTheSameNormalizedKey()
+    {
+        DomainEntities.Link withLeadingZeros = CreateLink(1, 2, "https://192.168.001.001/x", null, null, null);
+        DomainEntities.Link withoutLeadingZeros = CreateLink(1, 2, "https://192.168.1.1/x", null, null, null);
+
+        Assert.NotEqual(withLeadingZeros.UrlOriginal, withoutLeadingZeros.UrlOriginal);
+        Assert.Equal(withoutLeadingZeros.UrlNormalized, withLeadingZeros.UrlNormalized);
     }
 
     [Fact]
@@ -132,17 +206,11 @@ public class LinkTests
         Assert.Equal("Desc", link.Description);
     }
 
-    private static void SetEntityId(DomainEntities.Collection collection, long id)
-    {
-        System.Reflection.PropertyInfo? property = typeof(DomainEntities.Collection).BaseType?.GetProperty("Id");
-        property?.SetValue(collection, id);
-    }
-
     private static DomainEntities.Link CreateLink(long userId, long collectionId, string urlOriginal, string? title, string? description, string? image)
     {
         long collectionOwnerId = userId > 0 ? userId : 1;
         DomainEntities.Collection collection = DomainEntities.Collection.Create(collectionOwnerId, "Collection", null);
-        SetEntityId(collection, collectionId);
+        EntityTestFactory.SetId(collection, collectionId);
 
         return DomainEntities.Link.Create(userId, collection, urlOriginal, title, description, image);
     }
@@ -240,7 +308,7 @@ public class LinkTests
     public void Create_WhenCollectionIsPublicAndPublicRequested_SetsPublicState()
     {
         DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null, true);
-        SetEntityId(collection, 22);
+        EntityTestFactory.SetId(collection, 22);
 
         DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com/public", null, null, null, true);
 
@@ -252,7 +320,7 @@ public class LinkTests
     public void Create_WhenCollectionIsPrivateAndPublicRequested_Throws()
     {
         DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
-        SetEntityId(collection, 22);
+        EntityTestFactory.SetId(collection, 22);
 
         Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
             DomainEntities.Link.Create(1, collection, "https://example.com/private", null, null, null, true));
@@ -262,7 +330,7 @@ public class LinkTests
     public void ChangePrivacy_WhenPublicRequestedOnPrivateCollection_ThrowsAndKeepsPreviousState()
     {
         DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
-        SetEntityId(collection, 22);
+        EntityTestFactory.SetId(collection, 22);
 
         DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com/private", null, null, null);
 
@@ -274,7 +342,7 @@ public class LinkTests
     public void ChangePrivacy_WhenPublicRequestedOnPublicCollection_SetsPublicState()
     {
         DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null, true);
-        SetEntityId(collection, 22);
+        EntityTestFactory.SetId(collection, 22);
         DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com/private", null, null, null);
 
         link.ChangePrivacy(true, collection);
@@ -290,16 +358,113 @@ public class LinkTests
     public void MoveToCollection_WhenValid_LeavesLinkPrivate(bool sourceIsPublic, bool destinationIsPublic)
     {
         DomainEntities.Collection sourceCollection = DomainEntities.Collection.Create(1, "Source", null, sourceIsPublic);
-        SetEntityId(sourceCollection, 9);
+        EntityTestFactory.SetId(sourceCollection, 9);
 
         DomainEntities.Collection destinationCollection = DomainEntities.Collection.Create(1, "Destination", null, destinationIsPublic);
-        SetEntityId(destinationCollection, 21);
+        EntityTestFactory.SetId(destinationCollection, 21);
 
         DomainEntities.Link link = DomainEntities.Link.Create(1, sourceCollection, "https://example.com/path", null, null, null, sourceIsPublic);
 
         link.MoveToCollection(destinationCollection);
 
         Assert.Equal(21, link.CollectionId);
+        Assert.False(link.IsPublic);
+    }
+
+    [Fact]
+    public void Create_WhenCollectionIsNull_Throws()
+    {
+        Assert.Throws<DomainExceptions.NotValidInputException>(() =>
+            DomainEntities.Link.Create(1, null!, "https://example.com", null, null, null));
+    }
+
+    [Fact]
+    public void Create_WhenCollectionHasNoId_Throws()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() =>
+            DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null));
+    }
+
+    [Fact]
+    public void ChangePrivacy_WhenCollectionIsNull_Throws()
+    {
+        DomainEntities.Link link = CreateLink(1, 2, "https://example.com", null, null, null);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => link.ChangePrivacy(true, null!));
+
+        Assert.False(link.IsPublic);
+    }
+
+    [Fact]
+    public void ChangePrivacy_WhenCollectionHasNoId_ThrowsAndKeepsPreviousState()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
+        EntityTestFactory.SetId(collection, 22);
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
+
+        DomainEntities.Collection collectionWithoutId = DomainEntities.Collection.Create(1, "Collection Without Id", null);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => link.ChangePrivacy(true, collectionWithoutId));
+
+        Assert.False(link.IsPublic);
+    }
+
+    [Fact]
+    public void ChangePrivacy_WhenCollectionBelongsToAnotherUser_ThrowsAndKeepsPreviousState()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null, true);
+        EntityTestFactory.SetId(collection, 22);
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
+
+        DomainEntities.Collection otherUsersCollection = DomainEntities.Collection.Create(2, "Other Users Collection", null, true);
+        EntityTestFactory.SetId(otherUsersCollection, 22);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => link.ChangePrivacy(true, otherUsersCollection));
+
+        Assert.False(link.IsPublic);
+    }
+
+    [Fact]
+    public void ChangePrivacy_WhenCollectionIsAnotherOfTheSameUser_ThrowsAndKeepsPreviousState()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null, true);
+        EntityTestFactory.SetId(collection, 22);
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
+
+        DomainEntities.Collection otherCollection = DomainEntities.Collection.Create(1, "Other Collection", null, true);
+        EntityTestFactory.SetId(otherCollection, 23);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => link.ChangePrivacy(true, otherCollection));
+
+        Assert.False(link.IsPublic);
+    }
+
+    [Fact]
+    public void MoveToCollection_WhenDestinationIsNull_ThrowsAndKeepsCurrentCollection()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
+        EntityTestFactory.SetId(collection, 9);
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => link.MoveToCollection(null!));
+
+        Assert.Equal(9, link.CollectionId);
+    }
+
+    [Fact]
+    public void MoveToCollection_WhenDestinationHasNoId_ThrowsAndKeepsCurrentCollection()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
+        EntityTestFactory.SetId(collection, 9);
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
+
+        DomainEntities.Collection destinationWithoutId = DomainEntities.Collection.Create(1, "Destination Without Id", null);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => link.MoveToCollection(destinationWithoutId));
+
+        Assert.Equal(9, link.CollectionId);
         Assert.False(link.IsPublic);
     }
 }

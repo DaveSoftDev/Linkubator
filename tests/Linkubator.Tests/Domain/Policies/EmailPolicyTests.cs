@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using DomainExceptions = Linkubator.Domain.Exceptions;
 using DomainPolicies = Linkubator.Domain.Policies;
 
@@ -56,5 +57,37 @@ public class EmailPolicyTests
         Assert.Equal(251, email.Length);
         Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() =>
             DomainPolicies.EmailPolicy.Normalize(email));
+    }
+
+    /// <summary>
+    /// El patrón debe replicar literalmente la expresión de specifications.md → «Email»,
+    /// anclada con \A y \z. Se prueba sobre el patrón y no sobre Normalize porque el recorte
+    /// previo elimina el salto de línea final, que es la única diferencia que el anclaje aprecia.
+    /// </summary>
+    [Fact]
+    public void EmailPatternIsAnchoredAsTheSpecificationWritesIt()
+    {
+        Regex pattern = InvokeEmailPattern();
+
+        Assert.StartsWith(@"\A", pattern.ToString(), StringComparison.Ordinal);
+        Assert.EndsWith(@"\z", pattern.ToString(), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Con \z final, una dirección seguida de un salto de línea no casa por la posición
+    /// anterior a ese salto, que es lo que permitiría el anclaje $.
+    /// </summary>
+    [Fact]
+    public void EmailPatternRejectsATrailingLineBreakInsteadOfMatchingBeforeIt()
+    {
+        Regex pattern = InvokeEmailPattern();
+
+        Assert.DoesNotMatch(pattern, "ana@example.com\n");
+        Assert.Matches(pattern, "ana@example.com");
+    }
+
+    private static Regex InvokeEmailPattern()
+    {
+        return (Regex)PrivatePolicyInvoker.InvokeStatic(typeof(DomainPolicies.EmailPolicy), "EmailPattern")!;
     }
 }

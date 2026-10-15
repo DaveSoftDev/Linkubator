@@ -18,4 +18,23 @@ public class LinkUrlExamplesTests
         Assert.Throws<DomainExceptions.UrlSchemeNotAllowedException>(() => DomainPolicies.LinkUrlPolicy.Adjust("mailto:ana@example.com"));
         Assert.Throws<DomainExceptions.UrlAuthorityMissingException>(() => DomainPolicies.LinkUrlPolicy.Adjust("http:example.com"));
     }
+
+    [Fact]
+    public void AdjustRejectsUrlWhenAddedSchemePushesItOverMaximumLength()
+    {
+        string input = "example.com/" + new string('a', 2048 - "example.com/".Length);
+
+        Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() =>
+            DomainPolicies.LinkUrlPolicy.Adjust(input));
+    }
+
+    [Fact]
+    public void AdjustCountsUnicodeCodePointsForMaximumLength()
+    {
+        string prefix = "https://example.com/";
+        string input = prefix + new string('a', 2048 - prefix.Length - 1) + "😀";
+
+        Assert.Equal(2048, DomainPolicies.UserTextPolicy.CountCodePoints(input));
+        Assert.Equal(input, DomainPolicies.LinkUrlPolicy.Adjust(input));
+    }
 }

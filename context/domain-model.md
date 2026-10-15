@@ -26,7 +26,7 @@ Propiedades:
 Invariantes:
 
 - `Email` es obligatorio y único en todo el sistema, normalizado y validado según [specifications.md → «Email»](specifications.md#email).
-- `EmailConfirmedAt` es `null` mientras el registro está sin completar. Un registro sin completar solo contiene el email y el `SecurityStamp`: `Name`, `Alias` y `Password` son `null`, no tiene colecciones y no puede iniciar sesión. Al completar el registro se fijan los cuatro valores a la vez y, desde entonces, `Name`, `Alias` y `Password` son obligatorios.
+- `EmailConfirmedAt` es `null` mientras el registro está sin completar. En el perfil, un registro sin completar solo tiene email y `SecurityStamp`; `Name`, `Alias` y `Password` son `null`, no tiene colecciones y no puede iniciar sesión. Esto no excluye campos operativos de `User`, como las marcas de envío de correo. Al completar el registro se fijan `Name`, `Alias`, `Password` y `EmailConfirmedAt` a la vez y, desde entonces, `Name`, `Alias` y `Password` son obligatorios.
 - Volver a registrarse con el email de un registro sin completar no crea otra cuenta: reenvía el correo de completar registro (ver [specifications.md → «Registro»](specifications.md#registro)).
 - `Name` no necesita ser único, ya que su finalidad es sólo para uso privado de la aplicación (Pantallas, Emails...).
 - `Alias` es público, mutable y único en todo el sistema. Se genera según [specifications.md → «Generación del alias»](specifications.md#generación-del-alias).
@@ -84,8 +84,8 @@ Invariantes:
 
 - `Name` y `Slug` son obligatorios. `Description` es opcional.
 - `Slug` se genera a partir de `Name` según [specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs), y se regenera cada vez que cambia `Name`.
-- `Slug` es único dentro del usuario, nunca en todo el sistema. `Name` no tiene restricción propia: como dos nombres que producen el mismo slug no pueden coexistir, la unicidad real es la del slug y alcanza a nombres que solo se diferencian en mayúsculas, acentos o símbolos.
-- Si `Name` no produce un slug válido o el slug colisiona dentro del usuario, al crear o al renombrar, la operación se rechaza.
+- `Slug` es único dentro del usuario, nunca en todo el sistema. La unicidad se determina por el slug generado según [specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs), no por una comparación independiente de `Name`.
+- Si `Name` no produce un slug válido o el slug generado ya pertenece a otra colección del usuario, al crear o al renombrar, la operación se rechaza.
 - Una colección puede no tener enlaces.
 - Una colección con enlaces no se puede eliminar.
 - Si el usuario intenta eliminar su última colección del usuario la operación se rechaza.
@@ -108,8 +108,8 @@ Invariantes:
 
 - `Name` y `Slug` son obligatorios.
 - `Slug` se genera a partir de `Name` según [specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs), y se regenera cada vez que cambia `Name`.
-- `Slug` es único dentro del usuario, nunca en todo el sistema. `Name` no tiene restricción propia: como dos nombres que producen el mismo slug no pueden coexistir, la unicidad real es la del slug y alcanza a nombres que solo se diferencian en mayúsculas, acentos o símbolos.
-- Si `Name` no produce un slug válido o el slug colisiona dentro del usuario, al crear o al renombrar, la operación se rechaza. Excepción: al crear una etiqueta desde el formulario de un enlace, si su slug coincide con el de una etiqueta existente, se asocia esa etiqueta en lugar de rechazar la operación.
+- `Slug` es único dentro del usuario, nunca en todo el sistema. La unicidad se determina por el slug generado según [specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs), no por una comparación independiente de `Name`.
+- Si `Name` no produce un slug válido o el slug generado ya pertenece a otra etiqueta del usuario, al crear o al renombrar, la operación se rechaza. Excepción: al crear una etiqueta desde el formulario de un enlace, si su slug coincide con el de una etiqueta existente, se asocia esa etiqueta en lugar de rechazar la operación.
 - Una etiqueta puede no tener enlaces.
 - Solo se puede eliminar una etiqueta si no tiene enlaces asociados. 
 - El borrado es físico.

@@ -34,6 +34,51 @@ public class EntityPublicSurfaceTests
         Assert.False(HasPublicSetter(null));
     }
 
+    [Fact]
+    public void HasPublicSetter_ReturnsFalse_WhenPropertyHasNoSetter()
+    {
+        // Arrange
+        var property = typeof(NoSetterEntity).GetProperty(nameof(NoSetterEntity.ReadOnlyProp));
+
+        // Act & Assert
+        Assert.False(HasPublicSetter(property));
+    }
+
+    private class NoSetterEntity
+    {
+        public string ReadOnlyProp { get; } = string.Empty;
+    }
+
+    [Fact]
+    public void HasPublicSetter_ReturnsFalse_WhenPropertyHasPrivateSetter()
+    {
+        // Arrange
+        var property = typeof(PrivateSetterEntity).GetProperty(nameof(PrivateSetterEntity.PropWithPrivateSetter));
+
+        // Act & Assert
+        Assert.False(HasPublicSetter(property));
+    }
+
+    private class PrivateSetterEntity
+    {
+        public string PropWithPrivateSetter { get; private set; } = string.Empty;
+    }
+
+    [Fact]
+    public void PublicSetterEntity_PropertyCanBeGetAndSet()
+    {
+        // Arrange
+        var entity = new PublicSetterEntity();
+
+        // Act
+        var original = entity.UrlOriginal;
+        entity.UrlOriginal = "test";
+
+        // Assert
+        Assert.Equal(string.Empty, original);
+        Assert.Equal("test", entity.UrlOriginal);
+    }
+
     private static bool HasPublicSetter(System.Reflection.PropertyInfo? property)
     {
         return property?.SetMethod is { IsPublic: true };

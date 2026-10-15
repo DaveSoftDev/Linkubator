@@ -1,7 +1,7 @@
 using Linkubator.Infrastructure;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, services, loggerConfiguration) =>
     loggerConfiguration
@@ -12,7 +12,7 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) =>
 builder.Services.AddInfrastructure();
 builder.Services.AddRazorPages();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -21,6 +21,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseSerilogRequestLogging();
 app.UseRouting();
 app.UseAuthorization();
 
