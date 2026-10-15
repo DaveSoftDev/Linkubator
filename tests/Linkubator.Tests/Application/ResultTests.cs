@@ -1,9 +1,9 @@
 using Linkubator.Application;
 using Linkubator.Domain.Exceptions;
 
-namespace Linkubator.Tests;
+namespace Linkubator.Tests.Application;
 
-public class ApplicationContractsTests
+public class ResultTests
 {
     [Fact]
     public void ResultSuccessAndFailureAreExplicitlyDistinguishable()

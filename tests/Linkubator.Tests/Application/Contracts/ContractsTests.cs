@@ -2,9 +2,9 @@ using Linkubator.Application;
 using Linkubator.Application.Constants;
 using Linkubator.Domain.Entities;
 
-namespace Linkubator.Tests;
+namespace Linkubator.Tests.Application.Contracts;
 
-public class S4_2_ApplicationContractsTests
+public class ContractsTests
 {
     [Fact]
     public void CurrentUserTracksTheIdentifiedUser()
