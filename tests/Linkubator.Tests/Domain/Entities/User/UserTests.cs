@@ -92,4 +92,104 @@ public class UserTests
                 "hash",
                 new DateTime(2026, 10, 6, 8, 30, 0, DateTimeKind.Utc)));
     }
+
+    [Fact]
+    public void CreateIncompleteRegistration_WhenValid_SetsOnlyEmailAndSecurityStamp()
+    {
+        DomainEntities.User user = DomainEntities.User.CreateIncompleteRegistration("  Nuevo@Example.com  ");
+
+        Assert.Equal("nuevo@example.com", user.Email);
+        Assert.Null(user.Name);
+        Assert.Null(user.Alias);
+        Assert.Null(user.Password);
+        Assert.Null(user.EmailConfirmedAt);
+        Assert.Equal(0, user.FailedLoginAttempts);
+        Assert.Null(user.LockoutEnd);
+        Assert.Null(user.LastEmailSentAt);
+        Assert.Null(user.LastExistingAccountNoticeAt);
+        Assert.NotEmpty(user.SecurityStamp);
+        Assert.Matches("^[A-Za-z0-9_-]{43}$", user.SecurityStamp);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("not-an-email")]
+    public void CreateIncompleteRegistration_WhenEmailIsMissingOrInvalid_Throws(string? email)
+    {
+        Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
+            DomainEntities.User.CreateIncompleteRegistration(email!));
+    }
+
+    [Fact]
+    public void CompleteRegistration_WhenRegistrationIsIncomplete_SetsTheFourValuesAtOnce()
+    {
+        DomainEntities.User user = DomainEntities.User.CreateIncompleteRegistration("user@example.com");
+
+        DateTime confirmedAt = new(2026, 10, 6, 8, 30, 0, DateTimeKind.Utc);
+
+        user.CompleteRegistration("  Ana María  ", "AnaMaria2026", "hashed-password", confirmedAt);
+
+        Assert.Equal("Ana María", user.Name);
+        Assert.NotNull(user.Alias);
+        Assert.NotEmpty(user.Alias);
+        Assert.Equal("hashed-password", user.Password);
+        Assert.Equal(confirmedAt, user.EmailConfirmedAt);
+    }
+
+    [Fact]
+    public void CompleteRegistration_WhenRegistrationIsAlreadyCompleted_ThrowsAndKeepsTheValues()
+    {
+        DomainEntities.User user = DomainEntities.User.Create(
+            "user@example.com",
+            "Ana",
+            "AnaMaria2026",
+            "hash",
+            new DateTime(2026, 10, 6, 8, 30, 0, DateTimeKind.Utc));
+
+        string? alias = user.Alias;
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() =>
+            user.CompleteRegistration("Other", "OtherName2026", "hash-2", new DateTime(2026, 10, 7, 8, 30, 0, DateTimeKind.Utc)));
+
+        Assert.Equal("Ana", user.Name);
+        Assert.Equal(alias, user.Alias);
+        Assert.Equal("hash", user.Password);
+        Assert.Equal(new DateTime(2026, 10, 6, 8, 30, 0, DateTimeKind.Utc), user.EmailConfirmedAt);
+    }
+
+    [Theory]
+    [InlineData("user@example.com", null, "AnaMaria2026", "hash")]
+    [InlineData("user@example.com", "", "AnaMaria2026", "hash")]
+    [InlineData("user@example.com", "Ana", null, "hash")]
+    [InlineData("user@example.com", "Ana", "AnaMaria2026", null)]
+    [InlineData("user@example.com", "Ana", "AnaMaria2026", "   ")]
+    public void CompleteRegistration_WhenRequiredDataIsMissing_ThrowsAndKeepsTheRegistrationIncomplete(
+        string email,
+        string? name,
+        string? aliasCandidate,
+        string? passwordHash)
+    {
+        DomainEntities.User user = DomainEntities.User.CreateIncompleteRegistration(email);
+
+        DateTime confirmedAt = new(2026, 10, 6, 8, 30, 0, DateTimeKind.Utc);
+
+        Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
+            user.CompleteRegistration(name!, aliasCandidate!, passwordHash!, confirmedAt));
+
+        Assert.Null(user.Name);
+        Assert.Null(user.Alias);
+        Assert.Null(user.Password);
+        Assert.Null(user.EmailConfirmedAt);
+    }
+
+    [Fact]
+    public void CompleteRegistration_WhenEmailConfirmationDateIsDefault_Throws()
+    {
+        DomainEntities.User user = DomainEntities.User.CreateIncompleteRegistration("user@example.com");
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() =>
+            user.CompleteRegistration("Ana", "AnaMaria2026", "hash", default));
+    }
 }

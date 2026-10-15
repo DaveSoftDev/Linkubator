@@ -40,7 +40,7 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 ### Registro
 
 - A partir del email introducido por el usuario:
-  - Si no existe ninguna cuenta con ese email, se crea un registro sin completar, que solo contiene el email y el `SecurityStamp` (La base de datos ya asignará `Id` y `CreatedAt`), y se envía el correo de completar registro.
+  - Si no existe ninguna cuenta con ese email, se crea un registro sin completar: aún no tiene perfil completo (`Name`, `Alias` y `Password`); sí contiene el email y el `SecurityStamp`, y puede tener campos operativos como `LastEmailSentAt`. La base de datos asigna `Id` y `CreatedAt`. Se envía el correo de completar registro.
   - Si existe un registro sin completar con ese email, se emite un token nuevo y se vuelve a enviar el correo de completar registro. Volver a registrarse es la forma de pedir el reenvío.
   - Si existe una cuenta completada con ese email, no se crea nada y se envía a esa dirección el correo de aviso de cuenta existente.
 - Un registro sin completar no tiene nombre, alias, contraseña ni colecciones, y no puede iniciar sesión (invariantes de [domain-model.md → «User»](domain-model.md#user)).
@@ -177,9 +177,10 @@ Reglas de los slugs:
 
 - El slug de colección y el de etiqueta no se muestran al usuario.
 - Se regeneran automáticamente cuando cambia el nombre.
+- La equivalencia de nombres para las restricciones de unicidad se determina exclusivamente comparando los slugs generados por esta transformación: dos nombres son equivalentes si y solo si generan el mismo slug. No se aplica una comparación adicional de los nombres originales. Por ejemplo, «Papá» y «papa» generan el mismo slug y colisionan; los símbolos solo causan una colisión si, tras aplicar la transformación, ambos nombres generan exactamente el mismo slug.
 - La colección por defecto «Bandeja de entrada» tiene el slug `bandeja-de-entrada`.
 - Si el resultado queda vacío, o fuera del rango de longitud de «Longitudes máximas», la operación se rechaza. Nunca se trunca.
-- Si el slug colisiona con otro del mismo usuario, al crear o al modificar, la operación se rechaza indicando el nombre de la colección o etiqueta con la que colisiona, aunque se escriba distinto (por ejemplo, «Papá» y «papa»). No se añaden sufijos ni prefijos para resolver colisiones.
+- Si el slug generado colisiona con el de otra colección o etiqueta del mismo usuario, al crear o al modificar, la operación se rechaza indicando el nombre del elemento con el que colisiona. No se añaden sufijos ni prefijos para resolver colisiones.
 - Excepción: al crear una etiqueta desde el formulario de un enlace, si su slug coincide con el de una existente, se asocia esa y se indica al usuario cuál se ha asociado.
 
 ### Tabla de conversión de símbolos
@@ -386,7 +387,7 @@ Esta regla se aplica al ajuste de `UrlOriginal` y `Image`:
 El formulario conserva la URL introducida para mostrar los errores. El ajuste produce una URL ajustada o string vacío `""`.
 
 1. Recortar los espacios del principio y del final.
-2. Si queda vacía o contiene caracteres de control o saltos de línea, rechazar.
+2. Si queda vacía o contiene caracteres de control o saltos de línea, rechazar. También se rechaza cualquier espacio que haya quedado en el interior, incluido el espacio normal y los espacios Unicode, porque el analizador de URI los reescribiría después en silencio.
 3. Si empieza por `//`, añadir `https:`.
 4. Si tiene un esquema URI explícito, según [«Detección de esquema URI»](#detección-de-esquema-uri), solo se aceptan `http` y `https`, sin distinguir mayúsculas. Cualquier otro esquema (`ftp`, `file`, `text`, `javascript`, `data`, `mailto`, `vbscript` y similares) se rechaza.
 5. Si no tiene esquema, añadir `http://` cuando el host es `localhost` y `https://` en cualquier otro caso.
@@ -419,7 +420,7 @@ El formulario conserva la URL de imagen introducida para mostrar los errores. El
 
 1. Recortar los espacios del principio y del final.
 2. Si queda vacía, tratarla como no informada y no continuar a validación.
-3. Si contiene caracteres de control o saltos de línea, rechazar el ajuste.
+3. Si contiene caracteres de control o saltos de línea, rechazar el ajuste. También se rechaza cualquier espacio que haya quedado en el interior, incluido el espacio normal y los espacios Unicode, porque el analizador de URI los reescribiría después en silencio.
 4. Si empieza por `//`, añadir `https:`.
 5. Si tiene un esquema URI explícito, según [«Detección de esquema URI»](#detección-de-esquema-uri), cambiar `http` a `https`; aceptar `https` sin distinguir mayúsculas y rechazar cualquier otro esquema (`ftp`, `file`, `text`, `javascript`, `data`, `mailto`, `vbscript` y similares).
 6. Si tiene la forma host y puerto reconocida en [«Detección de esquema URI»](#detección-de-esquema-uri), tratarla como autoridad y añadir `https://`.

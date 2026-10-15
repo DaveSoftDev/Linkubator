@@ -34,6 +34,11 @@ public static class UrlNormalizationPolicy
         "at_term"
     };
 
+    /// <summary>
+    /// Normaliza una URL para detectar duplicados.
+    /// </summary>
+    /// <param name="url">URL a normalizar.</param>
+    /// <returns>Clave normalizada.</returns>
     public static string Normalize(string url)
     {
         UserTextPolicy.ThrowIfNullOrWhiteSpace(url);
@@ -49,18 +54,29 @@ public static class UrlNormalizationPolicy
         return Canonicalize(combined);
     }
 
+    /// <summary>
+    /// Analiza la URL como absoluta.
+    /// </summary>
+    /// <param name="url">URL a analizar.</param>
+    /// <returns>Objeto <see cref="Uri"/> absoluto.</returns>
+    /// <exception cref="DomainExceptions.UrlNotAbsoluteException">Si la URL no es absoluta.</exception>
     private static Uri ParseAbsoluteUri(string url)
     {
         string parseableUrl = EscapePathUnicode(url);
 
         if (!Uri.TryCreate(parseableUrl, UriKind.Absolute, out Uri? uri) || uri is null)
         {
-            throw new ArgumentException("Input must be an absolute URI.", nameof(url));
+            throw new DomainExceptions.UrlNotAbsoluteException();
         }
 
         return uri;
     }
 
+    /// <summary>
+    /// Escapa los caracteres Unicode de la ruta para que Uri pueda analizarlos.
+    /// </summary>
+    /// <param name="url">URL a procesar.</param>
+    /// <returns>URL con caracteres de ruta Unicode escapados.</returns>
     private static string EscapePathUnicode(string url)
     {
         if (string.IsNullOrEmpty(url))
@@ -91,7 +107,7 @@ public static class UrlNormalizationPolicy
         for (int index = 0; index < path.Length; index++)
         {
             char character = path[index];
-            if (character == '%' && index + 2 < path.Length && IsHexDigit(path[index + 1]) && IsHexDigit(path[index + 2]))
+            if (character == '%' && index + 2 < path.Length && char.IsAsciiHexDigit(path[index + 1]) && char.IsAsciiHexDigit(path[index + 2]))
             {
                 escapedPath.Append(character);
                 continue;
@@ -109,6 +125,11 @@ public static class UrlNormalizationPolicy
         return authority + escapedPath + postSeparator;
     }
 
+    /// <summary>
+    /// Determina si un carácter es seguro para la ruta.
+    /// </summary>
+    /// <param name="character">Carácter a evaluar.</param>
+    /// <returns><c>true</c> si el carácter es seguro; de lo contrario, <c>false</c>.</returns>
     private static bool IsPathSafeCharacter(char character)
     {
         return character switch
@@ -121,11 +142,11 @@ public static class UrlNormalizationPolicy
         };
     }
 
-    private static bool IsHexDigit(char character)
-    {
-        return char.IsAsciiHexDigit(character);
-    }
-
+    /// <summary>
+    /// Normaliza la cadena de consulta, eliminando parámetros de marketing y ordenando el resto.
+    /// </summary>
+    /// <param name="query">Consulta a normalizar.</param>
+    /// <returns>Consulta normalizada o cadena vac�a si no quedan parámetros.</returns>
     private static string NormalizeQuery(string query)
     {
         if (string.IsNullOrEmpty(query))
@@ -133,34 +154,36 @@ public static class UrlNormalizationPolicy
             return string.Empty;
         }
 
+        List<KeyValuePair<string, string>> parameters = BuildNormalizedParameters(query);
+        if (parameters.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        return BuildQueryString(parameters);
+    }
+
+    /// <summary>
+    /// Construye la lista de parámetros normalizados a partir de la consulta.
+    /// </summary>
+    /// <param name="query">Consulta a procesar.</param>
+    /// <returns>Lista ordenada de parámetros normalizados.</returns>
+    private static List<KeyValuePair<string, string>> BuildNormalizedParameters(string query)
+    {
         string[] segments = query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (segments.Length == 0)
         {
-            return string.Empty;
+            return [];
         }
 
         List<KeyValuePair<string, string>> parameters = [];
 
         foreach (string segment in segments)
         {
-            int separatorIndex = segment.IndexOf('=');
-            string name = separatorIndex >= 0 ? segment[..separatorIndex] : segment;
-            string value = separatorIndex >= 0 ? segment[(separatorIndex + 1)..] : string.Empty;
-
-            if (string.IsNullOrEmpty(name))
+            if (TryParseParameter(segment, out KeyValuePair<string, string> parameter))
             {
-                continue;
+                parameters.Add(parameter);
             }
-
-            string decodedName = WebUtility.UrlDecode(name);
-            string decodedValue = WebUtility.UrlDecode(value);
-
-            if (_marketingParameters.Contains(decodedName))
-            {
-                continue;
-            }
-
-            parameters.Add(new KeyValuePair<string, string>(decodedName.ToLowerInvariant(), decodedValue.ToLowerInvariant()));
         }
 
         parameters.Sort((left, right) =>
@@ -169,11 +192,45 @@ public static class UrlNormalizationPolicy
             return comparison != 0 ? comparison : StringComparer.Ordinal.Compare(left.Value, right.Value);
         });
 
-        if (parameters.Count == 0)
+        return parameters;
+    }
+
+    /// <summary>
+    /// Intenta analizar un parámetro de consulta.
+    /// </summary>
+    /// <param name="segment">Segmento a analizar.</param>
+    /// <param name="parameter">Parámetro resultante.</param>
+    /// <returns><c>true</c> si el parámetro es válido y no es de marketing; de lo contrario, <c>false</c>.</returns>
+    private static bool TryParseParameter(string segment, out KeyValuePair<string, string> parameter)
+    {
+        parameter = default;
+
+        int separatorIndex = segment.IndexOf('=');
+        string name = separatorIndex >= 0 ? segment[..separatorIndex] : segment;
+        if (string.IsNullOrEmpty(name))
         {
-            return string.Empty;
+            return false;
         }
 
+        string value = separatorIndex >= 0 ? segment[(separatorIndex + 1)..] : string.Empty;
+        string decodedName = WebUtility.UrlDecode(name);
+        if (_marketingParameters.Contains(decodedName))
+        {
+            return false;
+        }
+
+        string decodedValue = WebUtility.UrlDecode(value);
+        parameter = new KeyValuePair<string, string>(decodedName.ToLowerInvariant(), decodedValue.ToLowerInvariant());
+        return true;
+    }
+
+    /// <summary>
+    /// Construye la cadena de consulta a partir de los parámetros normalizados.
+    /// </summary>
+    /// <param name="parameters">Lista de parámetros.</param>
+    /// <returns>Cadena de consulta.</returns>
+    private static string BuildQueryString(List<KeyValuePair<string, string>> parameters)
+    {
         StringBuilder queryBuilder = new();
         foreach (KeyValuePair<string, string> parameter in parameters)
         {
@@ -188,6 +245,11 @@ public static class UrlNormalizationPolicy
         return queryBuilder.ToString();
     }
 
+    /// <summary>
+    /// Canonicaliza la cadena resultante para obtener la clave de normalización.
+    /// </summary>
+    /// <param name="input">Entrada a canonicalizar.</param>
+    /// <returns>Clave canonicalizada.</returns>
     private static string Canonicalize(string input)
     {
         if (string.IsNullOrEmpty(input))
@@ -196,7 +258,6 @@ public static class UrlNormalizationPolicy
         }
 
         string normalized = input.ToLowerInvariant();
-        normalized = normalized.Replace("ç", "c").Replace("ñ", "n");
         normalized = normalized.Normalize(NormalizationForm.FormD);
 
         StringBuilder builder = new(normalized.Length);
@@ -228,3 +289,5 @@ public static class UrlNormalizationPolicy
         return result.Trim('-');
     }
 }
+
+

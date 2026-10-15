@@ -162,10 +162,10 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 
 **Definition of Done**
 
-- [ ] Las invariantes aplicables al MVP0 tienen test.
-- [ ] No existe ningún camino de dominio para hacer público un enlace de una colección privada.
-- [ ] Las fichas de entidad coinciden con el código.
-- [ ] El humano ha aprobado el modelo.
+- [x] Las invariantes aplicables al MVP0 tienen test.
+- [x] No existe ningún camino de dominio para hacer público un enlace de una colección privada.
+- [x] Las fichas de entidad coinciden con el código.
+- [x] El humano ha aprobado el modelo.
 
 ### S3a: Dominio IV: refactor (M)
 
@@ -173,13 +173,12 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 
 | ID | Tarea | Resp. |
 |---|---|---|
-| S3a.1 | Refactorizar las Policies | Humano |
-| S3a.2 | Refactorizar las entidades | Humano |
+| S3a.1 | Refactorizar Entities y Policies; el alcance de políticas de URL quedó especificado en [spec.md](../specs/archive/s3a-refactor-de-dominio/spec.md), diseñado en [plan.md](../specs/archive/s3a-refactor-de-dominio/plan.md) y ejecutado/evidenciado en [tasks.md](../specs/archive/s3a-refactor-de-dominio/tasks.md) | Humano; ejecución del alcance de políticas de URL autorizada a IA por DLG el 13-X-2026 |
 
 **Definition of Done**
 
-- [ ] Dominio sigue funcionando como hasta ahora.
-- [ ] El humano ha aprobado el nuevo Domain.
+- [x] El Domain cumple las especificaciones aprobadas y supera las validaciones del trabajo; para el alcance de políticas de URL, consultar [spec.md](../specs/archive/s3a-refactor-de-dominio/spec.md) y su evidencia en [tasks.md](../specs/archive/s3a-refactor-de-dominio/tasks.md).
+- [x] El humano ha aceptado el nuevo Domain.
 
 ### S4: Aplicación: casos de uso (L)
 
@@ -208,6 +207,19 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 - [ ] Los casos de uso no aceptan `UserId` del cliente.
 - [ ] Los tests con fakes cubren los caminos felices y los de error.
 - [ ] Los logs no incluyen contenido prohibido.
+
+### S4a: Aplicación: refactor (M)
+
+**Objetivo:** refactorizar todo Application para mejorar en rendimiento y legibilidad del código.
+
+| ID | Tarea | Resp. |
+|---|---|---|
+| S4a.1 | Refactorizar Application | Humano |
+
+**Definition of Done**
+
+- [ ] Application sigue funcionando como hasta ahora.
+- [ ] El humano ha aprobado la nueva Application.
 
 ### S5: Persistencia I: SQLite y transacciones (L)
 
@@ -262,6 +274,19 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 - [ ] Acentos, NFC, operadores como términos literales y entrada sin términos se comportan según la especificación.
 - [ ] El comando de reconstrucción restaura una proyección alterada a mano.
 - [ ] El humano ha probado búsquedas con los datos de ejemplo.
+
+### S6a: Persistencia: refactor (M)
+
+**Objetivo:** refactorizar todo la Persistencia para mejorar en rendimiento y legibilidad del código.
+
+| ID | Tarea | Resp. |
+|---|---|---|
+| S6a.1 | Refactorizar la Persistencia | Humano |
+
+**Definition of Done**
+
+- [ ] Persistencia sigue funcionando como hasta ahora.
+- [ ] El humano ha aprobado la nueva Persistencia.
 
 ### S7: Web base, seguridad y accesibilidad (L)
 
@@ -359,6 +384,19 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 - [ ] Los enlaces de paginación y los formularios de búsqueda conservan los filtros aplicables.
 - [ ] El humano ha probado la búsqueda con los datos de ejemplo.
 
+### S10a: Web: refactor (M)
+
+**Objetivo:** refactorizar toda la Web para mejorar en rendimiento y legibilidad del código.
+
+| ID | Tarea | Resp. |
+|---|---|---|
+| S10a.1 | Refactorizar la Web | Humano |
+
+**Definition of Done**
+
+- [ ] Web sigue funcionando como hasta ahora.
+- [ ] El humano ha aprobado la nueva Web.
+
 ### S11: Área pública y SEO (L)
 
 **Objetivo:** publicar las cuatro páginas públicas, renderizadas en servidor y legibles para buscadores.
@@ -383,6 +421,19 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 - [ ] No quedan textos pendientes.
 - [ ] El HTML se sirve renderizado en servidor.
 - [ ] La revisión humana del HTML público está aceptada.
+
+### S11a: Área pública: refactor (M)
+
+**Objetivo:** refactorizar toda la Área pública para mejorar en rendimiento y legibilidad del código.
+
+| ID | Tarea | Resp. |
+|---|---|---|
+| S11a.1 | Refactorizar el Área pública | Humano |
+
+**Definition of Done**
+
+- [ ] El Área pública sigue funcionando como hasta ahora.
+- [ ] El humano ha aprobado la nueva Área pública.
 
 ### S12: Cierre y hardening (M)
 

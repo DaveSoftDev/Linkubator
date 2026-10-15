@@ -4,6 +4,8 @@ Vista derivada del modelo de dominio y de la arquitectura. Las propiedades e inv
 
 La multiplicidad User–Collection contempla todos los estados de la cuenta; la condición para las cuentas completadas está en [domain-model.md → «User»](../domain-model.md#user).
 
+La propiedad de las asociaciones entre `Link`, `Collection` y `Tag` se define en [domain-model.md → «Propiedad de los datos»](../domain-model.md#propiedad-de-los-datos); su garantía técnica se describe en [architecture.md → «Persistencia»](../architecture.md#persistencia).
+
 ```mermaid
 erDiagram
     User {
@@ -34,7 +36,7 @@ erDiagram
     Link {
         INTEGER Id PK
         INTEGER UserId FK
-        INTEGER CollectionId FK
+        INTEGER CollectionId FK "comparte la FK compuesta con UserId"
         TEXT UrlOriginal
         TEXT UrlNormalized
         TEXT Title "NULL si no se informa"

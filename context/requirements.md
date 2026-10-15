@@ -38,13 +38,9 @@ El usuario podrá:
 - Hacer pública o privada una colección.
 - Eliminar una colección solo si no tiene enlaces y no es la última que le queda.
 
-La colección «Bandeja de entrada» es una colección normal como cualquier otra, aunque sea creada por la aplicación. El usuario podrá actuar sobre esta colección igual que sobre cualquier otra. La podrá:
-- Editarla.
-- Cambiarle la privacidad.
-- Eliminarla.
-- Asignarle enlaces
+La colección «Bandeja de entrada» es una colección normal como cualquier otra, aunque sea creada por la aplicación. El usuario puede realizar sobre ella las mismas operaciones que sobre las demás colecciones —editarla, cambiar su privacidad, eliminarla y asignarle enlaces—, sujetas a las mismas restricciones.
 
-No puede haber dos colecciones del usuario con nombres equivalentes: se consideran el mismo nombre los que solo se diferencian en mayúsculas, acentos (por ejemplo, «Papá» y «papa»). Si el nombre no es válido o equivale al de otra colección suya, se rechaza indicándole con cuál coincide, y debe elegir otro.
+No puede haber dos colecciones del mismo usuario cuyos nombres Linkubator considere equivalentes según [specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs). Si el nombre no es válido o equivale al de otra colección suya, se rechaza indicándole con cuál coincide, y debe elegir otro.
 
 Una colección pública con al menos un enlace público tiene su propia página pública y aparece en la página de colecciones del usuario. Una colección pública sin enlaces públicos no se muestra en ninguna página pública hasta que tenga uno. Si se renombra la colección, su dirección pública anterior deja de existir.
 
@@ -56,7 +52,7 @@ El usuario podrá:
 - Buscar etiquetas.
 - Asociar varias etiquetas a un enlace, eligiendo las existentes o creando una nueva desde el propio formulario del enlace.
 
-No puede haber dos etiquetas del usuario con nombres equivalentes, se resuelve con el mismo criterio que en las colecciones.
+No puede haber dos etiquetas del mismo usuario cuyos nombres Linkubator considere equivalentes según [specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs). Si al crear una etiqueta desde el formulario de un enlace ya existe una equivalente, se asocia la existente y se indica cuál.
 
 ## Enlaces
 

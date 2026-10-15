@@ -17,7 +17,7 @@ sequenceDiagram
     App->>DB: BEGIN IMMEDIATE
     App->>DB: Buscar cuenta por email y comprobar el límite aplicable
     alt No existe una cuenta
-        App->>DB: Crear registro incompleto con email y SecurityStamp; la base asigna Id y CreatedAt
+        App->>DB: Crear registro sin perfil completo; la base asigna Id y CreatedAt
         opt Se permite enviar correo con token
             App->>DB: Emitir token y actualizar LastEmailSentAt
             App->>DB: Guardar el hash del token

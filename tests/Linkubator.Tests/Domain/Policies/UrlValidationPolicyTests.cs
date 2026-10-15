@@ -39,12 +39,12 @@ public class UrlValidationPolicyTests
     [Fact]
     public void ValidHostAcceptsDnsAndIpFormats()
     {
-        Assert.True(DomainPolicies.UrlHostPolicy.IsValidHost("localhost"));
-        Assert.True(DomainPolicies.UrlHostPolicy.IsValidHost("example.com"));
-        Assert.True(DomainPolicies.UrlHostPolicy.IsValidHost("192.168.1.1"));
-        Assert.True(DomainPolicies.UrlHostPolicy.IsValidHost("[2001:db8::1]"));
-        Assert.True(DomainPolicies.UrlHostPolicy.IsValidHost("xn--bcher-kva.example"));
-        Assert.False(DomainPolicies.UrlHostPolicy.IsValidHost("intranet"));
+        Assert.True(DomainPolicies.UriAuthorityPolicy.IsValidHost("localhost"));
+        Assert.True(DomainPolicies.UriAuthorityPolicy.IsValidHost("example.com"));
+        Assert.True(DomainPolicies.UriAuthorityPolicy.IsValidHost("192.168.1.1"));
+        Assert.True(DomainPolicies.UriAuthorityPolicy.IsValidHost("[2001:db8::1]"));
+        Assert.True(DomainPolicies.UriAuthorityPolicy.IsValidHost("xn--bcher-kva.example"));
+        Assert.False(DomainPolicies.UriAuthorityPolicy.IsValidHost("intranet"));
     }
 
     [Trait("Category", "Validation")]
@@ -135,6 +135,38 @@ public class UrlValidationPolicyTests
 
     [Trait("Category", "Validation")]
     [Theory]
+    [InlineData("https://0xC0A80101/img.jpg")]
+    [InlineData("http://0xC0A80101:8080/")]
+    [InlineData("https://2130706433/img.jpg")]
+    [InlineData("https://0x7f.1/img.jpg")]
+    [InlineData("https://192.168.0x1.1/img.jpg")]
+    [InlineData("https://192.168.1/img.jpg")]
+    [InlineData("https://127.1")]
+    [InlineData("https://0177.0.0.1/img.jpg")]
+    public void ValidateRejectsIpv4HostsWrittenInANotAdmittedForm(string input)
+    {
+        Assert.Throws<DomainExceptions.UrlHostInvalidException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));
+    }
+
+    [Trait("Category", "Validation")]
+    [Theory]
+    [InlineData("https://0xC0A80101/img.jpg", "https://192.168.1.1/img.jpg")]
+    [InlineData("http://0xC0A80101:8080/", "http://192.168.1.1:8080/")]
+    [InlineData("https://2130706433/img.jpg", "https://127.0.0.1/img.jpg")]
+    [InlineData("https://0x7f.1/img.jpg", "https://127.0.0.1/img.jpg")]
+    [InlineData("https://192.168.0x1.1/img.jpg", "https://192.168.1.1/img.jpg")]
+    [InlineData("https://192.168.1/img.jpg", "https://192.168.0.1/img.jpg")]
+    [InlineData("https://0177.0.0.1/img.jpg", "https://127.0.0.1/img.jpg")]
+    [InlineData("https://127.1", "https://127.0.0.1")]
+    public void ValidateAcceptsTheSameIpv4HostsOnlyWhenTheyAreWrittenAsFourDecimalGroups(string rejected, string accepted)
+    {
+        Assert.Throws<DomainExceptions.UrlHostInvalidException>(() => DomainPolicies.UrlValidationPolicy.Validate(rejected));
+
+        Assert.Null(Record.Exception(() => DomainPolicies.UrlValidationPolicy.Validate(accepted)));
+    }
+
+    [Trait("Category", "Validation")]
+    [Theory]
     [InlineData("https://localhost")]
     [InlineData("http://127.0.0.1")]
     [InlineData("http://10.0.0.5:8080/x")]
@@ -202,6 +234,17 @@ public class UrlValidationPolicyTests
     public void ValidateRejectsAnEmptyPort(string input)
     {
         Assert.Throws<DomainExceptions.UrlPortInvalidException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));
+    }
+
+    [Trait("Category", "Validation")]
+    [Theory]
+    [InlineData("https://127.0.0.1:99999/img.jpg")]
+    [InlineData("https://0xC0A80101:99999/img.jpg")]
+    [InlineData("https://example.com:99999/x")]
+    [InlineData("https://example.com:65536/x")]
+    public void ValidateRejectsAPortUriCannotParseAsAnAbsoluteUri(string input)
+    {
+        Assert.Throws<DomainExceptions.UrlNotAbsoluteException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));
     }
 
     [Trait("Category", "Validation")]
@@ -281,8 +324,20 @@ public class UrlValidationPolicyTests
     }
 
     [Trait("Category", "Validation")]
+    [Fact]
+    public void HasInvalidPortIgnoresInputsTheAuthorityAnalysisDoesNotRecognize()
+    {
+        object? hasInvalidPort = PrivatePolicyInvoker.InvokeStatic(
+            typeof(DomainPolicies.UrlValidationPolicy),
+            "HasInvalidPort",
+            "//");
+
+        Assert.False(hasInvalidPort as bool?);
+    }
+
+    [Trait("Category", "Validation")]
     [Theory]
-    [InlineData("https://intranet", typeof(DomainExceptions.UrlAuthorityMissingException))]
+    [InlineData("https://intranet", typeof(DomainExceptions.UrlHostInvalidException))]
     [InlineData("intranet", typeof(DomainExceptions.UrlHostInvalidException))]
     [InlineData("https://ana:clave@example.com", typeof(DomainExceptions.UrlCredentialsNotAllowedException))]
     public void SpecificationExamplesAreRejectedByAdjustmentOrValidation(string input, Type expected)
