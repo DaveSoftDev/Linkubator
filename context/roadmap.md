@@ -36,7 +36,7 @@ La Definition of Done de S3a está completada. Las tareas y su evidencia se mant
 
 Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 
-La especificación de [S4.1 — contratos de aplicación](../specs/s4.1-contratos-aplicacion/spec.md) y su plan técnico están aprobados; las tareas están pendientes de aprobación. Estos artefactos no acreditan implementación ni modifican la puerta de S4.5.
+La especificación y el plan técnico de [S4.1 — contratos de aplicación](../specs/s4.1-contratos-aplicacion/spec.md) están aprobados; sus tareas están aprobadas y la implementación está iniciada, según [tasks.md → «Aceptación y cierre»](../specs/s4.1-contratos-aplicacion/tasks.md#aceptación-y-cierre). La [spec de S4.2 — contratos de repositorios, Unit of Work e identidad identificada](../specs/s4.2-contratos-repositorios-identidad/spec.md) y su [plan técnico](../specs/s4.2-contratos-repositorios-identidad/plan.md) están aprobados; sus [tareas](../specs/s4.2-contratos-repositorios-identidad/tasks.md#aceptación-y-cierre) se aprobaron por DLG el 15-X-2026 («Vamos»). T03–T06 están completadas para el alcance contractual; build y suite pasan (733/733). T07 registra la trazabilidad y queda pendiente la aceptación explícita de DLG; las pruebas de comportamiento se harán con sus consumidores. La implementación de los casos de uso posteriores sigue sujeta a la puerta S4.5.
 
 ## Next
 

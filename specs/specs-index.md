@@ -12,6 +12,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| S4.2 — Contratos de repositorios, Unit of Work e identidad identificada | [spec.md](s4.2-contratos-repositorios-identidad/spec.md) | [plan.md](s4.2-contratos-repositorios-identidad/plan.md) | [tasks.md](s4.2-contratos-repositorios-identidad/tasks.md#aceptación-y-cierre) |
 
 ## Trabajos archivados
 

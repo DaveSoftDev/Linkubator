@@ -49,7 +49,9 @@ Para trabajos nuevos usa `specs/<slug>/`, con un nombre descriptivo en kebab-cas
 
 Es una convención local para los trabajos de esta skill, no un estándar universal de SDD. No crees otros artefactos sin necesidad. Carga cada plantilla cuando vayas a redactar su documento. Sus enlaces están preparados para el destino `specs/<slug>/`; ajusta las rutas si la ubicación difiere. Enlaza el trabajo desde [specs-index.md](../../specs/specs-index.md) sin duplicar su contenido. Mantén [roadmap.md](../../context/roadmap.md) como fuente del estado de las etapas: enlaza el trabajo cuando sea necesario para mostrar su avance, sin convertir los artefactos SDD en una segunda fuente de estado.
 
-Siempre que inscribas una spec, asegúrate de que lo estás haciendo al final de la tabla que le corresponde. Tienes estas tres tablas para elegir (Trabajos activos, Trabajos completados, Trabajos archivados).
+Nunca hagas referencia en un artefacto a pruebas, evidencias, tareas... De una especificación que todavia no se ha iniciado. Referenciar a las especificaciones que aún no existen puede inducir a errores y confusión. Puedes referenciar solo las especificaciones existentes y aprobadas.
+
+Siempre que inscribas una especificación, asegúrate de que lo estás haciendo al final de la tabla que le corresponde. Tienes estas tres tablas para elegir (Trabajos activos, Trabajos completados, Trabajos archivados).
 
 Los trabajos terminados y aceptados se trasladan, con su carpeta completa, a `specs/archive/<slug>/`. El estado y la evidencia de cierre pertenecen a `tasks.md`; el índice es solo navegación. Un documento redundante, una propuesta descartada o un diseño antiguo sin cierre no se archivan como trabajo terminado.
 
