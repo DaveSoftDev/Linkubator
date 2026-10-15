@@ -2,8 +2,8 @@
 
 ## Estado y aprobación
 
-- Estado: borrador.
-- Aprobación: pendiente; registrar responsable, fecha y referencia real cuando exista.
+- Estado: aprobada.
+- Aprobación: DLG, 15-X-2026 («Aprobado»).
 
 ## Objetivo
 
@@ -68,4 +68,5 @@ Los casos negativos y límites de cada operación se concretarán en los criteri
 
 ## Artefactos relacionados
 
-No hay plan técnico ni tareas todavía. Se crearán siguiendo el flujo de aprobación de [sdd-writer](../../skills/sdd-writer/SKILL.md): el plan solo después de la aprobación explícita de esta especificación.
+- [Plan técnico](plan.md), aprobado por DLG el 15-X-2026 («Comprendido»).
+- [Tareas](tasks.md), pendientes de aprobación.

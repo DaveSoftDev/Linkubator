@@ -88,3 +88,11 @@ Estas reglas no se pueden romper nunca, ni en la documentación ni en el código
 ## Implementación autorizada
 
 Se permite crear los proyectos, el código, el SQL de aplicación y migraciones, las dependencias y el frontend necesarios para implementar la etapa activa del [roadmap.md](context/roadmap.md), siguiendo la pila prevista en [architecture.md → Arquitectura](context/architecture.md#arquitectura). No se amplía por ello el alcance comprometido: las funciones reservadas a etapas posteriores y las propuestas siguen sujetas a [decisions.md](context/decisions.md) y [roadmap.md](context/roadmap.md). La configuración de despliegue continúa fuera del alcance.
+
+## Convención de estructura del código
+
+- Cada tipo público debe vivir en su propio archivo.
+- Los tipos no deben acumularse en archivos raíz dentro de una capa; se organizan por carpeta y responsabilidad: `Contracts/`, `Dtos/Requests/`, `Dtos/Models/`, `Validation/`, `UseCases/`, `Services/` y así sucesivamente.
+- Las carpetas deben reflejar el dominio y no dejar tipos sueltos que luego se reubiquen por refactor.
+- Cuando una capa ya tiene una estructura clara, se mantiene ese patrón y no se crean archivos generales de “todo en uno” salvo el punto de entrada del proyecto.
+- El patrón de Domain es referencia para Application: módulos por responsabilidad y un archivo por objeto o servicio.

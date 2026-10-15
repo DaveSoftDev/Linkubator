@@ -6,7 +6,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
-| S4.1 — Result, errores, DTOs y validadores de aplicación | [spec.md](s4.1-contratos-aplicacion/spec.md) | — | — |
+| S4.1 — Result, errores, DTOs y validadores de aplicación | [spec.md](s4.1-contratos-aplicacion/spec.md) | [plan.md](s4.1-contratos-aplicacion/plan.md) | [tasks.md](s4.1-contratos-aplicacion/tasks.md#aceptación-y-cierre) |
 
 ## Trabajos completados
 
