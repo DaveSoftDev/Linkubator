@@ -32,6 +32,8 @@ La Definition of Done de S3 está completada. Las tareas y su evidencia se manti
 
 Esta etapa abarca S1–S4, en el orden definido por [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints). La implementación de casos de uso de S4 no comienza hasta que sus criterios de aceptación estén aprobados según [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 
+La especificación de [S4.1 — contratos de aplicación](../specs/s4.1-contratos-aplicacion/spec.md) está en borrador y pendiente de aprobación; no acredita implementación ni modifica la puerta de S4.5.
+
 ## Next
 
 ### Persistencia
