@@ -39,7 +39,7 @@ Este plan organiza la construcción del MVP0 en sprints de 1 semana, con la IA g
 - Sin la aprobación explícita del humano (S4.5), la IA no implementa ningún caso de uso, repositorio concreto ni página Razor.
 - Los criterios aprobados son la fuente de los tests de aplicación (S4), de integración HTTP (S8–S11) y de las guías manuales.
 - Los sprints S5–S11 no redefinen criterios. Si descubren un hueco, la IA propone el cambio y el humano lo aprueba antes de implementarlo.
-- Se prevé guardar los criterios en `plans/acceptance-criteria.md`, fuera de `context/`, con enlaces a las reglas y sin copiarlas.
+- Se prevé guardar los criterios en `plans/mvp0-acceptance-criteria.md`, fuera de `context/`, con enlaces a las reglas y sin copiarlas.
 
 ## 2. Resumen de sprints
 
@@ -189,7 +189,7 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 | S4.1 | Definir `Result`, errores de aplicación, DTOs y validadores | IA | — |
 | S4.2 | Definir las interfaces de repositorios y de Unit of Work, y la abstracción del usuario identificado | IA | S4.1 |
 | S4.3 | Definir el contrato del proveedor de identidad de desarrollo ([«Identidad de desarrollo»](../context/decisions.md#identidad-de-desarrollo)) | IA | S4.2 |
-| S4.4 | Redactar criterios de aceptación (dado/cuando/entonces) de cada caso de uso en el archivo previsto `plans/acceptance-criteria.md`, enlazados a su regla | IA | S4.1 |
+| S4.4 | Redactar criterios de aceptación (dado/cuando/entonces) de cada caso de uso en el archivo previsto [Criterios de aceptación](mvp0-acceptance-criteria.md), enlazados a su regla | IA | S4.1 |
 | S4.5 | **Puerta:** revisar y aprobar los criterios de aceptación, dejando constancia por escrito | Humano | S4.4 |
 | S4.6 | Implementar los casos de uso de colecciones: crear, renombrar con regeneración de slug, cambiar visibilidad, eliminar (no la última ni con enlaces) y listar | IA | S4.5 |
 | S4.7 | Implementar los casos de uso de enlaces: crear con duplicados, editar, mover, cambiar visibilidad, eliminar y listar | IA | S4.5 |

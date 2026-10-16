@@ -11,15 +11,15 @@
 
 ### Componentes y contratos
 
-El trabajo produce tres fichas Markdown en la carpeta de esta spec. Son vistas derivadas y de revisión, no documentos fuente. Cada una reúne las referencias de las fuentes que afectan a la entidad, siguiendo [requirements-review → «Entity sheet»](../../../skills/requirements-review/SKILL.md#entity-sheet), y cierra con las contradicciones, duplicados u omisiones detectados o indica explícitamente que no se detectaron.
+El trabajo produce tres fichas Markdown en `cards/`, dentro de la carpeta archivada de esta spec. Son vistas derivadas y de revisión, no documentos fuente. Cada una reúne las referencias de las fuentes que afectan a la entidad, siguiendo [requirements-review → «Entity sheet»](../../../skills/requirements-review/SKILL.md#entity-sheet), y cierra con las contradicciones, duplicados u omisiones detectados o indica explícitamente que no se detectaron.
 
 | Componente | Ubicación | Responsabilidad | Criterios |
 | --- | --- | --- | --- |
-| Ficha de `User` | `user.md` | Sintetizar las reglas de fuente que afectan a `User`, con referencias al documento y línea correspondientes. | CA01–CA03 |
-| Ficha de `Collection` | `collection.md` | Sintetizar las reglas de fuente que afectan a `Collection`, con referencias al documento y línea correspondientes. | CA01–CA03 |
-| Ficha de `Link` | `link.md` | Sintetizar las reglas de fuente que afectan a `Link`, con referencias al documento y línea correspondientes. | CA01–CA03 |
+| Ficha de `User` | `cards/user.md` | Sintetizar las reglas de fuente que afectan a `User`, con referencias al documento y línea correspondientes. | CA01–CA03 |
+| Ficha de `Collection` | `cards/collection.md` | Sintetizar las reglas de fuente que afectan a `Collection`, con referencias al documento y línea correspondientes. | CA01–CA03 |
+| Ficha de `Link` | `cards/link.md` | Sintetizar las reglas de fuente que afectan a `Link`, con referencias al documento y línea correspondientes. | CA01–CA03 |
 
-Las ubicaciones propuestas siguen la adaptación de entrega aprobada en [spec.md → «Alcance»](spec.md#alcance). Las fichas enlazan sus fuentes; no copian tablas, reglas completas ni valores como especificaciones independientes. Se limitan a `User`, `Collection` y `Link`, alcance de S3 definido en [mvp0-plan.md → «S3: Dominio III: entidades e invariantes (M)»](../../../plans/mvp0-plan.md#s3-dominio-iii-entidades-e-invariantes-m).
+Las ubicaciones siguen la adaptación de entrega aprobada en [spec.md → «Alcance»](spec.md#alcance). Las fichas enlazan sus fuentes; no copian tablas, reglas completas ni valores como especificaciones independientes. Se limitan a `User`, `Collection` y `Link`, alcance de S3 definido en [mvp0-plan.md → «S3: Dominio III: entidades e invariantes (M)»](../../../plans/mvp0-plan.md#s3-dominio-iii-entidades-e-invariantes-m).
 
 ### Flujos internos
 
@@ -56,7 +56,7 @@ La revisión de las fichas contra el comportamiento real del código y la aproba
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comando, test o revisión | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |
 | V01 | CA01 | Revisión documental de cobertura por entidad | Fuentes de verdad, implementación de Domain y cierres S3.1–S3.4 disponibles | Aplicar [requirements-review → «Entity sheet»](../../../skills/requirements-review/SKILL.md#entity-sheet) a `User`, `Collection` y `Link`; contrastar las fuentes citadas y el material de checklist aplicable | Existen las tres fichas y cada una cubre las reglas encontradas que afectan a su entidad, con referencias `archivo#Lnn` | Fichas y comprobación de las referencias de fuente por entidad |
-| V02 | CA02 | Revisión técnica de ubicación y fuente única | V01 | Revisar el árbol de `specs/s3.5-fichas-entidades/` y comparar las afirmaciones de las fichas con los documentos propietarios | Las tres fichas están en la carpeta prevista; no hay reglas nuevas, cambios en fuentes ni duplicación de valores como autoridad | Lista de archivos y revisión del diff; confirmación de que los documentos fuente no se modificaron |
+| V02 | CA02 | Revisión técnica de ubicación y fuente única | V01 | Revisar el árbol de `specs/archive/s3.5-fichas-entidades/` y comparar las afirmaciones de las fichas con los documentos propietarios | Las tres fichas están en la carpeta prevista; no hay reglas nuevas, cambios en fuentes ni duplicación de valores como autoridad | Lista de archivos y revisión del diff; confirmación de que los documentos fuente no se modificaron |
 | V03 | CA03 | Revisión editorial y de referencias | V01–V02 | Comprobar enlaces Markdown y números de línea citados, y leer el apartado de observaciones finales de cada ficha | Las referencias resuelven y cada ficha indica los hallazgos detectados o que no se detectaron | Resultado por archivo de la revisión de enlaces y observaciones |
 
 Estas comprobaciones validan la cobertura documental y sus referencias; no demuestran que el código cumpla las invariantes ni que el modelo esté aprobado. No se requiere prueba automatizada de código para este trabajo documental. La comparación de comportamiento y la aceptación humana pertenecen a S3.6.
