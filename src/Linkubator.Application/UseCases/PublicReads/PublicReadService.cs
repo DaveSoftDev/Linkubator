@@ -1,8 +1,10 @@
 using Linkubator.Application.Constants;
+using Linkubator.Application.Contracts;
+using Linkubator.Application.Dtos.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Linkubator.Application;
+namespace Linkubator.Application.UseCases.PublicReads;
 
 public sealed class PublicReadService : IPublicReadService
 {

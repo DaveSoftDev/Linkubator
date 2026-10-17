@@ -1,4 +1,7 @@
-namespace Linkubator.Application;
+using Linkubator.Application.Dtos.Models;
+using Linkubator.Application.Dtos.Requests;
+
+namespace Linkubator.Application.Contracts;
 
 public interface ICollectionService
 {

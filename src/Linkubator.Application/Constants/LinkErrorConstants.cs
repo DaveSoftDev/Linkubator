@@ -1,3 +1,5 @@
+using Linkubator.Application.Contracts;
+
 namespace Linkubator.Application.Constants;
 
 public static class LinkErrors

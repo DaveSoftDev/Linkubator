@@ -1,4 +1,4 @@
-namespace Linkubator.Application;
+namespace Linkubator.Application.Results;
 
 public class Result
 {

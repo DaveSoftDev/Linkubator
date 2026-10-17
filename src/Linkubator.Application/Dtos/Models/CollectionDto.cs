@@ -1,4 +1,4 @@
-namespace Linkubator.Application;
+namespace Linkubator.Application.Dtos.Models;
 
 public sealed record CollectionDto(
     long Id,

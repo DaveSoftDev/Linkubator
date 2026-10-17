@@ -6,10 +6,21 @@ Todo el código propuesto para esta solución debe ser como si lo hiciera un des
 
 ## Organización de clases
 
-- No añadir clases de producción directamente en la raíz del proyecto, salvo puntos de entrada y composición.
-- Agruparlas en carpetas por responsabilidad y alinear el namespace con la ruta.
-- Organizar los tests reflejando la capa y responsabilidad de la clase probada.
-- No crear carpetas genéricas ni una carpeta por clase.
+La regla canónica de organización del código está en [AGENTS.md](../../AGENTS.md) bajo “Convención de estructura del código”.
+
+Este archivo no duplica la política general: solo recuerda aplicarla en C# y mantener la ruta real del proyecto alineada con el namespace. En la práctica:
+
+- cada tipo vive en la carpeta que refleja su responsabilidad;
+- no se dejan tipos en la raíz salvo puntos de entrada o composición;
+- `Contracts/` queda para interfaces y contratos;
+- `Results/` para resultados/errores;
+- `Enums/` para enumeraciones;
+- `Requests/` para DTOs de entrada;
+- `Models/` o `Dtos/Models/` para salidas y modelos;
+- `Constants/` para literales, mensajes y códigos;
+- `UseCases/`, `Services/` y `Repositories/` para la implementación concreta.
+
+Si aparece una duda, la fuente de decisión es [AGENTS.md](../../AGENTS.md).
 
 ### Async
 - **Los métodos propios de `Linkubator` NO DEBEN terminar con el sufijo `Async`** — el paradigma del proyecto es que todos los métodos son asíncronos por defecto.

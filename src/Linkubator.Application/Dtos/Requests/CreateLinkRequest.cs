@@ -1,4 +1,4 @@
-namespace Linkubator.Application;
+namespace Linkubator.Application.Dtos.Requests;
 
 public sealed record CreateLinkRequest(
     long CollectionId,

@@ -1,6 +1,7 @@
+using Linkubator.Application.Enums;
 using Linkubator.Domain.Exceptions;
 
-namespace Linkubator.Application;
+namespace Linkubator.Application.Results;
 
 public sealed class ApplicationError
 {

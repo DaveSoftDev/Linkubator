@@ -1,6 +1,7 @@
+using Linkubator.Application.Dtos.Models;
 using Entities = Linkubator.Domain.Entities;
 
-namespace Linkubator.Application;
+namespace Linkubator.Application.Contracts;
 
 public interface ICollectionRepository
 {

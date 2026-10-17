@@ -1,6 +1,7 @@
 using System.Reflection;
-using Linkubator.Application;
 using Linkubator.Application.Constants;
+using Linkubator.Application.Contracts;
+using Linkubator.Application.Models;
 using Linkubator.Domain.Entities;
 
 namespace Linkubator.Tests.Application.Contracts;

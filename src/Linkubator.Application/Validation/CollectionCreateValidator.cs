@@ -1,8 +1,11 @@
 using Linkubator.Application.Constants;
+using Linkubator.Application.Contracts;
+using Linkubator.Application.Dtos.Requests;
+using Linkubator.Application.Validation;
 using Linkubator.Domain.Constants;
 using Linkubator.Domain.Policies;
 
-namespace Linkubator.Application;
+namespace Linkubator.Application.Validation;
 
 public sealed class CollectionCreateValidator : IValidator<CreateCollectionRequest>
 {

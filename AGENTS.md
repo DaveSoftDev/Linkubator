@@ -58,6 +58,7 @@ Las skills del proyecto viven en `skills/`. Cada una contiene un archivo [`SKILL
 
 - [skill-authoring](skills/skill-authoring/SKILL.md): define cómo crear, actualizar y validar skills de Linkubator, adaptando patrones externos a las convenciones del repositorio y de Copilot.
 - [linkubator-guidelines](skills/linkubator-guidelines/SKILL.md): aplica guías conductuales al escribir, revisar o refactorizar código, con foco en simplicidad, cambios quirúrgicos, supuestos explícitos y criterios de éxito verificables.
+- [project-structure](skills/project-structure/SKILL.md): organiza nuevas o existentes capas del proyecto por responsabilidad y evita que tipos se queden en la raíz o mezclados por conveniencia temporal. Aplica la convención reutilizable de `Contracts`, `Results`, `Enums`, `Requests`, `Models`, `Constants` y `UseCases`.
 - [requirements-review](skills/requirements-review/SKILL.md): revisa y sincroniza la documentación. Detecta contradicciones, duplicados, textos en el documento equivocado, omisiones, deriva del alcance del MVP0 y supuestos no documentados, y genera bajo demanda la ficha de una entidad. No genera código.
 - [sdd-writer](skills/sdd-writer/SKILL.md): prepara especificación, plan técnico y tareas bajo Spec-Driven Development; verifica cierre y archiva trabajos aceptados con evidencia y enlaces trazables. No introduce reglas de producto ni implementa código.
 
@@ -93,7 +94,15 @@ Se permite crear los proyectos, el código, el SQL de aplicación y migraciones,
 ## Convención de estructura del código
 
 - Cada tipo público debe vivir en su propio archivo.
-- Los tipos no deben acumularse en archivos raíz dentro de una capa; se organizan por carpeta y responsabilidad: `Contracts/`, `Dtos/Requests/`, `Dtos/Models/`, `Validation/`, `UseCases/`, `Services/` y así sucesivamente.
+- Los tipos no deben acumularse en archivos raíz dentro de una capa; se organizan por carpeta y responsabilidad: `Contracts/`, `Results/`, `Enums/`, `Models/`, `Dtos/Requests/`, `Dtos/Models/`, `Validation/`, `UseCases/`, `Services/` y así sucesivamente.
 - Las carpetas deben reflejar el dominio y no dejar tipos sueltos que luego se reubiquen por refactor.
 - Cuando una capa ya tiene una estructura clara, se mantiene ese patrón y no se crean archivos generales de “todo en uno” salvo el punto de entrada del proyecto.
 - El patrón de Domain es referencia para Application: módulos por responsabilidad y un archivo por objeto o servicio.
+- `Contracts/` debe contener solo interfaces y contratos de capa; no se guardan aquí `Result`, `ApplicationError`, enums ni DTOs concretos.
+- `Results/` contiene tipos de salida de la aplicación: `Result`, `Result<T>`, `ApplicationError` y cualquier wrapper compartido de resultado/errores.
+- `Enums/` contiene únicamente enums de la capa, como `ApplicationErrorCategory`.
+- `Dtos/Requests/` contiene solo DTOs de entrada: peticiones que llegan al caso de uso.
+- `Dtos/Models/` o `Models/` contiene representaciones de salida o modelos de dominio/aplicación, no datos de entrada. Se usa para DTOs que devuelven un valor al caso de uso o a otra capa.
+- `Responses/` solo debe usarse cuando el proyecto está modelando explícitamente la respuesta HTTP o API, no como contenedor genérico para todo lo que devuelve un servicio. En esta capa, si no existe una respuesta HTTP con ese formato, preferimos `Models/`.
+- `Constants/` se usa para literales, mensajes, códigos, constantes de error y fábricas de error concretas; no para tipos de lógica ni contratos.
+- La regla de clasificación debe ser siempre: si el tipo describe una operación o dependencia, va a `Contracts`; si describe un valor de resultado, va a `Results` o `Models`; si describe un conjunto cerrado de valores, va a `Enums`; si describe un dato de entrada, va a `Requests`.

@@ -1,11 +1,16 @@
+using Linkubator.Application.Constants;
+using Linkubator.Application.Contracts;
+using Linkubator.Application.Dtos.Models;
+using Linkubator.Application.Dtos.Requests;
+using Linkubator.Application.Validation;
+using Linkubator.Domain.Constants;
 using DomainEntities = Linkubator.Domain.Entities;
 using DomainExceptions = Linkubator.Domain.Exceptions;
 using DomainPolicies = Linkubator.Domain.Policies;
-using Linkubator.Application.Constants;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Linkubator.Application;
+namespace Linkubator.Application.UseCases.Links;
 
 public sealed class LinkService : ILinkService
 {
