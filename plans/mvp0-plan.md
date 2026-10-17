@@ -201,12 +201,12 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [ ] Todos los casos de uso del MVP0 tienen contrato y criterios de aceptación.
-- [ ] El humano ha aprobado los criterios por escrito (S4.5) antes de empezar S4.6.
-- [ ] Cada criterio aprobado tiene al menos un test que lo verifica.
-- [ ] Los casos de uso no aceptan `UserId` del cliente.
-- [ ] Los tests con fakes cubren los caminos felices y los de error.
-- [ ] Los logs no incluyen contenido prohibido.
+- [x] Todos los casos de uso del MVP0 tienen contrato y criterios de aceptación.
+- [x] El humano ha aprobado los criterios por escrito (S4.5) antes de empezar S4.6.
+- [x] Cada criterio aprobado tiene al menos un test que lo verifica.
+- [x] Los casos de uso no aceptan `UserId` del cliente.
+- [x] Los tests con fakes cubren los caminos felices y los de error.
+- [x] Los logs no incluyen contenido prohibido.
 
 ### S4a: Aplicación: refactor (M)
 
