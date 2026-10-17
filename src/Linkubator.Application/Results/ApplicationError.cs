@@ -1,4 +1,3 @@
-using Linkubator.Application.Enums;
 using Linkubator.Domain.Exceptions;
 
 namespace Linkubator.Application.Results;
@@ -38,6 +37,6 @@ public sealed class ApplicationError
     public static ApplicationError FromDomainException(DomainException exception, string? field = null)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        return new ApplicationError(exception.Code, ApplicationErrorCategory.DomainRule, field, null);
+        return new ApplicationError(exception.Code, ApplicationErrorCategory.DomainRule, field, exception.Message);
     }
 }

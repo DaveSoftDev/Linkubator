@@ -1,9 +1,8 @@
 using Linkubator.Application.Constants;
-using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Dtos.Requests;
+using Linkubator.Application.Logging;
 using Linkubator.Application.Validation;
-using Linkubator.Domain.Constants;
 using DomainEntities = Linkubator.Domain.Entities;
 using DomainExceptions = Linkubator.Domain.Exceptions;
 using DomainPolicies = Linkubator.Domain.Policies;
@@ -41,20 +40,20 @@ public sealed class LinkService : ILinkService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Link creation rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result<LinkDto>.Failure(LinkErrors.CreateNotAuthenticated());
         }
 
         if (request is null)
         {
-            _logger.LogWarning("Link creation rejected for user {UserId}: request was null", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation rejected for user; request is null", new { UserId = _currentUser.UserId });
             return Result<LinkDto>.Failure(LinkErrors.RequestRequired());
         }
 
         Result validation = _createLinkValidator.Validate(request);
         if (!validation.IsSuccess)
         {
-            _logger.LogWarning("Link creation validation failed for user {UserId}. ErrorCount {ErrorCount}", _currentUser.UserId, validation.Errors.Count);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation validation failed for user", new { UserId = _currentUser.UserId }, request);
             return Result<LinkDto>.Failure(validation.Errors);
         }
 
@@ -63,13 +62,13 @@ public sealed class LinkService : ILinkService
             DomainEntities.Collection? collection = await _collectionRepository.GetById(request.CollectionId, _currentUser.UserId, cancellationToken);
             if (collection is null)
             {
-                _logger.LogWarning("Link creation rejected for user {UserId}: collection not accessible", _currentUser.UserId);
+                SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new {CollectionId = request.CollectionId });
                 return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
             }
 
             if (request.IsPublic && !collection.IsPublic)
             {
-                _logger.LogWarning("Link creation rejected for user {UserId}: public link in private collection", _currentUser.UserId);
+                SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation rejected for user; public link in private collection", new { UserId = _currentUser.UserId }, request);
                 return Result<LinkDto>.Failure(LinkErrors.PublicLinkInPrivateCollection());
             }
 
@@ -79,7 +78,7 @@ public sealed class LinkService : ILinkService
             DomainEntities.Link? duplicate = await _linkRepository.GetByNormalizedUrl(_currentUser.UserId, normalizedUrl, cancellationToken);
             if (duplicate is not null)
             {
-                _logger.LogWarning("Link creation rejected for user {UserId}: duplicate URL in collection {CollectionId}", _currentUser.UserId, duplicate.CollectionId);
+                SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation rejected for user; duplicate URL in collection", new { UserId = _currentUser.UserId }, request);
                 DomainEntities.Collection? duplicateCollection = await _collectionRepository.GetById(
                     duplicate.CollectionId,
                     _currentUser.UserId,
@@ -101,19 +100,17 @@ public sealed class LinkService : ILinkService
             ILinkRepository repository = unitOfWork.GetRepository<ILinkRepository>();
             await repository.Insert(created, cancellationToken);
             await unitOfWork.Commit(cancellationToken);
-            _logger.LogInformation("Link created for user {UserId}. LinkId {LinkId} CollectionId {CollectionId} IsPublic {IsPublic}", _currentUser.UserId, created.Id, created.CollectionId, created.IsPublic);
+            SafeLogger.Log(_logger, LogLevel.Information, null, "Link created", new { UserId = _currentUser.UserId });
             return Result<LinkDto>.Success(Map(created));
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
-            _logger.LogWarning("Link creation failed for user {UserId}: domain validation issue", _currentUser.UserId);
-            return Result<LinkDto>.Failure(ApplicationError.FromDomainException(
-                (DomainExceptions.DomainException)exception,
-                LinkErrors.CollectionIdField));
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Link creation failed for user; domain validation issue", new { UserId = _currentUser.UserId }, request);
+            return exception.FailDomain<LinkDto>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Link creation failed for user {UserId}. CollectionId {CollectionId}", _currentUser.UserId, request.CollectionId);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Link creation failed for user", new { UserId = _currentUser.UserId }, request);
             throw;
         }
     }
@@ -122,13 +119,13 @@ public sealed class LinkService : ILinkService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Link edit rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link edit rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result<LinkDto>.Failure(LinkErrors.EditNotAuthenticated());
         }
 
         if (linkId <= 0)
         {
-            _logger.LogWarning("Link edit validation failed for user {UserId}: invalid link id {LinkId}", _currentUser.UserId, linkId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link edit validation failed for user; invalid link ID", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
             return Result<LinkDto>.Failure(LinkErrors.LinkIdInvalid());
         }
 
@@ -144,20 +141,20 @@ public sealed class LinkService : ILinkService
                 DomainEntities.Link? link = await linkRepository.GetById(linkId, _currentUser.UserId, cancellationToken);
                 if (link is null)
                 {
-                    _logger.LogWarning("Link edit rejected for user {UserId}: link not accessible", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link edit rejected for user; link not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
                     return Result<LinkDto>.Failure(LinkErrors.LinkNotAccessible());
                 }
 
                 DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, _currentUser.UserId, cancellationToken);
                 if (collection is null)
                 {
-                    _logger.LogWarning("Link edit rejected for user {UserId}: collection not accessible", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link edit rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = link.CollectionId });
                     return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
                 }
 
                 if (isPublic == true && !collection.IsPublic)
                 {
-                    _logger.LogWarning("Link edit rejected for user {UserId}: public link in private collection", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link edit rejected for user; public link in private collection", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = link.CollectionId });
                     return Result<LinkDto>.Failure(LinkErrors.PublicLinkInPrivateCollection());
                 }
 
@@ -169,7 +166,7 @@ public sealed class LinkService : ILinkService
                 await linkRepository.Update(link, cancellationToken);
                 await unitOfWork.Commit(cancellationToken);
                 committed = true;
-                _logger.LogInformation("Link edited for user {UserId}. LinkId {LinkId} CollectionId {CollectionId} IsPublic {IsPublic}", _currentUser.UserId, link.Id, link.CollectionId, link.IsPublic);
+                SafeLogger.Log(_logger, LogLevel.Information, null, "Link edited", new { UserId = _currentUser.UserId });
                 return Result<LinkDto>.Success(Map(link));
             }
             finally
@@ -182,14 +179,12 @@ public sealed class LinkService : ILinkService
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
-            _logger.LogWarning("Link edit failed for user {UserId}: domain validation issue", _currentUser.UserId);
-            return Result<LinkDto>.Failure(ApplicationError.FromDomainException(
-                (DomainExceptions.DomainException)exception,
-                LinkErrors.LinkIdField));
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Link edit failed for user; domain validation issue", new { UserId = _currentUser.UserId }, new { LinkId = linkId, Title = title, Description = description, Image = image, IsPublic = isPublic });
+            return exception.FailDomain<LinkDto>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Link edit failed for user {UserId}. LinkId {LinkId}", _currentUser.UserId, linkId);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Link edit failed for user", new { UserId = _currentUser.UserId }, new { LinkId = linkId, Title = title, Description = description, Image = image, IsPublic = isPublic });
             throw;
         }
     }
@@ -198,19 +193,19 @@ public sealed class LinkService : ILinkService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Link move rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link move rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result<LinkDto>.Failure(LinkErrors.MoveNotAuthenticated());
         }
 
         if (linkId <= 0)
         {
-            _logger.LogWarning("Link move validation failed for user {UserId}: invalid link id {LinkId}", _currentUser.UserId, linkId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link move validation failed for user; invalid link id", new { UserId = _currentUser.UserId}, new { LinkId = linkId });
             return Result<LinkDto>.Failure(LinkErrors.LinkIdInvalid());
         }
 
         if (destinationCollectionId <= 0)
         {
-            _logger.LogWarning("Link move validation failed for user {UserId}: invalid destination collection id {CollectionId}", _currentUser.UserId, destinationCollectionId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link move validation failed for user; invalid destination collection id", new { UserId = _currentUser.UserId }, new { CollectionId = destinationCollectionId });
             return Result<LinkDto>.Failure(LinkErrors.DestinationCollectionIdInvalid());
         }
 
@@ -226,14 +221,14 @@ public sealed class LinkService : ILinkService
                 DomainEntities.Link? link = await linkRepository.GetById(linkId, _currentUser.UserId, cancellationToken);
                 if (link is null)
                 {
-                    _logger.LogWarning("Link move rejected for user {UserId}: link not accessible", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link move rejected for user; linkin not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
                     return Result<LinkDto>.Failure(LinkErrors.LinkNotAccessible());
                 }
 
                 DomainEntities.Collection? destinationCollection = await collectionRepository.GetById(destinationCollectionId, _currentUser.UserId, cancellationToken);
                 if (destinationCollection is null)
                 {
-                    _logger.LogWarning("Link move rejected for user {UserId}: destination collection not accessible", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link move rejected for user; destination collection not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = destinationCollectionId });
                     return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
                 }
 
@@ -241,7 +236,7 @@ public sealed class LinkService : ILinkService
                 await linkRepository.Update(link, cancellationToken);
                 await unitOfWork.Commit(cancellationToken);
                 committed = true;
-                _logger.LogInformation("Link moved for user {UserId}. LinkId {LinkId} CollectionId {CollectionId}", _currentUser.UserId, link.Id, link.CollectionId);
+                SafeLogger.Log(_logger, LogLevel.Information, null, "Link moved", new { UserId = _currentUser.UserId });
                 return Result<LinkDto>.Success(Map(link));
             }
             finally
@@ -254,14 +249,12 @@ public sealed class LinkService : ILinkService
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
-            _logger.LogWarning("Link move failed for user {UserId}: domain validation issue", _currentUser.UserId);
-            return Result<LinkDto>.Failure(ApplicationError.FromDomainException(
-                (DomainExceptions.DomainException)exception,
-                LinkErrors.LinkIdField));
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Link move failed for user; domain validation issue", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = destinationCollectionId });
+            return exception.FailDomain<LinkDto>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Link move failed for user {UserId}. LinkId {LinkId} CollectionId {CollectionId}", _currentUser.UserId, linkId, destinationCollectionId);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Link move failed for user", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = destinationCollectionId });
             throw;
         }
     }
@@ -270,13 +263,13 @@ public sealed class LinkService : ILinkService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Link visibility change rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link visibility change rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result<LinkDto>.Failure(LinkErrors.VisibilityNotAuthenticated());
         }
 
         if (linkId <= 0)
         {
-            _logger.LogWarning("Link visibility change validation failed for user {UserId}: invalid link id {LinkId}", _currentUser.UserId, linkId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link visibility change validation failed for user", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
             return Result<LinkDto>.Failure(LinkErrors.LinkIdInvalid());
         }
 
@@ -292,20 +285,20 @@ public sealed class LinkService : ILinkService
                 DomainEntities.Link? link = await linkRepository.GetById(linkId, _currentUser.UserId, cancellationToken);
                 if (link is null)
                 {
-                    _logger.LogWarning("Link visibility change rejected for user {UserId}: link not accessible", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link visibility change rejected for user; link not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
                     return Result<LinkDto>.Failure(LinkErrors.LinkNotAccessible());
                 }
 
                 DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, _currentUser.UserId, cancellationToken);
                 if (collection is null)
                 {
-                    _logger.LogWarning("Link visibility change rejected for user {UserId}: collection not accessible", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link visibility change rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = link.CollectionId });
                     return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
                 }
 
                 if (isPublic && !collection.IsPublic)
                 {
-                    _logger.LogWarning("Link visibility change rejected for user {UserId}: public link in private collection", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link visibility change rejected for user; public link in private collection", new { UserId = _currentUser.UserId }, new { LinkId = linkId, IsPublic = isPublic });
                     return Result<LinkDto>.Failure(LinkErrors.PublicLinkInPrivateCollection());
                 }
 
@@ -313,7 +306,7 @@ public sealed class LinkService : ILinkService
                 await linkRepository.Update(link, cancellationToken);
                 await unitOfWork.Commit(cancellationToken);
                 committed = true;
-                _logger.LogInformation("Link visibility changed for user {UserId}. LinkId {LinkId} CollectionId {CollectionId} IsPublic {IsPublic}", _currentUser.UserId, link.Id, link.CollectionId, isPublic);
+                SafeLogger.Log(_logger, LogLevel.Information, null, "Link visibility changed", new { UserId = _currentUser.UserId });
                 return Result<LinkDto>.Success(Map(link));
             }
             finally
@@ -326,14 +319,12 @@ public sealed class LinkService : ILinkService
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
-            _logger.LogWarning("Link visibility change failed for user {UserId}: domain validation issue", _currentUser.UserId);
-            return Result<LinkDto>.Failure(ApplicationError.FromDomainException(
-                (DomainExceptions.DomainException)exception,
-                LinkErrors.LinkIdField));
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Link visibility change failed for user: domain validation issue", new { UserId = _currentUser.UserId }, new { LinkId = linkId, IsPublic = isPublic });
+            return exception.FailDomain<LinkDto>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Link visibility change failed for user {UserId}. LinkId {LinkId}", _currentUser.UserId, linkId);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Link visibility change failed for user", new { UserId = _currentUser.UserId }, new { LinkId = linkId, IsPublic = isPublic });
             throw;
         }
     }
@@ -342,13 +333,13 @@ public sealed class LinkService : ILinkService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Link deletion rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link deletion rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result.Failure(LinkErrors.DeleteNotAuthenticated());
         }
 
         if (linkId <= 0)
         {
-            _logger.LogWarning("Link deletion validation failed for user {UserId}: invalid link id {LinkId}", _currentUser.UserId, linkId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link deletion validation failed for user; invalid link ID", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
             return Result.Failure(LinkErrors.DeleteNotAccessible());
         }
 
@@ -363,14 +354,14 @@ public sealed class LinkService : ILinkService
                 DomainEntities.Link? link = await repository.GetById(linkId, _currentUser.UserId, cancellationToken);
                 if (link is null)
                 {
-                    _logger.LogWarning("Link deletion rejected for user {UserId}: link not accessible", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link deletion rejected for user; link not accessible", new { UserId = _currentUser.UserId, LinkId = linkId }, null);
                     return Result.Failure(LinkErrors.DeleteNotAccessible());
                 }
 
                 await repository.Delete(linkId, _currentUser.UserId, cancellationToken);
                 await unitOfWork.Commit(cancellationToken);
                 committed = true;
-                _logger.LogInformation("Link deleted for user {UserId}. LinkId {LinkId} CollectionId {CollectionId}", _currentUser.UserId, linkId, link.CollectionId);
+                SafeLogger.Log(_logger, LogLevel.Information, null, "Link deleted", new { UserId = _currentUser.UserId });
                 return Result.Success();
             }
             finally
@@ -383,14 +374,12 @@ public sealed class LinkService : ILinkService
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
-            _logger.LogWarning("Link deletion failed for user {UserId}: domain validation issue", _currentUser.UserId);
-            return Result.Failure(ApplicationError.FromDomainException(
-                (DomainExceptions.DomainException)exception,
-                LinkErrors.LinkIdField));
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Link deletion failed for user; domain validation issue", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
+            return exception.FailDomain();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Link deletion failed for user {UserId}. LinkId {LinkId}", _currentUser.UserId, linkId);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Link deletion failed for user; Link ID", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
             throw;
         }
     }
@@ -399,19 +388,19 @@ public sealed class LinkService : ILinkService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Link listing rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link listing rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result<IReadOnlyList<LinkDto>>.Failure(LinkErrors.ListNotAuthenticated());
         }
 
         if (page < 1)
         {
-            _logger.LogWarning("Link listing validation failed for user {UserId}: invalid page {Page}", _currentUser.UserId, page);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link listing validation failed for user; invalid page", new { UserId = _currentUser.UserId }, new { Page = page });
             return Result<IReadOnlyList<LinkDto>>.Failure(LinkErrors.PageInvalid());
         }
 
         if (collectionId is not null && collectionId <= 0)
         {
-            _logger.LogWarning("Link listing validation failed for user {UserId}: invalid collection id {CollectionId}", _currentUser.UserId, collectionId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Link listing validation failed for user; invalid collection ID", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
             return Result<IReadOnlyList<LinkDto>>.Failure(LinkErrors.CollectionIdInvalid());
         }
 
@@ -424,13 +413,13 @@ public sealed class LinkService : ILinkService
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
-                _logger.LogError("Link listing collection check failed for user {UserId}. CollectionId {CollectionId}", _currentUser.UserId, collectionId);
+                SafeLogger.Log(_logger, LogLevel.Error, exception, "Link listing collection check failed for user; collection ID", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
                 throw;
             }
 
             if (collection is null)
             {
-                _logger.LogWarning("Link listing rejected for user {UserId}: collection not accessible", _currentUser.UserId);
+                SafeLogger.Log(_logger, LogLevel.Warning, null, "Link listing rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
                 return Result<IReadOnlyList<LinkDto>>.Failure(LinkErrors.CollectionNotAccessible());
             }
         }
@@ -443,10 +432,10 @@ public sealed class LinkService : ILinkService
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Link listing failed for user {UserId}. Page {Page} CollectionId {CollectionId}", _currentUser.UserId, page, collectionId);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Link listing failed for user; collection ID", new { UserId = _currentUser.UserId }, new { Page = page , CollectionId = collectionId });
             throw;
         }
-        _logger.LogInformation("Links listed for user {UserId}. Page {Page} ResultCount {ResultCount}", _currentUser.UserId, page, items.Count);
+        SafeLogger.Log(_logger, LogLevel.Information, null, "Links listed for user", new { UserId = _currentUser.UserId });
         return Result<IReadOnlyList<LinkDto>>.Success(items.ToList());
     }
 

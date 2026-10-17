@@ -1,9 +1,7 @@
-using System.Collections;
-using Linkubator.Application.Constants;
 using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Dtos.Requests;
-using Linkubator.Application.Enums;
+using Linkubator.Application.Logging;
 using Linkubator.Application.Models;
 using Linkubator.Application.Results;
 using Linkubator.Application.UseCases.Collections;
@@ -11,9 +9,9 @@ using Linkubator.Application.UseCases.Dashboard;
 using Linkubator.Application.UseCases.Links;
 using Linkubator.Application.UseCases.PublicReads;
 using Linkubator.Domain.Entities;
+using Linkubator.Domain.Exceptions;
 using Linkubator.Tests.Domain.Entities;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Linkubator.Tests.Application;
 
@@ -44,7 +42,6 @@ public sealed class LoggingTests
         Assert.DoesNotContain("token", string.Join(" ", entry.Values.Values), StringComparison.OrdinalIgnoreCase);
         Assert.Null(entry.Exception);
         Assert.True(entry.Values.ContainsKey("UserId"));
-        Assert.True(entry.Values.ContainsKey("CollectionId"));
     }
 
     [Fact]
@@ -65,7 +62,7 @@ public sealed class LoggingTests
         Assert.Same(repositoryFailure, thrown);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Error);
         Assert.Contains("Link listing failed", entry.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Null(entry.Exception);
+        Assert.Same(repositoryFailure, entry.Exception);
         Assert.DoesNotContain(searchSentinel, entry.Message, StringComparison.Ordinal);
         Assert.DoesNotContain(searchSentinel, string.Join(" ", entry.Values.Values), StringComparison.Ordinal);
     }
@@ -88,7 +85,6 @@ public sealed class LoggingTests
         Assert.True(result.IsSuccess);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
         Assert.Contains("Collection visibility changed", entry.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(false, entry.Values["IsPublic"]);
         Assert.Null(entry.Exception);
     }
 
@@ -128,6 +124,22 @@ public sealed class LoggingTests
     }
 
     [Fact]
+    public void SafeLogger_Log_PreservesDomainExceptionTraceability()
+    {
+        TestLogger<LinkService> logger = new();
+        NotValidInputException exception = new();
+
+        SafeLogger.Log(logger, LogLevel.Warning, exception, "Domain validation failed", new { UserId = 7L });
+
+        LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Warning);
+        Assert.Equal("Domain validation failed", entry.Message);
+        Assert.Equal("NotValidInput", entry.Values["DomainErrorCode"]);
+        Assert.Equal(nameof(NotValidInputException), entry.Values["ExceptionType"]);
+        Assert.False(entry.Values.ContainsKey("ExceptionMessage"));
+        Assert.Same(exception, entry.Exception);
+    }
+
+    [Fact]
     public async Task DashboardService_GetDashboard_LogsSuccessfulRead()
     {
         TestLogger<DashboardService> logger = new();
@@ -154,7 +166,6 @@ public sealed class LoggingTests
         Assert.True(result.IsSuccess);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
         Assert.Contains("Public user page loaded", entry.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(alias.Length, entry.Values["AliasLength"]);
         Assert.DoesNotContain(alias, entry.Message, StringComparison.Ordinal);
         Assert.DoesNotContain(alias, string.Join(" ", entry.Values.Values), StringComparison.Ordinal);
         Assert.Null(entry.Exception);

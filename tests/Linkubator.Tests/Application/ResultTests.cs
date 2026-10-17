@@ -109,12 +109,23 @@ public class ResultTests
         Assert.Equal("NotValidInput", fromException.Code);
         Assert.Equal(ApplicationErrorCategory.DomainRule, fromException.Category);
         Assert.Equal("slug", fromException.Field);
-        Assert.Null(fromException.Message);
+        Assert.Equal("NotValidInput", fromException.Message);
 
         ArgumentException exception = Assert.Throws<ArgumentException>(() => new ApplicationError(" ", ApplicationErrorCategory.Validation));
         Assert.Equal("code", exception.ParamName);
 
         Assert.Throws<ArgumentNullException>(() => ApplicationError.FromDomainException(null!));
+    }
+
+    [Fact]
+    public void ApplicationError_FromDomainException_PreservesMessageWhenFieldIsNotProvided()
+    {
+        ApplicationError error = ApplicationError.FromDomainException(new NotValidInputException());
+
+        Assert.Equal("NotValidInput", error.Code);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, error.Category);
+        Assert.Null(error.Field);
+        Assert.Equal("NotValidInput", error.Message);
     }
 
     [Fact]

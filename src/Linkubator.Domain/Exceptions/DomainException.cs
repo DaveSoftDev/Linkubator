@@ -14,7 +14,9 @@ public abstract class DomainException : Exception
     /// Inicializa una nueva instancia de <see cref="DomainException"/>.
     /// </summary>
     /// <param name="code">Código identificativo del error.</param>
-    protected DomainException(string code)
+    /// <param name="message">Mensaje opcional asociado a la excepción.</param>
+    protected DomainException(string code, string? message = null)
+        : base(message ?? code)
     {
         Code = code;
     }

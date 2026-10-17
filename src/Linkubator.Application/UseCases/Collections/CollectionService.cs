@@ -1,7 +1,7 @@
 ﻿using Linkubator.Application.Constants;
-using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Dtos.Requests;
+using Linkubator.Application.Logging;
 using Linkubator.Application.Validation;
 using Linkubator.Domain.Constants;
 using DomainEntities = Linkubator.Domain.Entities;
@@ -38,18 +38,18 @@ public sealed class CollectionService : ICollectionService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Collection creation rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection creation rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result<CollectionDto>.Failure(CollectionErrors.CreateNotAuthenticated());
         }
         if (request is null)
         {
-            _logger.LogWarning("Collection creation rejected for user {UserId}: request was null", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection creation rejected for user; request was null", new { UserId = _currentUser.UserId });
             return Result<CollectionDto>.Failure(CollectionErrors.RequestRequired());
         }
         Result validation = _createCollectionValidator.Validate(request);
         if (!validation.IsSuccess)
         {
-            _logger.LogWarning("Collection creation validation failed for user {UserId}. ErrorCount {ErrorCount}", _currentUser.UserId, validation.Errors.Count);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection creation validation failed for user;", new { UserId = _currentUser.UserId, ErrorCount = validation.Errors.Count }, request);
             return Result<CollectionDto>.Failure(validation.Errors);
         }
         try
@@ -59,7 +59,7 @@ public sealed class CollectionService : ICollectionService
             DomainEntities.Collection? existing = await _collectionRepository.GetBySlug(userId, created.Slug, cancellationToken);
             if (existing is not null)
             {
-                _logger.LogWarning("Collection creation rejected for user {UserId}: name already in use", _currentUser.UserId);
+                SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection creation rejected for user; name already in use", new { UserId = _currentUser.UserId }, request);
                 return Result<CollectionDto>.Failure(CollectionErrors.NameInUse(existing.Name));
             }
             await using IUnitOfWork unitOfWork = _unitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
@@ -67,19 +67,17 @@ public sealed class CollectionService : ICollectionService
             ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
             await repository.Insert(created, cancellationToken);
             await unitOfWork.Commit(cancellationToken);
-            _logger.LogInformation("Collection created for user {UserId}. CollectionId {CollectionId} IsPublic {IsPublic}", userId, created.Id, created.IsPublic);
+            SafeLogger.Log(_logger, LogLevel.Information, null, "Collection created for user", new { UserId = userId });
             return Result<CollectionDto>.Success(Map(created));
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
-            _logger.LogWarning("Collection creation failed for user {UserId}: domain validation issue", _currentUser.UserId);
-            return Result<CollectionDto>.Failure(ApplicationError.FromDomainException(
-                (DomainExceptions.DomainException)exception,
-                CollectionErrors.NameField));
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Collection creation failed for user", new { UserId = _currentUser.UserId }, request);
+            return exception.FailDomain<CollectionDto>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Collection creation failed for user {UserId}", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Collection creation failed for user", new { UserId = _currentUser.UserId }, request);
             throw;
         }
     }
@@ -87,18 +85,18 @@ public sealed class CollectionService : ICollectionService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Collection rename rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection rename rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result<CollectionDto>.Failure(CollectionErrors.RenameNotAuthenticated());
         }
         string trimmedName = name?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(trimmedName))
         {
-            _logger.LogWarning("Collection rename validation failed for user {UserId}: missing name", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection rename validation failed for user; missing name", new { UserId = _currentUser.UserId });
             return Result<CollectionDto>.Failure(CollectionErrors.NameRequired());
         }
         if (DomainPolicies.UserTextPolicy.CountCodePoints(trimmedName) > LengthLimitsConstants.CollectionName)
         {
-            _logger.LogWarning("Collection rename validation failed for user {UserId}: name too long", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection rename validation failed for user", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId, Name = name });
             return Result<CollectionDto>.Failure(CollectionErrors.NameTooLong());
         }
         try
@@ -106,14 +104,14 @@ public sealed class CollectionService : ICollectionService
             DomainEntities.Collection? collection = await _collectionRepository.GetById(collectionId, _currentUser.UserId, cancellationToken);
             if (collection is null)
             {
-                _logger.LogWarning("Collection rename rejected for user {UserId}: collection not accessible", _currentUser.UserId);
+                SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection rename rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
                 return Result<CollectionDto>.Failure(CollectionErrors.RenameNotAccessible());
             }
             string candidateSlug = DomainPolicies.SlugPolicy.Generate(trimmedName);
             DomainEntities.Collection? duplicate = await _collectionRepository.GetBySlug(_currentUser.UserId, candidateSlug, cancellationToken);
             if (duplicate is not null && duplicate.Id != collection.Id)
             {
-                _logger.LogWarning("Collection rename rejected for user {UserId}: name already in use", _currentUser.UserId);
+                SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection rename rejected for user; name already in use", new { UserId = _currentUser.UserId });
                 return Result<CollectionDto>.Failure(CollectionErrors.NameInUse(duplicate.Name));
             }
             collection.Rename(trimmedName);
@@ -122,19 +120,17 @@ public sealed class CollectionService : ICollectionService
             ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
             await repository.Update(collection, cancellationToken);
             await unitOfWork.Commit(cancellationToken);
-            _logger.LogInformation("Collection renamed for user {UserId}. CollectionId {CollectionId} IsPublic {IsPublic}", _currentUser.UserId, collection.Id, collection.IsPublic);
+            SafeLogger.Log(_logger, LogLevel.Information, null, "Collection renamed for user", new { UserId = _currentUser.UserId });
             return Result<CollectionDto>.Success(Map(collection));
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
-            _logger.LogWarning("Collection rename failed for user {UserId}: domain validation issue", _currentUser.UserId);
-            return Result<CollectionDto>.Failure(ApplicationError.FromDomainException(
-                (DomainExceptions.DomainException)exception,
-                CollectionErrors.NameField));
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Collection rename failed for user", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId , Name = name });
+            return exception.FailDomain<CollectionDto>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Collection rename failed for user {UserId}. CollectionId {CollectionId}", _currentUser.UserId, collectionId);
+            SafeLogger.Log( _logger, LogLevel.Error, exception, "Collection rename failed for user", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId, Name = name });
             throw;
         }
     }
@@ -142,7 +138,7 @@ public sealed class CollectionService : ICollectionService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Collection visibility change rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection visibility change rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result<CollectionDto>.Failure(CollectionErrors.VisibilityNotAuthenticated());
         }
         try
@@ -157,7 +153,7 @@ public sealed class CollectionService : ICollectionService
                 DomainEntities.Collection? collection = await repository.GetById(collectionId, _currentUser.UserId, cancellationToken);
                 if (collection is null)
                 {
-                    _logger.LogWarning("Collection visibility change rejected for user {UserId}: collection not accessible", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection visibility change rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
                     return Result<CollectionDto>.Failure(CollectionErrors.VisibilityNotAccessible());
                 }
 
@@ -175,7 +171,7 @@ public sealed class CollectionService : ICollectionService
 
                 await unitOfWork.Commit(cancellationToken);
                 committed = true;
-                _logger.LogInformation("Collection visibility changed for user {UserId}. CollectionId {CollectionId} IsPublic {IsPublic}", _currentUser.UserId, collection.Id, isPublic);
+                SafeLogger.Log(_logger, LogLevel.Information, null, "Collection visibility changed for user", new { UserId = _currentUser.UserId });
                 return Result<CollectionDto>.Success(Map(collection));
             }
             finally
@@ -188,14 +184,12 @@ public sealed class CollectionService : ICollectionService
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
-            _logger.LogWarning("Collection visibility change failed for user {UserId}: domain validation issue", _currentUser.UserId);
-            return Result<CollectionDto>.Failure(ApplicationError.FromDomainException(
-                (DomainExceptions.DomainException)exception,
-                CollectionErrors.CollectionIdField));
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Collection visibility change failed", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId, IsPublic = isPublic });
+            return exception.FailDomain<CollectionDto>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Collection visibility change failed for user {UserId}. CollectionId {CollectionId}", _currentUser.UserId, collectionId);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Collection visibility change failed", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId, IsPublic = isPublic });
             throw;
         }
     }
@@ -203,7 +197,7 @@ public sealed class CollectionService : ICollectionService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Collection deletion rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result.Failure(CollectionErrors.DeleteNotAuthenticated());
         }
         try
@@ -218,28 +212,28 @@ public sealed class CollectionService : ICollectionService
                 DomainEntities.Collection? collection = await repository.GetById(collectionId, _currentUser.UserId, cancellationToken);
                 if (collection is null)
                 {
-                    _logger.LogWarning("Collection deletion rejected for user {UserId}: collection not accessible", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
                     return Result.Failure(CollectionErrors.DeleteNotAccessible());
                 }
 
                 IReadOnlyCollection<DomainEntities.Link> links = await linkRepo.GetAllByCollection(_currentUser.UserId, collection.Id, cancellationToken);
                 if (links.Count > 0)
                 {
-                    _logger.LogWarning("Collection deletion rejected for user {UserId}: collection still has links", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; collection still has links", new { UserId = _currentUser.UserId });
                     return Result.Failure(CollectionErrors.HasLinks());
                 }
 
                 IReadOnlyCollection<DomainEntities.Collection> allCollections = await repository.GetAllByUser(_currentUser.UserId, cancellationToken);
                 if (allCollections.Count == 1)
                 {
-                    _logger.LogWarning("Collection deletion rejected for user {UserId}: last collection cannot be deleted", _currentUser.UserId);
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; last collection cannot be deleted", new { UserId = _currentUser.UserId });
                     return Result.Failure(CollectionErrors.LastCollectionCannotBeDeleted());
                 }
 
                 await repository.Delete(collectionId, _currentUser.UserId, cancellationToken);
                 await unitOfWork.Commit(cancellationToken);
                 committed = true;
-                _logger.LogInformation("Collection deleted for user {UserId}. CollectionId {CollectionId}", _currentUser.UserId, collectionId);
+                SafeLogger.Log(_logger, LogLevel.Information, null, "Collection deleted for user", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
                 return Result.Success();
             }
             finally
@@ -252,14 +246,12 @@ public sealed class CollectionService : ICollectionService
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
-            _logger.LogWarning("Collection deletion failed for user {UserId}: domain validation issue", _currentUser.UserId);
-            return Result.Failure(ApplicationError.FromDomainException(
-                (DomainExceptions.DomainException)exception,
-                CollectionErrors.CollectionIdField));
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Collection deletion failed", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
+            return exception.FailDomain();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Collection deletion failed for user {UserId}. CollectionId {CollectionId}", _currentUser.UserId, collectionId);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Collection deletion failed", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
             throw;
         }
     }
@@ -267,12 +259,12 @@ public sealed class CollectionService : ICollectionService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Collection listing rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection listing rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result<IReadOnlyList<CollectionDto>>.Failure(CollectionErrors.ListNotAuthenticated());
         }
         if (page < 1)
         {
-            _logger.LogWarning("Collection listing validation failed for user {UserId}: invalid page {Page}", _currentUser.UserId, page);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection listing validation failed for user; invalid page", new { UserId = _currentUser.UserId }, new { Page = page });
             return Result<IReadOnlyList<CollectionDto>>.Failure(CollectionErrors.PageInvalid());
         }
         string? trimmedQuery = query is null ? null : query.Trim();
@@ -283,10 +275,10 @@ public sealed class CollectionService : ICollectionService
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Collection listing failed for user {UserId}. Page {Page}", _currentUser.UserId, page);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Collection listing failed", new { UserId = _currentUser.UserId }, new { Page = page });
             throw;
         }
-        _logger.LogInformation("Collections listed for user {UserId}. Page {Page} ResultCount {ResultCount}", _currentUser.UserId, page, items.Count);
+        SafeLogger.Log(_logger, LogLevel.Information, null, "Collections listed for user", new { UserId = _currentUser.UserId });
         return Result<IReadOnlyList<CollectionDto>>.Success(items.ToList());
     }
     private static CollectionDto Map(DomainEntities.Collection collection)

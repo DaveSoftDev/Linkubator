@@ -1,6 +1,6 @@
 using Linkubator.Application.Constants;
-using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
+using Linkubator.Application.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -23,7 +23,7 @@ public sealed class DashboardService : IDashboardService
     {
         if (!_currentUser.IsAuthenticated)
         {
-            _logger.LogWarning("Dashboard request rejected for user {UserId}: not authenticated", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Dashboard request rejected for user; not authenticated", new { UserId = _currentUser.UserId });
             return Result<DashboardDto>.Failure(DashboardErrors.GetNotAuthenticated());
         }
 
@@ -34,10 +34,10 @@ public sealed class DashboardService : IDashboardService
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Dashboard load failed for user {UserId}", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Dashboard load failed for user", new { UserId = _currentUser.UserId });
             throw;
         }
-        _logger.LogInformation("Dashboard loaded for user {UserId}", _currentUser.UserId);
+        SafeLogger.Log(_logger, LogLevel.Information, null, "Dashboard loaded for user", new { UserId = _currentUser.UserId });
         return Result<DashboardDto>.Success(dashboard);
     }
 }
