@@ -1,5 +1,3 @@
-using Linkubator.Application.Contracts;
-
 namespace Linkubator.Application.Constants;
 
 public static class PublicReadErrors
@@ -15,21 +13,28 @@ public static class PublicReadErrors
     public const string CollectionNotAccessibleMessage = "La colección no es accesible.";
     public const string PageInvalidMessage = "La página debe ser mayor que cero.";
 
+    private const string AliasInvalidCode = "PUBLIC_READ_ALIAS_INVALID";
+    private const string SlugInvalidCode = "PUBLIC_READ_COLLECTION_SLUG_INVALID";
+    private const string UserNotAccessibleCode = "PUBLIC_READ_USER_NOT_ACCESSIBLE";
+    private const string CollectionsNotAccessibleCode = "PUBLIC_READ_COLLECTIONS_NOT_ACCESSIBLE";
+    private const string CollectionNotAccessibleCode = "PUBLIC_READ_COLLECTION_NOT_ACCESSIBLE";
+    private const string PageInvalidCode = "PUBLIC_READ_PAGE_INVALID";
+
     public static ApplicationError AliasInvalid()
-        => ApplicationError.Validation("PUBLIC_READ_ALIAS_INVALID", AliasField, AliasInvalidMessage);
+        => ApplicationError.Validation(AliasInvalidCode, AliasField, AliasInvalidMessage);
 
     public static ApplicationError SlugInvalid()
-        => ApplicationError.Validation("PUBLIC_READ_COLLECTION_SLUG_INVALID", SlugField, SlugInvalidMessage);
+        => ApplicationError.Validation(SlugInvalidCode, SlugField, SlugInvalidMessage);
 
     public static ApplicationError UserNotAccessible()
-        => ApplicationError.ResourceNotAccessible("PUBLIC_READ_USER_NOT_ACCESSIBLE", AliasField, UserNotAccessibleMessage);
+        => ApplicationError.ResourceNotAccessible(UserNotAccessibleCode, AliasField, UserNotAccessibleMessage);
 
     public static ApplicationError CollectionsNotAccessible()
-        => ApplicationError.ResourceNotAccessible("PUBLIC_READ_COLLECTIONS_NOT_ACCESSIBLE", AliasField, CollectionsNotAccessibleMessage);
+        => ApplicationError.ResourceNotAccessible(CollectionsNotAccessibleCode, AliasField, CollectionsNotAccessibleMessage);
 
     public static ApplicationError CollectionNotAccessible()
-        => ApplicationError.ResourceNotAccessible("PUBLIC_READ_COLLECTION_NOT_ACCESSIBLE", SlugField, CollectionNotAccessibleMessage);
+        => ApplicationError.ResourceNotAccessible(CollectionNotAccessibleCode, SlugField, CollectionNotAccessibleMessage);
 
     public static ApplicationError PageInvalid()
-        => ApplicationError.Validation("PUBLIC_READ_PAGE_INVALID", PageField, PageInvalidMessage);
+        => CommonErrors.PageInvalid(PageInvalidCode, PageField, PageInvalidMessage);
 }

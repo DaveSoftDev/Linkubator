@@ -1,16 +1,14 @@
-using Linkubator.Application.Contracts;
-
 namespace Linkubator.Application.Constants;
 
 public static class CollectionErrors
 {
-    public const string RequestField = "request";
-    public const string UserIdField = "UserId";
+    public const string PageField = CommonErrors.PageField;
+    public const string UserIdField = CommonErrors.UserIdField;
     public const string CollectionIdField = "CollectionId";
     public const string NameField = "Name";
     public const string DescriptionField = "Description";
-    public const string PageField = "page";
-    public const string NotAuthenticatedMessage = "La sesión del usuario no es válida.";
+    
+    public const string PageInvalidMessage = CommonErrors.PageInvalidMessage;
     public const string NameRequiredMessage = "El nombre es obligatorio.";
     public const string NameTooLongMessage = "El nombre supera la longitud máxima.";
     public const string DescriptionTooLongMessage = "La descripción supera la longitud máxima.";
@@ -18,34 +16,49 @@ public static class CollectionErrors
     public const string CollectionNotAccessibleMessage = "La colección no es accesible para este usuario.";
     public const string CollectionHasLinksMessage = "No se puede eliminar una colección con enlaces.";
     public const string LastCollectionCannotBeDeletedMessage = "No se puede eliminar la última colección del usuario.";
-    public const string PageInvalidMessage = "La página debe ser mayor que cero.";
+
+    private const string CreateNotAuthenticatedCode = "COLLECTION_CREATE_NOT_AUTHENTICATED";
+    private const string RenameNotAuthenticatedCode = "COLLECTION_RENAME_NOT_AUTHENTICATED";
+    private const string VisibilityNotAuthenticatedCode = "COLLECTION_VISIBILITY_NOT_AUTHENTICATED";
+    private const string DeleteNotAuthenticatedCode = "COLLECTION_DELETE_NOT_AUTHENTICATED";
+    private const string ListNotAuthenticatedCode = "COLLECTION_LIST_NOT_AUTHENTICATED";
+    private const string NameRequiredCode = "COLLECTION_NAME_REQUIRED";
+    private const string NameTooLongCode = "COLLECTION_NAME_TOO_LONG";
+    private const string DescriptionTooLongCode = "COLLECTION_DESCRIPTION_TOO_LONG";
+    private const string NameInUseCode = "COLLECTION_NAME_IN_USE";
+    private const string RenameNotAccessibleCode = "COLLECTION_RENAME_NOT_ACCESSIBLE";
+    private const string VisibilityNotAccessibleCode = "COLLECTION_VISIBILITY_NOT_ACCESSIBLE";
+    private const string DeleteNotAccessibleCode = "COLLECTION_DELETE_NOT_ACCESSIBLE";
+    private const string HasLinksCode = "COLLECTION_HAS_LINKS";
+    private const string LastCollectionCannotBeDeletedCode = "LAST_COLLECTION_CANNOT_BE_DELETED";
+    private const string PageInvalidCode = "PAGE_INVALID";
 
     public static ApplicationError RequestRequired()
-        => ApplicationError.Validation("REQUEST_REQUIRED", RequestField, "La solicitud es obligatoria.");
+        => CommonErrors.RequestRequired();
 
     public static ApplicationError CreateNotAuthenticated()
-        => ApplicationError.ResourceNotAccessible("COLLECTION_CREATE_NOT_AUTHENTICATED", UserIdField, NotAuthenticatedMessage);
+        => CommonErrors.NotAuthenticated(CreateNotAuthenticatedCode, UserIdField);
 
     public static ApplicationError RenameNotAuthenticated()
-        => ApplicationError.ResourceNotAccessible("COLLECTION_RENAME_NOT_AUTHENTICATED", UserIdField, NotAuthenticatedMessage);
+        => CommonErrors.NotAuthenticated(RenameNotAuthenticatedCode, UserIdField);
 
     public static ApplicationError VisibilityNotAuthenticated()
-        => ApplicationError.ResourceNotAccessible("COLLECTION_VISIBILITY_NOT_AUTHENTICATED", UserIdField, NotAuthenticatedMessage);
+        => CommonErrors.NotAuthenticated(VisibilityNotAuthenticatedCode, UserIdField);
 
     public static ApplicationError DeleteNotAuthenticated()
-        => ApplicationError.ResourceNotAccessible("COLLECTION_DELETE_NOT_AUTHENTICATED", UserIdField, NotAuthenticatedMessage);
+        => CommonErrors.NotAuthenticated(DeleteNotAuthenticatedCode, UserIdField);
 
     public static ApplicationError ListNotAuthenticated()
-        => ApplicationError.ResourceNotAccessible("COLLECTION_LIST_NOT_AUTHENTICATED", UserIdField, NotAuthenticatedMessage);
+        => CommonErrors.NotAuthenticated(ListNotAuthenticatedCode, UserIdField);
 
     public static ApplicationError NameRequired()
-        => ApplicationError.Validation("COLLECTION_NAME_REQUIRED", NameField, NameRequiredMessage);
+        => ApplicationError.Validation(NameRequiredCode, NameField, NameRequiredMessage);
 
     public static ApplicationError NameTooLong()
-        => ApplicationError.Validation("COLLECTION_NAME_TOO_LONG", NameField, NameTooLongMessage);
+        => ApplicationError.Validation(NameTooLongCode, NameField, NameTooLongMessage);
 
     public static ApplicationError DescriptionTooLong()
-        => ApplicationError.Validation("COLLECTION_DESCRIPTION_TOO_LONG", DescriptionField, DescriptionTooLongMessage);
+        => ApplicationError.Validation(DescriptionTooLongCode, DescriptionField, DescriptionTooLongMessage);
 
     public static ApplicationError NameInUse(string? conflictingCollectionName = null)
     {
@@ -54,25 +67,25 @@ public static class CollectionErrors
         {
             message = $"{NameInUseMessage}: {conflictingCollectionName}.";
         }
-        return ApplicationError.Domain("COLLECTION_NAME_IN_USE", NameField, message);
+        return ApplicationError.Domain(NameInUseCode, NameField, message);
     }
 
     public static ApplicationError RenameNotAccessible()
-        => ApplicationError.ResourceNotAccessible("COLLECTION_RENAME_NOT_ACCESSIBLE", CollectionIdField, CollectionNotAccessibleMessage);
+        => ApplicationError.ResourceNotAccessible(RenameNotAccessibleCode, CollectionIdField, CollectionNotAccessibleMessage);
 
     public static ApplicationError VisibilityNotAccessible()
-        => ApplicationError.ResourceNotAccessible("COLLECTION_VISIBILITY_NOT_ACCESSIBLE", CollectionIdField, CollectionNotAccessibleMessage);
+        => ApplicationError.ResourceNotAccessible(VisibilityNotAccessibleCode, CollectionIdField, CollectionNotAccessibleMessage);
 
     public static ApplicationError DeleteNotAccessible()
-        => ApplicationError.ResourceNotAccessible("COLLECTION_DELETE_NOT_ACCESSIBLE", CollectionIdField, CollectionNotAccessibleMessage);
+        => ApplicationError.ResourceNotAccessible(DeleteNotAccessibleCode, CollectionIdField, CollectionNotAccessibleMessage);
 
     public static ApplicationError HasLinks()
-        => ApplicationError.Domain("COLLECTION_HAS_LINKS", CollectionIdField, CollectionHasLinksMessage);
+        => ApplicationError.Domain(HasLinksCode, CollectionIdField, CollectionHasLinksMessage);
 
     public static ApplicationError LastCollectionCannotBeDeleted()
-        => ApplicationError.Domain("LAST_COLLECTION_CANNOT_BE_DELETED", CollectionIdField, LastCollectionCannotBeDeletedMessage);
+        => ApplicationError.Domain(LastCollectionCannotBeDeletedCode, CollectionIdField, LastCollectionCannotBeDeletedMessage);
 
     public static ApplicationError PageInvalid()
-        => ApplicationError.Validation("PAGE_INVALID", PageField, PageInvalidMessage);
+        => CommonErrors.PageInvalid(PageInvalidCode, PageField, PageInvalidMessage);
 }
 
