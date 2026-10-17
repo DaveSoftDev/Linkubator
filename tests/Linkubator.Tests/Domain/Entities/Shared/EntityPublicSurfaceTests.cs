@@ -1,3 +1,4 @@
+using System.Reflection;
 using DomainEntities = Linkubator.Domain.Entities;
 
 namespace Linkubator.Tests.Domain.Entities;
@@ -28,7 +29,7 @@ public class EntityPublicSurfaceTests
     [Fact]
     public void ReflectionTestDetectsPublicSetter()
     {
-        var property = typeof(PublicSetterEntity).GetProperty(nameof(PublicSetterEntity.UrlOriginal));
+        PropertyInfo? property = typeof(PublicSetterEntity).GetProperty(nameof(PublicSetterEntity.UrlOriginal));
         Assert.NotNull(property);
         Assert.True(HasPublicSetter(property));
         Assert.False(HasPublicSetter(null));
@@ -37,10 +38,8 @@ public class EntityPublicSurfaceTests
     [Fact]
     public void HasPublicSetter_ReturnsFalse_WhenPropertyHasNoSetter()
     {
-        // Arrange
-        var property = typeof(NoSetterEntity).GetProperty(nameof(NoSetterEntity.ReadOnlyProp));
+        PropertyInfo? property = typeof(NoSetterEntity).GetProperty(nameof(NoSetterEntity.ReadOnlyProp));
 
-        // Act & Assert
         Assert.False(HasPublicSetter(property));
     }
 
@@ -52,10 +51,8 @@ public class EntityPublicSurfaceTests
     [Fact]
     public void HasPublicSetter_ReturnsFalse_WhenPropertyHasPrivateSetter()
     {
-        // Arrange
-        var property = typeof(PrivateSetterEntity).GetProperty(nameof(PrivateSetterEntity.PropWithPrivateSetter));
+        PropertyInfo? property = typeof(PrivateSetterEntity).GetProperty(nameof(PrivateSetterEntity.PropWithPrivateSetter));
 
-        // Act & Assert
         Assert.False(HasPublicSetter(property));
     }
 
@@ -67,14 +64,11 @@ public class EntityPublicSurfaceTests
     [Fact]
     public void PublicSetterEntity_PropertyCanBeGetAndSet()
     {
-        // Arrange
-        var entity = new PublicSetterEntity();
+        PublicSetterEntity entity = new PublicSetterEntity();
 
-        // Act
-        var original = entity.UrlOriginal;
+        string original = entity.UrlOriginal;
         entity.UrlOriginal = "test";
 
-        // Assert
         Assert.Equal(string.Empty, original);
         Assert.Equal("test", entity.UrlOriginal);
     }

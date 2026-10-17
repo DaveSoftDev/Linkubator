@@ -16,14 +16,14 @@ Generar fichas derivadas de las entidades del dominio incluidas en S3 y conserva
 - [requirements-review → «Entity sheet»](../../../skills/requirements-review/SKILL.md#entity-sheet): procedimiento y formato de generación de las fichas.
 - [AGENTS.md → «Dónde vive cada cosa»](../../../AGENTS.md#dónde-vive-cada-cosa): responsabilidad de las fuentes funcionales y de los artefactos SDD derivados.
 - [architecture.md → «Domain»](../../../context/architecture.md#domain): papel de Domain en la arquitectura.
-- [S3.1 → «Criterios de aceptación»](../s3.1-entidades-user-collection-link/spec.md#criterios-de-aceptación), [S3.2 → «Criterios de aceptación»](../s3.2-invariantes-propiedad/spec.md#criterios-de-aceptación), [S3.3 → «Criterios de aceptación»](../s3.3-transiciones-publico-privado/spec.md#criterios-de-aceptación) y [S3.4 → «Criterios de aceptación»](../s3.4-tests-invariantes/spec.md#criterios-de-aceptación): alcance y comportamiento aprobado ya implementado en S3.
+- S3.1–S3.4: sus criterios aprobados y trabajos archivados se consultan desde [specs-index.md → «Trabajos archivados»](../../specs-index.md#trabajos-archivados), como contexto del alcance y comportamiento implementado en S3.
 
 ## Alcance
 
 - Incluye:
   - Generar mediante `requirements-review` una ficha para cada entidad de S3: `User`, `Collection` y `Link`.
   - Recoger en cada ficha las reglas y referencias de las fuentes de verdad aplicables a la entidad, y señalar contradicciones, duplicados u omisiones detectados según el procedimiento de la skill.
-  - Guardar las fichas como archivos Markdown dentro de `specs/s3.5-fichas-entidades/` para que S3.6 pueda revisarlas contra el código y decidir sobre las invariantes.
+  - Guardar las fichas como archivos Markdown en `cards/` dentro de esta carpeta archivada para que S3.6 pueda revisarlas contra el código y decidir sobre las invariantes.
 - Excluye:
   - Cambiar las fuentes funcionales, el código, los tests o el modelo. Cualquier hallazgo que requiera esos cambios se deriva a su documento propietario y no se resuelve dentro de este trabajo.
   - Generar fichas de `Tag`, `LinkTag` o `UserToken`, entidades que no forman parte del alcance de S3.
@@ -58,5 +58,5 @@ Los casos negativos, las invariantes de propiedad y las reglas de privacidad se 
 
 ## Artefactos relacionados
 
-- Los archivos de fichas se crearán como entregables del trabajo, no como fuentes funcionales independientes.
+- Los archivos de fichas son [vistas derivadas](cards/collection.md), no fuentes funcionales independientes.
 - [Plan técnico](plan.md), aprobado por DLG el 12-X-2026 («Adelante»).

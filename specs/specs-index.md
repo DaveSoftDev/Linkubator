@@ -6,11 +6,22 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| S4.4 — Criterios de aceptación de los casos de uso | [spec.md](s4.4-criterios-aceptacion-casos-uso/spec.md) | [plan.md](s4.4-criterios-aceptacion-casos-uso/plan.md) | [tasks.md](s4.4-criterios-aceptacion-casos-uso/tasks.md#aceptación-y-cierre) |
+| S4.5 — Revisión y aprobación de los criterios de aceptación | [spec.md](s4.5-aprobacion-criterios-aceptacion/spec.md) | [plan.md](s4.5-aprobacion-criterios-aceptacion/plan.md) | [tasks.md](s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre) |
+| S4.9 — Fakes en memoria y pruebas de casos de uso | [spec.md](s4.9-fakes-y-tests-casos-de-uso/spec.md) | [plan.md](s4.9-fakes-y-tests-casos-de-uso/plan.md) | [tasks.md](s4.9-fakes-y-tests-casos-de-uso/tasks.md#aceptación-y-cierre) |
+| S4.10 — Registro de eventos | [spec.md](s4.10-registro-de-eventos/spec.md) | [plan.md](s4.10-registro-de-eventos/plan.md) | [tasks.md](s4.10-registro-de-eventos/tasks.md) |
 
 ## Trabajos completados
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| Catálogo de criterios de aceptación del MVP0 (preparación S4.4) | — | — | [mvp0-acceptance-criteria.md](../plans/mvp0-acceptance-criteria.md); preparación aceptada por DLG («A leer», 15-X-2026); catálogo aprobado por DLG («Leído y comprendido», 16-X-2026). S4.8–S4.10 requieren aprobación de sus propios artefactos SDD antes de iniciar |
+| S4.1 — Result, errores, DTOs y validadores de aplicación | [spec.md](s4.1-contratos-aplicacion/spec.md) | [plan.md](s4.1-contratos-aplicacion/plan.md) | [tasks.md](s4.1-contratos-aplicacion/tasks.md#aceptación-y-cierre) |
+| S4.2 — Contratos de repositorios, Unit of Work e identidad identificada | [spec.md](s4.2-contratos-repositorios-identidad/spec.md) | [plan.md](s4.2-contratos-repositorios-identidad/plan.md) | [tasks.md](s4.2-contratos-repositorios-identidad/tasks.md#aceptación-y-cierre) |
+| S4.3 — Contrato del proveedor de identidad de desarrollo | [spec.md](s4.3-proveedor-identidad-desarrollo/spec.md) | [plan.md](s4.3-proveedor-identidad-desarrollo/plan.md) | [tasks.md](s4.3-proveedor-identidad-desarrollo/tasks.md#aceptación-y-cierre) |
+| S4.6 — Casos de uso de colecciones | [spec.md](s4.6-casos-uso-colecciones/spec.md) | [plan.md](s4.6-casos-uso-colecciones/plan.md) | [tasks.md](s4.6-casos-uso-colecciones/tasks.md#aceptación-y-cierre); aceptado por DLG el 17-X-2026 («Fase completada») |
+| S4.7 — Casos de uso de enlaces | [spec.md](s4.7-casos-uso-enlaces/spec.md) | [plan.md](s4.7-casos-uso-enlaces/plan.md) | [tasks.md](s4.7-casos-uso-enlaces/tasks.md#aceptación-y-cierre); aceptado por DLG el 17-X-2026 («Fase completada»); suite 790/790 |
+| S4.8 — Dashboard y lecturas públicas | [spec.md](s4.8-dashboard-y-lecturas-publicas/spec.md) | [plan.md](s4.8-dashboard-y-lecturas-publicas/plan.md) | [tasks.md](s4.8-dashboard-y-lecturas-publicas/tasks.md#aceptación-y-cierre); aceptado por DLG el 17-X-2026 («Fase completada»), alcance de Application |
 
 ## Trabajos archivados
 
@@ -41,7 +52,7 @@ El estado y la evidencia de cierre constan en las tareas del trabajo; este índi
 | S2.6 — Unificación de las validaciones de entrada de Domain | [spec.md](archive/s2.6-unificacion-de-validaciones-de-entrada/spec.md) | [plan.md](archive/s2.6-unificacion-de-validaciones-de-entrada/plan.md) | [tasks.md](archive/s2.6-unificacion-de-validaciones-de-entrada/tasks.md#aceptaci%C3%B3n-y-cierre) |
 | S2.7 — Revisión de la normalización con 31 URLs | [spec.md](archive/s2.7-revision-con-urls-reales/spec.md) | [plan.md](archive/s2.7-revision-con-urls-reales/plan.md) | [tasks.md](archive/s2.7-revision-con-urls-reales/tasks.md#aceptaci%C3%B3n-y-cierre) |
 | S2.8 — Resolución de hallazgos de URLs reales | [spec.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/spec.md) | [plan.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/plan.md) | [tasks.md](archive/s2.8-resolucion-de-hallazgos-de-urls-reales/tasks.md#aceptaci%C3%B3n-y-cierre) |
-| S3.1 — Entidades `User`, `Collection` y `Link` | [spec.md](archive/s3.1-entidades-user-collection-link/spec.md) | [plan.md](archive/s3.1-entidades-user-collection-link/plan.md) | [tasks.md](archive/s3.1-entidades-user-collection-link/tasks.md#aceptación-y-cierre) |
+| S3.1 — Entidades `User`, `Collection` y `Link` | [spec.md](archive/s3.1-entidades-user-collection-link/spec.md) | [plan.md](archive/s3.1-entidades-user-collection-link/plan.md) | [tasks.md](archive/s3.1-entidades-user-collection-link/tasks.md) |
 | S3.2 — Invariantes de propiedad | [spec.md](archive/s3.2-invariantes-propiedad/spec.md) | [plan.md](archive/s3.2-invariantes-propiedad/plan.md) | [tasks.md](archive/s3.2-invariantes-propiedad/tasks.md#aceptación-y-cierre) |
 | S3.3 — Transiciones público y privado | [spec.md](archive/s3.3-transiciones-publico-privado/spec.md) | [plan.md](archive/s3.3-transiciones-publico-privado/plan.md) | [tasks.md](archive/s3.3-transiciones-publico-privado/tasks.md#aceptación-y-cierre) |
 | S3.4 — Tests de invariantes del dominio | [spec.md](archive/s3.4-tests-invariantes/spec.md) | [plan.md](archive/s3.4-tests-invariantes/plan.md) | [tasks.md](archive/s3.4-tests-invariantes/tasks.md#aceptación-y-cierre) |

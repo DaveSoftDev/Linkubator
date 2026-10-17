@@ -49,7 +49,9 @@ Para trabajos nuevos usa `specs/<slug>/`, con un nombre descriptivo en kebab-cas
 
 Es una convención local para los trabajos de esta skill, no un estándar universal de SDD. No crees otros artefactos sin necesidad. Carga cada plantilla cuando vayas a redactar su documento. Sus enlaces están preparados para el destino `specs/<slug>/`; ajusta las rutas si la ubicación difiere. Enlaza el trabajo desde [specs-index.md](../../specs/specs-index.md) sin duplicar su contenido. Mantén [roadmap.md](../../context/roadmap.md) como fuente del estado de las etapas: enlaza el trabajo cuando sea necesario para mostrar su avance, sin convertir los artefactos SDD en una segunda fuente de estado.
 
-Siempre que inscribas una spec, asegúrate de que lo estás haciendo al final de la tabla que le corresponde. Tienes estas tres tablas para elegir (Trabajos activos, Trabajos completados, Trabajos archivados).
+Nunca hagas referencia en un artefacto a pruebas, evidencias, tareas... De una especificación que todavia no se ha iniciado. Referenciar a las especificaciones que aún no existen puede inducir a errores y confusión. Puedes referenciar solo las especificaciones existentes y aprobadas.
+
+Siempre que inscribas una especificación, asegúrate de que lo estás haciendo al final de la tabla que le corresponde. Tienes estas tres tablas para elegir (Trabajos activos, Trabajos completados, Trabajos archivados).
 
 Los trabajos terminados y aceptados se trasladan, con su carpeta completa, a `specs/archive/<slug>/`. El estado y la evidencia de cierre pertenecen a `tasks.md`; el índice es solo navegación. Un documento redundante, una propuesta descartada o un diseño antiguo sin cierre no se archivan como trabajo terminado.
 
@@ -76,6 +78,8 @@ Tras crear `spec.md`, revisa [roadmap.md](../../context/roadmap.md). Si el traba
 Redacta `plan.md` solo después de que `spec.md` tenga aprobación humana registrada. El plan cubre componentes, responsabilidades, contratos, flujos internos, persistencia y transacciones cuando apliquen, dependencias, garantías técnicas y riesgos. Reutiliza el diseño y los tests existentes adecuados. Separa decisiones confirmadas de propuestas.
 
 Para cada criterio, define validación, alcance, prerrequisitos, resultado esperado y evidencia que se registrará. Distingue prueba automatizada, revisión técnica y validación manual; no atribuyas a un test garantías que no comprueba. Usa comandos concretos y filtros compatibles con el runner cuando se conozcan; si no, registra la detección necesaria como tarea. Evita pruebas de UI o herramientas ajenas a las fuentes aprobadas.
+
+**La spec actual debe poder cerrarse sin esperar trabajo futuro.** Al definir criterios y validaciones, delimita qué demuestra esta etapa y asigna esos checks a tareas incluidas en su propio `tasks.md`. Ningún criterio, tarea de cierre ni aceptación puede depender de que una etapa posterior cree código, tests, infraestructura o evidencia. Si una validación corresponde a otra capa o etapa futura, regístrala como seguimiento de esa etapa, no como bloqueo de cierre. Si el criterio aprobado mezcla responsabilidades, conserva la regla funcional y separa la evidencia por límite de capa; no dejes la spec abierta esperando la otra etapa. Las dependencias de cierre solo pueden ser prerrequisitos ya disponibles al iniciar el trabajo o tareas de la propia spec.
 
 Cuando una garantía dependa de un test arquitectónico o de seguridad, planifica una comprobación negativa proporcionada al riesgo que demuestre que detecta la infracción. No alteres cambios del usuario ni conviertas ese requisito en una nueva infraestructura de testing.
 
@@ -110,7 +114,7 @@ Bajo «Descomposición» usa texto introductorio en esa sección solo para aport
 - Comprueba que no se duplican reglas del producto y que se respetan terminología e invariantes de [AGENTS.md](../../AGENTS.md). Si el cambio requiere sincronizar fuentes o introduce una posible duplicación, usa [requirements-review](../requirements-review/SKILL.md) antes de darlo por listo.
 - Al actualizar evidencia, registra criterio, comprobación, entorno o versión pertinente, resultado, fecha y referencia. No inventes comandos ejecutados, resultados, aprobaciones ni fechas. Una validación pendiente, fallida o no disponible sigue explícita.
 - Si la implementación se bloquea o se reabre, actualiza de inmediato su resumen en la cabecera de `tasks.md`, la tarea afectada y [roadmap.md](../../context/roadmap.md) cuando este muestre el avance de la etapa. Distingue este estado de la aprobación de tareas y de la aceptación del resultado.
-- El cierre requiere evidencia satisfactoria para todos los criterios, tareas completadas y aceptación humana registrada. Pruebas verdes no conceden aceptación humana ni cierran otras etapas.
+- El cierre requiere evidencia satisfactoria para todos los criterios dentro del alcance de esta spec, tareas propias completadas y aceptación humana registrada. No lo condiciona ninguna tarea futura ni evidencia asignada a otra etapa: esas quedan como seguimiento independiente y no mantienen abierta ni reabren esta spec. Pruebas verdes no conceden aceptación humana ni cierran otras etapas.
 - Al registrar la aceptación humana del resultado, actualiza [roadmap.md](../../context/roadmap.md) para reflejar el trabajo terminado y enlazar la evidencia de cierre en `tasks.md`. Si el trabajo aún no se archiva, usa su ruta activa; recalcula el enlace si se archiva después.
 - Si un cambio revela una regla nueva o una contradicción, bloquea la tarea afectada, propone el cambio en su documento propietario y espera aprobación antes de actualizar e implementar los artefactos dependientes. No edites reglas funcionales por iniciativa propia.
 

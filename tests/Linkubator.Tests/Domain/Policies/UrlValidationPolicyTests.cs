@@ -1,3 +1,4 @@
+using Linkubator.Domain.Exceptions;
 using DomainExceptions = Linkubator.Domain.Exceptions;
 using DomainPolicies = Linkubator.Domain.Policies;
 
@@ -17,7 +18,7 @@ public class UrlValidationPolicyTests
     [InlineData("https://xn--bcher-kva.example/")]
     public void ValidateAcceptsAllowedUrls(string input)
     {
-        var exception = Record.Exception(() => DomainPolicies.UrlValidationPolicy.Validate(input));
+        Exception exception = Record.Exception(() => DomainPolicies.UrlValidationPolicy.Validate(input));
 
         Assert.Null(exception);
     }
@@ -55,7 +56,7 @@ public class UrlValidationPolicyTests
     [InlineData("https://example.com:abc")]
     public void ValidateRejectsAuthorityProblemsWithoutIncludingTheInputText(string input)
     {
-        var exception = Assert.ThrowsAny<DomainExceptions.DomainException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));
+        DomainException exception = Assert.ThrowsAny<DomainExceptions.DomainException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));
 
         Assert.DoesNotContain(input, exception.Message, StringComparison.Ordinal);
     }
@@ -67,7 +68,7 @@ public class UrlValidationPolicyTests
         string input = "https://EXAMPLE.com:8443/a/b?c=1";
         string actual = input;
 
-        var exception = Record.Exception(() => DomainPolicies.UrlValidationPolicy.Validate(actual));
+        Exception exception = Record.Exception(() => DomainPolicies.UrlValidationPolicy.Validate(actual));
 
         Assert.Null(exception);
         Assert.Equal(input, actual);

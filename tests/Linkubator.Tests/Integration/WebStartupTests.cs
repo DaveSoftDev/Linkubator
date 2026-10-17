@@ -1,0 +1,22 @@
+using Microsoft.AspNetCore.Mvc.Testing;
+
+namespace Linkubator.Tests.Integration;
+
+[Trait("Category", "Web")]
+public class WebStartupTests : IClassFixture<WebApplicationFactory<Program>>
+{
+    private readonly HttpClient _client;
+
+    public WebStartupTests(WebApplicationFactory<Program> factory)
+    {
+        _client = factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task HomePageReturnsSuccess()
+    {
+        using HttpResponseMessage response = await _client.GetAsync("/");
+
+        Assert.True(response.IsSuccessStatusCode);
+    }
+}

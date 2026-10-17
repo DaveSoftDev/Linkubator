@@ -48,6 +48,7 @@ Este documento describe cómo se construirá Linkubator: tecnologías, arquitect
 - Interfaces de repositorios y de Unit of Work.
 - Constantes, Options, Records.
 - Patrón `Result`.
+- Los casos de uso convierten la ausencia o falta de propiedad del recurso en un error de Application de categoría `ResourceNotAccessible`, con un código estable específico de la operación al eliminar colecciones o enlaces. Para cada operación de eliminación, los identificadores inválidos, recursos inexistentes y recursos ajenos comparten el mismo código; la categoría y el código no revelan cuál de esas causas ocurrió. No se representa esta situación como una excepción de Domain. Web consume categoría y código para seleccionar el mensaje y el tratamiento HTTP definidos en [specifications.md → «Rutas privadas»](specifications.md#rutas-privadas), sin recibir del error detalles de la causa.
 - Abstracciones del usuario identificado. 
 - Abstracciones del scraper.
 - Abstracciones de hashing de contraseñas (`IPasswordHasher`) y de envío de correo (`IEmailSender`).
