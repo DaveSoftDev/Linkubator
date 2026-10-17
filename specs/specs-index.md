@@ -17,6 +17,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | S4.1 — Result, errores, DTOs y validadores de aplicación | [spec.md](s4.1-contratos-aplicacion/spec.md) | [plan.md](s4.1-contratos-aplicacion/plan.md) | [tasks.md](s4.1-contratos-aplicacion/tasks.md#aceptación-y-cierre) |
 | S4.2 — Contratos de repositorios, Unit of Work e identidad identificada | [spec.md](s4.2-contratos-repositorios-identidad/spec.md) | [plan.md](s4.2-contratos-repositorios-identidad/plan.md) | [tasks.md](s4.2-contratos-repositorios-identidad/tasks.md#aceptación-y-cierre) |
 | S4.3 — Contrato del proveedor de identidad de desarrollo | [spec.md](s4.3-proveedor-identidad-desarrollo/spec.md) | [plan.md](s4.3-proveedor-identidad-desarrollo/plan.md) | [tasks.md](s4.3-proveedor-identidad-desarrollo/tasks.md#aceptación-y-cierre) |
+| S4.6 — Casos de uso de colecciones | [spec.md](s4.6-casos-uso-colecciones/spec.md) | [plan.md](s4.6-casos-uso-colecciones/plan.md) | [tasks.md](s4.6-casos-uso-colecciones/tasks.md#aceptación-y-cierre); aceptado por DLG el 17-X-2026 («Fase completada») |
 
 ## Trabajos archivados
 
