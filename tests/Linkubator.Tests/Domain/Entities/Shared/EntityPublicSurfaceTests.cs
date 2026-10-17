@@ -38,10 +38,8 @@ public class EntityPublicSurfaceTests
     [Fact]
     public void HasPublicSetter_ReturnsFalse_WhenPropertyHasNoSetter()
     {
-        // Arrange
         PropertyInfo? property = typeof(NoSetterEntity).GetProperty(nameof(NoSetterEntity.ReadOnlyProp));
 
-        // Act & Assert
         Assert.False(HasPublicSetter(property));
     }
 
@@ -53,10 +51,8 @@ public class EntityPublicSurfaceTests
     [Fact]
     public void HasPublicSetter_ReturnsFalse_WhenPropertyHasPrivateSetter()
     {
-        // Arrange
         PropertyInfo? property = typeof(PrivateSetterEntity).GetProperty(nameof(PrivateSetterEntity.PropWithPrivateSetter));
 
-        // Act & Assert
         Assert.False(HasPublicSetter(property));
     }
 
@@ -68,14 +64,11 @@ public class EntityPublicSurfaceTests
     [Fact]
     public void PublicSetterEntity_PropertyCanBeGetAndSet()
     {
-        // Arrange
         PublicSetterEntity entity = new PublicSetterEntity();
 
-        // Act
         string original = entity.UrlOriginal;
         entity.UrlOriginal = "test";
 
-        // Assert
         Assert.Equal(string.Empty, original);
         Assert.Equal("test", entity.UrlOriginal);
     }

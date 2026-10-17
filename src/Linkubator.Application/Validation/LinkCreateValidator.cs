@@ -48,10 +48,20 @@ public sealed class LinkCreateValidator : IValidator<CreateLinkRequest>
             {
                 errors.Add(ApplicationError.Validation("LINK_IMAGE_TOO_LONG", "Image", "La imagen supera la longitud máxima."));
             }
-            else if (!Uri.TryCreate(trimmedImage, UriKind.Absolute, out var imageUri) ||
-                     (imageUri.Scheme != Uri.UriSchemeHttps && imageUri.Scheme != Uri.UriSchemeHttp))
+            else
             {
-                errors.Add(ApplicationError.Validation("LINK_IMAGE_URL_INVALID", "Image", "La imagen debe ser una URL HTTP/HTTPS válida."));
+                bool isAbsoluteHttpOrHttps = Uri.TryCreate(trimmedImage, UriKind.Absolute, out var absoluteImage)
+                    && (absoluteImage.Scheme == Uri.UriSchemeHttps || absoluteImage.Scheme == Uri.UriSchemeHttp);
+                bool isRelativeReference = Uri.TryCreate(trimmedImage, UriKind.Relative, out _)
+                    || trimmedImage.StartsWith("//", StringComparison.Ordinal)
+                    || trimmedImage.StartsWith("/", StringComparison.Ordinal)
+                    || trimmedImage.StartsWith("./", StringComparison.Ordinal)
+                    || trimmedImage.StartsWith("../", StringComparison.Ordinal);
+
+                if (!isAbsoluteHttpOrHttps && !isRelativeReference)
+                {
+                    errors.Add(ApplicationError.Validation("LINK_IMAGE_URL_INVALID", "Image", "La imagen debe ser una URL HTTP/HTTPS válida."));
+                }
             }
         }
 

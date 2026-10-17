@@ -327,43 +327,34 @@ public class CollectionTests
     [Fact]
     public void RemoveLink_WhenLinkExists_RemovesItFromCollection()
     {
-        // Arrange
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
         EntityTestFactory.SetId(collection, 12);
         DomainEntities.Link link = DomainEntities.Link.Create(7, collection, "https://example.com/1", null, null, null);
         EntityTestFactory.AddLink(collection, link);
 
-        // Act
         EntityTestFactory.RemoveLink(collection, link);
 
-        // Assert
         Assert.Empty(collection.Links);
     }
 
     [Fact]
     public void RemoveLink_WhenLinkDoesNotExist_DoesNothing()
     {
-        // Arrange
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
         EntityTestFactory.SetId(collection, 12);
         DomainEntities.Link link = DomainEntities.Link.Create(7, collection, "https://example.com/1", null, null, null);
-        // Do not add the link to the collection
 
-        // Act
         EntityTestFactory.RemoveLink(collection, link);
 
-        // Assert
         Assert.Empty(collection.Links); // Still empty
     }
 
     [Fact]
     public void RemoveLink_WhenLinkIsNull_Throws()
     {
-        // Arrange
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
         EntityTestFactory.SetId(collection, 12);
 
-        // Act & Assert
         Assert.Throws<DomainExceptions.NotValidInputException>(() =>
             EntityTestFactory.RemoveLink(collection, null!));
     }
@@ -371,25 +362,20 @@ public class CollectionTests
     [Fact]
     public void ChangePrivacy_WhenCollectionHasNoLinks_DoesNotThrowAndSetsPrivacy()
     {
-        // Arrange
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
         EntityTestFactory.SetId(collection, 12);
 
-        // Act
         collection.ChangePrivacy(true, Array.Empty<DomainEntities.Link>());
 
-        // Assert
         Assert.True(collection.IsPublic);
     }
 
     [Fact]
     public void AddLink_WhenLinkIsNull_Throws()
     {
-        // Arrange
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
         EntityTestFactory.SetId(collection, 12);
 
-        // Act & Assert
         Assert.Throws<DomainExceptions.NotValidInputException>(() =>
             EntityTestFactory.AddLink(collection, null!));
     }
@@ -397,13 +383,10 @@ public class CollectionTests
     [Fact]
     public void Rename_WhenNameHasLeadingTrailingSpaces_TrimsAndSetsNameAndSlug()
     {
-        // Arrange
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
 
-        // Act
         collection.Rename("  Renamed Collection  ");
 
-        // Assert
         Assert.Equal("Renamed Collection", collection.Name);
         Assert.Equal("renamed-collection", collection.Slug);
     }
@@ -411,15 +394,12 @@ public class CollectionTests
     [Fact]
     public void AddLink_WhenLinkIsValidAndNotPresent_AddsToCollection()
     {
-        // Arrange
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
         EntityTestFactory.SetId(collection, 12);
         DomainEntities.Link link = DomainEntities.Link.Create(7, collection, "https://example.com/1", null, null, null);
 
-        // Act
         EntityTestFactory.AddLink(collection, link);
 
-        // Assert
         Assert.Single(collection.Links);
         Assert.Contains(link, collection.Links);
     }
@@ -427,19 +407,14 @@ public class CollectionTests
     [Fact]
     public void ChangePrivacy_WhenLinkIsNullInArray_ThrowsWithoutPartialMutation()
     {
-        // Arrange
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", "desc", true);
         EntityTestFactory.SetId(collection, 12);
         DomainEntities.Link associatedLink = DomainEntities.Link.Create(7, collection, "https://example.com/1", null, null, null, true);
 
-        // Act & Assert
         Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
             collection.ChangePrivacy(false, new[] { associatedLink, null! }));
 
-        // Assert that the collection's privacy did not change and the associated link's privacy did not change
         Assert.True(collection.IsPublic);
         Assert.True(associatedLink.IsPublic);
     }
-
-
 }

@@ -9,7 +9,7 @@
     - Tareas: aprobadas por DLG el 16-X-2026 («Ready»).
 - Implementación:
     - Estado: implementación, validación y aceptación completadas para el alcance S4.6.
-    - Inicio: DLG, 16-X-2026 («Perfecto, entonces implementa eso»), registrado en el historial de esta conversación.
+    - Inicio: DLG, 16-X-2026 (Implementa»), registrado en el historial de esta conversación.
     - Última validación: 17-X-2026; .NET SDK 10.0.401; `dotnet test tests/Linkubator.Tests/Linkubator.Tests.csproj --collect:"XPlat Code Coverage" --results-directory TestResults --verbosity minimal`, 775/775 correctas; `git diff --check`, exit code 0.
     - Finalización: 17-X-2026, tras completar los cambios de persistencia transaccional y ejecutar la suite completa.
     - Aceptación humana: DLG, 17-X-2026 («Fase completada»), instrucción explícita en esta conversación.
