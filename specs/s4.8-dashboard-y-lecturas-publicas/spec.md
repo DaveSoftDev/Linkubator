@@ -66,6 +66,8 @@ Implementar en Application el caso de uso del dashboard y los casos de uso de le
 
 Los escenarios negativos y límites se comprueban en las fuentes y criterios aprobados enlazados; esta especificación no vuelve a definirlos. La presentación HTTP de alias, slugs y páginas inexistentes, así como el HTML, canonical y metadatos, se valida en las etapas Web correspondientes. La comprobación de comportamiento de consumidores corresponde a S4.9; el registro de eventos corresponde a S4.10.
 
+El cierre de S4.8 evalúa únicamente los entregables y responsabilidades de Application definidos aquí. Las validaciones de consumidor, persistencia y presentación se planifican y cierran en sus etapas propietarias, sin ser prerrequisitos para cerrar ni motivos para reabrir S4.8.
+
 ## Bloqueos y preguntas pendientes
 
 | Pregunta o contradicción | Fuente afectada | Criterio bloqueado | Decisión humana necesaria |
@@ -74,4 +76,4 @@ Los escenarios negativos y límites se comprueban en las fuentes y criterios apr
 
 ## Artefactos relacionados
 
-- [Plan técnico](plan.md), aprobado por DLG el 17-X-2026 («Siguiente»); [tareas](tasks.md), pendientes de aprobación.
+- [Plan técnico](plan.md), aprobado por DLG el 17-X-2026 («Siguiente»); [tareas](tasks.md), aprobadas por DLG el 17-X-2026 («Siguiente») y cerradas para el alcance de Application con aceptación «Fase completada».

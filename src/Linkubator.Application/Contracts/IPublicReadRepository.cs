@@ -4,7 +4,7 @@ public interface IPublicReadRepository
 {
     Task<PublicUserDto?> GetUserPage(string alias, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyCollection<CollectionDto>?> GetCollectionsPage(
+    Task<IReadOnlyCollection<PublicCollectionSummaryDto>?> GetCollectionsPage(
         string alias,
         CancellationToken cancellationToken = default);
 

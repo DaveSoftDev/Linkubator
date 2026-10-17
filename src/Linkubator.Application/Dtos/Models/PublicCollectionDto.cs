@@ -4,4 +4,4 @@ public sealed record PublicCollectionDto(
     string Alias,
     string CollectionName,
     string Slug,
-    IReadOnlyList<LinkDto> Links);
+    IReadOnlyList<PublicLinkDto> Links);

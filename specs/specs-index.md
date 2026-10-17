@@ -8,7 +8,6 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | --- | --- | --- | --- |
 | S4.4 — Criterios de aceptación de los casos de uso | [spec.md](s4.4-criterios-aceptacion-casos-uso/spec.md) | [plan.md](s4.4-criterios-aceptacion-casos-uso/plan.md) | [tasks.md](s4.4-criterios-aceptacion-casos-uso/tasks.md#aceptación-y-cierre) |
 | S4.5 — Revisión y aprobación de los criterios de aceptación | [spec.md](s4.5-aprobacion-criterios-aceptacion/spec.md) | [plan.md](s4.5-aprobacion-criterios-aceptacion/plan.md) | [tasks.md](s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre) |
-| S4.8 — Dashboard y lecturas públicas | [spec.md](s4.8-dashboard-y-lecturas-publicas/spec.md) | [plan.md](s4.8-dashboard-y-lecturas-publicas/plan.md) | [tasks.md](s4.8-dashboard-y-lecturas-publicas/tasks.md#aceptación-y-cierre) |
 
 ## Trabajos completados
 
@@ -20,6 +19,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | S4.3 — Contrato del proveedor de identidad de desarrollo | [spec.md](s4.3-proveedor-identidad-desarrollo/spec.md) | [plan.md](s4.3-proveedor-identidad-desarrollo/plan.md) | [tasks.md](s4.3-proveedor-identidad-desarrollo/tasks.md#aceptación-y-cierre) |
 | S4.6 — Casos de uso de colecciones | [spec.md](s4.6-casos-uso-colecciones/spec.md) | [plan.md](s4.6-casos-uso-colecciones/plan.md) | [tasks.md](s4.6-casos-uso-colecciones/tasks.md#aceptación-y-cierre); aceptado por DLG el 17-X-2026 («Fase completada») |
 | S4.7 — Casos de uso de enlaces | [spec.md](s4.7-casos-uso-enlaces/spec.md) | [plan.md](s4.7-casos-uso-enlaces/plan.md) | [tasks.md](s4.7-casos-uso-enlaces/tasks.md#aceptación-y-cierre); aceptado por DLG el 17-X-2026 («Fase completada»); suite 790/790 |
+| S4.8 — Dashboard y lecturas públicas | [spec.md](s4.8-dashboard-y-lecturas-publicas/spec.md) | [plan.md](s4.8-dashboard-y-lecturas-publicas/plan.md) | [tasks.md](s4.8-dashboard-y-lecturas-publicas/tasks.md#aceptación-y-cierre); aceptado por DLG el 17-X-2026 («Fase completada»), alcance de Application |
 
 ## Trabajos archivados
 
