@@ -50,6 +50,8 @@ La [S4.8 — dashboard y lecturas públicas](../specs/s4.8-dashboard-y-lecturas-
 
 La [S4.9 — fakes en memoria y pruebas de casos de uso](../specs/s4.9-fakes-y-tests-casos-de-uso/spec.md), su [plan técnico](../specs/s4.9-fakes-y-tests-casos-de-uso/plan.md) y sus [tareas](../specs/s4.9-fakes-y-tests-casos-de-uso/tasks.md) fueron aprobados por DLG el 17-X-2026 («Siguiente» en cada artefacto). La implementación quedó completada y cerrada para el alcance de Application el 17-X-2026; la matriz criterio→test se revalidó, se reforzaron los escenarios pendientes y la evidencia final quedó alineada con los criterios aprobados. La validación técnica del 17-X-2026, con .NET SDK 10.0.401, pasó 808/808 pruebas; `ProjectReferenceMatrixTests` pasó 1/1 y el build de solución fue correcto. La aceptación de esta etapa queda limitada a Application y no incluye persistencia concreta, HTTP/Web, presentación ni S4.10, que corresponden a sus etapas posteriores.
 
+La [S4.10 — registro de eventos](../specs/s4.10-registro-de-eventos/spec.md), su [plan técnico](../specs/s4.10-registro-de-eventos/plan.md) y sus [tareas](../specs/s4.10-registro-de-eventos/tasks.md) fueron aprobados por DLG el 17-X-2026 («Siguiente» en cada artefacto). La preparación está cerrada; la implementación sigue no iniciada y requiere instrucción explícita posterior.
+
 ## Next
 
 ### Persistencia
