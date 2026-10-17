@@ -46,6 +46,8 @@ La [S4.6 — casos de uso de colecciones](../specs/s4.6-casos-uso-colecciones/sp
 
 La [S4.7 — casos de uso de enlaces](../specs/s4.7-casos-uso-enlaces/spec.md), su [plan técnico](../specs/s4.7-casos-uso-enlaces/plan.md) y sus [tareas](../specs/s4.7-casos-uso-enlaces/tasks.md) fueron aprobados por DLG el 17-X-2026 («Siguiente» en cada artefacto). La implementación quedó completada y aceptada por DLG el 17-X-2026 («Fase completada»); la suite de solución pasó 790/790 con .NET SDK 10.0.401. El alcance y las evidencias constan en sus [tareas, sección «Aceptación y cierre»](../specs/s4.7-casos-uso-enlaces/tasks.md#aceptación-y-cierre). La validación de consumidores Web y la persistencia concreta corresponden a sus etapas posteriores.
 
+La [S4.8 — dashboard y lecturas públicas](../specs/s4.8-dashboard-y-lecturas-publicas/spec.md), su [plan técnico](../specs/s4.8-dashboard-y-lecturas-publicas/plan.md) y sus [tareas](../specs/s4.8-dashboard-y-lecturas-publicas/tasks.md) fueron aprobados por DLG el 17-X-2026 («Siguiente» en cada artefacto). Las tareas están autorizadas, pero la implementación no se ha iniciado; el alcance y las validaciones pendientes constan en ellas.
+
 ## Next
 
 ### Persistencia
