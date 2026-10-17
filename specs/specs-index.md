@@ -8,6 +8,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | --- | --- | --- | --- |
 | S4.4 — Criterios de aceptación de los casos de uso | [spec.md](s4.4-criterios-aceptacion-casos-uso/spec.md) | [plan.md](s4.4-criterios-aceptacion-casos-uso/plan.md) | [tasks.md](s4.4-criterios-aceptacion-casos-uso/tasks.md#aceptación-y-cierre) |
 | S4.5 — Revisión y aprobación de los criterios de aceptación | [spec.md](s4.5-aprobacion-criterios-aceptacion/spec.md) | [plan.md](s4.5-aprobacion-criterios-aceptacion/plan.md) | [tasks.md](s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre) |
+| S4.9 — Fakes en memoria y pruebas de casos de uso | [spec.md](s4.9-fakes-y-tests-casos-de-uso/spec.md) | [plan.md](s4.9-fakes-y-tests-casos-de-uso/plan.md) | [tasks.md](s4.9-fakes-y-tests-casos-de-uso/tasks.md#aceptación-y-cierre) |
 
 ## Trabajos completados
 

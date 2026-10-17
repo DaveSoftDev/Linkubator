@@ -48,6 +48,8 @@ La [S4.7 — casos de uso de enlaces](../specs/s4.7-casos-uso-enlaces/spec.md), 
 
 La [S4.8 — dashboard y lecturas públicas](../specs/s4.8-dashboard-y-lecturas-publicas/spec.md), su [plan técnico](../specs/s4.8-dashboard-y-lecturas-publicas/plan.md) y sus [tareas](../specs/s4.8-dashboard-y-lecturas-publicas/tasks.md) fueron aprobados por DLG el 17-X-2026 («Siguiente» en cada artefacto). La implementación comenzó el 17-X-2026 («Empieza con la implementación») y quedó cerrada y aceptada para el alcance de Application por DLG el 17-X-2026 («Fase completada»). Los casos de uso y los DTOs públicos mínimos están implementados; el build pasó, la suite disponible pasó 787/787 y `ProjectReferenceMatrixTests` 1/1. La aceptación no depende de S4.9, persistencia ni Web: sus pruebas y entregables son independientes y no reabren este cierre. El detalle consta en las tareas.
 
+La [S4.9 — fakes en memoria y pruebas de casos de uso](../specs/s4.9-fakes-y-tests-casos-de-uso/spec.md), su [plan técnico](../specs/s4.9-fakes-y-tests-casos-de-uso/plan.md) y sus [tareas](../specs/s4.9-fakes-y-tests-casos-de-uso/tasks.md) fueron aprobados por DLG el 17-X-2026 («Siguiente» en cada artefacto). La implementación no ha comenzado; queda pendiente la instrucción explícita de inicio.
+
 ## Next
 
 ### Persistencia
