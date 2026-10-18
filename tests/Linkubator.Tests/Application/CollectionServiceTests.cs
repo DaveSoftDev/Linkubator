@@ -507,7 +507,7 @@ public class CollectionServiceTests
     }
 
     [Fact]
-    public async Task RenameCollection_WhenCollectionIsInvalid_ReturnsResourceNotAccessible()
+    public async Task RenameCollection_WhenCollectionIdIsInvalid_ReturnsValidationError()
     {
         CurrentUser currentUser = new CurrentUser(7);
         InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
@@ -518,8 +518,40 @@ public class CollectionServiceTests
         Result<CollectionDto> result = await service.RenameCollection(new CollectionRenameRequest(0, ""));
 
         Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("COLLECTION_RENAME_NOT_ACCESSIBLE", result.Errors[0].Code);
+        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
+        Assert.Equal("COLLECTION_ID_INVALID", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task ChangeCollectionVisibility_WhenCollectionIdIsInvalid_ReturnsValidationError()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.ChangeCollectionVisibility(new CollectionChangeVisibilityRequest(0, true));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
+        Assert.Equal("COLLECTION_ID_INVALID", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task DeleteCollection_WhenCollectionIdIsInvalid_ReturnsValidationError()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result result = await service.DeleteCollection(new CollectionDeleteRequest(0));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
+        Assert.Equal("COLLECTION_ID_INVALID", result.Errors[0].Code);
     }
 
     [Fact]

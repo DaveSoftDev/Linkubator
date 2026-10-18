@@ -123,6 +123,30 @@ public class LinkServiceTests
     }
 
     [Fact]
+    public async Task MoveLink_WhenLinkIdIsInvalid_ReturnsValidationError()
+    {
+        LinkService service = CreateService(new(7), new(), new());
+
+        Result<LinkDto> result = await service.MoveLink(new LinkMoveRequest(0, 1));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
+        Assert.Equal("LINK_ID_INVALID", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task ChangeLinkVisibility_WhenLinkIdIsInvalid_ReturnsValidationError()
+    {
+        LinkService service = CreateService(new(7), new(), new());
+
+        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(0, true));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
+        Assert.Equal("LINK_ID_INVALID", result.Errors[0].Code);
+    }
+
+    [Fact]
     public async Task MoveLink_WhenRequestIsNull_ReturnsRequestRequired()
     {
         LinkService service = CreateService(new(7), new(), new());
@@ -142,6 +166,53 @@ public class LinkServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task MoveLink_WhenLinkDoesNotBelongToUser_ReturnsResourceNotAccessible()
+    {
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection originalCollection = Collection.Create(9, "Other user's collection", null, true);
+        Collection destinationCollection = Collection.Create(7, "Destination", null, true);
+        SetId(originalCollection, 10);
+        SetId(destinationCollection, 11);
+        collectionRepository.Items.Add(originalCollection);
+        collectionRepository.Items.Add(destinationCollection);
+        Link link = Link.Create(9, originalCollection, "https://example.com/path", null, null, null, false);
+        SetId(link, 20);
+        linkRepository.Items.Add(link);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkDto> result = await service.MoveLink(new LinkMoveRequest(20, 11));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
+        Assert.Equal("LINK_NOT_ACCESSIBLE", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task ChangeLinkVisibility_WhenLinkDoesNotBelongToUser_ReturnsResourceNotAccessible()
+    {
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(9, "Other user's collection", null, true);
+        SetId(collection, 10);
+        collectionRepository.Items.Add(collection);
+        Link link = Link.Create(9, collection, "https://example.com/path", null, null, null, false);
+        SetId(link, 20);
+        linkRepository.Items.Add(link);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, true));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
+        Assert.Equal("LINK_NOT_ACCESSIBLE", result.Errors[0].Code);
     }
 
     [Fact]
@@ -471,7 +542,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task DeleteLink_WhenIdIsInvalid_ReturnsCommonResourceNotAccessibleError()
+    public async Task DeleteLink_WhenIdIsInvalid_ReturnsValidationError()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -482,8 +553,8 @@ public class LinkServiceTests
         Result result = await service.DeleteLink(new LinkDeleteRequest(0));
 
         Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("LINK_DELETE_NOT_ACCESSIBLE", result.Errors[0].Code);
+        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
+        Assert.Equal("LINK_ID_INVALID", result.Errors[0].Code);
     }
 
     private static LinkService CreateService(CurrentUser currentUser, InMemoryCollectionRepository collectionRepository, InMemoryLinkRepository linkRepository)
