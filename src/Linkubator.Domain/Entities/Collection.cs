@@ -78,6 +78,34 @@ public sealed class Collection : Bases.BaseEntity
     }
 
     /// <summary>
+    /// Rehidrata la colección con la lista de enlaces que pertenecen a ella.
+    /// </summary>
+    /// <param name="links">Enlaces asociados a la colección.</param>
+    /// <exception cref="DomainExceptions.NotValidInputException">Si la colección o los enlaces no son válidos.</exception>
+    public void RehydrateLinks(IEnumerable<Link> links)
+    {
+        if (links is null)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        _links.Clear();
+        foreach (Link link in links)
+        {
+            if (link is null || link.UserId != UserId || link.CollectionId != Id)
+            {
+                throw new DomainExceptions.NotValidInputException();
+            }
+
+            link.RehydrateCollection(this);
+            if (!_links.Contains(link))
+            {
+                _links.Add(link);
+            }
+        }
+    }
+
+    /// <summary>
     /// Cambia la privacidad de la colección y, si pasa a privada, de todos sus enlaces.
     /// </summary>
     /// <param name="isPublic">Nuevo valor de privacidad.</param>

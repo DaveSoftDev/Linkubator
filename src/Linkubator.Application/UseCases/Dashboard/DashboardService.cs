@@ -1,8 +1,11 @@
 using Linkubator.Application.Constants;
+using Linkubator.Application.Dtos.Models;
+using Linkubator.Application.Logging;
+using Linkubator.Application.Services;
+using DomainExceptions = Linkubator.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Linkubator.Application;
+namespace Linkubator.Application.UseCases.Dashboard;
 
 public sealed class DashboardService : IDashboardService
 {
@@ -10,19 +13,22 @@ public sealed class DashboardService : IDashboardService
     private readonly IDashboardRepository _dashboardRepository;
     private readonly ILogger<DashboardService> _logger;
 
-    public DashboardService(ICurrentUser currentUser, IDashboardRepository dashboardRepository, ILogger<DashboardService>? logger = null)
+    public DashboardService(ILogger<DashboardService> logger, ICurrentUser currentUser, IDashboardRepository dashboardRepository)
     {
-        _currentUser = currentUser ?? throw new ArgumentNullException(nameof(currentUser));
-        _dashboardRepository = dashboardRepository ?? throw new ArgumentNullException(nameof(dashboardRepository));
-        _logger = logger ?? NullLogger<DashboardService>.Instance;
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(currentUser);
+        ArgumentNullException.ThrowIfNull(dashboardRepository);
+
+        _logger = logger;
+        _currentUser = currentUser;
+        _dashboardRepository = dashboardRepository;
     }
 
     public async Task<Result<DashboardDto>> GetDashboard(CancellationToken cancellationToken = default)
     {
-        if (!_currentUser.IsAuthenticated)
+        if (!CurrentUserGuard.EnsureAuthenticated(_currentUser, _logger, DashboardErrors.GetNotAuthenticated, "Dashboard request rejected for user; not authenticated", out Result<DashboardDto> authenticationFailure))
         {
-            _logger.LogWarning("Dashboard request rejected for user {UserId}: not authenticated", _currentUser.UserId);
-            return Result<DashboardDto>.Failure(DashboardErrors.GetNotAuthenticated());
+            return authenticationFailure;
         }
 
         DashboardDto dashboard;
@@ -30,12 +36,17 @@ public sealed class DashboardService : IDashboardService
         {
             dashboard = await _dashboardRepository.GetByUser(_currentUser.UserId, cancellationToken);
         }
+        catch (DomainExceptions.DomainException exception)
+        {
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Dashboard load failed for user; domain validation issue", new { UserId = _currentUser.UserId });
+            return exception.FailDomain<DashboardDto>();
+        }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Dashboard load failed for user {UserId}", _currentUser.UserId);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Dashboard load failed for user", new { UserId = _currentUser.UserId });
             throw;
         }
-        _logger.LogInformation("Dashboard loaded for user {UserId}", _currentUser.UserId);
+        SafeLogger.Log(_logger, LogLevel.Information, null, "Dashboard loaded for user", new { UserId = _currentUser.UserId });
         return Result<DashboardDto>.Success(dashboard);
     }
 }

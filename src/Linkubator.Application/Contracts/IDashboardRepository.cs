@@ -1,4 +1,6 @@
-namespace Linkubator.Application;
+using Linkubator.Application.Dtos.Models;
+
+namespace Linkubator.Application.Contracts;
 
 public interface IDashboardRepository
 {

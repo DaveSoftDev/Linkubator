@@ -83,7 +83,7 @@ public class EntityTestFactoryTests
     [Fact]
     public void ResolveInternalMethod_ReturnsMethodInfo_ForAddLink()
     {
-        MethodInfo methodInfo = EntityTestFactory.ResolveInternalMethod("AddLink");
+        MethodInfo methodInfo = EntityTestFactory.ResolveInternalMethod(typeof(DomainEntities.Collection), "AddLink");
 
         Assert.NotNull(methodInfo);
         Assert.IsAssignableFrom<System.Reflection.MethodInfo>(methodInfo);
@@ -94,7 +94,7 @@ public class EntityTestFactoryTests
     [Fact]
     public void ResolveInternalMethod_ReturnsMethodInfo_ForRemoveLink()
     {
-        MethodInfo methodInfo = EntityTestFactory.ResolveInternalMethod("RemoveLink");
+        MethodInfo methodInfo = EntityTestFactory.ResolveInternalMethod(typeof(DomainEntities.Collection), "RemoveLink");
 
         Assert.NotNull(methodInfo);
         Assert.IsAssignableFrom<System.Reflection.MethodInfo>(methodInfo);
@@ -108,7 +108,7 @@ public class EntityTestFactoryTests
         string bogusName = "NonExistentMethod";
 
         InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
-            EntityTestFactory.ResolveInternalMethod(bogusName));
+            EntityTestFactory.ResolveInternalMethod(typeof(DomainEntities.Collection), bogusName));
         Assert.Contains("no encontrado", exception.Message);
     }
 }

@@ -2,9 +2,10 @@ namespace Linkubator.Application.Constants;
 
 public static class DashboardErrors
 {
-    public const string UserIdField = "UserId";
-    public const string NotAuthenticatedMessage = "La sesión del usuario no es válida.";
+    public const string UserIdField = CommonErrors.UserIdField;
+
+    private const string GetNotAuthenticatedCode = "DASHBOARD_GET_NOT_AUTHENTICATED";
 
     public static ApplicationError GetNotAuthenticated()
-        => ApplicationError.ResourceNotAccessible("DASHBOARD_GET_NOT_AUTHENTICATED", UserIdField, NotAuthenticatedMessage);
+        => CommonErrors.NotAuthenticated(GetNotAuthenticatedCode, UserIdField);
 }

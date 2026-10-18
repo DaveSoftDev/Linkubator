@@ -1,18 +1,23 @@
 using Linkubator.Application.Constants;
+using Linkubator.Application.Dtos.Models;
+using Linkubator.Application.Logging;
+using DomainExceptions = Linkubator.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Linkubator.Application;
+namespace Linkubator.Application.UseCases.PublicReads;
 
 public sealed class PublicReadService : IPublicReadService
 {
     private readonly IPublicReadRepository _publicReadRepository;
     private readonly ILogger<PublicReadService> _logger;
 
-    public PublicReadService(IPublicReadRepository publicReadRepository, ILogger<PublicReadService>? logger = null)
+    public PublicReadService(ILogger<PublicReadService> logger, IPublicReadRepository publicReadRepository)
     {
-        _publicReadRepository = publicReadRepository ?? throw new ArgumentNullException(nameof(publicReadRepository));
-        _logger = logger ?? NullLogger<PublicReadService>.Instance;
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(publicReadRepository);
+
+        _logger = logger;
+        _publicReadRepository = publicReadRepository;
     }
 
     public async Task<Result<PublicUserDto>> GetUserPage(string alias, CancellationToken cancellationToken = default)
@@ -20,7 +25,7 @@ public sealed class PublicReadService : IPublicReadService
         string trimmedAlias = TrimOrEmpty(alias);
         if (string.IsNullOrWhiteSpace(trimmedAlias))
         {
-            _logger.LogWarning("Public user page lookup rejected: alias missing");
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Public user page lookup rejected; alias missing", new { }, new { Alias = alias });
             return Result<PublicUserDto>.Failure(PublicReadErrors.AliasInvalid());
         }
 
@@ -29,18 +34,23 @@ public sealed class PublicReadService : IPublicReadService
         {
             result = await _publicReadRepository.GetUserPage(trimmedAlias, cancellationToken);
         }
+        catch (DomainExceptions.DomainException exception)
+        {
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Public user page lookup failed; domain validation issue", new { }, new { Alias = alias });
+            return exception.FailDomain<PublicUserDto>();
+        }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Public user page lookup failed. AliasLength {AliasLength}", trimmedAlias.Length);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Public user page lookup failed; alias", new { }, new { Alias = alias });
             throw;
         }
         if (result is null)
         {
-            _logger.LogWarning("Public user page lookup failed: alias not accessible");
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Public user page lookup failed; alias not accessible", new { }, new { Alias = alias });
             return Result<PublicUserDto>.Failure(PublicReadErrors.UserNotAccessible());
         }
 
-        _logger.LogInformation("Public user page loaded. AliasLength {AliasLength}", trimmedAlias.Length);
+        SafeLogger.Log(_logger, LogLevel.Information, null, "Public user page loaded", new { });
         return Result<PublicUserDto>.Success(result);
     }
 
@@ -49,7 +59,7 @@ public sealed class PublicReadService : IPublicReadService
         string trimmedAlias = TrimOrEmpty(alias);
         if (string.IsNullOrWhiteSpace(trimmedAlias))
         {
-            _logger.LogWarning("Public collections lookup rejected: alias missing");
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Public collections lookup rejected; alias missing", new { }, new { Alias = alias });
             return Result<IReadOnlyList<PublicCollectionSummaryDto>>.Failure(PublicReadErrors.AliasInvalid());
         }
 
@@ -58,18 +68,23 @@ public sealed class PublicReadService : IPublicReadService
         {
             result = await _publicReadRepository.GetCollectionsPage(trimmedAlias, cancellationToken);
         }
+        catch (DomainExceptions.DomainException exception)
+        {
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Public collections lookup failed; domain validation issue", new { }, new { Alias = alias });
+            return exception.FailDomain<IReadOnlyList<PublicCollectionSummaryDto>>();
+        }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Public collections lookup failed. AliasLength {AliasLength}", trimmedAlias.Length);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Public collections lookup failed; alias", new { }, new { Alias = alias });
             throw;
         }
         if (result is null)
         {
-            _logger.LogWarning("Public collections lookup failed: alias not accessible");
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Public collections lookup failed; alias not accessible", new { }, new { Alias = alias });
             return Result<IReadOnlyList<PublicCollectionSummaryDto>>.Failure(PublicReadErrors.CollectionsNotAccessible());
         }
 
-        _logger.LogInformation("Public collections page loaded. AliasLength {AliasLength} ResultCount {ResultCount}", trimmedAlias.Length, result.Count);
+        SafeLogger.Log(_logger, LogLevel.Information, null, "Public collections page loaded", new { }, new { Alias = alias });
         return Result<IReadOnlyList<PublicCollectionSummaryDto>>.Success(result.ToList());
     }
 
@@ -79,19 +94,19 @@ public sealed class PublicReadService : IPublicReadService
         string trimmedSlug = TrimOrEmpty(slug);
         if (string.IsNullOrWhiteSpace(trimmedAlias))
         {
-            _logger.LogWarning("Public collection page lookup rejected: alias missing");
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Public collection page lookup rejected; alias missing", new { }, new { Alias = alias });
             return Result<PublicCollectionDto>.Failure(PublicReadErrors.AliasInvalid());
         }
 
         if (string.IsNullOrWhiteSpace(trimmedSlug))
         {
-            _logger.LogWarning("Public collection page lookup rejected: slug missing");
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Public collection page lookup rejected; slug missing", new { }, new { Alias = alias, Slug = slug });
             return Result<PublicCollectionDto>.Failure(PublicReadErrors.SlugInvalid());
         }
 
         if (page < 1)
         {
-            _logger.LogWarning("Public collection page lookup rejected: invalid page {Page}", page);
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Public collection page lookup rejected; invalid page", new { }, new { Alias = alias, Page = page });
             return Result<PublicCollectionDto>.Failure(PublicReadErrors.PageInvalid());
         }
 
@@ -100,18 +115,23 @@ public sealed class PublicReadService : IPublicReadService
         {
             result = await _publicReadRepository.GetCollectionPage(trimmedAlias, trimmedSlug, page, cancellationToken);
         }
+        catch (DomainExceptions.DomainException exception)
+        {
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Public collection page lookup failed; domain validation issue", new { }, new { Alias = alias, Slug = slug, Page = page });
+            return exception.FailDomain<PublicCollectionDto>();
+        }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Public collection page lookup failed. AliasLength {AliasLength} Page {Page}", trimmedAlias.Length, page);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Public collection page lookup failed; alias and slug", new { }, new { Alias = alias, Slug = slug, Page = page });
             throw;
         }
         if (result is null)
         {
-            _logger.LogWarning("Public collection page lookup failed: collection not accessible");
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Public collection page lookup failed; collection not accessible", new { }, new { Alias = alias, Slug = slug, Page = page });
             return Result<PublicCollectionDto>.Failure(PublicReadErrors.CollectionNotAccessible());
         }
 
-        _logger.LogInformation("Public collection page loaded. AliasLength {AliasLength} Page {Page}", trimmedAlias.Length, page);
+        SafeLogger.Log(_logger, LogLevel.Information, null, "Public collection page loaded", new { }, new { Alias = alias, Slug = slug, Page = page });
         return Result<PublicCollectionDto>.Success(result);
     }
 
@@ -121,13 +141,13 @@ public sealed class PublicReadService : IPublicReadService
         string trimmedSlug = TrimOrEmpty(slug);
         if (string.IsNullOrWhiteSpace(trimmedAlias))
         {
-            _logger.LogWarning("Public collection count lookup rejected: alias missing");
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Public collection count lookup rejected; alias missing", new { }, new { Alias = alias });
             return Result<int>.Failure(PublicReadErrors.AliasInvalid());
         }
 
         if (string.IsNullOrWhiteSpace(trimmedSlug))
         {
-            _logger.LogWarning("Public collection count lookup rejected: slug missing");
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Public collection count lookup rejected; slug missing", new { }, new { Alias = alias, Slug = slug });
             return Result<int>.Failure(PublicReadErrors.SlugInvalid());
         }
 
@@ -145,18 +165,23 @@ public sealed class PublicReadService : IPublicReadService
                 count = 0;
             }
         }
+        catch (DomainExceptions.DomainException exception)
+        {
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Public collection count lookup failed; domain validation issue", new { }, new { Alias = alias, Slug = slug });
+            return exception.FailDomain<int>();
+        }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _logger.LogError("Public collection count lookup failed. AliasLength {AliasLength}", trimmedAlias.Length);
+            SafeLogger.Log(_logger, LogLevel.Error, exception, "Public collection count lookup failed; alias and slug", new { }, new { Alias = alias, Slug = slug });
             throw;
         }
         if (collection is null)
         {
-            _logger.LogWarning("Public collection count lookup failed: collection not accessible");
+            SafeLogger.Log(_logger, LogLevel.Warning, null, "Public collection count lookup failed; collection not accessible", new { }, new { Alias = alias, Slug = slug });
             return Result<int>.Failure(PublicReadErrors.CollectionNotAccessible());
         }
 
-        _logger.LogInformation("Public collection count loaded. AliasLength {AliasLength} ResultCount {ResultCount}", trimmedAlias.Length, count);
+        SafeLogger.Log(_logger, LogLevel.Information, null, "Public collection count loaded", new { });
         return Result<int>.Success(count);
     }
 

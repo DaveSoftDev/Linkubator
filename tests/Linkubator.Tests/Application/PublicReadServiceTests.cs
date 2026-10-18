@@ -1,5 +1,11 @@
-using Linkubator.Application;
 using Linkubator.Application.Constants;
+using Linkubator.Application.Contracts;
+using Linkubator.Application.Dtos.Models;
+using Linkubator.Application.Enums;
+using Linkubator.Application.Results;
+using Linkubator.Application.UseCases.PublicReads;
+using Linkubator.Domain.Exceptions;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Linkubator.Tests.Application;
 
@@ -8,13 +14,14 @@ public class PublicReadServiceTests
     [Fact]
     public void Constructor_WhenDependenciesAreNull_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new PublicReadService(null!));
+        Assert.Throws<ArgumentNullException>(() => new PublicReadService(null!, new FakePublicReadRepository()));
+        Assert.Throws<ArgumentNullException>(() => new PublicReadService(NullLogger<PublicReadService>.Instance, null!));
     }
 
     [Fact]
     public async Task GetUserPage_WhenAliasIsBlank_ReturnsValidationError()
     {
-        PublicReadService service = new(new FakePublicReadRepository());
+        PublicReadService service = CreateService(new FakePublicReadRepository());
 
         Result<PublicUserDto> result = await service.GetUserPage("   ");
 
@@ -38,7 +45,7 @@ public class PublicReadServiceTests
             {
                 new PublicLinkDto("https://example.com/post", "Post", "Preview", "https://example.com/icon.png"),
             });
-        PublicReadService service = new(repository);
+        PublicReadService service = CreateService(repository);
 
         Result<PublicUserDto> result = await service.GetUserPage(" alice ");
 
@@ -54,7 +61,7 @@ public class PublicReadServiceTests
     {
         FakePublicReadRepository repository = new();
         repository.UserPage = new PublicUserDto("alice", Array.Empty<PublicCollectionSummaryDto>(), Array.Empty<PublicLinkDto>());
-        PublicReadService service = new(repository);
+        PublicReadService service = CreateService(repository);
 
         Result<PublicUserDto> result = await service.GetUserPage("alice");
 
@@ -65,9 +72,37 @@ public class PublicReadServiceTests
     }
 
     [Fact]
+    public async Task GetUserPage_WhenRepositoryThrowsDomainException_ReturnsDomainFailure()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            UserPageThrow = new NotValidInputException()
+        };
+        PublicReadService service = CreateService(repository);
+
+        Result<PublicUserDto> result = await service.GetUserPage("alice");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
+        Assert.Equal("NotValidInput", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetUserPage_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            UserPageThrow = new InvalidOperationException("boom")
+        };
+        PublicReadService service = CreateService(repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetUserPage("alice"));
+    }
+
+    [Fact]
     public async Task GetUserPage_WhenUserIsNotAccessible_ReturnsResourceNotAccessible()
     {
-        PublicReadService service = new(new FakePublicReadRepository { UserPage = null });
+        PublicReadService service = CreateService(new FakePublicReadRepository { UserPage = null });
 
         Result<PublicUserDto> result = await service.GetUserPage("alice");
 
@@ -79,7 +114,7 @@ public class PublicReadServiceTests
     [Fact]
     public async Task GetCollectionsPage_WhenAliasIsBlank_ReturnsValidationError()
     {
-        PublicReadService service = new(new FakePublicReadRepository());
+        PublicReadService service = CreateService(new FakePublicReadRepository());
 
         Result<IReadOnlyList<PublicCollectionSummaryDto>> result = await service.GetCollectionsPage(" ");
 
@@ -97,7 +132,7 @@ public class PublicReadServiceTests
             new PublicCollectionSummaryDto("Tech", "tech", "Preview"),
             new PublicCollectionSummaryDto("Life", "life", null),
         };
-        PublicReadService service = new(repository);
+        PublicReadService service = CreateService(repository);
 
         Result<IReadOnlyList<PublicCollectionSummaryDto>> result = await service.GetCollectionsPage("alice");
 
@@ -111,7 +146,7 @@ public class PublicReadServiceTests
     {
         FakePublicReadRepository repository = new();
         repository.CollectionsPage = Array.Empty<PublicCollectionSummaryDto>();
-        PublicReadService service = new(repository);
+        PublicReadService service = CreateService(repository);
 
         Result<IReadOnlyList<PublicCollectionSummaryDto>> result = await service.GetCollectionsPage("alice");
 
@@ -123,7 +158,7 @@ public class PublicReadServiceTests
     [Fact]
     public async Task GetCollectionsPage_WhenCollectionsAreNotAccessible_ReturnsResourceNotAccessible()
     {
-        PublicReadService service = new(new FakePublicReadRepository { CollectionsPage = null });
+        PublicReadService service = CreateService(new FakePublicReadRepository { CollectionsPage = null });
 
         Result<IReadOnlyList<PublicCollectionSummaryDto>> result = await service.GetCollectionsPage("alice");
 
@@ -133,9 +168,37 @@ public class PublicReadServiceTests
     }
 
     [Fact]
+    public async Task GetCollectionsPage_WhenRepositoryThrowsDomainException_ReturnsDomainFailure()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionsPageThrow = new NotValidInputException()
+        };
+        PublicReadService service = CreateService(repository);
+
+        Result<IReadOnlyList<PublicCollectionSummaryDto>> result = await service.GetCollectionsPage("alice");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
+        Assert.Equal("NotValidInput", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetCollectionsPage_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionsPageThrow = new InvalidOperationException("boom")
+        };
+        PublicReadService service = CreateService(repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetCollectionsPage("alice"));
+    }
+
+    [Fact]
     public async Task GetCollectionPage_WhenAliasOrSlugAreInvalid_ReturnsValidationError()
     {
-        PublicReadService service = new(new FakePublicReadRepository());
+        PublicReadService service = CreateService(new FakePublicReadRepository());
 
         Result<PublicCollectionDto> aliasResult = await service.GetCollectionPage(" ", "tech");
         Result<PublicCollectionDto> slugResult = await service.GetCollectionPage("alice", " ");
@@ -149,7 +212,7 @@ public class PublicReadServiceTests
     [Fact]
     public async Task GetCollectionPage_WhenPageIsBelowOne_ReturnsValidationError()
     {
-        PublicReadService service = new(new FakePublicReadRepository());
+        PublicReadService service = CreateService(new FakePublicReadRepository());
 
         Result<PublicCollectionDto> result = await service.GetCollectionPage("alice", "tech", page: 0);
 
@@ -170,7 +233,7 @@ public class PublicReadServiceTests
             {
                 new PublicLinkDto("https://example.com/post", "Post", "Preview", "https://example.com/icon.png"),
             });
-        PublicReadService service = new(repository);
+        PublicReadService service = CreateService(repository);
 
         Result<PublicCollectionDto> result = await service.GetCollectionPage(" alice ", " tech ", 2);
 
@@ -187,7 +250,7 @@ public class PublicReadServiceTests
     {
         FakePublicReadRepository repository = new();
         repository.CollectionPage = new PublicCollectionDto("alice", "Tech", "tech", Array.Empty<PublicLinkDto>());
-        PublicReadService service = new(repository);
+        PublicReadService service = CreateService(repository);
 
         Result<PublicCollectionDto> result = await service.GetCollectionPage("alice", "tech", 1);
 
@@ -199,7 +262,7 @@ public class PublicReadServiceTests
     [Fact]
     public async Task GetCollectionPage_WhenCollectionIsNotAccessible_ReturnsResourceNotAccessible()
     {
-        PublicReadService service = new(new FakePublicReadRepository { CollectionPage = null });
+        PublicReadService service = CreateService(new FakePublicReadRepository { CollectionPage = null });
 
         Result<PublicCollectionDto> result = await service.GetCollectionPage("alice", "tech");
 
@@ -209,9 +272,37 @@ public class PublicReadServiceTests
     }
 
     [Fact]
+    public async Task GetCollectionPage_WhenRepositoryThrowsDomainException_ReturnsDomainFailure()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionPageThrow = new NotValidInputException()
+        };
+        PublicReadService service = CreateService(repository);
+
+        Result<PublicCollectionDto> result = await service.GetCollectionPage("alice", "tech");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
+        Assert.Equal("NotValidInput", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetCollectionPage_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionPageThrow = new InvalidOperationException("boom")
+        };
+        PublicReadService service = CreateService(repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetCollectionPage("alice", "tech"));
+    }
+
+    [Fact]
     public async Task GetCollectionPageCount_WhenAliasOrSlugAreInvalid_ReturnsValidationError()
     {
-        PublicReadService service = new(new FakePublicReadRepository());
+        PublicReadService service = CreateService(new FakePublicReadRepository());
 
         Result<int> aliasResult = await service.GetCollectionPageCount(" ", "tech");
         Result<int> slugResult = await service.GetCollectionPageCount("alice", " ");
@@ -228,7 +319,7 @@ public class PublicReadServiceTests
         FakePublicReadRepository repository = new();
         repository.CollectionPage = new PublicCollectionDto("alice", "Tech", "tech", Array.Empty<PublicLinkDto>());
         repository.CollectionPageCount = 7;
-        PublicReadService service = new(repository);
+        PublicReadService service = CreateService(repository);
 
         Result<int> result = await service.GetCollectionPageCount("alice", "tech");
 
@@ -238,13 +329,62 @@ public class PublicReadServiceTests
         Assert.Equal("tech", repository.LastCollectionSlug);
     }
 
+    [Fact]
+    public async Task GetCollectionPageCount_WhenCollectionIsNotAccessible_ReturnsResourceNotAccessible()
+    {
+        PublicReadService service = CreateService(new FakePublicReadRepository { CollectionPage = null });
+
+        Result<int> result = await service.GetCollectionPageCount("alice", "tech");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
+        Assert.Equal("PUBLIC_READ_COLLECTION_NOT_ACCESSIBLE", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetCollectionPageCount_WhenRepositoryThrowsDomainException_ReturnsDomainFailure()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionPageThrow = new NotValidInputException()
+        };
+        PublicReadService service = CreateService(repository);
+
+        Result<int> result = await service.GetCollectionPageCount("alice", "tech");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
+        Assert.Equal("NotValidInput", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetCollectionPageCount_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionPageThrow = new InvalidOperationException("boom")
+        };
+        PublicReadService service = CreateService(repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetCollectionPageCount("alice", "tech"));
+    }
+
+    private static PublicReadService CreateService(FakePublicReadRepository repository)
+        => new(NullLogger<PublicReadService>.Instance, repository);
+
     private sealed class FakePublicReadRepository : IPublicReadRepository
     {
         public PublicUserDto? UserPage { get; set; }
 
+        public Exception? UserPageThrow { get; set; }
+
         public IReadOnlyCollection<PublicCollectionSummaryDto>? CollectionsPage { get; set; } = Array.Empty<PublicCollectionSummaryDto>();
 
+        public Exception? CollectionsPageThrow { get; set; }
+
         public PublicCollectionDto? CollectionPage { get; set; }
+
+        public Exception? CollectionPageThrow { get; set; }
 
         public int CollectionPageCount { get; set; }
 
@@ -261,12 +401,22 @@ public class PublicReadServiceTests
         public Task<PublicUserDto?> GetUserPage(string alias, CancellationToken cancellationToken = default)
         {
             LastAlias = alias;
+            if (UserPageThrow is not null)
+            {
+                return Task.FromException<PublicUserDto?>(UserPageThrow);
+            }
+
             return Task.FromResult(UserPage);
         }
 
         public Task<IReadOnlyCollection<PublicCollectionSummaryDto>?> GetCollectionsPage(string alias, CancellationToken cancellationToken = default)
         {
             LastCollectionsAlias = alias;
+            if (CollectionsPageThrow is not null)
+            {
+                return Task.FromException<IReadOnlyCollection<PublicCollectionSummaryDto>?>(CollectionsPageThrow);
+            }
+
             return Task.FromResult(CollectionsPage);
         }
 
@@ -275,6 +425,11 @@ public class PublicReadServiceTests
             LastCollectionAlias = alias;
             LastCollectionSlug = slug;
             LastCollectionPage = page;
+            if (CollectionPageThrow is not null)
+            {
+                return Task.FromException<PublicCollectionDto?>(CollectionPageThrow);
+            }
+
             return Task.FromResult(CollectionPage);
         }
 

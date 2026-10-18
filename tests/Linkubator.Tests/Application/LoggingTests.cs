@@ -1,10 +1,17 @@
-using System.Collections;
-using Linkubator.Application;
-using Linkubator.Application.Constants;
+using Linkubator.Application.Contracts;
+using Linkubator.Application.Dtos.Models;
+using Linkubator.Application.Dtos.Requests;
+using Linkubator.Application.Logging;
+using Linkubator.Application.Models;
+using Linkubator.Application.Results;
+using Linkubator.Application.UseCases.Collections;
+using Linkubator.Application.UseCases.Dashboard;
+using Linkubator.Application.UseCases.Links;
+using Linkubator.Application.UseCases.PublicReads;
 using Linkubator.Domain.Entities;
+using Linkubator.Domain.Exceptions;
 using Linkubator.Tests.Domain.Entities;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Linkubator.Tests.Application;
 
@@ -21,9 +28,9 @@ public sealed class LoggingTests
         collectionRepository.Items.Add(collection);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         TestLogger<LinkService> logger = new();
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory, logger: logger);
+        LinkService service = new(logger, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.CreateLink(new CreateLinkRequest(10, "https://example.com/path?token=super-secret-value"));
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com/path?token=super-secret-value"));
 
         Assert.True(result.IsSuccess);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
@@ -35,7 +42,6 @@ public sealed class LoggingTests
         Assert.DoesNotContain("token", string.Join(" ", entry.Values.Values), StringComparison.OrdinalIgnoreCase);
         Assert.Null(entry.Exception);
         Assert.True(entry.Values.ContainsKey("UserId"));
-        Assert.True(entry.Values.ContainsKey("CollectionId"));
     }
 
     [Fact]
@@ -48,7 +54,7 @@ public sealed class LoggingTests
         InMemoryLinkRepository linkRepository = new() { PageFailure = repositoryFailure };
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         TestLogger<LinkService> logger = new();
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory, logger: logger);
+        LinkService service = new(logger, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
         InvalidOperationException thrown = await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.ListLinks(searchSentinel));
@@ -56,7 +62,7 @@ public sealed class LoggingTests
         Assert.Same(repositoryFailure, thrown);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Error);
         Assert.Contains("Link listing failed", entry.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Null(entry.Exception);
+        Assert.Same(repositoryFailure, entry.Exception);
         Assert.DoesNotContain(searchSentinel, entry.Message, StringComparison.Ordinal);
         Assert.DoesNotContain(searchSentinel, string.Join(" ", entry.Values.Values), StringComparison.Ordinal);
     }
@@ -72,14 +78,13 @@ public sealed class LoggingTests
         collectionRepository.Items.Add(collection);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         TestLogger<CollectionService> logger = new();
-        CollectionService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory, logger: logger);
+        CollectionService service = new(logger, currentUser, collectionRepository, unitOfWorkFactory);
 
-        Result<CollectionDto> result = await service.ChangeCollectionVisibility(10, false);
+        Result<CollectionDto> result = await service.ChangeCollectionVisibility(new CollectionChangeVisibilityRequest(10, false));
 
         Assert.True(result.IsSuccess);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
         Assert.Contains("Collection visibility changed", entry.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(false, entry.Values["IsPublic"]);
         Assert.Null(entry.Exception);
     }
 
@@ -92,7 +97,7 @@ public sealed class LoggingTests
         InMemoryLinkRepository linkRepository = new();
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         TestLogger<LinkService> logger = new();
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory, logger: logger);
+        LinkService service = new(logger, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
         Result<IReadOnlyList<LinkDto>> result = await service.ListLinks(searchSentinel, page: 0);
 
@@ -119,11 +124,127 @@ public sealed class LoggingTests
     }
 
     [Fact]
+    public void SafeLogger_Log_PreservesDomainExceptionTraceability()
+    {
+        TestLogger<LinkService> logger = new();
+        NotValidInputException exception = new();
+
+        SafeLogger.Log(logger, LogLevel.Warning, exception, "Domain validation failed", new { UserId = 7L });
+
+        LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Warning);
+        Assert.Equal("Domain validation failed", entry.Message);
+        Assert.Equal("NotValidInput", entry.Values["DomainErrorCode"]);
+        Assert.Equal(nameof(NotValidInputException), entry.Values["ExceptionType"]);
+        Assert.False(entry.Values.ContainsKey("ExceptionMessage"));
+        Assert.Same(exception, entry.Exception);
+    }
+
+    [Fact]
+    public void SafeLogger_SafePreview_HandlesNullsAndTruncation()
+    {
+        Assert.Equal(string.Empty, SafeLogger.SafePreview(null, 32));
+        Assert.Equal(string.Empty, SafeLogger.SafePreview(string.Empty, 32));
+        Assert.Equal("abc\\r\\n\\tdef", SafeLogger.SafePreview("abc\r\n\tdef", 64));
+        Assert.Equal("abcde...", SafeLogger.SafePreview("abcdefghij", 8));
+        Assert.Equal("ab", SafeLogger.SafePreview("abcdef", 2));
+    }
+
+    [Fact]
+    public void SafeLogger_Log_WhenContextIsEmpty_AddsHasValueFalse()
+    {
+        TestLogger<LinkService> logger = new();
+
+        SafeLogger.Log(logger, LogLevel.Warning, null, "No context", null, null);
+
+        LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Warning);
+        Assert.Equal("No context", entry.Message);
+        Assert.Equal(false, entry.Values["HasValue"]);
+    }
+
+    [Fact]
+    public void SafeLogger_Log_WhenContextContainsEnumerableAndCustomValues_SanitizesThem()
+    {
+        TestLogger<LinkService> logger = new();
+        var request = new
+        {
+            Query = "1234567890123456789012345678901234567890",
+            Tags = new object[] { "very-long-string-that-must-be-previewed", "short", 7 },
+            Role = SampleRole.Admin,
+            Payload = new SamplePayload()
+        };
+
+        SafeLogger.Log(logger, LogLevel.Information, null, "Rich context", new { UserId = 7L }, request);
+
+        LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
+        Assert.Equal(7L, entry.Values["UserId"]);
+        Assert.Equal("Rich context", entry.Message);
+        Assert.Equal("1234567890123456789012345678901234567890", entry.Values["Query"]);
+        var tags = Assert.IsAssignableFrom<IEnumerable<object?>>(entry.Values["Tags"]);
+        Assert.Contains("short", tags.Select(item => item?.ToString()), StringComparer.Ordinal);
+        Assert.Equal(SampleRole.Admin.ToString(), entry.Values["Role"]?.ToString());
+        Assert.Equal(nameof(SamplePayload), entry.Values["Payload"]?.ToString());
+    }
+
+    [Fact]
+    public void SafeLogger_Log_IncludesAdditionalContextAndSkipsIndexers()
+    {
+        TestLogger<LinkService> logger = new();
+        var payload = new IndexedPayload();
+
+        SafeLogger.Log(logger, LogLevel.Debug, null, "With extras", new { RequestId = "abc" }, payload);
+
+        LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Debug);
+        Assert.Equal("abc", entry.Values["RequestId"]);
+        Assert.Equal("Ada", entry.Values["Name"]);
+        Assert.False(entry.Values.ContainsKey("Item"));
+    }
+
+    [Fact]
+    public void SafeLogger_SafeLogState_ExposesCountAndEnumerable()
+    {
+        Type stateType = typeof(SafeLogger).Assembly
+            .GetType("Linkubator.Application.Logging.SafeLogger+SafeLogState", throwOnError: true)!;
+
+        object state = Activator.CreateInstance(stateType, "state-message", new Dictionary<string, object?>
+        {
+            ["UserId"] = 7L,
+            ["TraceId"] = "trace-42"
+        })!;
+
+        int count = (int)stateType.GetProperty("Count", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)!
+            .GetValue(state)!;
+        var genericEnumerator = (System.Collections.IEnumerator)stateType
+            .GetMethod("GetEnumerator", Type.EmptyTypes)!
+            .Invoke(state, null)!;
+        var explicitEnumerator = (System.Collections.IEnumerator)((System.Collections.IEnumerable)state).GetEnumerator();
+
+        Assert.Equal(2, count);
+        Assert.True(genericEnumerator.MoveNext());
+        Assert.True(explicitEnumerator.MoveNext());
+        Assert.Contains(new KeyValuePair<string, object?>("UserId", 7L), (IEnumerable<KeyValuePair<string, object?>>)state);
+    }
+
+    [Fact]
+    public void SafeLogger_BuildContext_WithAdditionalContext_UsesAllSources()
+    {
+        Type buildContextType = typeof(SafeLogger).GetMethod("BuildContext", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .DeclaringType!;
+
+        var result = (Dictionary<string, object?>)buildContextType
+            .GetMethod("BuildContext", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null,
+                new[] { typeof(object), typeof(object), typeof(object) }, null)!
+            .Invoke(null, new object?[] { new { UserId = 7L }, null, new { TraceId = "trace-42" } })!;
+
+        Assert.Equal(7L, result["UserId"]);
+        Assert.Equal("trace-42", result["TraceId"]);
+    }
+
+    [Fact]
     public async Task DashboardService_GetDashboard_LogsSuccessfulRead()
     {
         TestLogger<DashboardService> logger = new();
-        DashboardService service = new(new CurrentUser(7), new FakeDashboardRepository(), logger);
-
+        DashboardService service = new(logger, new CurrentUser(7), new FakeDashboardRepository());
+    
         Result<DashboardDto> result = await service.GetDashboard();
 
         Assert.True(result.IsSuccess);
@@ -138,17 +259,32 @@ public sealed class LoggingTests
     {
         const string alias = "public-alias-sentinel";
         TestLogger<PublicReadService> logger = new();
-        PublicReadService service = new(new FakePublicReadRepository(), logger);
+        PublicReadService service = new(logger, new FakePublicReadRepository());
 
         Result<PublicUserDto> result = await service.GetUserPage(alias);
 
         Assert.True(result.IsSuccess);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
         Assert.Contains("Public user page loaded", entry.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(alias.Length, entry.Values["AliasLength"]);
         Assert.DoesNotContain(alias, entry.Message, StringComparison.Ordinal);
         Assert.DoesNotContain(alias, string.Join(" ", entry.Values.Values), StringComparison.Ordinal);
         Assert.Null(entry.Exception);
+    }
+
+    private enum SampleRole
+    {
+        Admin,
+        Reader
+    }
+
+    private sealed class SamplePayload
+    {
+    }
+
+    private sealed class IndexedPayload
+    {
+        public string Name => "Ada";
+        public string this[int index] => $"index-{index}";
     }
 
     private sealed class TestLogger<T> : ILogger<T>

@@ -123,6 +123,26 @@ public sealed class Link : Bases.BaseEntity
     }
 
     /// <summary>
+    /// Rehidrata la referencia bidireccional con la colección a la que pertenece el enlace.
+    /// </summary>
+    /// <param name="collection">Colección asociada.</param>
+    /// <exception cref="DomainExceptions.NotValidInputException">Si la colección no coincide con el vínculo del enlace.</exception>
+    internal void RehydrateCollection(Collection collection)
+    {
+        if (collection is null)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        if (collection.UserId != UserId || collection.Id != CollectionId)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        _collection = collection;
+    }
+
+    /// <summary>
     /// Mueve el enlace a otra colección. Al moverlo, pasa a ser privado.
     /// </summary>
     /// <param name="destinationCollection">Colección de destino.</param>

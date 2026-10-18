@@ -15,6 +15,7 @@ public abstract class DomainException : Exception
     /// </summary>
     /// <param name="code">Código identificativo del error.</param>
     protected DomainException(string code)
+        : base(code)
     {
         Code = code;
     }

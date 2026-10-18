@@ -454,6 +454,71 @@ public class LinkTests
     }
 
     [Fact]
+    public void RehydrateCollection_WhenCollectionMatchesLink_RebindsTheBidirectionalReference()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
+        EntityTestFactory.SetId(collection, 9);
+
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
+
+        EntityTestFactory.RehydrateCollection(link, collection);
+
+        Assert.Equal(collection.Id, link.CollectionId);
+    }
+
+    [Fact]
+    public void RehydrateCollection_WhenCollectionIsNull_Throws()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
+        EntityTestFactory.SetId(collection, 9);
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => EntityTestFactory.RehydrateCollection(link, null!));
+    }
+
+    [Fact]
+    public void RehydrateCollection_WhenCollectionBelongsToAnotherUser_Throws()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
+        EntityTestFactory.SetId(collection, 9);
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
+
+        DomainEntities.Collection otherUserCollection = DomainEntities.Collection.Create(2, "Other User Collection", null);
+        EntityTestFactory.SetId(otherUserCollection, 9);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => EntityTestFactory.RehydrateCollection(link, otherUserCollection));
+    }
+
+    [Fact]
+    public void RehydrateCollection_WhenCollectionDoesNotMatchLink_Throws()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
+        EntityTestFactory.SetId(collection, 9);
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
+
+        DomainEntities.Collection otherCollection = DomainEntities.Collection.Create(1, "Other Collection", null);
+        EntityTestFactory.SetId(otherCollection, 10);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => EntityTestFactory.RehydrateCollection(link, otherCollection));
+    }
+
+    [Fact]
+    public void MoveToCollection_WhenDestinationIsTheSameInstanceButItsIdChanges_UsesReferenceBranch()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
+        EntityTestFactory.SetId(collection, 9);
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
+
+        var property = typeof(DomainEntities.Bases.BaseEntity).GetProperty(nameof(DomainEntities.Bases.BaseEntity.Id), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+        property!.SetValue(collection, 42L);
+
+        link.MoveToCollection(collection);
+
+        Assert.Equal(42L, link.CollectionId);
+        Assert.False(link.IsPublic);
+    }
+
+    [Fact]
     public void MoveToCollection_WhenDestinationHasNoId_ThrowsAndKeepsCurrentCollection()
     {
         DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
