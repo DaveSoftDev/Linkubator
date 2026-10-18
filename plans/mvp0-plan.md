@@ -218,8 +218,8 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [ ] Application sigue funcionando como hasta ahora.
-- [ ] El humano ha aprobado la nueva Application.
+- [x] Application sigue funcionando como hasta ahora.
+- [x] El humano ha aprobado la nueva Application.
 
 ### S5: Persistencia I: SQLite y transacciones (L)
 
