@@ -30,6 +30,8 @@ csharp_style_prefer_switch_expression = true
 dotnet_diagnostic.IDE1006.severity = error
 
 # ─── Naming: estilos ───────────────────────────────────
+# Linkubator no usa el sufijo Async en los métodos; async es el paradigma por defecto.
+# Los métodos deben nombrarse con PascalCase sin incluir "Async" en el nombre.
 dotnet_naming_style.pascal_case.capitalization = pascal_case
 dotnet_naming_style.camel_case.capitalization = camel_case
 dotnet_naming_style.underscore_camel_case.capitalization = camel_case
@@ -69,9 +71,10 @@ dotnet_naming_rule.methods_should_be_pascal_case.severity = warning
 dotnet_naming_rule.methods_should_be_pascal_case.symbols = methods
 dotnet_naming_rule.methods_should_be_pascal_case.style = pascal_case
 
-dotnet_naming_rule.async_methods_should_be_async_pascal_case.severity = warning
-dotnet_naming_rule.async_methods_should_be_async_pascal_case.symbols = async_methods
-dotnet_naming_rule.async_methods_should_be_async_pascal_case.style = async_pascal_case
+# En Linkubator, los métodos async también usan PascalCase sin sufijo Async.
+dotnet_naming_rule.async_methods_should_be_pascal_case.severity = warning
+dotnet_naming_rule.async_methods_should_be_pascal_case.symbols = async_methods
+dotnet_naming_rule.async_methods_should_be_pascal_case.style = pascal_case
 
 dotnet_naming_rule.properties_should_be_pascal_case.severity = warning
 dotnet_naming_rule.properties_should_be_pascal_case.symbols = properties
