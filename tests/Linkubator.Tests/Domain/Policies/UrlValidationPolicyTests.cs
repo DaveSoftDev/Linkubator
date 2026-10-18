@@ -49,6 +49,15 @@ public class UrlValidationPolicyTests
     }
 
     [Trait("Category", "Validation")]
+    [Fact]
+    public void IsValidAuthorityRejectsNullOrHostlessAuthorities()
+    {
+        Assert.False(DomainPolicies.UriAuthorityPolicy.IsValidAuthority(null));
+        Assert.False(DomainPolicies.UriAuthorityPolicy.IsValidAuthority(new DomainPolicies.UriAuthority("http", null, "80", false)));
+        Assert.True(DomainPolicies.UriAuthorityPolicy.IsValidAuthority(new DomainPolicies.UriAuthority("http", "example.com", "80", false)));
+    }
+
+    [Trait("Category", "Validation")]
     [Theory]
     [InlineData("https://usuario:clave@example.com/path")]
     [InlineData("https://example.com:0")]
@@ -232,6 +241,7 @@ public class UrlValidationPolicyTests
     [Theory]
     [InlineData("https://example.com:/path")]
     [InlineData("https://[2001:db8::1]:/path")]
+    [InlineData("http://127.0.0.1:/")]
     public void ValidateRejectsAnEmptyPort(string input)
     {
         Assert.Throws<DomainExceptions.UrlPortInvalidException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));
@@ -243,6 +253,8 @@ public class UrlValidationPolicyTests
     [InlineData("https://0xC0A80101:99999/img.jpg")]
     [InlineData("https://example.com:99999/x")]
     [InlineData("https://example.com:65536/x")]
+    [InlineData("https://192.168.1.1:99999")]
+    [InlineData("https://127.0.0.1:abc")]
     public void ValidateRejectsAPortUriCannotParseAsAnAbsoluteUri(string input)
     {
         Assert.Throws<DomainExceptions.UrlNotAbsoluteException>(() => DomainPolicies.UrlValidationPolicy.Validate(input));

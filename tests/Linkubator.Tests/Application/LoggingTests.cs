@@ -140,6 +140,106 @@ public sealed class LoggingTests
     }
 
     [Fact]
+    public void SafeLogger_SafePreview_HandlesNullsAndTruncation()
+    {
+        Assert.Equal(string.Empty, SafeLogger.SafePreview(null, 32));
+        Assert.Equal(string.Empty, SafeLogger.SafePreview(string.Empty, 32));
+        Assert.Equal("abc\\r\\n\\tdef", SafeLogger.SafePreview("abc\r\n\tdef", 64));
+        Assert.Equal("abcde...", SafeLogger.SafePreview("abcdefghij", 8));
+        Assert.Equal("ab", SafeLogger.SafePreview("abcdef", 2));
+    }
+
+    [Fact]
+    public void SafeLogger_Log_WhenContextIsEmpty_AddsHasValueFalse()
+    {
+        TestLogger<LinkService> logger = new();
+
+        SafeLogger.Log(logger, LogLevel.Warning, null, "No context", null, null);
+
+        LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Warning);
+        Assert.Equal("No context", entry.Message);
+        Assert.Equal(false, entry.Values["HasValue"]);
+    }
+
+    [Fact]
+    public void SafeLogger_Log_WhenContextContainsEnumerableAndCustomValues_SanitizesThem()
+    {
+        TestLogger<LinkService> logger = new();
+        var request = new
+        {
+            Query = "1234567890123456789012345678901234567890",
+            Tags = new object[] { "very-long-string-that-must-be-previewed", "short", 7 },
+            Role = SampleRole.Admin,
+            Payload = new SamplePayload()
+        };
+
+        SafeLogger.Log(logger, LogLevel.Information, null, "Rich context", new { UserId = 7L }, request);
+
+        LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
+        Assert.Equal(7L, entry.Values["UserId"]);
+        Assert.Equal("Rich context", entry.Message);
+        Assert.Equal("1234567890123456789012345678901234567890", entry.Values["Query"]);
+        var tags = Assert.IsAssignableFrom<IEnumerable<object?>>(entry.Values["Tags"]);
+        Assert.Contains("short", tags.Select(item => item?.ToString()), StringComparer.Ordinal);
+        Assert.Equal(SampleRole.Admin.ToString(), entry.Values["Role"]?.ToString());
+        Assert.Equal(nameof(SamplePayload), entry.Values["Payload"]?.ToString());
+    }
+
+    [Fact]
+    public void SafeLogger_Log_IncludesAdditionalContextAndSkipsIndexers()
+    {
+        TestLogger<LinkService> logger = new();
+        var payload = new IndexedPayload();
+
+        SafeLogger.Log(logger, LogLevel.Debug, null, "With extras", new { RequestId = "abc" }, payload);
+
+        LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Debug);
+        Assert.Equal("abc", entry.Values["RequestId"]);
+        Assert.Equal("Ada", entry.Values["Name"]);
+        Assert.False(entry.Values.ContainsKey("Item"));
+    }
+
+    [Fact]
+    public void SafeLogger_SafeLogState_ExposesCountAndEnumerable()
+    {
+        Type stateType = typeof(SafeLogger).Assembly
+            .GetType("Linkubator.Application.Logging.SafeLogger+SafeLogState", throwOnError: true)!;
+
+        object state = Activator.CreateInstance(stateType, "state-message", new Dictionary<string, object?>
+        {
+            ["UserId"] = 7L,
+            ["TraceId"] = "trace-42"
+        })!;
+
+        int count = (int)stateType.GetProperty("Count", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)!
+            .GetValue(state)!;
+        var genericEnumerator = (System.Collections.IEnumerator)stateType
+            .GetMethod("GetEnumerator", Type.EmptyTypes)!
+            .Invoke(state, null)!;
+        var explicitEnumerator = (System.Collections.IEnumerator)((System.Collections.IEnumerable)state).GetEnumerator();
+
+        Assert.Equal(2, count);
+        Assert.True(genericEnumerator.MoveNext());
+        Assert.True(explicitEnumerator.MoveNext());
+        Assert.Contains(new KeyValuePair<string, object?>("UserId", 7L), (IEnumerable<KeyValuePair<string, object?>>)state);
+    }
+
+    [Fact]
+    public void SafeLogger_BuildContext_WithAdditionalContext_UsesAllSources()
+    {
+        Type buildContextType = typeof(SafeLogger).GetMethod("BuildContext", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .DeclaringType!;
+
+        var result = (Dictionary<string, object?>)buildContextType
+            .GetMethod("BuildContext", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null,
+                new[] { typeof(object), typeof(object), typeof(object) }, null)!
+            .Invoke(null, new object?[] { new { UserId = 7L }, null, new { TraceId = "trace-42" } })!;
+
+        Assert.Equal(7L, result["UserId"]);
+        Assert.Equal("trace-42", result["TraceId"]);
+    }
+
+    [Fact]
     public async Task DashboardService_GetDashboard_LogsSuccessfulRead()
     {
         TestLogger<DashboardService> logger = new();
@@ -169,6 +269,22 @@ public sealed class LoggingTests
         Assert.DoesNotContain(alias, entry.Message, StringComparison.Ordinal);
         Assert.DoesNotContain(alias, string.Join(" ", entry.Values.Values), StringComparison.Ordinal);
         Assert.Null(entry.Exception);
+    }
+
+    private enum SampleRole
+    {
+        Admin,
+        Reader
+    }
+
+    private sealed class SamplePayload
+    {
+    }
+
+    private sealed class IndexedPayload
+    {
+        public string Name => "Ada";
+        public string this[int index] => $"index-{index}";
     }
 
     private sealed class TestLogger<T> : ILogger<T>

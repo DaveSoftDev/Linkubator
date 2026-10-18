@@ -88,6 +88,18 @@ public class PublicReadServiceTests
     }
 
     [Fact]
+    public async Task GetUserPage_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            UserPageThrow = new InvalidOperationException("boom")
+        };
+        PublicReadService service = CreateService(repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetUserPage("alice"));
+    }
+
+    [Fact]
     public async Task GetUserPage_WhenUserIsNotAccessible_ReturnsResourceNotAccessible()
     {
         PublicReadService service = CreateService(new FakePublicReadRepository { UserPage = null });
@@ -153,6 +165,34 @@ public class PublicReadServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
         Assert.Equal("PUBLIC_READ_COLLECTIONS_NOT_ACCESSIBLE", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetCollectionsPage_WhenRepositoryThrowsDomainException_ReturnsDomainFailure()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionsPageThrow = new NotValidInputException()
+        };
+        PublicReadService service = CreateService(repository);
+
+        Result<IReadOnlyList<PublicCollectionSummaryDto>> result = await service.GetCollectionsPage("alice");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
+        Assert.Equal("NotValidInput", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetCollectionsPage_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionsPageThrow = new InvalidOperationException("boom")
+        };
+        PublicReadService service = CreateService(repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetCollectionsPage("alice"));
     }
 
     [Fact]
@@ -232,6 +272,34 @@ public class PublicReadServiceTests
     }
 
     [Fact]
+    public async Task GetCollectionPage_WhenRepositoryThrowsDomainException_ReturnsDomainFailure()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionPageThrow = new NotValidInputException()
+        };
+        PublicReadService service = CreateService(repository);
+
+        Result<PublicCollectionDto> result = await service.GetCollectionPage("alice", "tech");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
+        Assert.Equal("NotValidInput", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetCollectionPage_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionPageThrow = new InvalidOperationException("boom")
+        };
+        PublicReadService service = CreateService(repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetCollectionPage("alice", "tech"));
+    }
+
+    [Fact]
     public async Task GetCollectionPageCount_WhenAliasOrSlugAreInvalid_ReturnsValidationError()
     {
         PublicReadService service = CreateService(new FakePublicReadRepository());
@@ -259,6 +327,46 @@ public class PublicReadServiceTests
         Assert.Equal(7, result.Value);
         Assert.Equal("alice", repository.LastCollectionAlias);
         Assert.Equal("tech", repository.LastCollectionSlug);
+    }
+
+    [Fact]
+    public async Task GetCollectionPageCount_WhenCollectionIsNotAccessible_ReturnsResourceNotAccessible()
+    {
+        PublicReadService service = CreateService(new FakePublicReadRepository { CollectionPage = null });
+
+        Result<int> result = await service.GetCollectionPageCount("alice", "tech");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
+        Assert.Equal("PUBLIC_READ_COLLECTION_NOT_ACCESSIBLE", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetCollectionPageCount_WhenRepositoryThrowsDomainException_ReturnsDomainFailure()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionPageThrow = new NotValidInputException()
+        };
+        PublicReadService service = CreateService(repository);
+
+        Result<int> result = await service.GetCollectionPageCount("alice", "tech");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
+        Assert.Equal("NotValidInput", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetCollectionPageCount_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        FakePublicReadRepository repository = new()
+        {
+            CollectionPageThrow = new InvalidOperationException("boom")
+        };
+        PublicReadService service = CreateService(repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetCollectionPageCount("alice", "tech"));
     }
 
     private static PublicReadService CreateService(FakePublicReadRepository repository)

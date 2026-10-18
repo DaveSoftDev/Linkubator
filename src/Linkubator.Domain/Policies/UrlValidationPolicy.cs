@@ -32,12 +32,24 @@ public static class UrlValidationPolicy
         }
 
         string host = uri.IdnHost;
-        if (uri.HostNameType == UriHostNameType.IPv4
-            && (!UriAuthorityPolicy.TryExtractHost(input, out string? writtenHost)
-                || writtenHost is null
-                || !UriAuthorityPolicy.IsValidHost(writtenHost)))
+        if (uri.HostNameType == UriHostNameType.IPv4)
         {
-            throw new DomainExceptions.UrlHostInvalidException();
+            bool canExtractHost = UriAuthorityPolicy.TryExtractHost(input, out string? writtenHost);
+
+            if (!canExtractHost)
+            {
+                if (HasInvalidPort(input))
+                {
+                    throw new DomainExceptions.UrlPortInvalidException();
+                }
+
+                throw new DomainExceptions.UrlHostInvalidException();
+            }
+
+            if (!UriAuthorityPolicy.IsValidHost(writtenHost!))
+            {
+                throw new DomainExceptions.UrlHostInvalidException();
+            }
         }
 
         if (!UriAuthorityPolicy.IsValidHost(host))

@@ -523,6 +523,25 @@ public class CollectionServiceTests
     }
 
     [Fact]
+    public async Task RenameCollection_WhenNameMatchesCurrentCollection_AllowsItWithoutDuplicateError()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        Collection collection = Collection.Create(7, "Alpha", "desc");
+        SetId(collection, 12);
+        repository.Items.Add(collection);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.RenameCollection(new CollectionRenameRequest(collection.Id, "alpha"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("alpha", result.Value!.Name);
+        Assert.Equal("alpha", result.Value.Slug);
+    }
+
+    [Fact]
     public async Task ChangeCollectionVisibility_WhenCollectionIdIsInvalid_ReturnsValidationError()
     {
         CurrentUser currentUser = new CurrentUser(7);
@@ -552,6 +571,66 @@ public class CollectionServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
         Assert.Equal("COLLECTION_ID_INVALID", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task CreateCollection_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        UnexpectedCollectionRepository repository = new UnexpectedCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        UnexpectedUnitOfWorkFactory unitOfWorkFactory = new UnexpectedUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateCollection(new CollectionCreateRequest("My Collection", "desc", true)));
+    }
+
+    [Fact]
+    public async Task RenameCollection_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        UnexpectedCollectionRepository repository = new UnexpectedCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        UnexpectedUnitOfWorkFactory unitOfWorkFactory = new UnexpectedUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.RenameCollection(new CollectionRenameRequest(42, "Better Name")));
+    }
+
+    [Fact]
+    public async Task ChangeCollectionVisibility_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        UnexpectedCollectionRepository repository = new UnexpectedCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        UnexpectedUnitOfWorkFactory unitOfWorkFactory = new UnexpectedUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ChangeCollectionVisibility(new CollectionChangeVisibilityRequest(42, true)));
+    }
+
+    [Fact]
+    public async Task DeleteCollection_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        UnexpectedCollectionRepository repository = new UnexpectedCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        UnexpectedUnitOfWorkFactory unitOfWorkFactory = new UnexpectedUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.DeleteCollection(new CollectionDeleteRequest(42)));
+    }
+
+    [Fact]
+    public async Task ListCollections_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        UnexpectedCollectionRepository repository = new UnexpectedCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        UnexpectedUnitOfWorkFactory unitOfWorkFactory = new UnexpectedUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ListCollections());
     }
 
     [Fact]
@@ -788,6 +867,71 @@ public class CollectionServiceTests
         Assert.Equal("PAGE_INVALID", CollectionErrors.PageInvalid().Code);
         Assert.Equal(ApplicationErrorCategory.Validation, CollectionErrors.PageInvalid().Category);
         Assert.Equal("page", CollectionErrors.PageInvalid().Field);
+    }
+
+    private sealed class UnexpectedCollectionRepository : ICollectionRepository
+    {
+        public Task<Collection?> GetById(long id, long userId, CancellationToken cancellationToken = default)
+            => Task.FromException<Collection?>(new InvalidOperationException("boom"));
+
+        public Task<Collection?> GetBySlug(long userId, string slug, CancellationToken cancellationToken = default)
+            => Task.FromException<Collection?>(new InvalidOperationException("boom"));
+
+        public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
+            => Task.FromException<IReadOnlyCollection<Collection>>(new InvalidOperationException("boom"));
+
+        public Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
+            => Task.FromException<IReadOnlyCollection<CollectionDto>>(new InvalidOperationException("boom"));
+
+        public Task<int> GetPageCountByUser(long userId, string? query, CancellationToken cancellationToken = default)
+            => Task.FromException<int>(new InvalidOperationException("boom"));
+
+        public Task Insert(Collection collection, CancellationToken cancellationToken = default)
+            => Task.FromException(new InvalidOperationException("boom"));
+
+        public Task Update(Collection collection, CancellationToken cancellationToken = default)
+            => Task.FromException(new InvalidOperationException("boom"));
+
+        public Task Delete(long id, long userId, CancellationToken cancellationToken = default)
+            => Task.FromException(new InvalidOperationException("boom"));
+    }
+
+    private sealed class UnexpectedUnitOfWorkFactory : IUnitOfWorkFactory
+    {
+        private readonly ICollectionRepository _collectionRepository;
+        private readonly ILinkRepository _linkRepository;
+
+        public UnexpectedUnitOfWorkFactory(ICollectionRepository collectionRepository, ILinkRepository linkRepository)
+        {
+            _collectionRepository = collectionRepository;
+            _linkRepository = linkRepository;
+        }
+
+        public IUnitOfWork Get(string contextName)
+            => new UnexpectedUnitOfWork(_collectionRepository, _linkRepository);
+    }
+
+    private sealed class UnexpectedUnitOfWork : IUnitOfWork
+    {
+        private readonly ICollectionRepository _collectionRepository;
+        private readonly ILinkRepository _linkRepository;
+
+        public UnexpectedUnitOfWork(ICollectionRepository collectionRepository, ILinkRepository linkRepository)
+        {
+            _collectionRepository = collectionRepository;
+            _linkRepository = linkRepository;
+        }
+
+        public TRepository GetRepository<TRepository>() where TRepository : class
+            => typeof(TRepository) == typeof(ICollectionRepository)
+                ? (TRepository)(object)_collectionRepository
+                : (TRepository)(object)_linkRepository;
+
+        public Task Begin(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Commit(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Rollback(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Dispose() { }
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 
     private sealed class AcceptAllCreateCollectionValidator : IValidator<CollectionCreateRequest>

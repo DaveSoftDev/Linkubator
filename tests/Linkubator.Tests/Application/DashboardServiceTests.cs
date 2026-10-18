@@ -68,6 +68,18 @@ public class DashboardServiceTests
         Assert.Equal("NotValidInput", result.Errors[0].Code);
     }
 
+    [Fact]
+    public async Task GetDashboard_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    {
+        FakeDashboardRepository repository = new()
+        {
+            Throw = new InvalidOperationException("boom")
+        };
+        DashboardService service = new(NullLogger<DashboardService>.Instance, new CurrentUser(7), repository);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetDashboard());
+    }
+
     private sealed class FakeDashboardRepository : IDashboardRepository
     {
         public Exception? Throw { get; set; }

@@ -34,6 +34,9 @@ public static class UnitOfWorkFactoryExtensions
 
     public static async Task ExecuteInTransaction(this IUnitOfWorkFactory factory, string contextName, Func<IUnitOfWork, CancellationToken, Task> action, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(factory);
+        ArgumentNullException.ThrowIfNull(action);
+
         await ExecuteInTransaction(factory, contextName, async (unitOfWork, token) => { await action(unitOfWork, token); return true; }, cancellationToken);
     }
 }
