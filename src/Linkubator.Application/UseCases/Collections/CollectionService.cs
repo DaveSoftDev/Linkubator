@@ -2,6 +2,7 @@
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Dtos.Requests;
 using Linkubator.Application.Logging;
+using Linkubator.Application.Services;
 using Linkubator.Application.Validation;
 using Linkubator.Domain.Constants;
 using DomainEntities = Linkubator.Domain.Entities;
@@ -62,13 +63,19 @@ public sealed class CollectionService : ICollectionService
                 SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection creation rejected for user; name already in use", new { UserId = _currentUser.UserId }, request);
                 return Result<CollectionDto>.Failure(CollectionErrors.NameInUse(existing.Name));
             }
-            await using IUnitOfWork unitOfWork = _unitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
-            await unitOfWork.Begin(cancellationToken);
-            ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
-            await repository.Insert(created, cancellationToken);
-            await unitOfWork.Commit(cancellationToken);
+
+            Result<CollectionDto> result = await _unitOfWorkFactory.ExecuteInTransaction(
+                UnitOfWorkContexts.Linkubator,
+                async (unitOfWork, token) =>
+                {
+                    ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
+                    await repository.Insert(created, token);
+                    return Result<CollectionDto>.Success(Map(created));
+                },
+                cancellationToken);
+
             SafeLogger.Log(_logger, LogLevel.Information, null, "Collection created for user", new { UserId = userId });
-            return Result<CollectionDto>.Success(Map(created));
+            return result;
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
@@ -115,13 +122,19 @@ public sealed class CollectionService : ICollectionService
                 return Result<CollectionDto>.Failure(CollectionErrors.NameInUse(duplicate.Name));
             }
             collection.Rename(trimmedName);
-            await using IUnitOfWork unitOfWork = _unitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
-            await unitOfWork.Begin(cancellationToken);
-            ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
-            await repository.Update(collection, cancellationToken);
-            await unitOfWork.Commit(cancellationToken);
+
+            Result<CollectionDto> result = await _unitOfWorkFactory.ExecuteInTransaction(
+                UnitOfWorkContexts.Linkubator,
+                async (unitOfWork, token) =>
+                {
+                    ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
+                    await repository.Update(collection, token);
+                    return Result<CollectionDto>.Success(Map(collection));
+                },
+                cancellationToken);
+
             SafeLogger.Log(_logger, LogLevel.Information, null, "Collection renamed for user", new { UserId = _currentUser.UserId });
-            return Result<CollectionDto>.Success(Map(collection));
+            return result;
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
@@ -143,44 +156,38 @@ public sealed class CollectionService : ICollectionService
         }
         try
         {
-            await using IUnitOfWork unitOfWork = _unitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
-            await unitOfWork.Begin(cancellationToken);
-            ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
-            ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
-            bool committed = false;
-            try
-            {
-                DomainEntities.Collection? collection = await repository.GetById(collectionId, _currentUser.UserId, cancellationToken);
-                if (collection is null)
+            Result<CollectionDto> result = await _unitOfWorkFactory.ExecuteInTransaction(
+                UnitOfWorkContexts.Linkubator,
+                async (unitOfWork, token) =>
                 {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection visibility change rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
-                    return Result<CollectionDto>.Failure(CollectionErrors.VisibilityNotAccessible());
-                }
+                    ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
+                    ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
 
-                IReadOnlyCollection<DomainEntities.Link> links = await linkRepository.GetAllByCollection(_currentUser.UserId, collection.Id, cancellationToken);
-                DomainEntities.Link[] linksToMakePrivate = !isPublic
-                    ? links.Where(link => link.IsPublic).ToArray()
-                    : [];
+                    DomainEntities.Collection? collection = await repository.GetById(collectionId, _currentUser.UserId, token);
+                    if (collection is null)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection visibility change rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
+                        return Result<CollectionDto>.Failure(CollectionErrors.VisibilityNotAccessible());
+                    }
 
-                collection.ChangePrivacy(isPublic, links);
-                await repository.Update(collection, cancellationToken);
-                foreach (DomainEntities.Link link in linksToMakePrivate)
-                {
-                    await linkRepository.Update(link, cancellationToken);
-                }
+                    IReadOnlyCollection<DomainEntities.Link> links = await linkRepository.GetAllByCollection(_currentUser.UserId, collection.Id, token);
+                    DomainEntities.Link[] linksToMakePrivate = !isPublic
+                        ? links.Where(link => link.IsPublic).ToArray()
+                        : [];
 
-                await unitOfWork.Commit(cancellationToken);
-                committed = true;
-                SafeLogger.Log(_logger, LogLevel.Information, null, "Collection visibility changed for user", new { UserId = _currentUser.UserId });
-                return Result<CollectionDto>.Success(Map(collection));
-            }
-            finally
-            {
-                if (!committed)
-                {
-                    await unitOfWork.Rollback(cancellationToken);
-                }
-            }
+                    collection.ChangePrivacy(isPublic, links);
+                    await repository.Update(collection, token);
+                    foreach (DomainEntities.Link link in linksToMakePrivate)
+                    {
+                        await linkRepository.Update(link, token);
+                    }
+
+                    return Result<CollectionDto>.Success(Map(collection));
+                },
+                cancellationToken);
+
+            SafeLogger.Log(_logger, LogLevel.Information, null, "Collection visibility changed for user", new { UserId = _currentUser.UserId });
+            return result;
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
@@ -202,47 +209,41 @@ public sealed class CollectionService : ICollectionService
         }
         try
         {
-            await using IUnitOfWork unitOfWork = _unitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
-            await unitOfWork.Begin(cancellationToken);
-            ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
-            ILinkRepository linkRepo = unitOfWork.GetRepository<ILinkRepository>();
-            bool committed = false;
-            try
-            {
-                DomainEntities.Collection? collection = await repository.GetById(collectionId, _currentUser.UserId, cancellationToken);
-                if (collection is null)
+            Result result = await _unitOfWorkFactory.ExecuteInTransaction(
+                UnitOfWorkContexts.Linkubator,
+                async (unitOfWork, token) =>
                 {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
-                    return Result.Failure(CollectionErrors.DeleteNotAccessible());
-                }
+                    ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
+                    ILinkRepository linkRepo = unitOfWork.GetRepository<ILinkRepository>();
 
-                IReadOnlyCollection<DomainEntities.Link> links = await linkRepo.GetAllByCollection(_currentUser.UserId, collection.Id, cancellationToken);
-                if (links.Count > 0)
-                {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; collection still has links", new { UserId = _currentUser.UserId });
-                    return Result.Failure(CollectionErrors.HasLinks());
-                }
+                    DomainEntities.Collection? collection = await repository.GetById(collectionId, _currentUser.UserId, token);
+                    if (collection is null)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
+                        return Result.Failure(CollectionErrors.DeleteNotAccessible());
+                    }
 
-                IReadOnlyCollection<DomainEntities.Collection> allCollections = await repository.GetAllByUser(_currentUser.UserId, cancellationToken);
-                if (allCollections.Count == 1)
-                {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; last collection cannot be deleted", new { UserId = _currentUser.UserId });
-                    return Result.Failure(CollectionErrors.LastCollectionCannotBeDeleted());
-                }
+                    IReadOnlyCollection<DomainEntities.Link> links = await linkRepo.GetAllByCollection(_currentUser.UserId, collection.Id, token);
+                    if (links.Count > 0)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; collection still has links", new { UserId = _currentUser.UserId });
+                        return Result.Failure(CollectionErrors.HasLinks());
+                    }
 
-                await repository.Delete(collectionId, _currentUser.UserId, cancellationToken);
-                await unitOfWork.Commit(cancellationToken);
-                committed = true;
-                SafeLogger.Log(_logger, LogLevel.Information, null, "Collection deleted for user", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
-                return Result.Success();
-            }
-            finally
-            {
-                if (!committed)
-                {
-                    await unitOfWork.Rollback(cancellationToken);
-                }
-            }
+                    IReadOnlyCollection<DomainEntities.Collection> allCollections = await repository.GetAllByUser(_currentUser.UserId, token);
+                    if (allCollections.Count == 1)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; last collection cannot be deleted", new { UserId = _currentUser.UserId });
+                        return Result.Failure(CollectionErrors.LastCollectionCannotBeDeleted());
+                    }
+
+                    await repository.Delete(collectionId, _currentUser.UserId, token);
+                    return Result.Success();
+                },
+                cancellationToken);
+
+            SafeLogger.Log(_logger, LogLevel.Information, null, "Collection deleted for user", new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
+            return result;
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {

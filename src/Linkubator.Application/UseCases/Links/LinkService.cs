@@ -2,6 +2,7 @@ using Linkubator.Application.Constants;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Dtos.Requests;
 using Linkubator.Application.Logging;
+using Linkubator.Application.Services;
 using Linkubator.Application.Validation;
 using DomainEntities = Linkubator.Domain.Entities;
 using DomainExceptions = Linkubator.Domain.Exceptions;
@@ -95,13 +96,18 @@ public sealed class LinkService : ILinkService
                 request.Image,
                 request.IsPublic);
 
-            await using IUnitOfWork unitOfWork = _unitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
-            await unitOfWork.Begin(cancellationToken);
-            ILinkRepository repository = unitOfWork.GetRepository<ILinkRepository>();
-            await repository.Insert(created, cancellationToken);
-            await unitOfWork.Commit(cancellationToken);
+            Result<LinkDto> result = await _unitOfWorkFactory.ExecuteInTransaction(
+                UnitOfWorkContexts.Linkubator,
+                async (unitOfWork, token) =>
+                {
+                    ILinkRepository repository = unitOfWork.GetRepository<ILinkRepository>();
+                    await repository.Insert(created, token);
+                    return Result<LinkDto>.Success(Map(created));
+                },
+                cancellationToken);
+
             SafeLogger.Log(_logger, LogLevel.Information, null, "Link created", new { UserId = _currentUser.UserId });
-            return Result<LinkDto>.Success(Map(created));
+            return result;
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
@@ -131,51 +137,45 @@ public sealed class LinkService : ILinkService
 
         try
         {
-            await using IUnitOfWork unitOfWork = _unitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
-            await unitOfWork.Begin(cancellationToken);
-            ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
-            ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
-            bool committed = false;
-            try
-            {
-                DomainEntities.Link? link = await linkRepository.GetById(linkId, _currentUser.UserId, cancellationToken);
-                if (link is null)
+            Result<LinkDto> result = await _unitOfWorkFactory.ExecuteInTransaction(
+                UnitOfWorkContexts.Linkubator,
+                async (unitOfWork, token) =>
                 {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link edit rejected for user; link not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
-                    return Result<LinkDto>.Failure(LinkErrors.LinkNotAccessible());
-                }
+                    ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
+                    ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
 
-                DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, _currentUser.UserId, cancellationToken);
-                if (collection is null)
-                {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link edit rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = link.CollectionId });
-                    return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
-                }
+                    DomainEntities.Link? link = await linkRepository.GetById(linkId, _currentUser.UserId, token);
+                    if (link is null)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Link edit rejected for user; link not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
+                        return Result<LinkDto>.Failure(LinkErrors.LinkNotAccessible());
+                    }
 
-                if (isPublic == true && !collection.IsPublic)
-                {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link edit rejected for user; public link in private collection", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = link.CollectionId });
-                    return Result<LinkDto>.Failure(LinkErrors.PublicLinkInPrivateCollection());
-                }
+                    DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, _currentUser.UserId, token);
+                    if (collection is null)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Link edit rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = link.CollectionId });
+                        return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
+                    }
 
-                link.Edit(title, description, image);
-                if (isPublic is bool requestedVisibility)
-                {
-                    link.ChangePrivacy(requestedVisibility, collection);
-                }
-                await linkRepository.Update(link, cancellationToken);
-                await unitOfWork.Commit(cancellationToken);
-                committed = true;
-                SafeLogger.Log(_logger, LogLevel.Information, null, "Link edited", new { UserId = _currentUser.UserId });
-                return Result<LinkDto>.Success(Map(link));
-            }
-            finally
-            {
-                if (!committed)
-                {
-                    await unitOfWork.Rollback(cancellationToken);
-                }
-            }
+                    if (isPublic == true && !collection.IsPublic)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Link edit rejected for user; public link in private collection", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = link.CollectionId });
+                        return Result<LinkDto>.Failure(LinkErrors.PublicLinkInPrivateCollection());
+                    }
+
+                    link.Edit(title, description, image);
+                    if (isPublic is bool requestedVisibility)
+                    {
+                        link.ChangePrivacy(requestedVisibility, collection);
+                    }
+                    await linkRepository.Update(link, token);
+                    return Result<LinkDto>.Success(Map(link));
+                },
+                cancellationToken);
+
+            SafeLogger.Log(_logger, LogLevel.Information, null, "Link edited", new { UserId = _currentUser.UserId });
+            return result;
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
@@ -211,41 +211,35 @@ public sealed class LinkService : ILinkService
 
         try
         {
-            await using IUnitOfWork unitOfWork = _unitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
-            await unitOfWork.Begin(cancellationToken);
-            ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
-            ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
-            bool committed = false;
-            try
-            {
-                DomainEntities.Link? link = await linkRepository.GetById(linkId, _currentUser.UserId, cancellationToken);
-                if (link is null)
+            Result<LinkDto> result = await _unitOfWorkFactory.ExecuteInTransaction(
+                UnitOfWorkContexts.Linkubator,
+                async (unitOfWork, token) =>
                 {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link move rejected for user; linkin not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
-                    return Result<LinkDto>.Failure(LinkErrors.LinkNotAccessible());
-                }
+                    ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
+                    ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
 
-                DomainEntities.Collection? destinationCollection = await collectionRepository.GetById(destinationCollectionId, _currentUser.UserId, cancellationToken);
-                if (destinationCollection is null)
-                {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link move rejected for user; destination collection not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = destinationCollectionId });
-                    return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
-                }
+                    DomainEntities.Link? link = await linkRepository.GetById(linkId, _currentUser.UserId, token);
+                    if (link is null)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Link move rejected for user; linkin not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
+                        return Result<LinkDto>.Failure(LinkErrors.LinkNotAccessible());
+                    }
 
-                link.MoveToCollection(destinationCollection);
-                await linkRepository.Update(link, cancellationToken);
-                await unitOfWork.Commit(cancellationToken);
-                committed = true;
-                SafeLogger.Log(_logger, LogLevel.Information, null, "Link moved", new { UserId = _currentUser.UserId });
-                return Result<LinkDto>.Success(Map(link));
-            }
-            finally
-            {
-                if (!committed)
-                {
-                    await unitOfWork.Rollback(cancellationToken);
-                }
-            }
+                    DomainEntities.Collection? destinationCollection = await collectionRepository.GetById(destinationCollectionId, _currentUser.UserId, token);
+                    if (destinationCollection is null)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Link move rejected for user; destination collection not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = destinationCollectionId });
+                        return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
+                    }
+
+                    link.MoveToCollection(destinationCollection);
+                    await linkRepository.Update(link, token);
+                    return Result<LinkDto>.Success(Map(link));
+                },
+                cancellationToken);
+
+            SafeLogger.Log(_logger, LogLevel.Information, null, "Link moved", new { UserId = _currentUser.UserId });
+            return result;
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
@@ -275,47 +269,41 @@ public sealed class LinkService : ILinkService
 
         try
         {
-            await using IUnitOfWork unitOfWork = _unitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
-            await unitOfWork.Begin(cancellationToken);
-            ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
-            ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
-            bool committed = false;
-            try
-            {
-                DomainEntities.Link? link = await linkRepository.GetById(linkId, _currentUser.UserId, cancellationToken);
-                if (link is null)
+            Result<LinkDto> result = await _unitOfWorkFactory.ExecuteInTransaction(
+                UnitOfWorkContexts.Linkubator,
+                async (unitOfWork, token) =>
                 {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link visibility change rejected for user; link not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
-                    return Result<LinkDto>.Failure(LinkErrors.LinkNotAccessible());
-                }
+                    ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
+                    ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
 
-                DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, _currentUser.UserId, cancellationToken);
-                if (collection is null)
-                {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link visibility change rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = link.CollectionId });
-                    return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
-                }
+                    DomainEntities.Link? link = await linkRepository.GetById(linkId, _currentUser.UserId, token);
+                    if (link is null)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Link visibility change rejected for user; link not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId });
+                        return Result<LinkDto>.Failure(LinkErrors.LinkNotAccessible());
+                    }
 
-                if (isPublic && !collection.IsPublic)
-                {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link visibility change rejected for user; public link in private collection", new { UserId = _currentUser.UserId }, new { LinkId = linkId, IsPublic = isPublic });
-                    return Result<LinkDto>.Failure(LinkErrors.PublicLinkInPrivateCollection());
-                }
+                    DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, _currentUser.UserId, token);
+                    if (collection is null)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Link visibility change rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { LinkId = linkId, CollectionId = link.CollectionId });
+                        return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
+                    }
 
-                link.ChangePrivacy(isPublic, collection);
-                await linkRepository.Update(link, cancellationToken);
-                await unitOfWork.Commit(cancellationToken);
-                committed = true;
-                SafeLogger.Log(_logger, LogLevel.Information, null, "Link visibility changed", new { UserId = _currentUser.UserId });
-                return Result<LinkDto>.Success(Map(link));
-            }
-            finally
-            {
-                if (!committed)
-                {
-                    await unitOfWork.Rollback(cancellationToken);
-                }
-            }
+                    if (isPublic && !collection.IsPublic)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Link visibility change rejected for user; public link in private collection", new { UserId = _currentUser.UserId }, new { LinkId = linkId, IsPublic = isPublic });
+                        return Result<LinkDto>.Failure(LinkErrors.PublicLinkInPrivateCollection());
+                    }
+
+                    link.ChangePrivacy(isPublic, collection);
+                    await linkRepository.Update(link, token);
+                    return Result<LinkDto>.Success(Map(link));
+                },
+                cancellationToken);
+
+            SafeLogger.Log(_logger, LogLevel.Information, null, "Link visibility changed", new { UserId = _currentUser.UserId });
+            return result;
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
@@ -345,32 +333,26 @@ public sealed class LinkService : ILinkService
 
         try
         {
-            await using IUnitOfWork unitOfWork = _unitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
-            await unitOfWork.Begin(cancellationToken);
-            ILinkRepository repository = unitOfWork.GetRepository<ILinkRepository>();
-            bool committed = false;
-            try
-            {
-                DomainEntities.Link? link = await repository.GetById(linkId, _currentUser.UserId, cancellationToken);
-                if (link is null)
+            Result result = await _unitOfWorkFactory.ExecuteInTransaction(
+                UnitOfWorkContexts.Linkubator,
+                async (unitOfWork, token) =>
                 {
-                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link deletion rejected for user; link not accessible", new { UserId = _currentUser.UserId, LinkId = linkId }, null);
-                    return Result.Failure(LinkErrors.DeleteNotAccessible());
-                }
+                    ILinkRepository repository = unitOfWork.GetRepository<ILinkRepository>();
 
-                await repository.Delete(linkId, _currentUser.UserId, cancellationToken);
-                await unitOfWork.Commit(cancellationToken);
-                committed = true;
-                SafeLogger.Log(_logger, LogLevel.Information, null, "Link deleted", new { UserId = _currentUser.UserId });
-                return Result.Success();
-            }
-            finally
-            {
-                if (!committed)
-                {
-                    await unitOfWork.Rollback(cancellationToken);
-                }
-            }
+                    DomainEntities.Link? link = await repository.GetById(linkId, _currentUser.UserId, token);
+                    if (link is null)
+                    {
+                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Link deletion rejected for user; link not accessible", new { UserId = _currentUser.UserId, LinkId = linkId }, null);
+                        return Result.Failure(LinkErrors.DeleteNotAccessible());
+                    }
+
+                    await repository.Delete(linkId, _currentUser.UserId, token);
+                    return Result.Success();
+                },
+                cancellationToken);
+
+            SafeLogger.Log(_logger, LogLevel.Information, null, "Link deleted", new { UserId = _currentUser.UserId });
+            return result;
         }
         catch (Exception exception) when (exception is not OperationCanceledException && exception is DomainExceptions.DomainException)
         {
