@@ -1,9 +1,9 @@
-using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Requests;
 using Linkubator.Application.Enums;
 using Linkubator.Application.Results;
-using Linkubator.Application.Validation;
 using Linkubator.Domain.Exceptions;
+using Linkubator.Application.Validation.Collections;
+using Linkubator.Application.Validation.Links;
 
 namespace Linkubator.Tests.Application;
 
@@ -131,7 +131,7 @@ public class ResultTests
     [Fact]
     public void ValidatorsRejectInvalidRequests()
     {
-        CreateCollectionRequest badCollection = new CreateCollectionRequest(" ", "123456...", false);
+        CollectionCreateRequest badCollection = new CollectionCreateRequest(" ", "123456...", false);
         CollectionCreateValidator collectionValidator = new CollectionCreateValidator();
 
         Result collectionResult = collectionValidator.Validate(badCollection);
@@ -139,7 +139,7 @@ public class ResultTests
         Assert.False(collectionResult.IsSuccess);
         Assert.Contains(collectionResult.Errors, error => error.Field == "Name");
 
-        CreateLinkRequest badLink = new CreateLinkRequest(0, " ", "titulo", "descripcion", "https://example.com/image.jpg", true);
+        LinkCreateRequest badLink = new LinkCreateRequest(0, " ", "titulo", "descripcion", "https://example.com/image.jpg", true);
         LinkCreateValidator linkValidator = new LinkCreateValidator();
 
         Result linkResult = linkValidator.Validate(badLink);

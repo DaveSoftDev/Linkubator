@@ -4,6 +4,7 @@ public static class CommonErrors
 {
     public const string RequestField = "request";
     public const string UserIdField = "UserId";
+    public const string CollectionIdField = "CollectionId";
     public const string PageField = "page";
 
     public const string RequestRequiredMessage = "La solicitud es obligatoria.";

@@ -12,6 +12,8 @@ public abstract class BaseEntity
 
     /// <summary>
     /// Fecha y hora en que la entidad fue creada.
+    /// Se fija al construir el agregado para que el objeto tenga un estado coherente
+    /// antes de persistir. La BBDD puede sobrescribirlo al insertar si así lo requiere la infraestructura.
     /// </summary>
-    public DateTime CreatedAt { get; protected set; }
+    public DateTime CreatedAt { get; protected set; } = DateTime.UtcNow;
 }

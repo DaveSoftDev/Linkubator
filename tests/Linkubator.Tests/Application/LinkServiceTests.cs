@@ -1,4 +1,3 @@
-using Linkubator.Application.Constants;
 using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Dtos.Requests;
@@ -7,6 +6,7 @@ using Linkubator.Application.Models;
 using Linkubator.Application.Results;
 using Linkubator.Application.UseCases.Links;
 using Linkubator.Domain.Entities;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Linkubator.Tests.Application;
 
@@ -20,10 +20,11 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         CurrentUser currentUser = new(7);
 
-        Assert.Throws<ArgumentNullException>(() => new LinkService(null!, collectionRepository, linkRepository, unitOfWorkFactory));
-        Assert.Throws<ArgumentNullException>(() => new LinkService(currentUser, null!, linkRepository, unitOfWorkFactory));
-        Assert.Throws<ArgumentNullException>(() => new LinkService(currentUser, collectionRepository, null!, unitOfWorkFactory));
-        Assert.Throws<ArgumentNullException>(() => new LinkService(currentUser, collectionRepository, linkRepository, null!));
+        Assert.Throws<ArgumentNullException>(() => new LinkService(null!, currentUser, collectionRepository, linkRepository, unitOfWorkFactory));
+        Assert.Throws<ArgumentNullException>(() => new LinkService(NullLogger<LinkService>.Instance, null!, collectionRepository, linkRepository, unitOfWorkFactory));
+        Assert.Throws<ArgumentNullException>(() => new LinkService(NullLogger<LinkService>.Instance, currentUser, null!, linkRepository, unitOfWorkFactory));
+        Assert.Throws<ArgumentNullException>(() => new LinkService(NullLogger<LinkService>.Instance, currentUser, collectionRepository, null!, unitOfWorkFactory));
+        Assert.Throws<ArgumentNullException>(() => new LinkService(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, null!));
     }
 
     [Fact]
@@ -36,9 +37,9 @@ public class LinkServiceTests
         SetId(collection, 10);
         collectionRepository.Items.Add(collection);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.CreateLink(new CreateLinkRequest(10, "https://example.com/path?x=1"));
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com/path?x=1"));
 
         Assert.True(result.IsSuccess);
         Assert.Equal(10, result.Value!.CollectionId);
@@ -57,9 +58,9 @@ public class LinkServiceTests
         collectionRepository.Items.Add(collection);
         linkRepository.Items.Add(Link.Create(7, collection, "https://example.com", null, null, null));
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.CreateLink(new CreateLinkRequest(10, "https://example.com/"));
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com/"));
 
         Assert.False(result.IsSuccess);
         Assert.Equal("LINK_DUPLICATE_URL", result.Errors[0].Code);
@@ -74,13 +75,84 @@ public class LinkServiceTests
         InMemoryCollectionRepository collectionRepository = new();
         InMemoryLinkRepository linkRepository = new();
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.CreateLink(new CreateLinkRequest(10, "https://example.com"));
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com"));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
         Assert.Equal("LINK_CREATE_NOT_AUTHENTICATED", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task CreateLink_WhenRequestIsNull_ReturnsRequestRequiredBeforeAuthentication()
+    {
+        CurrentUser currentUser = new(0);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkDto> result = await service.CreateLink(null!);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task EditLink_WhenRequestIsNull_ReturnsRequestRequired()
+    {
+        LinkService service = CreateService(new(7), new(), new());
+
+        Result<LinkDto> result = await service.EditLink(null!);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task EditLink_WhenLinkIdIsInvalid_ReturnsValidationError()
+    {
+        LinkService service = CreateService(new(7), new(), new());
+
+        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(0, 0));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
+        Assert.Equal("LINK_ID_INVALID", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task MoveLink_WhenRequestIsNull_ReturnsRequestRequired()
+    {
+        LinkService service = CreateService(new(7), new(), new());
+
+        Result<LinkDto> result = await service.MoveLink(null!);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task ChangeLinkVisibility_WhenRequestIsNull_ReturnsRequestRequired()
+    {
+        LinkService service = CreateService(new(7), new(), new());
+
+        Result<LinkDto> result = await service.ChangeLinkVisibility(null!);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task DeleteLink_WhenRequestIsNull_ReturnsRequestRequired()
+    {
+        LinkService service = CreateService(new(7), new(), new());
+
+        Result result = await service.DeleteLink(null!);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
     }
 
     [Fact]
@@ -96,9 +168,9 @@ public class LinkServiceTests
         SetId(link, 20);
         linkRepository.Items.Add(link);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(20, "New title", "New desc", "https://example.com/new.png");
+        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 7, "New title", "New desc", "https://example.com/new.png"));
 
         Assert.True(result.IsSuccess);
         Assert.Equal("https://example.com/path", result.Value!.UrlOriginal);
@@ -120,9 +192,9 @@ public class LinkServiceTests
         SetId(link, 20);
         linkRepository.Items.Add(link);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(20, "Changed", "Changed description", "file:///invalid.png", true);
+        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 7,"Changed", "Changed description", "file:///invalid.png", true));
 
         Assert.False(result.IsSuccess);
         Assert.Equal("LINK_PUBLIC_IN_PRIVATE_COLLECTION", result.Errors[0].Code);
@@ -148,7 +220,7 @@ public class LinkServiceTests
         linkRepository.Items.Add(first);
         linkRepository.Items.Add(second);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
         Result<IReadOnlyList<LinkDto>> result = await service.ListLinks(collectionId: 10);
 
@@ -170,9 +242,9 @@ public class LinkServiceTests
         SetId(link, 20);
         linkRepository.Items.Add(link);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result result = await service.DeleteLink(20);
+        Result result = await service.DeleteLink(new LinkDeleteRequest(20));
 
         Assert.True(result.IsSuccess);
         Assert.DoesNotContain(linkRepository.Items, item => item.Id == 20);
@@ -190,9 +262,9 @@ public class LinkServiceTests
         SetId(collection, 10);
         collectionRepository.Items.Add(collection);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.CreateLink(new CreateLinkRequest(10, "https://example.com/path", Image: image));
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com/path", Image: image));
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value!.Image);
@@ -218,9 +290,9 @@ public class LinkServiceTests
         SetId(collection, 10);
         collectionRepository.Items.Add(collection);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.CreateLink(new CreateLinkRequest(10, "https://example.com/path", IsPublic: true));
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com/path", IsPublic: true));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
@@ -239,9 +311,9 @@ public class LinkServiceTests
         SetId(collection, 10);
         collectionRepository.Items.Add(collection);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.CreateLink(new CreateLinkRequest(10, "https://example.com/public", IsPublic: true));
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com/public", IsPublic: true));
 
         Assert.True(result.IsSuccess);
         Assert.True(result.Value!.IsPublic);
@@ -265,9 +337,9 @@ public class LinkServiceTests
         SetId(link, 20);
         linkRepository.Items.Add(link);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.MoveLink(20, 11);
+        Result<LinkDto> result = await service.MoveLink(new LinkMoveRequest(20, 11));
 
         Assert.True(result.IsSuccess);
         Assert.Equal(11, result.Value!.CollectionId);
@@ -291,9 +363,9 @@ public class LinkServiceTests
         SetId(link, 20);
         linkRepository.Items.Add(link);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.MoveLink(20, 11);
+        Result<LinkDto> result = await service.MoveLink(new LinkMoveRequest(20, 11));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
@@ -314,9 +386,9 @@ public class LinkServiceTests
         SetId(existing, 20);
         linkRepository.Items.Add(existing);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.CreateLink(new CreateLinkRequest(10, "https://example.com/"));
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com/"));
 
         Assert.False(result.IsSuccess);
         Assert.Equal("LINK_DUPLICATE_URL", result.Errors[0].Code);
@@ -337,9 +409,9 @@ public class LinkServiceTests
         SetId(link, 20);
         linkRepository.Items.Add(link);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.ChangeLinkVisibility(20, true);
+        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, true));
 
         Assert.False(result.IsSuccess);
         Assert.Equal("LINK_PUBLIC_IN_PRIVATE_COLLECTION", result.Errors[0].Code);
@@ -354,7 +426,7 @@ public class LinkServiceTests
         InMemoryCollectionRepository collectionRepository = new();
         InMemoryLinkRepository linkRepository = new();
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
         Result<IReadOnlyList<LinkDto>> result = await service.ListLinks(page: 0);
 
@@ -370,7 +442,7 @@ public class LinkServiceTests
         InMemoryCollectionRepository collectionRepository = new();
         InMemoryLinkRepository linkRepository = new();
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
         Result<IReadOnlyList<LinkDto>> result = await service.ListLinks(collectionId: 0);
 
@@ -389,7 +461,7 @@ public class LinkServiceTests
         SetId(collection, 42);
         collectionRepository.Items.Add(collection);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
         Result<IReadOnlyList<LinkDto>> result = await service.ListLinks(collectionId: 42);
 
@@ -405,13 +477,19 @@ public class LinkServiceTests
         InMemoryCollectionRepository collectionRepository = new();
         InMemoryLinkRepository linkRepository = new();
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result result = await service.DeleteLink(0);
+        Result result = await service.DeleteLink(new LinkDeleteRequest(0));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
         Assert.Equal("LINK_DELETE_NOT_ACCESSIBLE", result.Errors[0].Code);
+    }
+
+    private static LinkService CreateService(CurrentUser currentUser, InMemoryCollectionRepository collectionRepository, InMemoryLinkRepository linkRepository)
+    {
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        return new LinkService(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
     }
 
     private sealed class InMemoryCollectionRepository : ICollectionRepository

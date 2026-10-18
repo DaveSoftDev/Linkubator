@@ -1,8 +1,8 @@
 using Linkubator.Application.Constants;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Logging;
+using DomainExceptions = Linkubator.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Linkubator.Application.UseCases.PublicReads;
 
@@ -11,10 +11,13 @@ public sealed class PublicReadService : IPublicReadService
     private readonly IPublicReadRepository _publicReadRepository;
     private readonly ILogger<PublicReadService> _logger;
 
-    public PublicReadService(IPublicReadRepository publicReadRepository, ILogger<PublicReadService>? logger = null)
+    public PublicReadService(ILogger<PublicReadService> logger, IPublicReadRepository publicReadRepository)
     {
-        _publicReadRepository = publicReadRepository ?? throw new ArgumentNullException(nameof(publicReadRepository));
-        _logger = logger ?? NullLogger<PublicReadService>.Instance;
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(publicReadRepository);
+
+        _logger = logger;
+        _publicReadRepository = publicReadRepository;
     }
 
     public async Task<Result<PublicUserDto>> GetUserPage(string alias, CancellationToken cancellationToken = default)
@@ -30,6 +33,11 @@ public sealed class PublicReadService : IPublicReadService
         try
         {
             result = await _publicReadRepository.GetUserPage(trimmedAlias, cancellationToken);
+        }
+        catch (DomainExceptions.DomainException exception)
+        {
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Public user page lookup failed; domain validation issue", new { }, new { Alias = alias });
+            return exception.FailDomain<PublicUserDto>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -59,6 +67,11 @@ public sealed class PublicReadService : IPublicReadService
         try
         {
             result = await _publicReadRepository.GetCollectionsPage(trimmedAlias, cancellationToken);
+        }
+        catch (DomainExceptions.DomainException exception)
+        {
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Public collections lookup failed; domain validation issue", new { }, new { Alias = alias });
+            return exception.FailDomain<IReadOnlyList<PublicCollectionSummaryDto>>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -101,6 +114,11 @@ public sealed class PublicReadService : IPublicReadService
         try
         {
             result = await _publicReadRepository.GetCollectionPage(trimmedAlias, trimmedSlug, page, cancellationToken);
+        }
+        catch (DomainExceptions.DomainException exception)
+        {
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Public collection page lookup failed; domain validation issue", new { }, new { Alias = alias, Slug = slug, Page = page });
+            return exception.FailDomain<PublicCollectionDto>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -146,6 +164,11 @@ public sealed class PublicReadService : IPublicReadService
             {
                 count = 0;
             }
+        }
+        catch (DomainExceptions.DomainException exception)
+        {
+            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Public collection count lookup failed; domain validation issue", new { }, new { Alias = alias, Slug = slug });
+            return exception.FailDomain<int>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {

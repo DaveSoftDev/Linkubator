@@ -5,7 +5,7 @@ public static class LinkErrors
     public const string UserIdField = CommonErrors.UserIdField;
     public const string PageField = CommonErrors.PageField;
     public const string LinkIdField = "LinkId";
-    public const string CollectionIdField = "CollectionId";
+    public const string CollectionIdField = CommonErrors.CollectionIdField;
     public const string DestinationCollectionIdField = "DestinationCollectionId";
     public const string UrlField = "Url";
     private const string PublicLinkInPrivateCollectionField = "IsPublic";
@@ -20,11 +20,6 @@ public static class LinkErrors
     private const string CollectionIdInvalidMessage = "La colección es obligatoria.";
     private const string DeleteNotAccessibleMessage = "No se ha podido eliminar el enlace.";
     private const string UrlRequiredMessage = "La URL es obligatoria.";
-    private const string UrlTooLongMessage = "La URL supera la longitud máxima.";
-    private const string TitleTooLongMessage = "El título supera la longitud máxima.";
-    private const string DescriptionTooLongMessage = "La descripción supera la longitud máxima.";
-    private const string ImageTooLongMessage = "La imagen supera la longitud máxima.";
-    private const string ImageUrlInvalidMessage = "La imagen debe ser una URL HTTP/HTTPS válida.";
 
     private const string CreateNotAuthenticatedCode = "LINK_CREATE_NOT_AUTHENTICATED";
     private const string EditNotAuthenticatedCode = "LINK_EDIT_NOT_AUTHENTICATED";
@@ -42,11 +37,6 @@ public static class LinkErrors
     private const string DuplicateUrlCode = "LINK_DUPLICATE_URL";
     private const string PageInvalidCode = "PAGE_INVALID";
     private const string UrlRequiredCode = "URL_REQUIRED";
-    private const string UrlTooLongCode = "URL_TOO_LONG";
-    private const string TitleTooLongCode = "LINK_TITLE_TOO_LONG";
-    private const string DescriptionTooLongCode = "LINK_DESCRIPTION_TOO_LONG";
-    private const string ImageTooLongCode = "LINK_IMAGE_TOO_LONG";
-    private const string ImageUrlInvalidCode = "LINK_IMAGE_URL_INVALID";
 
     public static ApplicationError RequestRequired()
         => CommonErrors.RequestRequired();
@@ -80,21 +70,6 @@ public static class LinkErrors
 
     public static ApplicationError UrlRequired()
         => ApplicationError.Validation(UrlRequiredCode, UrlField, UrlRequiredMessage);
-
-    public static ApplicationError UrlTooLong()
-        => ApplicationError.Validation(UrlTooLongCode, UrlField, UrlTooLongMessage);
-
-    public static ApplicationError TitleTooLong()
-        => ApplicationError.Validation(TitleTooLongCode, "Title", TitleTooLongMessage);
-
-    public static ApplicationError DescriptionTooLong()
-        => ApplicationError.Validation(DescriptionTooLongCode, "Description", DescriptionTooLongMessage);
-
-    public static ApplicationError ImageTooLong()
-        => ApplicationError.Validation(ImageTooLongCode, "Image", ImageTooLongMessage);
-
-    public static ApplicationError ImageUrlInvalid()
-        => ApplicationError.Validation(ImageUrlInvalidCode, "Image", ImageUrlInvalidMessage);
 
     public static ApplicationError CollectionNotAccessible()
         => ApplicationError.ResourceNotAccessible(CollectionNotAccessibleCode, CollectionIdField, CollectionNotAccessibleMessage);

@@ -28,9 +28,9 @@ public sealed class LoggingTests
         collectionRepository.Items.Add(collection);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         TestLogger<LinkService> logger = new();
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory, logger: logger);
+        LinkService service = new(logger, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.CreateLink(new CreateLinkRequest(10, "https://example.com/path?token=super-secret-value"));
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com/path?token=super-secret-value"));
 
         Assert.True(result.IsSuccess);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
@@ -54,7 +54,7 @@ public sealed class LoggingTests
         InMemoryLinkRepository linkRepository = new() { PageFailure = repositoryFailure };
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         TestLogger<LinkService> logger = new();
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory, logger: logger);
+        LinkService service = new(logger, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
         InvalidOperationException thrown = await Assert.ThrowsAsync<InvalidOperationException>(
             () => service.ListLinks(searchSentinel));
@@ -78,9 +78,9 @@ public sealed class LoggingTests
         collectionRepository.Items.Add(collection);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         TestLogger<CollectionService> logger = new();
-        CollectionService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory, logger: logger);
+        CollectionService service = new(logger, currentUser, collectionRepository, unitOfWorkFactory);
 
-        Result<CollectionDto> result = await service.ChangeCollectionVisibility(10, false);
+        Result<CollectionDto> result = await service.ChangeCollectionVisibility(new CollectionChangeVisibilityRequest(10, false));
 
         Assert.True(result.IsSuccess);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
@@ -97,7 +97,7 @@ public sealed class LoggingTests
         InMemoryLinkRepository linkRepository = new();
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         TestLogger<LinkService> logger = new();
-        LinkService service = new(currentUser, collectionRepository, linkRepository, unitOfWorkFactory, logger: logger);
+        LinkService service = new(logger, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
         Result<IReadOnlyList<LinkDto>> result = await service.ListLinks(searchSentinel, page: 0);
 
@@ -143,8 +143,8 @@ public sealed class LoggingTests
     public async Task DashboardService_GetDashboard_LogsSuccessfulRead()
     {
         TestLogger<DashboardService> logger = new();
-        DashboardService service = new(new CurrentUser(7), new FakeDashboardRepository(), logger);
-
+        DashboardService service = new(logger, new CurrentUser(7), new FakeDashboardRepository());
+    
         Result<DashboardDto> result = await service.GetDashboard();
 
         Assert.True(result.IsSuccess);
@@ -159,7 +159,7 @@ public sealed class LoggingTests
     {
         const string alias = "public-alias-sentinel";
         TestLogger<PublicReadService> logger = new();
-        PublicReadService service = new(new FakePublicReadRepository(), logger);
+        PublicReadService service = new(logger, new FakePublicReadRepository());
 
         Result<PublicUserDto> result = await service.GetUserPage(alias);
 

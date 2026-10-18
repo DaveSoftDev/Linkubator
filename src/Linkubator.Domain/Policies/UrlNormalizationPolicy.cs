@@ -146,7 +146,7 @@ public static class UrlNormalizationPolicy
     /// Normaliza la cadena de consulta, eliminando parámetros de marketing y ordenando el resto.
     /// </summary>
     /// <param name="query">Consulta a normalizar.</param>
-    /// <returns>Consulta normalizada o cadena vac�a si no quedan parámetros.</returns>
+    /// <returns>Consulta normalizada o cadena vacía si no quedan parámetros.</returns>
     private static string NormalizeQuery(string query)
     {
         if (string.IsNullOrEmpty(query))

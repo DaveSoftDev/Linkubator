@@ -4,27 +4,24 @@ public static class CollectionErrors
 {
     public const string PageField = CommonErrors.PageField;
     public const string UserIdField = CommonErrors.UserIdField;
-    public const string CollectionIdField = "CollectionId";
+    public const string CollectionIdField = CommonErrors.CollectionIdField;
     public const string NameField = "Name";
-    public const string DescriptionField = "Description";
     
     public const string PageInvalidMessage = CommonErrors.PageInvalidMessage;
     public const string NameRequiredMessage = "El nombre es obligatorio.";
-    public const string NameTooLongMessage = "El nombre supera la longitud máxima.";
-    public const string DescriptionTooLongMessage = "La descripción supera la longitud máxima.";
     public const string NameInUseMessage = "Ya existe una colección con ese nombre";
     public const string CollectionNotAccessibleMessage = "La colección no es accesible para este usuario.";
     public const string CollectionHasLinksMessage = "No se puede eliminar una colección con enlaces.";
     public const string LastCollectionCannotBeDeletedMessage = "No se puede eliminar la última colección del usuario.";
+    public const string CollectionIdInvalidMessage = "La colección es obligatoria.";
 
     private const string CreateNotAuthenticatedCode = "COLLECTION_CREATE_NOT_AUTHENTICATED";
     private const string RenameNotAuthenticatedCode = "COLLECTION_RENAME_NOT_AUTHENTICATED";
     private const string VisibilityNotAuthenticatedCode = "COLLECTION_VISIBILITY_NOT_AUTHENTICATED";
     private const string DeleteNotAuthenticatedCode = "COLLECTION_DELETE_NOT_AUTHENTICATED";
     private const string ListNotAuthenticatedCode = "COLLECTION_LIST_NOT_AUTHENTICATED";
+    private const string CollectionIdInvalidCode = "COLLECTION_ID_INVALID";
     private const string NameRequiredCode = "COLLECTION_NAME_REQUIRED";
-    private const string NameTooLongCode = "COLLECTION_NAME_TOO_LONG";
-    private const string DescriptionTooLongCode = "COLLECTION_DESCRIPTION_TOO_LONG";
     private const string NameInUseCode = "COLLECTION_NAME_IN_USE";
     private const string RenameNotAccessibleCode = "COLLECTION_RENAME_NOT_ACCESSIBLE";
     private const string VisibilityNotAccessibleCode = "COLLECTION_VISIBILITY_NOT_ACCESSIBLE";
@@ -51,14 +48,11 @@ public static class CollectionErrors
     public static ApplicationError ListNotAuthenticated()
         => CommonErrors.NotAuthenticated(ListNotAuthenticatedCode, UserIdField);
 
+    public static ApplicationError CollectionIdInvalid()
+        => ApplicationError.Validation(CollectionIdInvalidCode, CollectionIdField, CollectionIdInvalidMessage);
+
     public static ApplicationError NameRequired()
         => ApplicationError.Validation(NameRequiredCode, NameField, NameRequiredMessage);
-
-    public static ApplicationError NameTooLong()
-        => ApplicationError.Validation(NameTooLongCode, NameField, NameTooLongMessage);
-
-    public static ApplicationError DescriptionTooLong()
-        => ApplicationError.Validation(DescriptionTooLongCode, DescriptionField, DescriptionTooLongMessage);
 
     public static ApplicationError NameInUse(string? conflictingCollectionName = null)
     {
