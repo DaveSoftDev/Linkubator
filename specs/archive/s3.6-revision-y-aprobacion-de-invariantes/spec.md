@@ -17,7 +17,7 @@ Contrastar las fichas derivadas de S3.5 con las entidades y tests de Domain, y r
 - [architecture.md → «Domain»](../../../context/architecture.md#domain): responsabilidad y límites de la capa Domain.
 - [S3.1 → «Criterios de aceptación»](../s3.1-entidades-user-collection-link/spec.md#criterios-de-aceptación), [S3.2 → «Criterios de aceptación»](../s3.2-invariantes-propiedad/spec.md#criterios-de-aceptación), [S3.3 → «Criterios de aceptación»](../s3.3-transiciones-publico-privado/spec.md#criterios-de-aceptación) y [S3.4 → «Criterios de aceptación»](../s3.4-tests-invariantes/spec.md#criterios-de-aceptación): contratos aprobados y cobertura de S3.1–S3.4.
 - [S3.5 → «Criterios de aceptación»](../s3.5-fichas-entidades/spec.md#criterios-de-aceptación): propósito y requisitos de las fichas.
-- [S3.5 — Ficha de `User`](../s3.5-fichas-entidades/user.md), [ficha de `Collection`](../s3.5-fichas-entidades/collection.md) y [ficha de `Link`](../s3.5-fichas-entidades/link.md): material derivado que se contrasta, no fuente de reglas.
+- [S3.5 — Ficha de `User`](../s3.5-fichas-entidades/cards/user.md), [ficha de `Collection`](../s3.5-fichas-entidades/cards/collection.md) y [ficha de `Link`](../s3.5-fichas-entidades/cards/link.md): material derivado que se contrasta, no fuente de reglas.
 
 ## Alcance
 

@@ -17,7 +17,7 @@ Todo el código permanece en `Linkubator.Domain` y sus tests, sin referencias a 
 | --- | --- | --- | --- |
 | `Collection` | `src/Linkubator.Domain/Entities/Collection.cs` | Aceptar el estado solicitado al crearla y exponer una operación de cambio de privacidad; al pasar a privada, coordinar que los enlaces recibidos también queden privados. | CA01, CA04, CA05 |
 | `Link` | `src/Linkubator.Domain/Entities/Link.cs` | Crear a partir de una colección materializada, aceptar estado público solo si la colección está pública, permitir hacer público o privado con comprobación de colección y forzar privacidad tras movimiento. | CA02, CA03, CA06, CA07 |
-| Tests de `Collection` y `Link` | `tests/Linkubator.Tests/Domain/Entities/Collection/CollectionTests.cs` y `tests/Linkubator.Tests/Domain/Entities/Link/LinkTests.cs` | Comprobar las transiciones, precondiciones, rechazos y ausencia de mutación parcial. | CA01–CA08 |
+| Tests de `Collection` y `Link` | `tests/Linkubator.Tests/Domain/Entities/CollectionTests.cs` y `tests/Linkubator.Tests/Domain/Entities/LinkTests.cs` | Comprobar las transiciones, precondiciones, rechazos y ausencia de mutación parcial. | CA01–CA08 |
 
 El diseño aprobado conserva el valor predeterminado privado de las entidades y añade `isPublic = false` a `Collection.Create` y a la creación de `Link`. `Link.Create` recibe una `Collection` materializada para comprobar propiedad y privacidad; se retiró la ruta que recibía solo `collectionId`. La colección destino sigue siendo responsable de la verificación de propiedad introducida en S3.2.
 

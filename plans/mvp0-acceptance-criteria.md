@@ -9,7 +9,7 @@
 
 Este documento reúne los criterios GIVEN/WHEN/THEN para los casos de uso S4, con trazabilidad a las reglas propietarias de [requirements.md](../context/requirements.md), [specifications.md](../context/specifications.md), [domain-model.md](../context/domain-model.md), [architecture.md](../context/architecture.md) y la puerta de S4 en [mvp0-plan.md](mvp0-plan.md#puerta-de-entrada-de-la-implementación-criterios-de-aceptación-de-s4).
 
-No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documento y la sección que lo fundamentan. DLG aprobó el catálogo en S4.5 el 16-X-2026 («Leído y comprendido»); la decisión y el cierre documental constan en [S4.5 → «Aceptación y cierre»](../specs/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre).
+No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documento y la sección que lo fundamentan. DLG aprobó el catálogo en S4.5 el 16-X-2026 («Leído y comprendido»); la decisión y el cierre documental constan en [S4.5 → «Aceptación y cierre»](../specs/archive/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre).
 
 ## Criterios de aceptación
 
@@ -213,4 +213,4 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - La aprobación humana de este artefacto es la puerta antes de implementar S4.6–S4.10; DLG la registró el 16-X-2026 («Leído y comprendido»).
 - Si aparece una omisión o contradicción en una fuente propietaria, se detiene el criterio afectado y se resuelve en el documento propietario antes de aprobarlo.
 - Antes de esa aprobación, la implementación de casos de uso y la validación por fakes no podían comenzar.
-- La cobertura documental y la validación de enlaces e identificadores están registradas en [S4.4 → «Descomposición»](../specs/s4.4-criterios-aceptacion-casos-uso/tasks.md#descomposición) y [«Evidencia por criterio»](../specs/s4.4-criterios-aceptacion-casos-uso/tasks.md#evidencia-por-criterio). La aprobación posterior de S4.5 consta en [sus tareas → «Aceptación y cierre»](../specs/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre); no implica que S4.6–S4.10 hayan comenzado.
+- La cobertura documental y la validación de enlaces e identificadores están registradas en [S4.4 → «Descomposición»](../specs/archive/s4.4-criterios-aceptacion-casos-uso/tasks.md#descomposición) y [«Evidencia por criterio»](../specs/archive/s4.4-criterios-aceptacion-casos-uso/tasks.md#evidencia-por-criterio). La aprobación posterior de S4.5 consta en [sus tareas → «Aceptación y cierre»](../specs/archive/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre); no implica que S4.6–S4.10 hayan comenzado.
