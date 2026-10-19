@@ -1,6 +1,7 @@
 using DomainEnums = Linkubator.Domain.Enums;
 using DomainExceptions = Linkubator.Domain.Exceptions;
 using DomainEntities = Linkubator.Domain.Entities;
+using System.Reflection;
 
 namespace Linkubator.Tests.Domain.Entities;
 
@@ -509,7 +510,7 @@ public class LinkTests
         EntityTestFactory.SetId(collection, 9);
         DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
 
-        var property = typeof(DomainEntities.Bases.BaseEntity).GetProperty(nameof(DomainEntities.Bases.BaseEntity.Id), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+        PropertyInfo? property = typeof(DomainEntities.Bases.BaseEntity).GetProperty(nameof(DomainEntities.Bases.BaseEntity.Id), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
         property!.SetValue(collection, 42L);
 
         link.MoveToCollection(collection);

@@ -151,7 +151,7 @@ public sealed class SqliteUnitOfWork : IUnitOfWork
 
         if (_connection.State != ConnectionState.Closed)
         {
-            _connection.Close();
+            await _connection.CloseAsync();
         }
 
         _disposed = true;

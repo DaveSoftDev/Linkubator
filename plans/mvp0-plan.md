@@ -232,8 +232,8 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 | S5.3 | Escribir el esquema de `User`, `Collection` y `Link` con únicos, la clave foránea compuesta `Link (UserId, CollectionId)` e índices | IA |
 | S5.4 | Registrar la colación `es-ES` con `CreateCollation` en todas las conexiones | IA |
 | S5.5 | Implementar el Unit of Work con `BEGIN IMMEDIATE` y los repositorios Dapper | IA |
-| S5.6 | Escribir el SQL local de desarrollo, idempotente: usuario completado y «Bandeja de entrada» | IA |
-| S5.7 | Implementar el proveedor de identidad, que solo se registra en desarrollo y falla al arrancar si no hay usuario completado | IA |
+| S5.6 | Implementar el aprovisionamiento SQL idempotente de identidad de desarrollo y su ejecución tras las migraciones al arrancar, en todos los entornos | IA |
+| S5.7 | Implementar el proveedor de identidad y registrarlo en todos los entornos hasta que LoginV0 introduzca autenticación real | IA |
 | S5.8 | Escribir tests de integración sobre SQLite temporal: únicos, clave compuesta, carreras (última colección, privada vs público, mover a colección ajena) y orden alfabético | IA |
 | S5.9 | Ejecutar las migraciones, revisar el SQL y comprobar el esquema con una herramienta SQLite | Humano |
 | S5.10 | Revisar manualmente la aplicación del script local dos veces seguidas | Humano |
@@ -244,7 +244,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 - [ ] WAL, `busy_timeout` y claves foráneas están activos en cada conexión.
 - [ ] La colación `es-ES` ordena según [«Listados»](../context/specifications.md#listados).
 - [ ] El script local se puede repetir sin duplicar datos.
-- [ ] La aplicación no arranca sin usuario de desarrollo completado, y el proveedor solo se registra en desarrollo.
+- [ ] En cada arranque se aplican las migraciones antes de aprovisionar o completar el usuario de desarrollo; el proveedor resuelve esa identidad en todos los entornos hasta LoginV0.
 - [ ] Los tests de transacciones y de carreras pasan.
 - [ ] Los repositorios cumplen los contratos y criterios de S4.
 - [ ] El humano ha revisado el esquema y el SQL.

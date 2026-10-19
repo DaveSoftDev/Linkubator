@@ -9,6 +9,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | S5.1 — Configuración de SQLite y Dapper | [spec.md](s5.1-configuracion-sqlite-dapper/spec.md) | [plan.md](s5.1-configuracion-sqlite-dapper/plan.md) | [tasks.md](s5.1-configuracion-sqlite-dapper/tasks.md) |
 | S5.2 — Ejecutor de scripts SQL versionados | [spec.md](s5.2-ejecutor-scripts-sql-versionados/spec.md) | [plan.md](s5.2-ejecutor-scripts-sql-versionados/plan.md) | [tasks.md](s5.2-ejecutor-scripts-sql-versionados/tasks.md) |
 | S5.4 — Registro de la colación `es-ES` en las conexiones SQLite | [spec.md](s5.4-colacion-es-es/spec.md) | [plan.md](s5.4-colacion-es-es/plan.md) | [tasks.md](s5.4-colacion-es-es/tasks.md#aceptación-y-cierre); aceptado por DLG («Colación añadida», 19-X-2026) |
+| S5.6 — Aprovisionamiento SQL de identidad de desarrollo | [spec.md](s5.6-sql-local-identidad-desarrollo/spec.md); aprobada por DLG («Validado y confirmado», 19-X-2026) | [plan.md](s5.6-sql-local-identidad-desarrollo/plan.md); aprobado por DLG («Siguiente», 19-X-2026) | [tasks.md](s5.6-sql-local-identidad-desarrollo/tasks.md#aceptación-y-cierre); cerrado y aceptado por DLG («Tenemos demo user»); verificador Argon2id PHC y evidencias focalizada 26/26, suite 1026/1026, build y publicación correctos |
 
 ## Trabajos completados
 

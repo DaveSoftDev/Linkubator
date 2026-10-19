@@ -37,6 +37,18 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 
 ## Cuenta
 
+### Identidad de desarrollo
+
+- Hasta que LoginV0 incorpore autenticación real, cada arranque de la aplicación prepara la identidad de desarrollo en todos los entornos, después de aplicar las migraciones y antes de atender peticiones privadas.
+- La identidad de desarrollo comparte el acceso privado entre todas las personas con acceso a la aplicación hasta LoginV0; el riesgo aceptado por DLG consta en [decisions.md → «Identidad de desarrollo»](decisions.md#identidad-de-desarrollo).
+- El email de desarrollo se obtiene de configuración. Su valor inicial es `user@linkubator.test`; el nombre inicial es `Demo User` y el alias inicial es `my-demo-user`.
+- Si no existe una cuenta con el email configurado, se crea completa con el perfil inicial, `EmailConfirmedAt` informado y un hash Argon2id inicial de una contraseña aleatoria descartada.
+- Si existe una cuenta sin completar, se completa con el perfil inicial configurado, se informa `EmailConfirmedAt` y se establece el hash inicial. Si ya está completada, sus datos no se modifican.
+- Si la cuenta no tiene colecciones, se crea la colección privada «Bandeja de entrada». Si ya tiene una o más colecciones, se conservan sin cambios, independientemente de su nombre o privacidad.
+- La creación o compleción de la cuenta y, cuando corresponda, la creación de su colección inicial se aplican como una única operación atómica.
+- Repetir el aprovisionamiento no duplica ni reinicia la cuenta o sus colecciones existentes.
+- El marcador `EmailConfirmedAt` de esta identidad es técnico y no demuestra la titularidad real del email.
+
 ### Registro
 
 - A partir del email introducido por el usuario:

@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Text.RegularExpressions;
 using Dapper;
 using Linkubator.Infrastructure.Contracts;
@@ -65,7 +66,7 @@ public sealed class SqliteMigrationService : ISqliteMigrationService
                 continue;
             }
 
-            using var transaction = connection.BeginTransaction();
+            await using DbTransaction transaction = await connection.BeginTransactionAsync();
             try
             {
                 await connection.ExecuteAsync(new CommandDefinition(script.Sql, transaction: transaction));
@@ -73,11 +74,11 @@ public sealed class SqliteMigrationService : ISqliteMigrationService
                     $"INSERT INTO {MigrationHistoryTableName} (version, applied_at_utc) VALUES (@Version, @AppliedAtUtc);",
                     new { Version = script.Version, AppliedAtUtc = DateTime.UtcNow },
                     transaction: transaction));
-                transaction.Commit();
+                await transaction.CommitAsync();
             }
             catch
             {
-                transaction.Rollback();
+                await transaction.RollbackAsync();
                 throw;
             }
         }

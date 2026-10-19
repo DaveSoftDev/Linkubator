@@ -182,19 +182,19 @@ public sealed class SqliteMigrationServiceTests
 
     private static void AssertDefault(SqliteConnection connection, string tableName, string columnName, string expectedValue)
     {
-        var column = connection.Query($"PRAGMA table_info('{tableName}');").Single(column => (string)column.name == columnName);
+        dynamic column = connection.Query($"PRAGMA table_info('{tableName}');").Single(column => (string)column.name == columnName);
         Assert.Equal(expectedValue, Convert.ToString(column.dflt_value));
     }
 
     private static void AssertDefaultContains(SqliteConnection connection, string tableName, string columnName, string expectedValue)
     {
-        var column = connection.Query($"PRAGMA table_info('{tableName}');").Single(column => (string)column.name == columnName);
+        dynamic column = connection.Query($"PRAGMA table_info('{tableName}');").Single(column => (string)column.name == columnName);
         Assert.Contains(expectedValue, Convert.ToString(column.dflt_value), StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AssertColumns(SqliteConnection connection, string tableName, (string Name, string Type, long NotNull, long PrimaryKey)[] expected)
     {
-        var actual = connection.Query($"PRAGMA table_info('{tableName}');")
+        (string, string, long, long)[] actual = connection.Query($"PRAGMA table_info('{tableName}');")
             .Select(column => ((string)column.name, (string)column.type, (long)column.notnull, (long)column.pk))
             .ToArray();
 
@@ -207,26 +207,26 @@ public sealed class SqliteMigrationServiceTests
         (string Column, long Descending)[][] expectedUniqueIndexes,
         (string Name, (string Column, long Descending)[] Columns)[] expectedSecondaryIndexes)
     {
-        var indexes = connection.Query($"PRAGMA index_list('{tableName}');")
+        (string Name, long Unique, string Origin)[] indexes = connection.Query($"PRAGMA index_list('{tableName}');")
             .Select(index => (Name: (string)index.name, Unique: (long)index.unique, Origin: (string)index.origin))
             .ToArray();
-        var uniqueIndexes = indexes.Where(index => index.Unique == 1)
+        string[] uniqueIndexes = indexes.Where(index => index.Unique == 1)
             .Select(index => ReadIndexColumns(connection, index.Name))
             .Select(FormatIndexColumns)
             .OrderBy(columns => columns)
             .ToArray();
-        var expectedUnique = expectedUniqueIndexes
+        string[] expectedUnique = expectedUniqueIndexes
             .Select(FormatIndexColumns)
             .OrderBy(columns => columns)
             .ToArray();
 
         Assert.Equal(expectedUnique, uniqueIndexes);
 
-        var secondaryIndexes = indexes.Where(index => index.Origin == "c")
+        (string Name, long Unique, string Origin)[] secondaryIndexes = indexes.Where(index => index.Origin == "c")
             .OrderBy(index => index.Name)
             .ToArray();
         Assert.Equal(expectedSecondaryIndexes.Select(index => index.Name).OrderBy(name => name), secondaryIndexes.Select(index => index.Name).OrderBy(name => name));
-        foreach (var expectedIndex in expectedSecondaryIndexes)
+        foreach ((string Name, (string Column, long Descending)[] Columns) expectedIndex in expectedSecondaryIndexes)
         {
             Assert.Equal(FormatIndexColumns(expectedIndex.Columns), FormatIndexColumns(ReadIndexColumns(connection, expectedIndex.Name)));
         }
@@ -248,19 +248,19 @@ public sealed class SqliteMigrationServiceTests
 
     private static void AssertForeignKeys(SqliteConnection connection, string tableName, (string Table, string From, string To, string OnUpdate, string OnDelete)[] expected)
     {
-        var actual = connection.Query($"PRAGMA foreign_key_list('{tableName}');")
+        (string Table, string From, string To, string OnUpdate, string OnDelete)[] actual = connection.Query($"PRAGMA foreign_key_list('{tableName}');")
             .Select(foreignKey => (Table: (string)foreignKey.table, From: (string)foreignKey.from, To: (string)foreignKey.to, OnUpdate: (string)foreignKey.on_update, OnDelete: (string)foreignKey.on_delete))
             .OrderBy(foreignKey => foreignKey.Table)
             .ThenBy(foreignKey => foreignKey.From)
             .ToArray();
-        var expectedSorted = expected.OrderBy(foreignKey => foreignKey.Table).ThenBy(foreignKey => foreignKey.From).ToArray();
+        (string Table, string From, string To, string OnUpdate, string OnDelete)[] expectedSorted = expected.OrderBy(foreignKey => foreignKey.Table).ThenBy(foreignKey => foreignKey.From).ToArray();
 
         Assert.Equal(expectedSorted, actual);
     }
 
     private static void AssertCompositeCollectionForeignKey(SqliteConnection connection)
     {
-        var foreignKeys = connection.Query("PRAGMA foreign_key_list('Link');")
+        (long Id, long Sequence, string From, string To)[] foreignKeys = connection.Query("PRAGMA foreign_key_list('Link');")
             .Where(foreignKey => (string)foreignKey.table == "Collection")
             .Select(foreignKey => (Id: (long)foreignKey.id, Sequence: (long)foreignKey.seq, From: (string)foreignKey.from, To: (string)foreignKey.to))
             .OrderBy(foreignKey => foreignKey.Sequence)

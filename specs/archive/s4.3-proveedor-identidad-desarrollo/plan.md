@@ -21,14 +21,14 @@
 
 1. La composición de la aplicación en desarrollo resolverá el proveedor concreto en el punto autorizado de Infrastructure/Web, sin añadir referencias desde Application a esas capas.
 2. El proveedor concreto leerá la configuración local y localizará la cuenta por el email estable según [architecture.md → «Autenticación»](../../../context/architecture.md#autenticación) y [decisions.md → «Identidad de desarrollo»](../../../context/decisions.md#identidad-de-desarrollo).
-3. Durante el arranque, la implementación de S5.7 comprobará que la cuenta localizada está completada y detendrá el inicio si no lo está.
+3. Durante el arranque, la cuenta se aprovisiona antes de que el proveedor de S5.7 la resuelva, según la responsabilidad posterior asignada a S5.6.
 4. En cada petición privada de `/app`, el consumidor usará el identificador devuelto para construir el contexto `CurrentUser`; no confiará en valores de identidad de la solicitud.
 5. Los errores de configuración o resolución se manejan en las fronteras de composición y persistencia. Este contrato no define mensajes de usuario ni respuestas HTTP.
 
 ### Persistencia y dependencias
 
 - S4.3 añade solo el contrato a Application y no incorpora paquetes ni dependencias de persistencia.
-- El proveedor concreto de S5.7 usará configuración local y la persistencia para localizar por email la cuenta completada. La consulta al arrancar, el ciclo de vida por petición y el registro exclusivo en desarrollo pertenecen a S5.7.
+- El proveedor concreto de S5.7 usa configuración de identidad y persistencia para localizar por email la cuenta completada. La resolución por petición y el registro del proveedor en Development pertenecen a S5.7. El aprovisionamiento y la orquestación previa de migraciones se asignan a S5.6. La regla vigente de entornos está en [specifications.md → «Identidad de desarrollo»](../../../context/specifications.md#identidad-de-desarrollo).
 - No se modifica el SQL local de aprovisionamiento, el esquema ni los repositorios en este trabajo.
 - Se conserva la dirección de dependencias descrita en [architecture.md → «Dependencias entre proyectos»](../../../context/architecture.md#dependencias-entre-proyectos).
 
@@ -46,7 +46,7 @@
 | Añadir `IDevelopmentIdentityProvider` en Application con `GetUserId(CancellationToken)` | Confirmada por implementación revisada por DLG | [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación), CA01–CA04; aprobación en [tasks.md → «Aceptación y cierre»](tasks.md#aceptación-y-cierre) | Distingue la provisión de identidad del contexto `ICurrentUser`; el nombre as-built difiere del método `GetUserIdAsync` propuesto originalmente. |
 | Retornar `UserId` y dejar la construcción de `CurrentUser` al consumidor | Confirmada en el diseño aceptado | S4.2 define `ICurrentUser` y `CurrentUser`; [spec.md](spec.md#criterios-de-aceptación), CA02 | Evita duplicar el contrato de usuario identificado. |
 | Recibir configuración por parámetro en el contrato | Descartada | [architecture.md → «Autenticación»](../../../context/architecture.md#autenticación) | El proveedor concreto obtiene el email desde configuración local; no se acepta como autoridad un dato de petición. |
-| Implementar el chequeo de cuenta completada y el registro solo en desarrollo | Confirmada como responsabilidad de S5.7 | [mvp0-plan.md → «S5: Persistencia I: SQLite y transacciones (L)»](../../../plans/mvp0-plan.md#s5-persistencia-i-sqlite-y-transacciones-l) | S4.3 define solamente el contrato. La implementación y pruebas de arranque quedan fuera de este trabajo. |
+| Implementar la resolución de la cuenta y registrar el proveedor antes de LoginV0 | Confirmada como responsabilidad de S5.7 | [mvp0-plan.md → «S5: Persistencia I: SQLite y transacciones (L)»](../../../plans/mvp0-plan.md#s5-persistencia-i-sqlite-y-transacciones-l) y decisión posterior de DLG | S4.3 define solamente el contrato. El aprovisionamiento previo y el orden migraciones→aprovisionamiento corresponden a S5.6. |
 | Invocar la resolución asíncrona en cada petición | Pendiente de S5.7 | [architecture.md → «Autenticación»](../../../context/architecture.md#autenticación) | La estrategia de ciclo de vida y caché se resuelve en el diseño de S5.7 sin debilitar la comprobación al arrancar. |
 
 ## Estrategia de validación

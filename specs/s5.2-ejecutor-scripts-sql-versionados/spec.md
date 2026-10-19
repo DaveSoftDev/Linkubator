@@ -22,12 +22,13 @@ Disponer en Infrastructure de un ejecutor que aplique scripts SQL versionados a 
   - Ejecutar scripts SQL versionados sobre SQLite mediante Infrastructure.
   - Mantener información que permita distinguir los scripts ya aplicados de los pendientes y evitar reaplicarlos en ejecuciones posteriores.
   - Permitir comprobar el ejecutor con scripts de prueba, sin requerir el esquema de S5.3.
+  - El ejecutor expone una operación invocable por el host; la secuencia y el momento de invocación en el arranque son responsabilidad de la composición de la aplicación, definidos en la especificación de aprovisionamiento de identidad.
 - Excluye:
   - Definir el esquema de `User`, `Collection` y `Link`, sus restricciones e índices; corresponde a S5.3.
   - Configurar SQLite y Dapper; corresponde a [S5.1](../s5.1-configuracion-sqlite-dapper/spec.md).
   - Registrar la colación, implementar Unit of Work y repositorios, provisionar el usuario local o implementar su proveedor de identidad; corresponden a S5.4–S5.7.
   - Validar restricciones, concurrencia y orden alfabético; corresponde a S5.8.
-  - La aplicación manual del conjunto final de scripts y la revisión del esquema; corresponden a S5.9.
+  - La integración del ejecutor en la secuencia de arranque; corresponde a S5.6. La aplicación manual y revisión humana del conjunto final de scripts y del esquema corresponden a S5.9.
 - Trabajo vecino y responsable de sus entregables:
   - S5.1 y S5.3–S5.10 implementan y validan sus entregables propios conforme a [mvp0-plan.md → «S5: Persistencia I: SQLite y transacciones (L)»](../../plans/mvp0-plan.md#s5-persistencia-i-sqlite-y-transacciones-l). Ninguno forma parte del cierre de esta especificación.
 

@@ -17,7 +17,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
 
     public async Task<PublicUserDto?> GetUserPage(string alias, CancellationToken cancellationToken = default)
     {
-        var user = await _connection.QuerySingleOrDefaultAsync<UserRow>(
+        UserRow? user = await _connection.QuerySingleOrDefaultAsync<UserRow>(
             "SELECT Id, Alias FROM User WHERE Alias = @Alias;",
             new { Alias = alias });
 
@@ -60,7 +60,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
 
     public async Task<IReadOnlyCollection<PublicCollectionSummaryDto>?> GetCollectionsPage(string alias, CancellationToken cancellationToken = default)
     {
-        var user = await _connection.QuerySingleOrDefaultAsync<UserRow>(
+        UserRow? user = await _connection.QuerySingleOrDefaultAsync<UserRow>(
             "SELECT Id, Alias FROM User WHERE Alias = @Alias;",
             new { Alias = alias });
 
@@ -88,7 +88,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
 
     public async Task<PublicCollectionDto?> GetCollectionPage(string alias, string slug, int page, CancellationToken cancellationToken = default)
     {
-        var user = await _connection.QuerySingleOrDefaultAsync<UserRow>(
+        UserRow? user = await _connection.QuerySingleOrDefaultAsync<UserRow>(
             "SELECT Id, Alias FROM User WHERE Alias = @Alias;",
             new { Alias = alias });
 
@@ -97,7 +97,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
             return null;
         }
 
-        var collection = await _connection.QuerySingleOrDefaultAsync<CollectionPageRow>(
+        CollectionPageRow? collection = await _connection.QuerySingleOrDefaultAsync<CollectionPageRow>(
             @"SELECT c.Id, c.Name, c.Slug
               FROM Collection c
               WHERE c.UserId = @UserId
@@ -110,7 +110,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
             return null;
         }
 
-        var links = (await _connection.QueryAsync<PublicLinkRow>(
+        List<PublicLinkDto> links = (await _connection.QueryAsync<PublicLinkRow>(
             @"SELECT l.UrlOriginal, l.Title, l.Description, l.Image
               FROM Link l
               WHERE l.UserId = @UserId
@@ -128,7 +128,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
 
     public async Task<int> GetCollectionPageCount(string alias, string slug, CancellationToken cancellationToken = default)
     {
-        var user = await _connection.QuerySingleOrDefaultAsync<UserRow>(
+        UserRow? user = await _connection.QuerySingleOrDefaultAsync<UserRow>(
             "SELECT Id, Alias FROM User WHERE Alias = @Alias;",
             new { Alias = alias });
 
@@ -137,7 +137,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
             return 0;
         }
 
-        var collection = await _connection.QuerySingleOrDefaultAsync<CollectionPageRow>(
+        CollectionPageRow? collection = await _connection.QuerySingleOrDefaultAsync<CollectionPageRow>(
             @"SELECT c.Id, c.Name, c.Slug
               FROM Collection c
               WHERE c.UserId = @UserId AND c.Slug = @Slug AND c.IsPublic = 1;",

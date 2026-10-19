@@ -1,6 +1,7 @@
 using Dapper;
 using Linkubator.Application.Constants;
 using Linkubator.Application.Contracts;
+using Linkubator.Domain.Entities;
 using Linkubator.Infrastructure.Sqlite;
 using Microsoft.Data.Sqlite;
 
@@ -23,9 +24,9 @@ public sealed class SqliteUnitOfWorkTests
         ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
         ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
 
-        var collection = Linkubator.Domain.Entities.Collection.Create(42, "My collection", "desc", false);
+        Collection collection = Collection.Create(42, "My collection", "desc", false);
         await collectionRepository.Insert(collection);
-        var createdLink = Linkubator.Domain.Entities.Link.Create(42, collection, "https://example.com/alpha", "Alpha", null, null, false);
+        Link createdLink = Link.Create(42, collection, "https://example.com/alpha", "Alpha", null, null, false);
         await linkRepository.Insert(createdLink);
 
         await using SqliteConnection observerBeforeCommit = connectionFactory.CreateOpenConnection();
@@ -58,7 +59,7 @@ public sealed class SqliteUnitOfWorkTests
         await unitOfWork.Begin();
 
         ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
-        var collection = Linkubator.Domain.Entities.Collection.Create(99, "Pending", "desc", false);
+        Collection collection = Collection.Create(99, "Pending", "desc", false);
         await collectionRepository.Insert(collection);
 
         await unitOfWork.Rollback();

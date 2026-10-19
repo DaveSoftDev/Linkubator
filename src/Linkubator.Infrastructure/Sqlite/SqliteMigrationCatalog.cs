@@ -14,8 +14,8 @@ internal static partial class SqliteMigrationCatalog
 
         return assembly
             .GetManifestResourceNames()
-            .Where(resourceName => resourceName.EndsWith(".sql", StringComparison.OrdinalIgnoreCase))
-            .Where(resourceName => resourceName.Contains(".Sqlite.Migrations.", StringComparison.OrdinalIgnoreCase))
+            .Where(resourceName => resourceName.StartsWith("Linkubator.Infrastructure.Sqlite.Migrations.", StringComparison.Ordinal)
+                && resourceName.EndsWith(".sql", StringComparison.OrdinalIgnoreCase))
             .OrderBy(resourceName => resourceName, StringComparer.Ordinal)
             .Select(resourceName =>
             {
@@ -23,7 +23,8 @@ internal static partial class SqliteMigrationCatalog
                     ?? throw new InvalidOperationException($"Embedded migration resource '{resourceName}' could not be loaded.");
                 using StreamReader reader = new(stream);
                 string sql = reader.ReadToEnd();
-                string resourceFileName = Path.GetFileNameWithoutExtension(resourceName);
+                string resourcePath = resourceName.Replace('\\', '/');
+                string resourceFileName = Path.GetFileNameWithoutExtension(resourcePath);
                 Match match = _versionRegex.Match(resourceFileName);
                 if (!match.Success)
                 {

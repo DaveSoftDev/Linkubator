@@ -1,4 +1,6 @@
 using Linkubator.Infrastructure;
+using Linkubator.Infrastructure.Contracts;
+using Linkubator.Infrastructure.DevelopmentIdentity;
 using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -13,6 +15,15 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddRazorPages();
 
 WebApplication app = builder.Build();
+
+using (AsyncServiceScope scope = app.Services.CreateAsyncScope())
+{
+    ISqliteMigrationService migrationService = scope.ServiceProvider.GetRequiredService<ISqliteMigrationService>();
+    await migrationService.ApplyPendingMigrations();
+
+    DevelopmentIdentityProvisioner provisioner = scope.ServiceProvider.GetRequiredService<DevelopmentIdentityProvisioner>();
+    await provisioner.Provision();
+}
 
 if (!app.Environment.IsDevelopment())
 {

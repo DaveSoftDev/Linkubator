@@ -1,3 +1,4 @@
+using System.Collections;
 using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Dtos.Requests;
@@ -179,7 +180,7 @@ public sealed class LoggingTests
         Assert.Equal(7L, entry.Values["UserId"]);
         Assert.Equal("Rich context", entry.Message);
         Assert.Equal("1234567890123456789012345678901234567890", entry.Values["Query"]);
-        var tags = Assert.IsAssignableFrom<IEnumerable<object?>>(entry.Values["Tags"]);
+        IEnumerable<object?> tags = Assert.IsAssignableFrom<IEnumerable<object?>>(entry.Values["Tags"]);
         Assert.Contains("short", tags.Select(item => item?.ToString()), StringComparer.Ordinal);
         Assert.Equal(SampleRole.Admin.ToString(), entry.Values["Role"]?.ToString());
         Assert.Equal(nameof(SamplePayload), entry.Values["Payload"]?.ToString());
@@ -189,7 +190,7 @@ public sealed class LoggingTests
     public void SafeLogger_Log_IncludesAdditionalContextAndSkipsIndexers()
     {
         TestLogger<LinkService> logger = new();
-        var payload = new IndexedPayload();
+        IndexedPayload payload = new IndexedPayload();
 
         SafeLogger.Log(logger, LogLevel.Debug, null, "With extras", new { RequestId = "abc" }, payload);
 
@@ -213,10 +214,10 @@ public sealed class LoggingTests
 
         int count = (int)stateType.GetProperty("Count", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)!
             .GetValue(state)!;
-        var genericEnumerator = (System.Collections.IEnumerator)stateType
+        IEnumerator genericEnumerator = (System.Collections.IEnumerator)stateType
             .GetMethod("GetEnumerator", Type.EmptyTypes)!
             .Invoke(state, null)!;
-        var explicitEnumerator = (System.Collections.IEnumerator)((System.Collections.IEnumerable)state).GetEnumerator();
+        IEnumerator explicitEnumerator = (System.Collections.IEnumerator)((System.Collections.IEnumerable)state).GetEnumerator();
 
         Assert.Equal(2, count);
         Assert.True(genericEnumerator.MoveNext());
@@ -230,7 +231,7 @@ public sealed class LoggingTests
         Type buildContextType = typeof(SafeLogger).GetMethod("BuildContext", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
             .DeclaringType!;
 
-        var result = (Dictionary<string, object?>)buildContextType
+        Dictionary<string, object?> result = (Dictionary<string, object?>)buildContextType
             .GetMethod("BuildContext", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null,
                 new[] { typeof(object), typeof(object), typeof(object) }, null)!
             .Invoke(null, new object?[] { new { UserId = 7L }, null, new { TraceId = "trace-42" } })!;

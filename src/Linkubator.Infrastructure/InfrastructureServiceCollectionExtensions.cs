@@ -1,10 +1,13 @@
 using Linkubator.Application.Contracts;
 using Linkubator.Infrastructure.Contracts;
+using Linkubator.Infrastructure.DevelopmentIdentity;
+using Linkubator.Infrastructure.Options;
 using Linkubator.Infrastructure.Repositories;
 using Linkubator.Infrastructure.Sqlite;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Options;
 
 namespace Linkubator.Infrastructure;
 
@@ -25,6 +28,19 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ISqliteConnectionFactory>(serviceProvider =>
             serviceProvider.GetRequiredService<SqliteConnectionFactory>());
 
+        services.Configure<DevelopmentIdentityOptions>(configuration.GetSection("DevelopmentIdentity"));
+        services.AddSingleton(provider =>
+        {
+            DevelopmentIdentityOptions configured = provider.GetRequiredService<IOptions<DevelopmentIdentityOptions>>().Value;
+            configured.Email ??= "user@linkubator.test";
+            configured.Name ??= "Demo User";
+            configured.Alias ??= "my-demo-user";
+            configured.PasswordHash ??= string.Empty;
+            return configured;
+        });
+
+        services.AddSingleton<DevelopmentIdentityProvisioner>();
+
         services.AddScoped<IUnitOfWorkFactory, SqliteUnitOfWorkFactory>();
         services.AddScoped(serviceProvider =>
             serviceProvider.GetRequiredService<ISqliteConnectionFactory>().CreateOpenConnection());
@@ -37,14 +53,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IPublicReadRepository>(serviceProvider =>
             new SqlitePublicReadRepository(serviceProvider.GetRequiredService<SqliteConnection>()));
 
-        services.AddSingleton<ISqliteMigrationService, SqliteMigrationService>();
+        services.AddSingleton<ISqliteMigrationService>(serviceProvider =>
+            new SqliteMigrationService(serviceProvider.GetRequiredService<ISqliteConnectionFactory>()));
 
-        return services;
-    }
-
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services)
-    {
-        ArgumentNullException.ThrowIfNull(services);
         return services;
     }
 }
