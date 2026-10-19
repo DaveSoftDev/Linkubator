@@ -72,6 +72,8 @@ La [S5.3 — esquema de `User`, `Collection` y `Link`](../specs/s5.3-esquema-use
 
 La [S5.4 — registro de la colación `es-ES` en las conexiones SQLite](../specs/s5.4-colacion-es-es/spec.md), su [plan técnico](../specs/s5.4-colacion-es-es/plan.md) y sus [tareas](../specs/s5.4-colacion-es-es/tasks.md) fueron aprobados por DLG el 19-X-2026 («Siguiente» en cada artefacto); el nombre SQL `LINKUBATOR_ES_ES` quedó confirmado al aprobar el plan. La implementación y validación quedaron completadas el 19-X-2026: tests focalizados 5/5, build correcto y `git diff --check` limpio. DLG aceptó y cerró S5.4 para su alcance el 19-X-2026 («Colación añadida»); el detalle y la evidencia constan en sus [tareas → «Aceptación y cierre»](../specs/s5.4-colacion-es-es/tasks.md#aceptación-y-cierre). S5.8 conserva las pruebas integradas del orden completo de los listados.
 
+La [S5.5 — Unit of Work y repositorios Dapper](../specs/s5.5-unit-of-work-y-repositorios-dapper/spec.md) fue aprobada por DLG el 19-X-2026 («Siguiente»), el [plan técnico](../specs/s5.5-unit-of-work-y-repositorios-dapper/plan.md) con «Siguiente» y las [tareas](../specs/s5.5-unit-of-work-y-repositorios-dapper/tasks.md) con «Ready». DLG confirmó que la búsqueda textual queda para S6. La implementación y validación técnica se completaron: tests focalizados SQLite 60/60, suite completa 1005/1005, build correcto y `git diff --check` limpio el 19-X-2026. DLG aceptó y cerró S5.5 para su alcance el 19-X-2026 («Repositorios listos»); el riesgo de `LinkService.CreateLink` sigue como seguimiento independiente y no reabre este trabajo.
+
 Criterio de finalización:
 
 - Las operaciones de enlaces y colecciones son atómicas.

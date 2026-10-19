@@ -5,7 +5,7 @@ namespace Linkubator.Infrastructure.Sqlite;
 
 internal static partial class SqliteMigrationCatalog
 {
-    private static readonly Regex VersionRegex = VersionPattern();
+    private static readonly Regex _versionRegex = VersionPattern();
 
     public static IReadOnlyList<SqliteMigrationScript> Load()
     {
@@ -24,7 +24,7 @@ internal static partial class SqliteMigrationCatalog
                 using StreamReader reader = new(stream);
                 string sql = reader.ReadToEnd();
                 string resourceFileName = Path.GetFileNameWithoutExtension(resourceName);
-                Match match = VersionRegex.Match(resourceFileName);
+                Match match = _versionRegex.Match(resourceFileName);
                 if (!match.Success)
                 {
                     throw new InvalidOperationException($"Embedded migration resource '{resourceName}' does not follow the expected VNNN naming convention.");

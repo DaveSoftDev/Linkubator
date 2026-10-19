@@ -8,7 +8,7 @@ namespace Linkubator.Infrastructure.Sqlite;
 public sealed class SqliteMigrationService : ISqliteMigrationService
 {
     private const string MigrationHistoryTableName = "schema_migrations";
-    private static readonly Regex VersionRegex = new("^V\\d+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static readonly Regex _versionRegex = new("^V\\d+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private readonly ISqliteConnectionFactory _connectionFactory;
     private readonly IReadOnlyList<SqliteMigrationScript> _scripts;
@@ -35,7 +35,7 @@ public sealed class SqliteMigrationService : ISqliteMigrationService
 
         foreach (SqliteMigrationScript script in _scripts)
         {
-            if (string.IsNullOrWhiteSpace(script.Version) || !VersionRegex.IsMatch(script.Version))
+            if (string.IsNullOrWhiteSpace(script.Version) || !_versionRegex.IsMatch(script.Version))
             {
                 throw new InvalidOperationException($"Migration version '{script.Version}' is invalid. Expected format VNNN.");
             }

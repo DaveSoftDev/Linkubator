@@ -15,6 +15,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
 | S5.3 — Esquema de `User`, `Collection` y `Link` | [spec.md](s5.3-esquema-user-collection-link/spec.md) | [plan.md](s5.3-esquema-user-collection-link/plan.md) | [tasks.md](s5.3-esquema-user-collection-link/tasks.md#aceptación-y-cierre); aceptado y cerrado por DLG («Tenemos schema», 19-X-2026) |
+| S5.5 — Unit of Work y repositorios Dapper | [spec.md](s5.5-unit-of-work-y-repositorios-dapper/spec.md); aprobada por DLG («Siguiente», 19-X-2026) | [plan.md](s5.5-unit-of-work-y-repositorios-dapper/plan.md); aprobado por DLG («Siguiente», 19-X-2026) | [tasks.md](s5.5-unit-of-work-y-repositorios-dapper/tasks.md#aceptación-y-cierre); aceptado y cerrado por DLG («Repositorios listos», 19-X-2026); tareas aprobadas («Ready») |
 | Catálogo de criterios de aceptación del MVP0 (preparación S4.4) | — | — | [mvp0-acceptance-criteria.md](../plans/mvp0-acceptance-criteria.md); preparación aceptada por DLG («A leer», 15-X-2026); catálogo aprobado por DLG («Leído y comprendido», 16-X-2026); trazabilidad documental en [S4.4 archivada](archive/s4.4-criterios-aceptacion-casos-uso/tasks.md#aceptación-y-cierre) y aprobación en [S4.5 archivada](archive/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre) |
 
 ## Trabajos archivados
