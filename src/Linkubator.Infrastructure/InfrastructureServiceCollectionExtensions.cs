@@ -22,6 +22,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ISqliteConnectionFactory>(serviceProvider =>
             serviceProvider.GetRequiredService<SqliteConnectionFactory>());
 
+        services.AddSingleton<ISqliteMigrationService, SqliteMigrationService>();
+
         return services;
     }
 

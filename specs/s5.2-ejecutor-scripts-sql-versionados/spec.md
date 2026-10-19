@@ -2,8 +2,8 @@
 
 ## Estado y aprobación
 
-- Estado: borrador.
-- Aprobación: pendiente; registrar fecha, responsable y referencia cuando exista.
+- Estado: aprobada.
+- Aprobación: DLG, 19-X-2026 («Siguiente»).
 
 ## Objetivo
 
@@ -53,4 +53,4 @@ Disponer en Infrastructure de un ejecutor que aplique scripts SQL versionados a 
 
 ## Artefactos relacionados
 
-Todavía no hay plan técnico ni tareas. Se prepararán secuencialmente tras la aprobación explícita de esta especificación y del plan, respectivamente.
+[Plan técnico](plan.md), aprobado por DLG el 19-X-2026 («Siguiente»). Las [tareas](tasks.md) quedan aprobadas y validadas con la referencia «Migraciones ready».
