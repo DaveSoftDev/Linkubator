@@ -37,6 +37,18 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 
 ## Cuenta
 
+### Identidad de desarrollo
+
+- Hasta que LoginV0 incorpore autenticación real, cada arranque de la aplicación prepara la identidad de desarrollo en todos los entornos, después de aplicar las migraciones y antes de atender peticiones privadas.
+- La identidad de desarrollo comparte el acceso privado entre todas las personas con acceso a la aplicación hasta LoginV0; el riesgo aceptado por DLG consta en [decisions.md → «Identidad de desarrollo»](decisions.md#identidad-de-desarrollo).
+- El email de desarrollo se obtiene de configuración. Su valor inicial es `user@linkubator.test`; el nombre inicial es `Demo User` y el alias inicial es `my-demo-user`.
+- Si no existe una cuenta con el email configurado, se crea completa con el perfil inicial, `EmailConfirmedAt` informado y un hash Argon2id inicial de una contraseña aleatoria descartada.
+- Si existe una cuenta sin completar, se completa con el perfil inicial configurado, se informa `EmailConfirmedAt` y se establece el hash inicial. Si ya está completada, sus datos no se modifican.
+- Si la cuenta no tiene colecciones, se crea la colección privada «Bandeja de entrada». Si ya tiene una o más colecciones, se conservan sin cambios, independientemente de su nombre o privacidad.
+- La creación o compleción de la cuenta y, cuando corresponda, la creación de su colección inicial se aplican como una única operación atómica.
+- Repetir el aprovisionamiento no duplica ni reinicia la cuenta o sus colecciones existentes.
+- El marcador `EmailConfirmedAt` de esta identidad es técnico y no demuestra la titularidad real del email.
+
 ### Registro
 
 - A partir del email introducido por el usuario:
@@ -697,9 +709,9 @@ Reglas de los filtros del listado de enlaces:
 - En los listados, cada filtro `c` o `e` vacío se ignora independientemente de los demás filtros; `p` ausente o vacío indica la primera página. Se conservan los demás filtros válidos.
 - Un valor de `p`, `c` o `e` inválido o fuera de rango muestra un mensaje accesible indicando que los valores no son correctos.
 - Un filtro `c` o `e` que identifica una colección o etiqueta inexistente o ajena al usuario se ignora; se conservan los demás filtros válidos.
-- En las rutas que identifican un recurso mediante `id`, salvo las de eliminación de colecciones y enlaces, un identificador inválido, un recurso inexistente y uno ajeno al usuario reciben la misma respuesta para los tres casos: el mensaje genérico «No se ha podido acceder al elemento solicitado.». No se muestran datos del recurso ni se modifica. En GET se muestra el mensaje con un enlace al listado correspondiente; en POST se redirige a ese listado con el mismo aviso accesible.
-- Al eliminar una colección, si el identificador es inválido, la colección no existe o pertenece a otro usuario, la operación no modifica datos ni revela cuál de esas condiciones se da; muestra «No se ha podido eliminar la colección». En GET se muestra el mensaje con un enlace al listado de colecciones; en POST se redirige a ese listado con el mismo aviso accesible.
-- Al eliminar un enlace, si el identificador es inválido, el enlace no existe o pertenece a otro usuario, la operación no modifica datos ni revela cuál de esas condiciones se da; muestra «No se ha podido eliminar el enlace». En GET se muestra el mensaje con un enlace al listado de enlaces; en POST se redirige a ese listado con el mismo aviso accesible.
+- En las rutas que identifican un recurso mediante `id`, un valor que no cumpla el formato de identificador válido produce un error de validación y no consulta ni modifica un recurso. Si el identificador tiene formato válido pero el recurso no existe o pertenece a otro usuario, ambos casos reciben el mismo resultado de recurso no accesible; no se muestran datos ni se revela cuál de esas causas ocurrió. En GET se muestra el mensaje genérico «No se ha podido acceder al elemento solicitado.» con un enlace al listado correspondiente; en POST se redirige a ese listado con el mismo aviso accesible.
+- Al eliminar una colección, un identificador inválido produce un error de validación y no modifica datos. Si el identificador tiene formato válido pero la colección no existe o pertenece a otro usuario, la operación no modifica datos ni revela cuál de esas dos condiciones se da; muestra «No se ha podido eliminar la colección». En GET se muestra el mensaje con un enlace al listado de colecciones; en POST se redirige a ese listado con el mismo aviso accesible.
+- Al eliminar un enlace, un identificador inválido produce un error de validación y no modifica datos. Si el identificador tiene formato válido pero el enlace no existe o pertenece a otro usuario, la operación no modifica datos ni revela cuál de esas dos condiciones se da; muestra «No se ha podido eliminar el enlace». En GET se muestra el mensaje con un enlace al listado de enlaces; en POST se redirige a ese listado con el mismo aviso accesible.
 - Al crear, editar o mover un enlace, un identificador de colección o etiqueta inválido, inexistente o ajeno muestra un error de validación en el formulario enviado, sin aplicar cambios.
 - El parámetro de URL `q` es de tipo texto. Un valor vacío, también provocará que se desprecie el parámetro, retornando la misma página desde la que se ha enviado, sin aplicar ningún tipo de búsqueda pero aplicando el resto de filtros si existieran. Si tras recortar sus espacios extremos, supera su [longitud máxima](#longitudes-máximas), mostrará también un mensaje de error.
 - Cada listado acepta solo estos parámetros, cuya semántica está en [«Búsqueda y filtros»](#búsqueda-y-filtros):

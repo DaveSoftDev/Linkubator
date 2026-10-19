@@ -4,8 +4,8 @@ Este documento recoge qué se ha decidido y por qué, qué riesgos se aceptan, q
 
 ## Contexto del MVP0
 
-- El MVP0 se ejecuta únicamente en local y no incluye autenticación real ni envío de correo. 
-- Para llevar a cabo este MVP0, a la zona privada se le inyecta una identidad de desarrollo que representa a un usuario válido (ver [«Identidad de desarrollo»](#identidad-de-desarrollo)); el detalle técnico está en [architecture.md → «Autenticación»](architecture.md#autenticación).
+- El MVP0 no incluye autenticación real ni envío de correo. Hasta que LoginV0 incorpore autenticación, se usa una identidad de desarrollo para que la aplicación pueda operar en cualquier entorno.
+- DLG acepta el riesgo de acceso privado compartido hasta que LoginV0 incorpore autenticación real (19-X-2026, «Sí, aceptamos ese riesgo»). El detalle técnico está en [architecture.md → «Autenticación»](architecture.md#autenticación).
 - Linkubator está preparado para multiples usuarios, y cada uno solo ve y modifica sus propios datos.
 - La interfaz está en castellano y funciona en los navegadores actuales.
 - Las páginas públicas y sus fundamentos SEO se pueden verificar.
@@ -15,8 +15,8 @@ Este documento recoge qué se ha decidido y por qué, qué riesgos se aceptan, q
 
 ### Producto y alcance
 
-- **El MVP0 se ejecuta únicamente en local y usa una identidad de desarrollo inyectada desde código que representa a un usuario válido.** La zona privada y la propiedad por usuario se implementan desde el MVP0; el registro, el inicio de sesión y el resto de la autenticación real se incorporan en el MVP1, para que los casos de uso estén preparados para sustituir esa identidad por la autenticada.
-- **El usuario de desarrollo del MVP0 se provisiona por separado y se localiza por su email.** El email es único y estable; usarlo evita acoplar el aprovisionamiento a un `Id` generado o a un alias mutable. Su hash inicial procede de una contraseña aleatoria descartada, para no guardar un secreto de acceso en el repositorio. Los pasos técnicos están en [architecture.md → «Autenticación»](architecture.md#autenticación).
+- **Hasta que LoginV0 incorpore autenticación real, la aplicación usa la identidad de desarrollo en todos los entornos.** Es necesario para que la aplicación pueda utilizarse antes de implementar el login. DLG aceptó el riesgo de acceso privado compartido el 19-X-2026 («Sí, aceptamos ese riesgo»). La identidad se sustituirá por la autenticada al implementar LoginV0.
+- **El usuario de desarrollo se localiza por su email configurable.** El email es único y estable; usarlo evita acoplar el aprovisionamiento a un `Id` generado o a un alias mutable. Se acepta versionar el hash no reversible de una contraseña aleatoria descartada para permitir el aprovisionamiento automático sin conservar la contraseña original. Los valores están en [specifications.md → «Identidad de desarrollo»](specifications.md#identidad-de-desarrollo) y los pasos técnicos en [architecture.md → «Autenticación»](architecture.md#autenticación).
 - **Linkubator MVP0 gestiona solamente enlaces y colecciones, preparado para varios usuarios.**
 - **La generación del alias forma parte intencionadamente del MVP0, aunque todavía no haya registro ni cambio de alias.** Así el dominio incorpora desde el inicio todas las validaciones del alias que aplicará el sistema, y no solo las necesarias para la identidad de desarrollo.
 - **La interfaz está en castellano.** Por eso la colección por defecto se llama «Bandeja de entrada» y el segmento de las rutas públicas es `colecciones`.
@@ -42,7 +42,7 @@ Las reglas de esta sección describen la gestión de cuentas del MVP1. En el MVP
 
 ### Seguridad
 
-- **Los errores de acceso al eliminar colecciones o enlaces usan un mensaje propio de la operación.** Para cada tipo de eliminación, el mismo mensaje se usa si el identificador es inválido, el recurso no existe o pertenece a otra persona; así se informa de que no se completó la acción sin revelar cuál fue la causa. Application los representa con categoría `ResourceNotAccessible` y un código estable por operación, común a esas tres causas; Web traduce el código al mensaje y tratamiento HTTP definidos en [specifications.md → «Rutas privadas»](specifications.md#rutas-privadas). Las demás rutas de recursos mantienen la respuesta común.
+- **Los identificadores inválidos se distinguen de los recursos válidos no accesibles.** La validación del formato/rango devuelve un error de validación; un identificador válido que no existe o pertenece a otra persona devuelve `ResourceNotAccessible`, con el mismo resultado externo para no revelar existencia o propiedad. En eliminaciones, ese resultado usa un código estable por operación y el mensaje propio de la operación en Web. La distinción evita presentar errores de entrada como intentos de acceso a recursos, manteniendo la privacidad para identificadores válidos no accesibles (ver [specifications.md → «Rutas privadas»](specifications.md#rutas-privadas)).
 - **Argon2id desde la implementación de autenticación del MVP1, con la configuración mínima de OWASP.** Así se evita tener que migrar hashes más adelante. Los parámetros van dentro del hash (formato PHC), de modo que se pueden endurecer sin invalidar los existentes (ver [specifications.md → «Hash de la contraseña»](specifications.md#hash-de-la-contraseña)).
 - **Los tokens de correo se almacenan con SHA-256, no con un hash lento como Argon2.** Como son aleatorios y tienen suficiente entropía, un hash lento no aporta protección práctica adicional. El detalle está en [specifications.md → «Tokens»](specifications.md#tokens).
 - **En el MVP1 solo se usan cookies técnicas.** Al estar exentas de consentimiento, no hace falta banner de cookies.
@@ -99,8 +99,10 @@ Las reglas de esta sección describen la gestión de cuentas del MVP1. En el MVP
 
 ### Identidad de desarrollo
 
-- La identidad de desarrollo permite validar la propiedad por usuario y los casos de uso privados antes de incorporar autenticación real. Su provisión y resolución técnica están en [architecture.md → «Autenticación»](architecture.md#autenticación).
-- El aprovisionamiento usa el email único y estable en lugar del `Id` generado o del alias mutable. El hash inicial procede de una contraseña aleatoria descartada, para no incluir una credencial de desarrollo en el repositorio.
+- La identidad de desarrollo permite utilizar la aplicación y validar la propiedad por usuario antes de incorporar autenticación real. Su provisión y resolución técnica están en [architecture.md → «Autenticación»](architecture.md#autenticación).
+- Mientras no haya autenticación, cualquier persona con acceso a la aplicación comparte esa identidad y puede leer o modificar sus datos privados. DLG acepta el riesgo hasta LoginV0; la autenticación real sustituirá este modo.
+- El aprovisionamiento usa un email configurable de prueba, en lugar del `Id` generado o de un alias mutable. El hash inicial de una contraseña aleatoria descartada evita incluir una credencial conocida en el repositorio. El formato del email y demás valores están en [specifications.md → «Identidad de desarrollo»](specifications.md#identidad-de-desarrollo).
+- DLG confirmó el 19-X-2026 que la aplicación debe aplicar las migraciones durante cada arranque y provisionar después la identidad, en todos los entornos hasta LoginV0. Esta decisión reemplaza el diseño inicial de invocación manual de las migraciones; consultar [architecture.md → «Persistencia»](architecture.md#persistencia).
 
 ## Pendientes
 

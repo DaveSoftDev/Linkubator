@@ -1,4 +1,4 @@
-﻿# Índice de specs
+# Índice de specs
 
 Este índice permite localizar los trabajos documentados en `specs/`. El procedimiento de Spec-Driven Development y archivado está en [sdd-writer](../skills/sdd-writer/SKILL.md).
 
@@ -6,22 +6,12 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
-| S4.4 — Criterios de aceptación de los casos de uso | [spec.md](s4.4-criterios-aceptacion-casos-uso/spec.md) | [plan.md](s4.4-criterios-aceptacion-casos-uso/plan.md) | [tasks.md](s4.4-criterios-aceptacion-casos-uso/tasks.md#aceptación-y-cierre) |
-| S4.5 — Revisión y aprobación de los criterios de aceptación | [spec.md](s4.5-aprobacion-criterios-aceptacion/spec.md) | [plan.md](s4.5-aprobacion-criterios-aceptacion/plan.md) | [tasks.md](s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre) |
-| S4.9 — Fakes en memoria y pruebas de casos de uso | [spec.md](s4.9-fakes-y-tests-casos-de-uso/spec.md) | [plan.md](s4.9-fakes-y-tests-casos-de-uso/plan.md) | [tasks.md](s4.9-fakes-y-tests-casos-de-uso/tasks.md#aceptación-y-cierre) |
-| S4.10 — Registro de eventos | [spec.md](s4.10-registro-de-eventos/spec.md) | [plan.md](s4.10-registro-de-eventos/plan.md) | [tasks.md](s4.10-registro-de-eventos/tasks.md) |
 
 ## Trabajos completados
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
-| Catálogo de criterios de aceptación del MVP0 (preparación S4.4) | — | — | [mvp0-acceptance-criteria.md](../plans/mvp0-acceptance-criteria.md); preparación aceptada por DLG («A leer», 15-X-2026); catálogo aprobado por DLG («Leído y comprendido», 16-X-2026). S4.8–S4.10 requieren aprobación de sus propios artefactos SDD antes de iniciar |
-| S4.1 — Result, errores, DTOs y validadores de aplicación | [spec.md](s4.1-contratos-aplicacion/spec.md) | [plan.md](s4.1-contratos-aplicacion/plan.md) | [tasks.md](s4.1-contratos-aplicacion/tasks.md#aceptación-y-cierre) |
-| S4.2 — Contratos de repositorios, Unit of Work e identidad identificada | [spec.md](s4.2-contratos-repositorios-identidad/spec.md) | [plan.md](s4.2-contratos-repositorios-identidad/plan.md) | [tasks.md](s4.2-contratos-repositorios-identidad/tasks.md#aceptación-y-cierre) |
-| S4.3 — Contrato del proveedor de identidad de desarrollo | [spec.md](s4.3-proveedor-identidad-desarrollo/spec.md) | [plan.md](s4.3-proveedor-identidad-desarrollo/plan.md) | [tasks.md](s4.3-proveedor-identidad-desarrollo/tasks.md#aceptación-y-cierre) |
-| S4.6 — Casos de uso de colecciones | [spec.md](s4.6-casos-uso-colecciones/spec.md) | [plan.md](s4.6-casos-uso-colecciones/plan.md) | [tasks.md](s4.6-casos-uso-colecciones/tasks.md#aceptación-y-cierre); aceptado por DLG el 17-X-2026 («Fase completada») |
-| S4.7 — Casos de uso de enlaces | [spec.md](s4.7-casos-uso-enlaces/spec.md) | [plan.md](s4.7-casos-uso-enlaces/plan.md) | [tasks.md](s4.7-casos-uso-enlaces/tasks.md#aceptación-y-cierre); aceptado por DLG el 17-X-2026 («Fase completada»); suite 790/790 |
-| S4.8 — Dashboard y lecturas públicas | [spec.md](s4.8-dashboard-y-lecturas-publicas/spec.md) | [plan.md](s4.8-dashboard-y-lecturas-publicas/plan.md) | [tasks.md](s4.8-dashboard-y-lecturas-publicas/tasks.md#aceptación-y-cierre); aceptado por DLG el 17-X-2026 («Fase completada»), alcance de Application |
+| Catálogo de criterios de aceptación del MVP0 (preparación S4.4) | — | — | [mvp0-acceptance-criteria.md](../plans/mvp0-acceptance-criteria.md); preparación aceptada por DLG («A leer», 15-X-2026); catálogo aprobado por DLG («Leído y comprendido», 16-X-2026); trazabilidad documental en [S4.4 archivada](archive/s4.4-criterios-aceptacion-casos-uso/tasks.md#aceptación-y-cierre) y aprobación en [S4.5 archivada](archive/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre) |
 
 ## Trabajos archivados
 
@@ -60,4 +50,25 @@ El estado y la evidencia de cierre constan en las tareas del trabajo; este índi
 | Tests adicionales de `EmailPolicy`, `ImageUrlPolicy` y `LinkUrlPolicy` | [spec.md](archive/tests-adicionales-policies-email-url/spec.md) | [plan.md](archive/tests-adicionales-policies-email-url/plan.md) | [tasks.md](archive/tests-adicionales-policies-email-url/tasks.md#aceptación-y-cierre) |
 | S3.5 — Fichas de entidades | [spec.md](archive/s3.5-fichas-entidades/spec.md) | [plan.md](archive/s3.5-fichas-entidades/plan.md) | [tasks.md](archive/s3.5-fichas-entidades/tasks.md#aceptación-y-cierre) |
 | S3.6 — Revisión y aprobación de invariantes | [spec.md](archive/s3.6-revision-y-aprobacion-de-invariantes/spec.md) | [plan.md](archive/s3.6-revision-y-aprobacion-de-invariantes/plan.md) | [tasks.md](archive/s3.6-revision-y-aprobacion-de-invariantes/tasks.md#aceptación-y-cierre) |
-| S3a.1 — Refactor de las políticas de URL | [spec.md](s3a-refactor-de-dominio/spec.md) | [plan.md](s3a-refactor-de-dominio/plan.md) | [tasks.md](s3a-refactor-de-dominio/tasks.md) |
+| S3a.1 — Refactor de las políticas de URL | [spec.md](archive/s3a-refactor-de-dominio/spec.md) | [plan.md](archive/s3a-refactor-de-dominio/plan.md) | [tasks.md](archive/s3a-refactor-de-dominio/tasks.md#aceptación-y-cierre) |
+| S4.1 — Result, errores, DTOs y validadores de aplicación | [spec.md](archive/s4.1-contratos-aplicacion/spec.md) | [plan.md](archive/s4.1-contratos-aplicacion/plan.md) | [tasks.md](archive/s4.1-contratos-aplicacion/tasks.md#aceptación-y-cierre) |
+| S4.2 — Contratos de repositorios, Unit of Work e identidad identificada | [spec.md](archive/s4.2-contratos-repositorios-identidad/spec.md) | [plan.md](archive/s4.2-contratos-repositorios-identidad/plan.md) | [tasks.md](archive/s4.2-contratos-repositorios-identidad/tasks.md#aceptación-y-cierre) |
+| S4.3 — Contrato del proveedor de identidad de desarrollo | [spec.md](archive/s4.3-proveedor-identidad-desarrollo/spec.md) | [plan.md](archive/s4.3-proveedor-identidad-desarrollo/plan.md) | [tasks.md](archive/s4.3-proveedor-identidad-desarrollo/tasks.md#aceptación-y-cierre) |
+| S4.4 — Criterios de aceptación de los casos de uso | [spec.md](archive/s4.4-criterios-aceptacion-casos-uso/spec.md) | [plan.md](archive/s4.4-criterios-aceptacion-casos-uso/plan.md) | [tasks.md](archive/s4.4-criterios-aceptacion-casos-uso/tasks.md#aceptación-y-cierre) |
+| S4.5 — Revisión y aprobación de los criterios de aceptación | [spec.md](archive/s4.5-aprobacion-criterios-aceptacion/spec.md) | [plan.md](archive/s4.5-aprobacion-criterios-aceptacion/plan.md) | [tasks.md](archive/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre) |
+| S4.6 — Casos de uso de colecciones | [spec.md](archive/s4.6-casos-uso-colecciones/spec.md) | [plan.md](archive/s4.6-casos-uso-colecciones/plan.md) | [tasks.md](archive/s4.6-casos-uso-colecciones/tasks.md#aceptación-y-cierre) |
+| S4.7 — Casos de uso de enlaces | [spec.md](archive/s4.7-casos-uso-enlaces/spec.md) | [plan.md](archive/s4.7-casos-uso-enlaces/plan.md) | [tasks.md](archive/s4.7-casos-uso-enlaces/tasks.md#aceptación-y-cierre) |
+| S4.8 — Dashboard y lecturas públicas | [spec.md](archive/s4.8-dashboard-y-lecturas-publicas/spec.md) | [plan.md](archive/s4.8-dashboard-y-lecturas-publicas/plan.md) | [tasks.md](archive/s4.8-dashboard-y-lecturas-publicas/tasks.md#aceptación-y-cierre) |
+| S4.9 — Fakes en memoria y pruebas de casos de uso | [spec.md](archive/s4.9-fakes-y-tests-casos-de-uso/spec.md) | [plan.md](archive/s4.9-fakes-y-tests-casos-de-uso/plan.md) | [tasks.md](archive/s4.9-fakes-y-tests-casos-de-uso/tasks.md#aceptación-y-cierre) |
+| S4.10 — Registro de eventos | [spec.md](archive/s4.10-registro-de-eventos/spec.md) | [plan.md](archive/s4.10-registro-de-eventos/plan.md) | [tasks.md](archive/s4.10-registro-de-eventos/tasks.md#aceptación-y-cierre) |
+| S5.1 — Configuración de SQLite y Dapper | [spec.md](archive/s5.1-configuracion-sqlite-dapper/spec.md) | [plan.md](archive/s5.1-configuracion-sqlite-dapper/plan.md) | [tasks.md](archive/s5.1-configuracion-sqlite-dapper/tasks.md#aceptación-y-cierre); DLG aceptó «Tenemos BBDD»; archivada el 19-X-2026 |
+| S5.2 — Ejecutor de scripts SQL versionados | [spec.md](archive/s5.2-ejecutor-scripts-sql-versionados/spec.md) | [plan.md](archive/s5.2-ejecutor-scripts-sql-versionados/plan.md) | [tasks.md](archive/s5.2-ejecutor-scripts-sql-versionados/tasks.md#aceptación-y-cierre); aprobación «Completado», aceptación «Migraciones ready»; archivada el 19-X-2026 |
+| S5.2.1 — Separar scripts de prueba del catálogo de migraciones | [spec.md](archive/s5.2.1-separar-scripts-prueba-catalogo/spec.md) | [plan.md](archive/s5.2.1-separar-scripts-prueba-catalogo/plan.md) | [tasks.md](archive/s5.2.1-separar-scripts-prueba-catalogo/tasks.md#aceptación-y-cierre); DLG aceptó «Completada»; archivada el 19-X-2026 |
+| S5.3 — Esquema de `User`, `Collection` y `Link` | [spec.md](archive/s5.3-esquema-user-collection-link/spec.md) | [plan.md](archive/s5.3-esquema-user-collection-link/plan.md) | [tasks.md](archive/s5.3-esquema-user-collection-link/tasks.md#aceptación-y-cierre); DLG aceptó «Tenemos schema»; archivada el 19-X-2026 |
+| S5.4 — Registro de la colación `es-ES` | [spec.md](archive/s5.4-colacion-es-es/spec.md) | [plan.md](archive/s5.4-colacion-es-es/plan.md) | [tasks.md](archive/s5.4-colacion-es-es/tasks.md#aceptación-y-cierre); DLG aceptó «Colación añadida»; archivada el 19-X-2026 |
+| S5.5 — Unit of Work y repositorios Dapper | [spec.md](archive/s5.5-unit-of-work-y-repositorios-dapper/spec.md) | [plan.md](archive/s5.5-unit-of-work-y-repositorios-dapper/plan.md) | [tasks.md](archive/s5.5-unit-of-work-y-repositorios-dapper/tasks.md#aceptación-y-cierre); DLG aceptó «Repositorios listos»; archivada el 19-X-2026 |
+| S5.6 — Aprovisionamiento SQL de identidad de desarrollo | [spec.md](archive/s5.6-sql-local-identidad-desarrollo/spec.md) | [plan.md](archive/s5.6-sql-local-identidad-desarrollo/plan.md) | [tasks.md](archive/s5.6-sql-local-identidad-desarrollo/tasks.md#aceptación-y-cierre); DLG aceptó «Tenemos demo user»; archivada el 19-X-2026 |
+| S5.7 — Proveedor de identidad de desarrollo | [spec.md](archive/s5.7-proveedor-identidad-desarrollo/spec.md) | [plan.md](archive/s5.7-proveedor-identidad-desarrollo/plan.md) | [tasks.md](archive/s5.7-proveedor-identidad-desarrollo/tasks.md#aceptación-y-cierre); DLG aceptó «Completado»; archivada el 19-X-2026 |
+| S5.8 — Tests de integración de persistencia | [spec.md](archive/s5.8-tests-integracion-persistencia/spec.md) | [plan.md](archive/s5.8-tests-integracion-persistencia/plan.md) | [tasks.md](archive/s5.8-tests-integracion-persistencia/tasks.md#aceptación-y-cierre); DLG aceptó «Completada»; archivada el 19-X-2026 |
+| S5.10 — Revisión manual de la aplicación repetida del script local | [spec.md](archive/s5.10-revision-manual-aplicacion-script-local/spec.md) | [plan.md](archive/s5.10-revision-manual-aplicacion-script-local/plan.md) | [tasks.md](archive/s5.10-revision-manual-aplicacion-script-local/tasks.md#aceptación-y-cierre); DLG aceptó «Completado»; archivada el 19-X-2026 |
+| S5.9 — Revisión manual de migraciones y esquema SQLite | [spec.md](archive/s5.9-revision-manual-migraciones-esquema/spec.md) | [plan.md](archive/s5.9-revision-manual-migraciones-esquema/plan.md) | [tasks.md](archive/s5.9-revision-manual-migraciones-esquema/tasks.md#aceptación-y-cierre); DLG aceptó «Completada»; CA04 completado con evidencia suplementaria; archivada el 19-X-2026 |

@@ -98,6 +98,23 @@ public class CollectionServiceTests
     }
 
     [Fact]
+    public async Task CreateCollection_WhenVisibilityIsNotSpecified_CreatesPrivateCollectionForCurrentUser()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.CreateCollection(new CollectionCreateRequest("Private collection"));
+
+        Assert.True(result.IsSuccess);
+        Collection created = Assert.Single(repository.Items);
+        Assert.Equal(currentUser.UserId, created.UserId);
+        Assert.False(created.IsPublic);
+    }
+
+    [Fact]
     public async Task CreateCollection_WhenUserIsUnauthenticated_ReturnsResourceNotAccessible()
     {
         CurrentUser currentUser = new CurrentUser(0);
@@ -208,6 +225,50 @@ public class CollectionServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
         Assert.Equal("COLLECTION_NAME_REQUIRED", result.Errors[0].Code);
+        Assert.Equal("Old Name", collection.Name);
+        Assert.Equal("old-name", collection.Slug);
+        Assert.Equal(0, repository.UpdateCalls);
+    }
+
+    [Fact]
+    public async Task RenameCollection_WhenSlugCannotBeGenerated_LeavesCollectionUnchanged()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        Collection collection = Collection.Create(7, "Original name", "desc");
+        SetId(collection, 42);
+        repository.Items.Add(collection);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.RenameCollection(new CollectionRenameRequest(collection.Id, "💫"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Original name", collection.Name);
+        Assert.Equal("original-name", collection.Slug);
+        Assert.Equal(0, repository.UpdateCalls);
+    }
+
+    [Fact]
+    public async Task RenameCollection_WhenCollectionBelongsToAnotherUser_LeavesItUnchanged()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        Collection collection = Collection.Create(9, "Other user's collection", "desc");
+        SetId(collection, 42);
+        repository.Items.Add(collection);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.RenameCollection(new CollectionRenameRequest(collection.Id, "Changed name"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
+        Assert.Equal("Other user's collection", collection.Name);
+        Assert.Equal("other-users-collection", collection.Slug);
+        Assert.Equal(0, repository.UpdateCalls);
     }
 
     [Fact]
@@ -307,6 +368,8 @@ public class CollectionServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
         Assert.Equal("COLLECTION_VISIBILITY_NOT_ACCESSIBLE", result.Errors[0].Code);
+        Assert.False(otherUserCollection.IsPublic);
+        Assert.Equal(0, repository.UpdateCalls);
     }
 
     [Fact]
@@ -341,6 +404,30 @@ public class CollectionServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
+        Assert.Equal("COLLECTION_DELETE_NOT_ACCESSIBLE", result.Errors[0].Code);
+        Assert.Contains(collection, repository.Items);
+        Assert.Equal(0, repository.DeleteCalls);
+    }
+
+    [Fact]
+    public async Task DeleteCollection_WhenIdIsInvalid_ReturnsValidationWithoutDeleting()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        Collection collection = Collection.Create(currentUser.UserId, "Keep this collection", null);
+        SetId(collection, 12);
+        repository.Items.Add(collection);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result result = await service.DeleteCollection(new CollectionDeleteRequest(0));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
+        Assert.Equal("COLLECTION_ID_INVALID", result.Errors[0].Code);
+        Assert.Contains(collection, repository.Items);
+        Assert.Equal(0, repository.DeleteCalls);
     }
 
     [Fact]
@@ -368,6 +455,8 @@ public class CollectionServiceTests
         Assert.Equal(1, unitOfWorkFactory.LastUnitOfWork!.BeginCount);
         Assert.Equal(0, unitOfWorkFactory.LastUnitOfWork.CommitCount);
         Assert.Equal(1, unitOfWorkFactory.LastUnitOfWork.RollbackCount);
+        Assert.Contains(collection, repository.Items);
+        Assert.Contains(link, linkRepository.Links);
     }
 
     [Fact]
@@ -390,6 +479,7 @@ public class CollectionServiceTests
         Assert.Equal(1, unitOfWorkFactory.LastUnitOfWork!.BeginCount);
         Assert.Equal(0, unitOfWorkFactory.LastUnitOfWork.CommitCount);
         Assert.Equal(1, unitOfWorkFactory.LastUnitOfWork.RollbackCount);
+        Assert.Contains(collection, repository.Items);
     }
 
     [Fact]
@@ -483,6 +573,54 @@ public class CollectionServiceTests
     }
 
     [Fact]
+    public async Task CreateCollection_WhenNameCannotProduceSlug_DoesNotInsertCollection()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.CreateCollection(new CollectionCreateRequest("💫"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Empty(repository.Items);
+    }
+    [Fact]
+    public async Task CreateCollection_WhenNameIsAlreadyUsed_DoesNotInsertAnotherCollection()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        Collection existing = Collection.Create(currentUser.UserId, "Same name", null);
+        SetId(existing, 12);
+        repository.Items.Add(existing);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.CreateCollection(new CollectionCreateRequest("Same name"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Single(repository.Items);
+        Assert.Same(existing, repository.Items[0]);
+    }
+
+    [Fact]
+    public async Task CreateCollection_WhenNameIsBlank_DoesNotInsertCollection()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.CreateCollection(new CollectionCreateRequest("   "));
+
+        Assert.False(result.IsSuccess);
+        Assert.Empty(repository.Items);
+    }
+
+    [Fact]
     public async Task RenameCollection_WhenDuplicateSlugExists_ReturnsDomainError()
     {
         CurrentUser currentUser = new CurrentUser(7);
@@ -504,6 +642,28 @@ public class CollectionServiceTests
         Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
         Assert.Equal("COLLECTION_NAME_IN_USE", result.Errors[0].Code);
         Assert.Equal($"{CollectionErrors.NameInUseMessage}: {alpha.Name}.", result.Errors[0].Message);
+        Assert.Equal("Beta", beta.Name);
+        Assert.Equal("beta", beta.Slug);
+        Assert.Equal(0, repository.UpdateCalls);
+    }
+    [Fact]
+    public async Task RenameCollection_WhenCollectionDoesNotExist_DoesNotUpdateAnyCollection()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        Collection unrelated = Collection.Create(currentUser.UserId, "Unrelated", null);
+        SetId(unrelated, 99);
+        repository.Items.Add(unrelated);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.RenameCollection(new CollectionRenameRequest(42, "Changed"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
+        Assert.Equal("Unrelated", unrelated.Name);
+        Assert.Equal(0, repository.UpdateCalls);
     }
 
     [Fact]
@@ -663,6 +823,8 @@ public class CollectionServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
         Assert.Equal("COLLECTION_DELETE_NOT_ACCESSIBLE", result.Errors[0].Code);
+        Assert.Empty(repository.Items);
+        Assert.Equal(0, repository.DeleteCalls);
     }
 
     [Fact]
@@ -725,6 +887,35 @@ public class CollectionServiceTests
     }
 
     [Fact]
+    public async Task ChangeCollectionVisibility_WhenMadePublic_KeepsLinksPrivate()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        Collection collection = Collection.Create(7, "Private collection", null, isPublic: false);
+        SetId(collection, 8);
+        repository.Items.Add(collection);
+        Link privateLink = Link.Create(7, collection, "https://example.com/private", "Private", null, null, isPublic: false);
+        Link alsoPrivateLink = Link.Create(7, collection, "https://example.com/private-2", "Private 2", null, null, isPublic: false);
+        SetId(privateLink, 91);
+        SetId(alsoPrivateLink, 92);
+        linkRepository.Links.Add(privateLink);
+        linkRepository.Links.Add(alsoPrivateLink);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.ChangeCollectionVisibility(new CollectionChangeVisibilityRequest(collection.Id, true));
+
+        Assert.True(result.IsSuccess);
+        Assert.True(collection.IsPublic);
+        Assert.False(privateLink.IsPublic);
+        Assert.False(alsoPrivateLink.IsPublic);
+        Assert.Equal(2, linkRepository.Links.Count);
+        Assert.Empty(linkRepository.UpdatedLinks);
+        Assert.Equal(1, unitOfWorkFactory.LastUnitOfWork!.CommitCount);
+    }
+
+    [Fact]
     public async Task ChangeCollectionVisibility_WhenMadePrivate_PersistsCollectionAndAllLinksInSameUnitOfWork()
     {
         CurrentUser currentUser = new CurrentUser(7);
@@ -771,11 +962,14 @@ public class CollectionServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
         CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
 
-        Result<IReadOnlyList<CollectionDto>> result = await service.ListCollections("al");
+        Result<IReadOnlyList<CollectionDto>> result = await service.ListCollections("  al  ");
 
         Assert.True(result.IsSuccess);
         Assert.Single(result.Value!);
         Assert.Equal("Alpha", result.Value![0].Name);
+        Assert.Equal(currentUser.UserId, repository.LastUserId);
+        Assert.Equal("al", repository.LastQuery);
+        Assert.Equal(1, repository.LastPage);
     }
 
     [Fact]
@@ -1030,6 +1224,10 @@ public class CollectionServiceTests
     {
         public List<Collection> Items { get; } = [];
         public int UpdateCalls { get; private set; }
+        public long LastUserId { get; private set; }
+        public string? LastQuery { get; private set; }
+        public int LastPage { get; private set; }
+        public int DeleteCalls { get; private set; }
 
         public Task<Collection?> GetById(long id, long userId, CancellationToken cancellationToken = default)
             => Task.FromResult(Items.FirstOrDefault(item => item.Id == id && item.UserId == userId));
@@ -1041,7 +1239,11 @@ public class CollectionServiceTests
             => Task.FromResult<IReadOnlyCollection<Collection>>(Items.Where(item => item.UserId == userId).ToList());
 
         public Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyCollection<CollectionDto>>(
+        {
+            LastUserId = userId;
+            LastQuery = query;
+            LastPage = page;
+            return Task.FromResult<IReadOnlyCollection<CollectionDto>>(
                 Items
                     .Where(item => item.UserId == userId)
                     .Where(item => string.IsNullOrWhiteSpace(query) || item.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
@@ -1049,6 +1251,7 @@ public class CollectionServiceTests
                     .Take(10)
                     .Select(item => new CollectionDto(item.Id, item.Name, item.Slug, item.Description, item.IsPublic, item.Links.Count, item.CreatedAt))
                     .ToList());
+        }
 
         public Task<int> GetPageCountByUser(long userId, string? query, CancellationToken cancellationToken = default)
             => Task.FromResult(
@@ -1080,6 +1283,7 @@ public class CollectionServiceTests
 
         public Task Delete(long id, long userId, CancellationToken cancellationToken = default)
         {
+            DeleteCalls++;
             Collection? target = Items.FirstOrDefault(item => item.Id == id && item.UserId == userId);
             if (target is not null)
             {

@@ -46,7 +46,7 @@ T03 y T02 son secuenciales porque `UrlHostPolicy` lanza una excepción creada en
 | CA09 | T02, T05, T07 | V03, V04, V06, V10 | Pasada | 10-X-2026, .NET 10.0.12 | [src/Linkubator.Domain/Policies/LinkUrlPolicy.cs](../../../src/Linkubator.Domain/Policies/LinkUrlPolicy.cs); [src/Linkubator.Domain/Exceptions/](../../../src/Linkubator.Domain/Exceptions/) |
 | CA10 | T05, T07 | V05, V10 | Pasada | 10-X-2026, .NET 10.0.12 | [src/Linkubator.Domain/Policies/LinkUrlPolicy.cs](../../../src/Linkubator.Domain/Policies/LinkUrlPolicy.cs); [tests/Linkubator.Tests/Domain/Policies/UrlPoliciesTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/UrlPoliciesTests.cs) |
 | CA11 | T05, T07 | V07, V10 | Pasada | 10-X-2026, .NET 10.0.12 | [src/Linkubator.Domain/Policies/LinkUrlPolicy.cs](../../../src/Linkubator.Domain/Policies/LinkUrlPolicy.cs); [tests/Linkubator.Tests/Domain/Policies/UrlPoliciesTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/UrlPoliciesTests.cs) |
-| CA12 | T04, T06, T08 | V01, V08 | Pasada | 10-X-2026, .NET 10.0.12 | [src/Linkubator.Domain/Policies/UriSchemePolicy.cs](../../../src/Linkubator.Domain/Policies/UriSchemePolicy.cs); [tests/Linkubator.Tests/Domain/Policies/UrlPoliciesTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/UrlPoliciesTests.cs) |
+| CA12 | T04, T06, T08 | V01, V08 | Pasada | 10-X-2026, .NET 10.0.12 | [UriAuthorityPolicy.cs](../../../src/Linkubator.Domain/Policies/UriAuthorityPolicy.cs); [UrlPoliciesTests.cs](../../../tests/Linkubator.Tests/Domain/Policies/UrlPoliciesTests.cs) |
 | CA13 | T08 | V09, V11, V12 | Pasada | 10-X-2026, .NET 10.0.12 | Build sin warnings; 31 pruebas correctas; aislamiento arquitectónico verificado |
 
 ## Aceptación y cierre

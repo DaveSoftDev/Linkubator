@@ -232,22 +232,22 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 | S5.3 | Escribir el esquema de `User`, `Collection` y `Link` con únicos, la clave foránea compuesta `Link (UserId, CollectionId)` e índices | IA |
 | S5.4 | Registrar la colación `es-ES` con `CreateCollation` en todas las conexiones | IA |
 | S5.5 | Implementar el Unit of Work con `BEGIN IMMEDIATE` y los repositorios Dapper | IA |
-| S5.6 | Escribir el SQL local de desarrollo, idempotente: usuario completado y «Bandeja de entrada» | IA |
-| S5.7 | Implementar el proveedor de identidad, que solo se registra en desarrollo y falla al arrancar si no hay usuario completado | IA |
+| S5.6 | Implementar el aprovisionamiento SQL idempotente de identidad de desarrollo y su ejecución tras las migraciones al arrancar, en todos los entornos | IA |
+| S5.7 | Implementar el proveedor de identidad y registrarlo en todos los entornos hasta que LoginV0 introduzca autenticación real | IA |
 | S5.8 | Escribir tests de integración sobre SQLite temporal: únicos, clave compuesta, carreras (última colección, privada vs público, mover a colección ajena) y orden alfabético | IA |
 | S5.9 | Ejecutar las migraciones, revisar el SQL y comprobar el esquema con una herramienta SQLite | Humano |
 | S5.10 | Revisar manualmente la aplicación del script local dos veces seguidas | Humano |
 
 **Definition of Done**
 
-- [ ] Los scripts se aplican sobre una BD vacía y la dejan en el estado esperado.
-- [ ] WAL, `busy_timeout` y claves foráneas están activos en cada conexión.
-- [ ] La colación `es-ES` ordena según [«Listados»](../context/specifications.md#listados).
-- [ ] El script local se puede repetir sin duplicar datos.
-- [ ] La aplicación no arranca sin usuario de desarrollo completado, y el proveedor solo se registra en desarrollo.
-- [ ] Los tests de transacciones y de carreras pasan.
-- [ ] Los repositorios cumplen los contratos y criterios de S4.
-- [ ] El humano ha revisado el esquema y el SQL.
+- [x] Los scripts se aplican sobre una BD vacía y la dejan en el estado esperado.
+- [x] WAL, `busy_timeout` y claves foráneas están activos en cada conexión.
+- [x] La colación `es-ES` ordena según [«Listados»](../context/specifications.md#listados).
+- [x] El script local se puede repetir sin duplicar datos.
+- [x] En cada arranque se aplican las migraciones antes de aprovisionar o completar el usuario de desarrollo; el proveedor resuelve esa identidad en todos los entornos hasta LoginV0.
+- [x] Los tests de transacciones y de carreras pasan.
+- [x] Los repositorios cumplen los contratos y criterios de S4.
+- [x] El humano ha revisado el esquema y el SQL.
 
 ### S6: Persistencia II: FTS5 (L)
 
@@ -299,7 +299,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 | S7.3 | Resolver la identidad de desarrollo en `/app` e inyectarla en los casos de uso | IA |
 | S7.4 | Crear el layout privado: idioma `es`, landmarks, enlace de salto, foco visible, contraste AA, `prefers-reduced-motion` y `noindex, nofollow` | IA |
 | S7.5 | Crear componentes: resumen de errores accesible, avisos, estado vacío, paginación y formulario de búsqueda | IA |
-| S7.6 | Implementar el análisis de `p`, `c`, `q` y `e` con sus reglas de ignorar y de error ([«Rutas privadas»](../context/specifications.md#rutas-privadas)) | IA |
+| S7.6 | Implementar el análisis de `p`, `c` y `q` con sus reglas de ignorar y de error ([«Rutas privadas»](../context/specifications.md#rutas-privadas)) | IA |
 | S7.7 | Implementar `/app` → dashboard, `404` genérico por método no permitido y el mensaje «No se ha podido acceder al elemento solicitado.» | IA |
 | S7.8 | Configurar el registro de peticiones sin cadena de consulta de los listados privados | IA |
 | S7.9 | Escribir tests de integración HTTP: HTTPS, cabeceras, `Host`, antiforgery, redirección, `404` y parámetros | IA |
@@ -325,7 +325,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 | S8.1 | Implementar el listado `/app/colecciones` con `q`, `p`, orden alfabético y estado vacío | IA |
 | S8.2 | Implementar crear, editar y eliminar (con confirmación) y cambiar visibilidad por POST con estado destino explícito | IA |
 | S8.3 | Mostrar errores de validación junto al campo, foco en el primer campo con error, y errores de reglas de dominio | IA |
-| S8.4 | Aplicar la respuesta común para identificadores inválidos, inexistentes o ajenos (GET con enlace al listado, POST con redirección y aviso) | IA |
+| S8.4 | Aplicar validación para identificadores inválidos y la respuesta común para identificadores válidos inexistentes o ajenos (GET con enlace al listado, POST con redirección y aviso) | IA |
 | S8.5 | Escribir tests HTTP derivados de los criterios aprobados en S4, de [«Rutas privadas»](../context/specifications.md#rutas-privadas) y de búsqueda de colecciones, con aislamiento entre usuarios | IA |
 | S8.6 | Ejecutar la guía manual: crear, renombrar, buscar, paginar, eliminar y reglas de borrado | Humano |
 | S8.7 | Revisar textos, mensajes y accesibilidad de los formularios | Humano |

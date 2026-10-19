@@ -9,7 +9,7 @@
 
 Este documento reúne los criterios GIVEN/WHEN/THEN para los casos de uso S4, con trazabilidad a las reglas propietarias de [requirements.md](../context/requirements.md), [specifications.md](../context/specifications.md), [domain-model.md](../context/domain-model.md), [architecture.md](../context/architecture.md) y la puerta de S4 en [mvp0-plan.md](mvp0-plan.md#puerta-de-entrada-de-la-implementación-criterios-de-aceptación-de-s4).
 
-No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documento y la sección que lo fundamentan. DLG aprobó el catálogo en S4.5 el 16-X-2026 («Leído y comprendido»); la decisión y el cierre documental constan en [S4.5 → «Aceptación y cierre»](../specs/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre).
+No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documento y la sección que lo fundamentan. DLG aprobó el catálogo en S4.5 el 16-X-2026 («Leído y comprendido»); la decisión y el cierre documental constan en [S4.5 → «Aceptación y cierre»](../specs/archive/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre).
 
 ## Criterios de aceptación
 
@@ -60,9 +60,9 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - Dado un usuario identificado y una colección de su propiedad que no tiene enlaces y no es la última del usuario.
 - Cuando solicita eliminar esa colección.
 - Entonces se elimina la colección.
-- Dado un usuario identificado y un identificador de colección inválido, inexistente o que corresponde a una colección ajena.
+- Dado un usuario identificado y una solicitud de eliminación con un identificador inválido, o con un identificador válido que no existe o corresponde a una colección ajena.
 - Cuando solicita eliminar la colección identificada.
-- Entonces Application devuelve un error de categoría `ResourceNotAccessible` con un código estable específico de eliminar colecciones, común a los tres casos y sin revelar cuál ocurrió. La operación no modifica datos. Web mapea ese error al mensaje «No se ha podido eliminar la colección» y al tratamiento GET/POST definidos en la fuente propietaria.
+- Entonces un identificador inválido produce un error de validación y no modifica datos. Si el identificador es válido pero la colección no existe o es ajena, Application devuelve un error de categoría `ResourceNotAccessible` con un código estable específico de eliminar colecciones, común a ambos casos y sin revelar cuál ocurrió. La operación no modifica datos. Web traduce cada resultado según [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas).
 
 #### AC-COL-04b — Eliminar una colección con enlaces o la última colección
 
@@ -135,9 +135,9 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - Dado un usuario identificado y un enlace de su propiedad.
 - Cuando confirma la eliminación de ese enlace.
 - Entonces el enlace se elimina.
-- Dado un usuario identificado y un identificador de enlace inválido, inexistente o que corresponde a un enlace ajeno.
+- Dado un usuario identificado y una solicitud de eliminación con un identificador inválido, o con un identificador válido que no existe o corresponde a un enlace ajeno.
 - Cuando solicita eliminar el enlace identificado.
-- Entonces Application devuelve un error de categoría `ResourceNotAccessible` con un código estable específico de eliminar enlaces, común a los tres casos y sin revelar cuál ocurrió. La operación no modifica datos. Web mapea ese error al mensaje «No se ha podido eliminar el enlace» y al tratamiento GET/POST definidos en la fuente propietaria.
+- Entonces un identificador inválido produce un error de validación y no modifica datos. Si el identificador es válido pero el enlace no existe o es ajeno, Application devuelve un error de categoría `ResourceNotAccessible` con un código estable específico de eliminar enlaces, común a ambos casos y sin revelar cuál ocurrió. La operación no modifica datos. Web traduce cada resultado según [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas).
 
 #### AC-LINK-06 — Listar enlaces del usuario
 
@@ -213,4 +213,4 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - La aprobación humana de este artefacto es la puerta antes de implementar S4.6–S4.10; DLG la registró el 16-X-2026 («Leído y comprendido»).
 - Si aparece una omisión o contradicción en una fuente propietaria, se detiene el criterio afectado y se resuelve en el documento propietario antes de aprobarlo.
 - Antes de esa aprobación, la implementación de casos de uso y la validación por fakes no podían comenzar.
-- La cobertura documental y la validación de enlaces e identificadores están registradas en [S4.4 → «Descomposición»](../specs/s4.4-criterios-aceptacion-casos-uso/tasks.md#descomposición) y [«Evidencia por criterio»](../specs/s4.4-criterios-aceptacion-casos-uso/tasks.md#evidencia-por-criterio). La aprobación posterior de S4.5 consta en [sus tareas → «Aceptación y cierre»](../specs/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre); no implica que S4.6–S4.10 hayan comenzado.
+- La cobertura documental y la validación de enlaces e identificadores están registradas en [S4.4 → «Descomposición»](../specs/archive/s4.4-criterios-aceptacion-casos-uso/tasks.md#descomposición) y [«Evidencia por criterio»](../specs/archive/s4.4-criterios-aceptacion-casos-uso/tasks.md#evidencia-por-criterio). La aprobación posterior de S4.5 consta en [sus tareas → «Aceptación y cierre»](../specs/archive/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre); no implica que S4.6–S4.10 hayan comenzado.
