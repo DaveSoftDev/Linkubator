@@ -79,7 +79,7 @@ Criterio de finalización:
 - Las transacciones son breves y no contienen operaciones externas.
 - WAL, `busy_timeout` y claves foráneas están configurados.
 
-Las proyecciones FTS5 se implementan en S6 según [architecture.md → «FTS5»](architecture.md#fts5); no son prerrequisito para cerrar Persistencia.
+Las proyecciones FTS5 se implementan en S6 según [architecture.md → «FTS5»](architecture.md#fts5); no son prerrequisito para cerrar Persistencia. La [S6.1 — proyecciones FTS5 de enlaces y colecciones](../specs/s6.1-proyecciones-fts5-enlaces-colecciones/spec.md), su [plan técnico](../specs/s6.1-proyecciones-fts5-enlaces-colecciones/plan.md) y sus [tareas y evidencia de cierre](../specs/s6.1-proyecciones-fts5-enlaces-colecciones/tasks.md#aceptación-y-cierre) están aprobados y cerrados por DLG el 19-X-2026 («Tenemos proyeciones»); se implementó V005 y la suite completa pasó 1050/1050.
 
 ## Next
 

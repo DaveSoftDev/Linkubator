@@ -11,6 +11,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| S6.1 — Proyecciones FTS5 de enlaces y colecciones | [spec.md](s6.1-proyecciones-fts5-enlaces-colecciones/spec.md) | [plan.md](s6.1-proyecciones-fts5-enlaces-colecciones/plan.md) | [tasks.md](s6.1-proyecciones-fts5-enlaces-colecciones/tasks.md#aceptación-y-cierre) — cerrada por DLG («Tenemos proyeciones», 19-X-2026) |
 | Catálogo de criterios de aceptación del MVP0 (preparación S4.4) | — | — | [mvp0-acceptance-criteria.md](../plans/mvp0-acceptance-criteria.md); preparación aceptada por DLG («A leer», 15-X-2026); catálogo aprobado por DLG («Leído y comprendido», 16-X-2026); trazabilidad documental en [S4.4 archivada](archive/s4.4-criterios-aceptacion-casos-uso/tasks.md#aceptación-y-cierre) y aprobación en [S4.5 archivada](archive/s4.5-aprobacion-criterios-aceptacion/tasks.md#aceptación-y-cierre) |
 
 ## Trabajos archivados

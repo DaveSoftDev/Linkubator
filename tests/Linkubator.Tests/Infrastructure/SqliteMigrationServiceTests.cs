@@ -82,8 +82,8 @@ public sealed class SqliteMigrationServiceTests
         await service.ApplyPendingMigrations();
 
         using SqliteConnection connection = factory.CreateOpenConnection();
-        string[] tableNames = connection.Query<string>("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name <> 'schema_migrations' ORDER BY name").ToArray();
-        Assert.Equal(new[] { "Collection", "Link", "User" }, tableNames);
+        string[] tableNames = connection.Query<string>("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'LinkSearch_%' AND name NOT LIKE 'CollectionSearch_%' AND name <> 'schema_migrations' ORDER BY name").ToArray();
+        Assert.Equal(new[] { "Collection", "CollectionSearch", "Link", "LinkSearch", "User" }, tableNames);
 
         AssertSchemaColumns(connection);
         AssertSchemaIndexes(connection);
@@ -118,7 +118,7 @@ public sealed class SqliteMigrationServiceTests
 
         using (SqliteConnection connection = factory.CreateOpenConnection())
         {
-            Assert.Equal(new[] { "V001", "V002", "V003", "V004" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version")).ToArray());
+            Assert.Equal(new[] { "V001", "V002", "V003", "V004", "V005" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version")).ToArray());
             Assert.Equal("legacy-seed", await connection.QuerySingleAsync<string>("SELECT value FROM sample_data WHERE id = 1;"));
         }
 
