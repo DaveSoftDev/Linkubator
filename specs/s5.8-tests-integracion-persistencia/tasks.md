@@ -46,7 +46,7 @@ Las tareas se ejecutan secuencialmente porque comparten la fixture de base tempo
 - Criterios sin evidencia satisfactoria: ninguno conocido; CA01–CA07 cuentan con evidencia satisfactoria.
 - Bloqueos y riesgos restantes: no hay bloqueos técnicos conocidos. Esta implementación no sustituye la revisión manual de S5.9/S5.10 ni completa la etapa Persistencia.
 - Aceptación humana: DLG, 19-X-2026 («Completada»), instrucción explícita en esta conversación.
-- Archivado: no solicitado.
+- Archivado: pendiente; DLG solicitó archivar los trabajos S5 cerrados el 19-X-2026 («Archiva las tareas pendientes»).
 - Ubicación archivada: pendiente.
 - Fecha efectiva de archivado y comprobación de enlaces: pendientes.
 - Siguiente paso autorizado, sin cerrar otras etapas: S5.8 queda cerrada para su alcance. S5.9 y S5.10 mantienen sus revisiones propias; el archivado de S5.8 no se ha solicitado.

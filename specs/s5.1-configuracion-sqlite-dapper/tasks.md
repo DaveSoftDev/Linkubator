@@ -44,7 +44,7 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no registrar r
 - Criterios sin evidencia satisfactoria: ninguno para el alcance S5.1.
 - Bloqueos y riesgos restantes: el archivo físico `data/database/Linkubator.db` se crea al abrir la aplicación y todavía no existe; el directorio está preparado. Esto no invalida las pruebas con bases temporales.
 - Aceptación humana del resultado: DLG, 19-X-2026 («Tenemos BBDD»).
-- Archivado: no solicitado.
+- Archivado: pendiente; DLG solicitó archivar los trabajos S5 cerrados el 19-X-2026 («Archiva las tareas pendientes»).
 - Ubicación archivada: pendiente.
 - Fecha efectiva de archivado y comprobación de enlaces: pendientes.
-- Siguiente paso autorizado: solicitar o registrar la aceptación explícita de DLG para cerrar S5.1; no iniciar etapas posteriores como parte de este cierre.
+- Siguiente paso autorizado: S5.1 queda cerrada para su alcance; el archivado no se ha solicitado.

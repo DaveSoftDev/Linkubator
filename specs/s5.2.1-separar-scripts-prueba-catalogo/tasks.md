@@ -44,7 +44,7 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no registrar r
 - Criterios sin evidencia satisfactoria: ninguno; CA01–CA04 tienen evidencia satisfactoria.
 - Bloqueos y riesgos restantes: ninguno conocido dentro del alcance de S5.2.1.
 - Aceptación humana: aceptada por DLG el 19-X-2026 («Completada»), instrucción explícita en esta conversación.
-- Archivado: no solicitado.
+- Archivado: pendiente; DLG solicitó archivar los trabajos S5 cerrados el 19-X-2026 («Archiva las tareas pendientes»).
 - Ubicación archivada: pendiente.
 - Fecha efectiva de archivado y comprobación de enlaces: pendientes.
 - Siguiente paso autorizado, sin cerrar otras etapas: aprobar las tareas de S5.9 y realizar su revisión manual; el cierre de S5.2.1 no acepta ni cierra S5.9.

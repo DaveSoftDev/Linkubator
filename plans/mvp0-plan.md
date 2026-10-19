@@ -240,14 +240,14 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [ ] Los scripts se aplican sobre una BD vacía y la dejan en el estado esperado.
-- [ ] WAL, `busy_timeout` y claves foráneas están activos en cada conexión.
-- [ ] La colación `es-ES` ordena según [«Listados»](../context/specifications.md#listados).
-- [ ] El script local se puede repetir sin duplicar datos.
-- [ ] En cada arranque se aplican las migraciones antes de aprovisionar o completar el usuario de desarrollo; el proveedor resuelve esa identidad en todos los entornos hasta LoginV0.
-- [ ] Los tests de transacciones y de carreras pasan.
-- [ ] Los repositorios cumplen los contratos y criterios de S4.
-- [ ] El humano ha revisado el esquema y el SQL.
+- [x] Los scripts se aplican sobre una BD vacía y la dejan en el estado esperado.
+- [x] WAL, `busy_timeout` y claves foráneas están activos en cada conexión.
+- [x] La colación `es-ES` ordena según [«Listados»](../context/specifications.md#listados).
+- [x] El script local se puede repetir sin duplicar datos.
+- [x] En cada arranque se aplican las migraciones antes de aprovisionar o completar el usuario de desarrollo; el proveedor resuelve esa identidad en todos los entornos hasta LoginV0.
+- [x] Los tests de transacciones y de carreras pasan.
+- [x] Los repositorios cumplen los contratos y criterios de S4.
+- [x] El humano ha revisado el esquema y el SQL.
 
 ### S6: Persistencia II: FTS5 (L)
 

@@ -43,7 +43,7 @@ La tarea T06 incluye la actualización documental del estado de S5.4 en el roadm
 - Criterios sin evidencia satisfactoria: ninguno; CA01–CA03 tienen evidencia satisfactoria.
 - Bloqueos y riesgos restantes: ninguno para el alcance S5.4. El orden integrado de los listados corresponde a S5.8 y no bloquea este cierre.
 - Aceptación humana: DLG, 19-X-2026 («Colación añadida»).
-- Archivado: no solicitado.
+- Archivado: pendiente; DLG solicitó archivar los trabajos S5 cerrados el 19-X-2026 («Archiva las tareas pendientes»).
 - Ubicación archivada: pendiente.
 - Fecha efectiva de archivado y comprobación de enlaces: pendientes.
 - Siguiente paso autorizado: continuar con el siguiente trabajo del roadmap; S5.4 queda cerrada para su alcance. El archivado no se ha solicitado.

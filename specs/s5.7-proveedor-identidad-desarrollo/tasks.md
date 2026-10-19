@@ -45,7 +45,7 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no registrar r
 - Criterios sin evidencia satisfactoria: ninguno conocido para CA01–CA05; la integración de operaciones privadas completas no se prueba porque las rutas privadas/casos de uso HTTP quedan fuera de este alcance.
 - Bloqueos y riesgos restantes: sin bloqueo técnico conocido en S5.7. La prueba de CA04 valida el middleware y no una página privada completa; S5.8 y las etapas de interfaz conservan sus validaciones propias.
 - Aceptación humana: DLG, 19-X-2026 («Completado»), instrucción explícita en esta conversación.
-- Archivado: no solicitado.
+- Archivado: pendiente; DLG solicitó archivar los trabajos S5 cerrados el 19-X-2026 («Archiva las tareas pendientes»).
 - Ubicación archivada: pendiente.
 - Fecha efectiva de archivado y comprobación de enlaces: pendientes.
 - Aprobación de tareas: DLG, 19-X-2026 («Siguiente»).

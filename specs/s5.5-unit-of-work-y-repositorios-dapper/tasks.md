@@ -51,7 +51,7 @@ T02–T04 se desarrollaron con el esquema S5.3 disponible. T05 depende de T01 ya
 - Criterios sin evidencia satisfactoria: ninguno; CA01–CA08 cuentan con evidencia focalizada e integrada registrada.
 - Bloqueos y riesgos restantes: no hay bloqueos propios de S5.5. El desfase de `LinkService.CreateLink` respecto a las comprobaciones dentro de `BEGIN IMMEDIATE` sigue siendo riesgo de extremo a extremo según [spec.md → «Bloqueos y preguntas pendientes»](spec.md#bloqueos-y-preguntas-pendientes), no evidencia que S5.5 pueda atribuirse.
 - Aceptación humana: DLG, 19-X-2026 («Repositorios listos»).
-- Archivado: no solicitado.
+- Archivado: pendiente; DLG solicitó archivar los trabajos S5 cerrados el 19-X-2026 («Archiva las tareas pendientes»).
 - Ubicación archivada: pendiente.
 - Fecha efectiva de archivado y comprobación de enlaces: pendientes.
 - Siguiente paso: ninguno dentro del alcance de S5.5. El riesgo de `LinkService.CreateLink` queda como seguimiento independiente y no reabre este cierre.

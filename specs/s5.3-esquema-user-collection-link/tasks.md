@@ -47,7 +47,7 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no registrar r
 - Criterios sin evidencia satisfactoria: ninguno; CA01–CA05 tienen evidencia satisfactoria por la ejecución del 19-X-2026.
 - Bloqueos y riesgos restantes: no hay bloqueos funcionales de esquema en el alcance S5.3; S5.8 y S5.9 quedan como validaciones vecinas y no bloquean este cierre.
 - Aceptación humana del resultado: DLG, 19-X-2026 («Tenemos schema»).
-- Archivado: no solicitado.
+- Archivado: pendiente; DLG solicitó archivar los trabajos S5 cerrados el 19-X-2026 («Archiva las tareas pendientes»).
 - Ubicación archivada: pendiente.
 - Fecha efectiva de archivado y comprobación de enlaces: pendientes.
 - Siguiente paso autorizado: continuar con el siguiente bloque del roadmap. S5.3 queda cerrada para su alcance; no se ha solicitado archivado.
