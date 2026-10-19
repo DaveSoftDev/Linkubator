@@ -64,6 +64,10 @@ Objetivos:
 - Registrar la colación propia del orden alfabético en todas las conexiones ([architecture.md → «Persistencia»](architecture.md#persistencia)).
 - Implementar el Unit of Work, las transacciones y las proyecciones FTS5 de enlaces y colecciones, una por entidad ([architecture.md → «Persistencia»](architecture.md#persistencia) y [architecture.md → «FTS5»](architecture.md#fts5)).
 
+La [S5.1 — configuración de SQLite y Dapper](../specs/s5.1-configuracion-sqlite-dapper/spec.md), su [plan técnico](../specs/s5.1-configuracion-sqlite-dapper/plan.md) y sus [tareas](../specs/s5.1-configuracion-sqlite-dapper/tasks.md) fueron aprobados por DLG el 19-X-2026 («Siguiente» en cada artefacto). La implementación quedó completada y aceptada por DLG el 19-X-2026 («Tenemos BBDD»); los tests focalizados pasaron 2/2 y el build de solución fue correcto. El archivo físico se creará al abrir una conexión de la aplicación; el directorio `data/database` está preparado. S5.1 queda cerrada para su alcance.
+
+La [S5.2 — ejecutor de scripts SQL versionados](../specs/s5.2-ejecutor-scripts-sql-versionados/spec.md) está en borrador, pendiente de aprobación; sus criterios cubren la aplicación ordenada, la idempotencia y el registro de fallos usando scripts de prueba, sin depender del esquema de S5.3.
+
 Criterio de finalización:
 
 - Las operaciones de enlaces y colecciones son atómicas.

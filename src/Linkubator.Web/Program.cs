@@ -9,7 +9,7 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) =>
         .ReadFrom.Services(services)
         .Enrich.FromLogContext());
 
-builder.Services.AddInfrastructure();
+builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddRazorPages();
 
 WebApplication app = builder.Build();

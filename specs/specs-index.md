@@ -6,6 +6,8 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| S5.1 — Configuración de SQLite y Dapper | [spec.md](s5.1-configuracion-sqlite-dapper/spec.md) | [plan.md](s5.1-configuracion-sqlite-dapper/plan.md) | [tasks.md](s5.1-configuracion-sqlite-dapper/tasks.md) |
+| S5.2 — Ejecutor de scripts SQL versionados (spec en borrador) | [spec.md](s5.2-ejecutor-scripts-sql-versionados/spec.md) | — | — |
 
 ## Trabajos completados
 
