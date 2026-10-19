@@ -40,6 +40,7 @@ public static class InfrastructureServiceCollectionExtensions
         });
 
         services.AddSingleton<DevelopmentIdentityProvisioner>();
+        services.AddSingleton<IDevelopmentIdentityProvider, DevelopmentIdentityProvider>();
 
         services.AddScoped<IUnitOfWorkFactory, SqliteUnitOfWorkFactory>();
         services.AddScoped(serviceProvider =>

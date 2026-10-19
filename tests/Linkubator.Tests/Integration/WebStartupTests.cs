@@ -1,8 +1,11 @@
 using Dapper;
+using Linkubator.Application.Contracts;
 using Linkubator.Infrastructure.Sqlite;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Linkubator.Tests.Integration;
 
@@ -69,6 +72,26 @@ public class WebStartupTests
         }
     }
 
+    [Fact]
+    public async Task Startup_WhenDevelopmentIdentityCannotBeResolved_DoesNotServeRequests()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash, failIdentityResolution: true);
+
+            Assert.ThrowsAny<Exception>(() => factory.CreateClient());
+
+            await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+            Assert.Equal(4L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
+            Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM User WHERE Email = @Email;", new { Email = DemoEmail }));
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
     private const string DemoEmail = "user@linkubator.test";
     private const string ValidArgon2idHash = "$argon2id$v=19$m=65536,t=3,p=1$42xS9y5nNCo8mABa9Y0KQw$w2hDMTrLZgBZ0Iqk7Q1m5J0C2U0xHgpiA62b0mXkVQ4";
 
@@ -90,7 +113,7 @@ public class WebStartupTests
         }
     }
 
-    private sealed class ConfiguredWebApplicationFactory(string databasePath, string passwordHash) : WebApplicationFactory<Program>
+    private sealed class ConfiguredWebApplicationFactory(string databasePath, string passwordHash, bool failIdentityResolution = false) : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -99,6 +122,18 @@ public class WebStartupTests
             builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
             builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");
             builder.UseSetting("DevelopmentIdentity:PasswordHash", passwordHash);
+
+            if (failIdentityResolution)
+            {
+                builder.ConfigureTestServices(services =>
+                    services.AddSingleton<IDevelopmentIdentityProvider, UnresolvableDevelopmentIdentityProvider>());
+            }
         }
+    }
+
+    private sealed class UnresolvableDevelopmentIdentityProvider : IDevelopmentIdentityProvider
+    {
+        public Task<long> GetUserId(CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("The configured development identity cannot be resolved.");
     }
 }

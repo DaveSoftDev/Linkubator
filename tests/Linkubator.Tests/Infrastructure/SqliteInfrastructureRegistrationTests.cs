@@ -30,6 +30,7 @@ public sealed class SqliteInfrastructureRegistrationTests
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IDashboardRepository>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IPublicReadRepository>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<ISqliteConnectionFactory>());
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<IDevelopmentIdentityProvider>());
 
         Microsoft.Data.Sqlite.SqliteConnection connection = scope.ServiceProvider.GetRequiredService<Microsoft.Data.Sqlite.SqliteConnection>();
         Assert.Equal(System.Data.ConnectionState.Open, connection.State);
