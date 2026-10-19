@@ -299,7 +299,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 | S7.3 | Resolver la identidad de desarrollo en `/app` e inyectarla en los casos de uso | IA |
 | S7.4 | Crear el layout privado: idioma `es`, landmarks, enlace de salto, foco visible, contraste AA, `prefers-reduced-motion` y `noindex, nofollow` | IA |
 | S7.5 | Crear componentes: resumen de errores accesible, avisos, estado vacío, paginación y formulario de búsqueda | IA |
-| S7.6 | Implementar el análisis de `p`, `c`, `q` y `e` con sus reglas de ignorar y de error ([«Rutas privadas»](../context/specifications.md#rutas-privadas)) | IA |
+| S7.6 | Implementar el análisis de `p`, `c` y `q` con sus reglas de ignorar y de error ([«Rutas privadas»](../context/specifications.md#rutas-privadas)) | IA |
 | S7.7 | Implementar `/app` → dashboard, `404` genérico por método no permitido y el mensaje «No se ha podido acceder al elemento solicitado.» | IA |
 | S7.8 | Configurar el registro de peticiones sin cadena de consulta de los listados privados | IA |
 | S7.9 | Escribir tests de integración HTTP: HTTPS, cabeceras, `Host`, antiforgery, redirección, `404` y parámetros | IA |
