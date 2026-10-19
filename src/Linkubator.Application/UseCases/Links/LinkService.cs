@@ -67,46 +67,59 @@ public sealed class LinkService : ILinkService
 
         try
         {
-            DomainEntities.Collection? collection = await _collectionRepository.GetById(request.CollectionId, _currentUser.UserId, cancellationToken);
-            if (collection is null)
-            {
-                SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId });
-                return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
-            }
-
-            if (request.IsPublic && !collection.IsPublic)
-            {
-                SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation rejected for user; public link in private collection", new { UserId = _currentUser.UserId }, request);
-                return Result<LinkDto>.Failure(LinkErrors.PublicLinkInPrivateCollection());
-            }
-
             string normalizedUrl = DomainPolicies.UrlNormalizationPolicy.Normalize(DomainPolicies.LinkUrlPolicy.Adjust(request.Url));
-
-            DomainEntities.Link? duplicate = await _linkRepository.GetByNormalizedUrl(_currentUser.UserId, normalizedUrl, cancellationToken);
-            if (duplicate is not null)
-            {
-                SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation rejected for user; duplicate URL in collection", new { UserId = _currentUser.UserId }, request);
-                DomainEntities.Collection? duplicateCollection = await _collectionRepository.GetById(duplicate.CollectionId, _currentUser.UserId, cancellationToken);
-                return Result<LinkDto>.Failure(LinkErrors.DuplicateUrl(duplicateCollection?.Name));
-            }
-
-            DomainEntities.Link created = DomainEntities.Link.Create(
-                _currentUser.UserId,
-                collection,
-                request.Url,
-                request.Title,
-                request.Description,
-                request.Image,
-                request.IsPublic);
-
             await using IUnitOfWork unitOfWork = _unitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
             await unitOfWork.Begin(cancellationToken);
-            ILinkRepository repository = unitOfWork.GetRepository<ILinkRepository>();
-            await repository.Insert(created, cancellationToken);
-            await unitOfWork.Commit(cancellationToken);
+            ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
+            ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
+            bool committed = false;
+            try
+            {
+                DomainEntities.Collection? collection = await collectionRepository.GetById(request.CollectionId, _currentUser.UserId, cancellationToken);
+                if (collection is null)
+                {
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation rejected for user; collection not accessible", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId });
+                    return Result<LinkDto>.Failure(LinkErrors.CollectionNotAccessible());
+                }
 
-            SafeLogger.Log(_logger, LogLevel.Information, null, "Link created", new { UserId = _currentUser.UserId });
-            return Result<LinkDto>.Success(Map(created));
+                if (request.IsPublic && !collection.IsPublic)
+                {
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation rejected for user; public link in private collection", new { UserId = _currentUser.UserId }, request);
+                    return Result<LinkDto>.Failure(LinkErrors.PublicLinkInPrivateCollection());
+                }
+
+                DomainEntities.Link? duplicate = await linkRepository.GetByNormalizedUrl(_currentUser.UserId, normalizedUrl, cancellationToken);
+                if (duplicate is not null)
+                {
+                    SafeLogger.Log(_logger, LogLevel.Warning, null, "Link creation rejected for user; duplicate URL in collection", new { UserId = _currentUser.UserId }, request);
+                    DomainEntities.Collection? duplicateCollection = await collectionRepository.GetById(duplicate.CollectionId, _currentUser.UserId, cancellationToken);
+                    return Result<LinkDto>.Failure(LinkErrors.DuplicateUrl(duplicateCollection?.Name));
+                }
+
+                DomainEntities.Link created = DomainEntities.Link.Create(
+                    _currentUser.UserId,
+                    collection,
+                    request.Url,
+                    request.Title,
+                    request.Description,
+                    request.Image,
+                    request.IsPublic);
+
+                await linkRepository.Insert(created, cancellationToken);
+                await unitOfWork.Commit(cancellationToken);
+                committed = true;
+
+                SafeLogger.Log(_logger, LogLevel.Information, null, "Link created", new { UserId = _currentUser.UserId });
+                return Result<LinkDto>.Success(Map(created));
+            }
+            finally
+            {
+                if (!committed)
+                {
+                    await unitOfWork.Rollback(cancellationToken);
+                }
+            }
+
         }
         catch (DomainExceptions.DomainException exception)
         {

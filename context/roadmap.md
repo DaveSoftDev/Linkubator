@@ -64,6 +64,8 @@ La [S5.6 — aprovisionamiento SQL de identidad de desarrollo](../specs/s5.6-sql
 
 La [S5.7 — proveedor de identidad de desarrollo](../specs/s5.7-proveedor-identidad-desarrollo/spec.md), su [plan técnico](../specs/s5.7-proveedor-identidad-desarrollo/plan.md) y sus [tareas](../specs/s5.7-proveedor-identidad-desarrollo/tasks.md) fueron aprobados por DLG el 19-X-2026 («Siguiente»). La implementación y validación técnica se completaron el 19-X-2026: proveedor SQLite registrado en todos los entornos, resolución comprobada al arranque después del aprovisionamiento, y middleware asíncrono de `/app` que establece el usuario scoped sin aceptar un identificador de la petición. Pasaron los tests focalizados 11/11, la suite 1032/1032 y el build de solución; el detalle consta en las tareas. DLG aceptó y cerró S5.7 para su alcance el 19-X-2026 («Completado»); la etapa Persistencia continúa abierta para S5.8–S5.10.
 
+La [S5.8 — tests de integración de persistencia](../specs/s5.8-tests-integracion-persistencia/spec.md), su [plan técnico](../specs/s5.8-tests-integracion-persistencia/plan.md) y sus [tareas](../specs/s5.8-tests-integracion-persistencia/tasks.md) están aprobados por DLG. La implementación terminó el 19-X-2026: tests focalizados 13/13, suite completa 1045/1045, build y `git diff --check` correctos. DLG aceptó y cerró S5.8 para su alcance el 19-X-2026 («Completada»); la etapa Persistencia continúa abierta para S5.9 y S5.10.
+
 Criterio de finalización:
 
 - Las operaciones de enlaces y colecciones son atómicas.
