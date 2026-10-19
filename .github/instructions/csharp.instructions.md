@@ -1,3 +1,9 @@
+---
+name: 'C# development'
+description: 'Guidelines for building C# applications'
+applyTo: 'src/**/*.cs'
+---
+
 ## Nomenclatura específica (no expresable en .editorconfig)
 
 ### Qué debes tener en cuenta cuando propongas código

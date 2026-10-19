@@ -60,9 +60,9 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - Dado un usuario identificado y una colección de su propiedad que no tiene enlaces y no es la última del usuario.
 - Cuando solicita eliminar esa colección.
 - Entonces se elimina la colección.
-- Dado un usuario identificado y un identificador de colección inválido, inexistente o que corresponde a una colección ajena.
+- Dado un usuario identificado y una solicitud de eliminación con un identificador inválido, o con un identificador válido que no existe o corresponde a una colección ajena.
 - Cuando solicita eliminar la colección identificada.
-- Entonces Application devuelve un error de categoría `ResourceNotAccessible` con un código estable específico de eliminar colecciones, común a los tres casos y sin revelar cuál ocurrió. La operación no modifica datos. Web mapea ese error al mensaje «No se ha podido eliminar la colección» y al tratamiento GET/POST definidos en la fuente propietaria.
+- Entonces un identificador inválido produce un error de validación y no modifica datos. Si el identificador es válido pero la colección no existe o es ajena, Application devuelve un error de categoría `ResourceNotAccessible` con un código estable específico de eliminar colecciones, común a ambos casos y sin revelar cuál ocurrió. La operación no modifica datos. Web traduce cada resultado según [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas).
 
 #### AC-COL-04b — Eliminar una colección con enlaces o la última colección
 
@@ -135,9 +135,9 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - Dado un usuario identificado y un enlace de su propiedad.
 - Cuando confirma la eliminación de ese enlace.
 - Entonces el enlace se elimina.
-- Dado un usuario identificado y un identificador de enlace inválido, inexistente o que corresponde a un enlace ajeno.
+- Dado un usuario identificado y una solicitud de eliminación con un identificador inválido, o con un identificador válido que no existe o corresponde a un enlace ajeno.
 - Cuando solicita eliminar el enlace identificado.
-- Entonces Application devuelve un error de categoría `ResourceNotAccessible` con un código estable específico de eliminar enlaces, común a los tres casos y sin revelar cuál ocurrió. La operación no modifica datos. Web mapea ese error al mensaje «No se ha podido eliminar el enlace» y al tratamiento GET/POST definidos en la fuente propietaria.
+- Entonces un identificador inválido produce un error de validación y no modifica datos. Si el identificador es válido pero el enlace no existe o es ajeno, Application devuelve un error de categoría `ResourceNotAccessible` con un código estable específico de eliminar enlaces, común a ambos casos y sin revelar cuál ocurrió. La operación no modifica datos. Web traduce cada resultado según [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas).
 
 #### AC-LINK-06 — Listar enlaces del usuario
 

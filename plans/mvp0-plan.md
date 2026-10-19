@@ -325,7 +325,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 | S8.1 | Implementar el listado `/app/colecciones` con `q`, `p`, orden alfabético y estado vacío | IA |
 | S8.2 | Implementar crear, editar y eliminar (con confirmación) y cambiar visibilidad por POST con estado destino explícito | IA |
 | S8.3 | Mostrar errores de validación junto al campo, foco en el primer campo con error, y errores de reglas de dominio | IA |
-| S8.4 | Aplicar la respuesta común para identificadores inválidos, inexistentes o ajenos (GET con enlace al listado, POST con redirección y aviso) | IA |
+| S8.4 | Aplicar validación para identificadores inválidos y la respuesta común para identificadores válidos inexistentes o ajenos (GET con enlace al listado, POST con redirección y aviso) | IA |
 | S8.5 | Escribir tests HTTP derivados de los criterios aprobados en S4, de [«Rutas privadas»](../context/specifications.md#rutas-privadas) y de búsqueda de colecciones, con aislamiento entre usuarios | IA |
 | S8.6 | Ejecutar la guía manual: crear, renombrar, buscar, paginar, eliminar y reglas de borrado | Humano |
 | S8.7 | Revisar textos, mensajes y accesibilidad de los formularios | Humano |
