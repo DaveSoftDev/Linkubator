@@ -82,13 +82,45 @@ public sealed class SqliteMigrationServiceTests
         await service.ApplyPendingMigrations();
 
         using SqliteConnection connection = factory.CreateOpenConnection();
-        string[] tableNames = connection.Query<string>("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT IN ('schema_migrations', 'sample_data') ORDER BY name").ToArray();
+        string[] tableNames = connection.Query<string>("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name <> 'schema_migrations' ORDER BY name").ToArray();
         Assert.Equal(new[] { "Collection", "Link", "User" }, tableNames);
 
         AssertSchemaColumns(connection);
         AssertSchemaIndexes(connection);
         AssertSchemaForeignKeys(connection);
         AssertSchemaDefinitionsAndDefaults(connection);
+
+        DeleteDatabaseFiles(databasePath);
+    }
+
+    [Fact]
+    public async Task ApplyPendingMigrations_WhenLegacyVersionsAreRecorded_PreservesHistoryAndSampleData()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory factory = new($"Data Source={databasePath}");
+        SqliteMigrationService service = new(factory, SqliteMigrationCatalog.Load());
+
+        await service.ApplyPendingMigrations();
+
+        using (SqliteConnection connection = factory.CreateOpenConnection())
+        {
+            await connection.ExecuteAsync("CREATE TABLE sample_data (id INTEGER PRIMARY KEY, value TEXT NOT NULL);");
+            await connection.ExecuteAsync("INSERT INTO sample_data (value) VALUES ('legacy-seed');");
+            await connection.ExecuteAsync(@"
+                INSERT INTO schema_migrations (version, applied_at_utc)
+                VALUES ('V001', '2026-10-01T00:00:00Z'),
+                       ('V002', '2026-10-01T00:00:00Z'),
+                       ('V003', '2026-10-01T00:00:00Z');
+            ");
+        }
+
+        await service.ApplyPendingMigrations();
+
+        using (SqliteConnection connection = factory.CreateOpenConnection())
+        {
+            Assert.Equal(new[] { "V001", "V002", "V003", "V004" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version")).ToArray());
+            Assert.Equal("legacy-seed", await connection.QuerySingleAsync<string>("SELECT value FROM sample_data WHERE id = 1;"));
+        }
 
         DeleteDatabaseFiles(databasePath);
     }

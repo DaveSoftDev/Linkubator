@@ -66,6 +66,10 @@ La [S5.7 — proveedor de identidad de desarrollo](../specs/s5.7-proveedor-ident
 
 La [S5.8 — tests de integración de persistencia](../specs/s5.8-tests-integracion-persistencia/spec.md), su [plan técnico](../specs/s5.8-tests-integracion-persistencia/plan.md) y sus [tareas](../specs/s5.8-tests-integracion-persistencia/tasks.md) están aprobados por DLG. La implementación terminó el 19-X-2026: tests focalizados 13/13, suite completa 1045/1045, build y `git diff --check` correctos. DLG aceptó y cerró S5.8 para su alcance el 19-X-2026 («Completada»); la etapa Persistencia continúa abierta para S5.9 y S5.10.
 
+La [S5.9 — revisión manual de migraciones y esquema SQLite](../specs/s5.9-revision-manual-migraciones-esquema/spec.md) y su [plan técnico](../specs/s5.9-revision-manual-migraciones-esquema/plan.md) fueron aprobados por DLG con «Siguiente» el 19-X-2026; la revisión V01/V02 del plan también fue aprobada con «Siguiente» y las tareas se re-aprobaron con «Aprobado» el mismo día. La exclusión de `V001`–`V003` se implementó y aceptó en [S5.2.1](../specs/s5.2.1-separar-scripts-prueba-catalogo/tasks.md#aceptación-y-cierre). V01 pasó 1/1 y V02 5/5; `V004` se revisó manualmente sin discrepancias. DLG aceptó y cerró S5.9 para su alcance con «Completada» el 19-X-2026. El aprovisionamiento repetido permanece en S5.10.
+
+La spec, el [plan técnico](../specs/s5.2.1-separar-scripts-prueba-catalogo/plan.md) y las [tareas](../specs/s5.2.1-separar-scripts-prueba-catalogo/tasks.md) de [S5.2.1 — separación de scripts de prueba del catálogo de migraciones](../specs/s5.2.1-separar-scripts-prueba-catalogo/spec.md) fueron aprobados por DLG («Siguiente», «Siguiente» y «Aprobado», respectivamente, 19-X-2026). La implementación y validación terminaron el 19-X-2026: suite completa 1046/1046, build correcto, catálogo real solo con V004 y compatibilidad comprobada con un historial previo V001–V004. DLG aceptó y cerró S5.2.1 para su alcance con «Completada» el 19-X-2026; no se archivó. S5.9 puede avanzar tras la aprobación de sus propias tareas.
+
 Criterio de finalización:
 
 - Las operaciones de enlaces y colecciones son atómicas.

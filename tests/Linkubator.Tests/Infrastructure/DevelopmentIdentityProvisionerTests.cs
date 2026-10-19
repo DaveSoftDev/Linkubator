@@ -233,7 +233,7 @@ public sealed class DevelopmentIdentityProvisionerTests
         string[] migrationVersions = SqliteMigrationCatalog.Load().Select(script => script.Version).ToArray();
 
         Assert.Contains("Linkubator.Infrastructure.DevelopmentIdentity.Sql.ProvisionDevelopmentIdentity.sql", resources);
-        Assert.Equal(new[] { "V001", "V002", "V003", "V004" }, migrationVersions);
+        Assert.Equal(new[] { "V004" }, migrationVersions);
     }
 
     private sealed class DevelopmentIdentityTestDatabase : IAsyncDisposable
