@@ -38,8 +38,8 @@ public class DashboardServiceTests
     {
         FakeDashboardRepository repository = new();
         DashboardService service = new(NullLogger<DashboardService>.Instance, new CurrentUser(7), repository);
-        CollectionDto collection = new(11, "My collection", "my-collection", "desc", true, 2, new DateTime(2026, 10, 1));
-        LinkDto recentLink = new(21, 11, "https://example.com/path", "https://example.com/path", "Example", "Preview", "https://example.com/icon.png", true, new DateTime(2026, 10, 2));
+        CollectionDto collection = new(11, "My collection", "my-collection", "desc", true, 2, new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc));
+        LinkDto recentLink = new(21, 11, "https://example.com/path", "https://example.com/path", "Example", "Preview", "https://example.com/icon.png", true, new DateTime(2026, 10, 2, 0, 0, 0, DateTimeKind.Utc));
         repository.Dashboard = new DashboardDto(1, 1, new[] { collection }, new[] { recentLink });
 
         Result<DashboardDto> result = await service.GetDashboard();

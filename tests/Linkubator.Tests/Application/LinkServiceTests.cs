@@ -47,7 +47,48 @@ public class LinkServiceTests
         Assert.True(result.IsSuccess);
         Assert.Equal(10, result.Value!.CollectionId);
         Assert.Equal("https://example.com/path?x=1", result.Value.UrlOriginal);
+        Assert.False(result.Value.IsPublic);
         Assert.Single(linkRepository.Items);
+    }
+
+    [Fact]
+    public async Task CreateLink_WhenUrlIsInvalid_DoesNotInsertLink()
+    {
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(7, "My Collection", null);
+        SetId(collection, 10);
+        collectionRepository.Items.Add(collection);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "javascript:alert(1)"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
+        Assert.Equal("UrlSchemeNotAllowed", result.Errors[0].Code);
+        Assert.Empty(linkRepository.Items);
+    }
+
+    [Fact]
+    public async Task CreateLink_WhenImageIsInvalid_DoesNotInsertLink()
+    {
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(7, "My Collection", null);
+        SetId(collection, 10);
+        collectionRepository.Items.Add(collection);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com", Image: "file:///invalid.png"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Empty(linkRepository.Items);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
+        Assert.Equal("UrlSchemeNotAllowed", result.Errors[0].Code);
     }
 
     [Fact]
@@ -68,6 +109,7 @@ public class LinkServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal("LINK_DUPLICATE_URL", result.Errors[0].Code);
         Assert.Contains("Existing collection", result.Errors[0].Message);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
         Assert.Single(linkRepository.Items);
     }
 
@@ -119,6 +161,7 @@ public class LinkServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
         Assert.Equal("LINK_COLLECTION_NOT_ACCESSIBLE", result.Errors[0].Code);
+        Assert.Empty(linkRepository.Items);
     }
 
     [Fact]
@@ -362,7 +405,7 @@ public class LinkServiceTests
         collectionRepository.Items.Add(original);
         collectionRepository.Items.Add(destination);
         AsyncThrowingLinkRepository linkRepository = new() { ThrowOnUpdate = true };
-        Link link = Link.Create(7, original, "https://example.com/path", null, null, null, false);
+        Link link = Link.Create(7, original, "https://example.com/path", "Original title", "Original description", "https://example.com/image.png", true);
         SetId(link, 20);
         linkRepository.Items.Add(link);
         UnexpectedUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
@@ -459,6 +502,8 @@ public class LinkServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
         Assert.Equal("LINK_NOT_ACCESSIBLE", result.Errors[0].Code);
+        Assert.False(link.IsPublic);
+        Assert.Empty(linkRepository.UpdatedItems);
     }
 
     [Fact]
@@ -584,6 +629,80 @@ public class LinkServiceTests
     }
 
     [Fact]
+    public async Task EditLink_WhenPublishingInPrivateCollectionWithOtherValidChanges_LeavesLinkUnchanged()
+    {
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(7, "Private collection", null);
+        SetId(collection, 10);
+        collectionRepository.Items.Add(collection);
+        Link link = Link.Create(7, collection, "https://example.com/path", "Original", "Original description", null);
+        SetId(link, 20);
+        linkRepository.Items.Add(link);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 10, "Changed", "Changed description", IsPublic: true));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("LINK_PUBLIC_IN_PRIVATE_COLLECTION", result.Errors[0].Code);
+        Assert.Equal("Original", link.Title);
+        Assert.Equal("Original description", link.Description);
+        Assert.False(link.IsPublic);
+        Assert.Empty(linkRepository.UpdatedItems);
+    }
+
+    [Fact]
+    public async Task EditLink_WhenLinkBelongsToAnotherUser_LeavesItUnchanged()
+    {
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(9, "Other user's collection", null, true);
+        SetId(collection, 10);
+        collectionRepository.Items.Add(collection);
+        Link link = Link.Create(9, collection, "https://example.com/path", "Original", "Original description", null);
+        SetId(link, 20);
+        linkRepository.Items.Add(link);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 10, "Changed"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
+        Assert.Equal("Original", link.Title);
+        Assert.Equal("Original description", link.Description);
+        Assert.False(link.IsPublic);
+        Assert.Empty(linkRepository.UpdatedItems);
+    }
+
+    [Fact]
+    public async Task EditLink_WhenImageIsInvalidInPublicCollection_LeavesLinkUnchanged()
+    {
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(7, "Public collection", null, true);
+        SetId(collection, 10);
+        collectionRepository.Items.Add(collection);
+        Link link = Link.Create(7, collection, "https://example.com/path", "Original", "Original description", "https://example.com/original.png", false);
+        SetId(link, 20);
+        linkRepository.Items.Add(link);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 10, "Changed", "Changed description", "file:///invalid.png"));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Original", link.Title);
+        Assert.Equal("Original description", link.Description);
+        Assert.Equal("https://example.com/original.png", link.Image);
+        Assert.Empty(linkRepository.UpdatedItems);
+    }
+
+    [Fact]
     public async Task ListLinks_WhenCollectionIdBelongsToUser_ReturnsLinks()
     {
         CurrentUser currentUser = new(7);
@@ -626,11 +745,13 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<IReadOnlyList<LinkDto>> result = await service.ListLinks(query: "  one  ");
+        Result<IReadOnlyList<LinkDto>> result = await service.ListLinks(query: "  one  ", collectionId: 10, page: 2);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Value!.Count);
-        Assert.All(result.Value, item => Assert.Equal(10, item.CollectionId));
+        Assert.Equal("one", linkRepository.LastQuery);
+        Assert.Equal(10, linkRepository.LastCollectionId);
+        Assert.Equal(2, linkRepository.LastPage);
+        Assert.Equal(currentUser.UserId, linkRepository.LastUserId);
     }
 
     [Fact]
@@ -671,6 +792,56 @@ public class LinkServiceTests
 
         Assert.True(result.IsSuccess);
         Assert.DoesNotContain(linkRepository.Items, item => item.Id == 20);
+    }
+
+    [Fact]
+    public async Task DeleteLink_WhenLinkBelongsToAnotherUser_ReturnsSameNotAccessibleErrorWithoutMutation()
+    {
+        CurrentUser currentUser = new(8);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(9, "Other user's collection", null, true);
+        SetId(collection, 10);
+        collectionRepository.Items.Add(collection);
+        Link link = Link.Create(9, collection, "https://example.com/path", "Title", null, null);
+        SetId(link, 21);
+        linkRepository.Items.Add(link);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result result = await service.DeleteLink(new LinkDeleteRequest(21));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
+        Assert.Equal("LINK_DELETE_NOT_ACCESSIBLE", result.Errors[0].Code);
+        Assert.Equal("LINK_NOT_ACCESSIBLE", LinkErrors.LinkNotAccessible().Code);
+        Assert.Contains(link, linkRepository.Items);
+        Assert.Single(linkRepository.Items);
+        Assert.Equal(0, linkRepository.DeleteCalls);
+    }
+
+    [Fact]
+    public async Task DeleteLink_WhenIdIsInvalid_ReturnsValidationWithoutDeleting()
+    {
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(currentUser.UserId, "Collection", null);
+        SetId(collection, 10);
+        collectionRepository.Items.Add(collection);
+        Link link = Link.Create(currentUser.UserId, collection, "https://example.com/keep", "Keep", null, null);
+        SetId(link, 20);
+        linkRepository.Items.Add(link);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result result = await service.DeleteLink(new LinkDeleteRequest(0));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
+        Assert.Equal("LINK_ID_INVALID", result.Errors[0].Code);
+        Assert.Contains(link, linkRepository.Items);
+        Assert.Equal(0, linkRepository.DeleteCalls);
     }
 
     [Theory]
@@ -756,7 +927,7 @@ public class LinkServiceTests
         SetId(destination, 11);
         collectionRepository.Items.Add(original);
         collectionRepository.Items.Add(destination);
-        Link link = Link.Create(7, original, "https://example.com/path", null, null, null, false);
+        Link link = Link.Create(7, original, "https://example.com/path", "Original title", "Original description", "https://example.com/image.png", true);
         SetId(link, 20);
         linkRepository.Items.Add(link);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
@@ -767,6 +938,11 @@ public class LinkServiceTests
         Assert.True(result.IsSuccess);
         Assert.Equal(11, result.Value!.CollectionId);
         Assert.Equal(11, link.CollectionId);
+        Assert.Equal(link.Id, result.Value.Id);
+        Assert.Equal("Original title", result.Value.Title);
+        Assert.Equal("Original description", result.Value.Description);
+        Assert.Equal("https://example.com/image.png", result.Value.Image);
+        Assert.False(result.Value.IsPublic);
         Assert.Contains(link, linkRepository.UpdatedItems);
     }
 
@@ -794,6 +970,8 @@ public class LinkServiceTests
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
         Assert.Equal("LINK_COLLECTION_NOT_ACCESSIBLE", result.Errors[0].Code);
         Assert.Equal(10, link.CollectionId);
+        Assert.False(link.IsPublic);
+        Assert.Empty(linkRepository.UpdatedItems);
     }
 
     [Fact]
@@ -926,6 +1104,7 @@ public class LinkServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
         Assert.Equal("LINK_DELETE_NOT_ACCESSIBLE", result.Errors[0].Code);
+        Assert.Equal(0, linkRepository.DeleteCalls);
     }
 
     [Fact]
@@ -1121,6 +1300,28 @@ public class LinkServiceTests
 
         Assert.True(result.IsSuccess);
         Assert.False(link.IsPublic);
+        Assert.Contains(link, linkRepository.UpdatedItems);
+    }
+
+    [Fact]
+    public async Task ChangeLinkVisibility_WhenMakingPublicOnPublicCollection_ChangesVisibility()
+    {
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(7, "Public collection", null, true);
+        SetId(collection, 10);
+        collectionRepository.Items.Add(collection);
+        Link link = Link.Create(7, collection, "https://example.com/path", "Title", null, null, false);
+        SetId(link, 20);
+        linkRepository.Items.Add(link);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, true));
+
+        Assert.True(result.IsSuccess);
+        Assert.True(link.IsPublic);
         Assert.Contains(link, linkRepository.UpdatedItems);
     }
 
@@ -1594,6 +1795,11 @@ public class LinkServiceTests
     {
         public List<Link> Items { get; } = [];
         public List<Link> UpdatedItems { get; } = [];
+        public int DeleteCalls { get; private set; }
+        public long LastUserId { get; private set; }
+        public string? LastQuery { get; private set; }
+        public long? LastCollectionId { get; private set; }
+        public int LastPage { get; private set; }
 
         public Task<Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
             => Task.FromResult(Items.FirstOrDefault(item => item.Id == id && item.UserId == userId));
@@ -1608,9 +1814,15 @@ public class LinkServiceTests
             => Task.FromResult<IReadOnlyCollection<Link>>(Items.Where(item => item.UserId == userId && item.CollectionId == collectionId).ToList());
 
         public Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyCollection<LinkDto>>(Items.Where(item => item.UserId == userId)
+        {
+            LastUserId = userId;
+            LastQuery = query;
+            LastCollectionId = collectionId;
+            LastPage = page;
+            return Task.FromResult<IReadOnlyCollection<LinkDto>>(Items.Where(item => item.UserId == userId)
                 .Select(Map)
                 .ToList());
+        }
 
         public Task<int> GetPageCountByUser(long userId, string? query, long? collectionId, CancellationToken cancellationToken = default)
             => Task.FromResult(1);
@@ -1629,6 +1841,7 @@ public class LinkServiceTests
 
         public Task Delete(long id, long userId, CancellationToken cancellationToken = default)
         {
+            DeleteCalls++;
             Link? existing = Items.FirstOrDefault(item => item.Id == id && item.UserId == userId);
             if (existing is not null)
             {
