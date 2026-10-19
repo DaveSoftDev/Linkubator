@@ -6,6 +6,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| S6.3 — Constructor de consultas FTS5 | [spec.md](s6.3-constructor-consulta-fts5/spec.md) | [plan.md](s6.3-constructor-consulta-fts5/plan.md) | [tasks.md](s6.3-constructor-consulta-fts5/tasks.md#aceptación-y-cierre) — cerrada por DLG («Completado», 20-X-2026) |
 
 ## Trabajos completados
 
