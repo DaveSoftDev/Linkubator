@@ -8,6 +8,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | --- | --- | --- | --- |
 | S5.1 — Configuración de SQLite y Dapper | [spec.md](s5.1-configuracion-sqlite-dapper/spec.md) | [plan.md](s5.1-configuracion-sqlite-dapper/plan.md) | [tasks.md](s5.1-configuracion-sqlite-dapper/tasks.md) |
 | S5.2 — Ejecutor de scripts SQL versionados | [spec.md](s5.2-ejecutor-scripts-sql-versionados/spec.md) | [plan.md](s5.2-ejecutor-scripts-sql-versionados/plan.md) | [tasks.md](s5.2-ejecutor-scripts-sql-versionados/tasks.md) |
+| S5.4 — Registro de la colación `es-ES` en las conexiones SQLite | [spec.md](s5.4-colacion-es-es/spec.md) | [plan.md](s5.4-colacion-es-es/plan.md) | [tasks.md](s5.4-colacion-es-es/tasks.md#aceptación-y-cierre); aceptado por DLG («Colación añadida», 19-X-2026) |
 
 ## Trabajos completados
 
