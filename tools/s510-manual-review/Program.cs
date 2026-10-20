@@ -1,18 +1,23 @@
 using System.Reflection;
-using System.Text;
 using Linkubator.Infrastructure.DevelopmentIdentity;
 using Linkubator.Infrastructure.Sqlite;
 using Microsoft.Data.Sqlite;
 
-if (args.Length != 2)
+if (args.Length < 2)
 {
-    throw new ArgumentException("Usage: S510ManualReview <initialize|prepare|repeat> <database-path>");
+    throw new ArgumentException("Usage: S510ManualReview <initialize|prepare|repeat> <database-path> | script <database-path> <script-path> <development-email>");
 }
 
 string mode = args[0];
+if (mode == "script" ? args.Length != 4 : args.Length != 2)
+{
+    throw new ArgumentException("Invalid arguments. Usage: S510ManualReview <initialize|prepare|repeat> <database-path> | script <database-path> <script-path> <development-email>");
+}
+
 string databasePath = Path.GetFullPath(args[1]);
 string connectionString = new SqliteConnectionStringBuilder { DataSource = databasePath }.ToString();
 SqliteConnectionFactory factory = new(connectionString);
+string stateEmail = "s510-review@linkubator.test";
 
 switch (mode)
 {
@@ -42,11 +47,28 @@ switch (mode)
 
         await Provision(factory);
         break;
+    case "script":
+        if (!string.Equals(Path.GetFullPath(Path.Combine("data", "local", "s6.8-seed.sql")), Path.GetFullPath(args[2]), StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("The generic script mode is restricted to the local S6.8 seed script.");
+        }
+        if (!File.Exists(databasePath))
+        {
+            throw new FileNotFoundException("Review database does not exist; refusing to create an empty file.", databasePath);
+        }
+        if (!File.Exists(args[2]))
+        {
+            throw new FileNotFoundException("Local preparation script does not exist.", args[2]);
+        }
+
+        stateEmail = args[3];
+        await ExecuteLocalScript(factory, Path.GetFullPath(args[2]), stateEmail);
+        break;
     default:
         throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unknown mode.");
 }
 
-await PrintState(factory, databasePath);
+await PrintState(factory, databasePath, stateEmail);
 
 static async Task Provision(SqliteConnectionFactory factory)
 {
@@ -89,6 +111,58 @@ static async Task Provision(SqliteConnectionFactory factory)
     }
 }
 
+static async Task ExecuteLocalScript(SqliteConnectionFactory factory, string scriptPath, string developmentEmail)
+{
+    string script = await File.ReadAllTextAsync(scriptPath);
+    await using SqliteConnection connection = factory.CreateOpenConnection();
+    connection.CreateFunction<string?, string?>("NormalizeSearchText", Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize, isDeterministic: true);
+
+    string expectedScriptPath = Path.GetFullPath(Path.Combine("data", "local", "s6.8-seed.sql"));
+    if (!string.Equals(Path.GetFullPath(scriptPath), expectedScriptPath, StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException("The generic script mode is restricted to the local S6.8 seed script.");
+    }
+    await Execute(connection, "BEGIN IMMEDIATE;");
+    try
+    {
+        if (await ScalarLong(connection, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('User', 'Collection', 'Link', 'CollectionSearch', 'LinkSearch');") != 5)
+        {
+            throw new InvalidOperationException("Database does not contain the required migrated schema.");
+        }
+
+        long userId = await ScalarLong(connection,
+            "SELECT Id FROM User WHERE Email = @Email AND Name IS NOT NULL AND Alias IS NOT NULL AND Password IS NOT NULL AND EmailConfirmedAt IS NOT NULL;",
+            developmentEmail);
+        if (userId <= 0)
+        {
+            throw new InvalidOperationException("The configured development identity is missing or incomplete.");
+        }
+
+        await using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = script;
+        command.Parameters.AddWithValue("DevelopmentEmail", developmentEmail);
+        await command.ExecuteNonQueryAsync();
+        await Execute(connection, "COMMIT;");
+    }
+    catch
+    {
+        await Execute(connection, "ROLLBACK;");
+        throw;
+    }
+}
+
+static async Task<long> ScalarLong(SqliteConnection connection, string sql, string? email = null)
+{
+    await using SqliteCommand command = connection.CreateCommand();
+    command.CommandText = sql;
+    if (email is not null)
+    {
+        command.Parameters.AddWithValue("Email", email);
+    }
+    object? value = await command.ExecuteScalarAsync();
+    return value is null || value is DBNull ? 0 : Convert.ToInt64(value);
+}
+
 static async Task PrepareMarkers(SqliteConnectionFactory factory)
 {
     await using SqliteConnection connection = factory.CreateOpenConnection();
@@ -118,7 +192,7 @@ static async Task PrepareMarkers(SqliteConnectionFactory factory)
     }
 }
 
-static async Task PrintState(SqliteConnectionFactory factory, string databasePath)
+static async Task PrintState(SqliteConnectionFactory factory, string databasePath, string email)
 {
     await using SqliteConnection connection = factory.CreateOpenConnection();
     await using (SqliteCommand versionCommand = connection.CreateCommand())
@@ -130,7 +204,7 @@ static async Task PrintState(SqliteConnectionFactory factory, string databasePat
     await using (SqliteCommand userCommand = connection.CreateCommand())
     {
         userCommand.CommandText = "SELECT COUNT(*), MAX(Name), MAX(Alias) FROM User WHERE Email = @Email;";
-        userCommand.Parameters.AddWithValue("Email", "s510-review@linkubator.test");
+        userCommand.Parameters.AddWithValue("Email", email);
         await using SqliteDataReader userReader = await userCommand.ExecuteReaderAsync();
         await userReader.ReadAsync();
         Console.WriteLine($"User count: {userReader.GetInt64(0)}; name: {userReader.GetString(1)}; alias: {userReader.GetString(2)}");
@@ -139,11 +213,20 @@ static async Task PrintState(SqliteConnectionFactory factory, string databasePat
     await using (SqliteCommand collectionCommand = connection.CreateCommand())
     {
         collectionCommand.CommandText = "SELECT COUNT(*), MAX(Name), MAX(Slug), MAX(Description), MAX(IsPublic) FROM Collection WHERE UserId = (SELECT Id FROM User WHERE Email = @Email);";
-        collectionCommand.Parameters.AddWithValue("Email", "s510-review@linkubator.test");
+        collectionCommand.Parameters.AddWithValue("Email", email);
         await using SqliteDataReader collectionReader = await collectionCommand.ExecuteReaderAsync();
         await collectionReader.ReadAsync();
         string description = collectionReader.IsDBNull(3) ? "<null>" : collectionReader.GetString(3);
         Console.WriteLine($"Collection count: {collectionReader.GetInt64(0)}; name: {collectionReader.GetString(1)}; slug: {collectionReader.GetString(2)}; description: {description}; public: {collectionReader.GetInt64(4)}");
+    }
+
+    await using (SqliteCommand linkCommand = connection.CreateCommand())
+    {
+        linkCommand.CommandText = "SELECT COUNT(*), (SELECT COUNT(*) FROM LinkSearch WHERE UserId = (SELECT Id FROM User WHERE Email = @Email)), (SELECT COUNT(*) FROM Link WHERE UserId = (SELECT Id FROM User WHERE Email = @Email) AND UrlNormalized LIKE 'exampletests6-8%') FROM Link WHERE UserId = (SELECT Id FROM User WHERE Email = @Email);";
+        linkCommand.Parameters.AddWithValue("Email", email);
+        await using SqliteDataReader linkReader = await linkCommand.ExecuteReaderAsync();
+        await linkReader.ReadAsync();
+        Console.WriteLine($"Link count: {linkReader.GetInt64(0)}; link projection count: {linkReader.GetInt64(1)}; S6.8 sample link count: {linkReader.GetInt64(2)}");
     }
 
     Console.WriteLine($"Database: {databasePath}");

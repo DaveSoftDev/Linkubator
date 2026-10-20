@@ -117,7 +117,7 @@ public class WebStartupTests
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            builder.UseSetting("ConnectionStrings:DefaultConnection", $"Data Source={databasePath}");
+            builder.UseSetting("ConnectionStrings:Linkubator", $"Data Source={databasePath}");
             builder.UseSetting("DevelopmentIdentity:Email", DemoEmail);
             builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
             builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");

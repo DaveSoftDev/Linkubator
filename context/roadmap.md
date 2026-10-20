@@ -87,6 +87,8 @@ La [S6.6 — reconstrucción manual de proyecciones FTS5](../specs/s6.6-reconstr
 
 La [S6.7 — pruebas integradas de búsqueda FTS5](../specs/s6.7-pruebas-integradas-fts5/spec.md), su [plan técnico](../specs/s6.7-pruebas-integradas-fts5/plan.md) y sus [tareas](../specs/s6.7-pruebas-integradas-fts5/tasks.md#aceptación-y-cierre) fueron aprobados por DLG con «Siguiente», «Aprobar el plan» y «Aprobar y autorizar implementación», respectivamente, el 20-X-2026. La implementación y validación técnica se completaron con pruebas focalizadas 4/4, `git diff --check` limpio y enlaces locales verificados. DLG aceptó y cerró S6.7 para su alcance con «Fase terminada» el 20-X-2026; la comprobación manual S6.9 sigue en su etapa propietaria.
 
+La [S6.8 — datos locales de ejemplo para búsqueda](../specs/s6.8-datos-local-busqueda/spec.md), su [plan técnico](../specs/s6.8-datos-local-busqueda/plan.md) y sus [tareas](../specs/s6.8-datos-local-busqueda/tasks.md#aceptación-y-cierre) fueron aprobados por DLG con «Apruebo la spec y preparar el plan», «Apruebo el plan y preparar tasks.md» y «Aprobar tareas y autorizar implementación», respectivamente, el 20-X-2026. La implementación y validación técnica de CA01–CA04 se completaron el 20-X-2026; DLG aceptó y cerró S6.8 para su alcance técnico con «Tenemos búsqueda» el 20-X-2026. La base local `data/database/Linkubator-S6.8-20261020.db`, ignorada por Git, se conserva para S6.9/S10.6; se creó inicialmente en `%TEMP%` con un override efímero y se trasladó al repositorio sin modificar la configuración habitual. S6.9/S10.6 siguen independientes.
+
 ## Next
 
 ### Interfaz privada - Gestión básica
