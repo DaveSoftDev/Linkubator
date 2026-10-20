@@ -58,20 +58,31 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
 
     public async Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
     {
-        ThrowIfSearchRequested(query);
-
+        string? searchQuery = Search.SearchQueryBuilder.Build(Search.SearchTextNormalizer.Normalize(query));
         int offset = (page - 1) * PageSize;
-
+        string sql = searchQuery is null
+            ? @"SELECT c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt,
+                       COUNT(l.Id) AS LinkCount
+                FROM Collection c
+                LEFT JOIN Link l ON l.UserId = c.UserId AND l.CollectionId = c.Id
+                WHERE c.UserId = @UserId
+                GROUP BY c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
+                ORDER BY c.Name COLLATE LINKUBATOR_ES_ES ASC, c.Id ASC
+                LIMIT @Limit OFFSET @Offset;"
+            : @"SELECT c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt,
+                       COUNT(l.Id) AS LinkCount
+                FROM CollectionSearch
+                INNER JOIN Collection c ON c.Id = CollectionSearch.rowid AND c.UserId = CollectionSearch.UserId
+                LEFT JOIN Link l ON l.UserId = c.UserId AND l.CollectionId = c.Id
+                WHERE CollectionSearch MATCH @SearchQuery
+                  AND CollectionSearch.UserId = @UserId
+                  AND c.UserId = @UserId
+                GROUP BY c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
+                ORDER BY c.Name COLLATE LINKUBATOR_ES_ES ASC, c.Id ASC
+                LIMIT @Limit OFFSET @Offset;";
         IEnumerable<CollectionListRow> rows = await _connection.QueryAsync<CollectionListRow>(
-            @"SELECT c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt,
-                     COUNT(l.Id) AS LinkCount
-              FROM Collection c
-              LEFT JOIN Link l ON l.UserId = c.UserId AND l.CollectionId = c.Id
-              WHERE c.UserId = @UserId
-              GROUP BY c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
-              ORDER BY c.Name COLLATE LINKUBATOR_ES_ES ASC, c.Id ASC
-              LIMIT @Limit OFFSET @Offset;",
-            new { UserId = userId, Limit = PageSize, Offset = offset });
+            sql,
+            new { UserId = userId, SearchQuery = searchQuery, Limit = PageSize, Offset = offset });
 
         return rows.Select(row => new CollectionDto(
             row.Id,
@@ -85,11 +96,18 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
 
     public async Task<int> GetPageCountByUser(long userId, string? query, CancellationToken cancellationToken = default)
     {
-        ThrowIfSearchRequested(query);
-
+        string? searchQuery = Search.SearchQueryBuilder.Build(Search.SearchTextNormalizer.Normalize(query));
+        string sql = searchQuery is null
+            ? "SELECT COUNT(*) FROM Collection WHERE UserId = @UserId;"
+            : @"SELECT COUNT(*)
+                FROM CollectionSearch
+                INNER JOIN Collection c ON c.Id = CollectionSearch.rowid AND c.UserId = CollectionSearch.UserId
+                WHERE CollectionSearch MATCH @SearchQuery
+                  AND CollectionSearch.UserId = @UserId
+                  AND c.UserId = @UserId;";
         long total = await _connection.ExecuteScalarAsync<long>(
-            "SELECT COUNT(*) FROM Collection WHERE UserId = @UserId;",
-            new { UserId = userId });
+            sql,
+            new { UserId = userId, SearchQuery = searchQuery });
 
         if (total == 0)
         {
@@ -199,15 +217,6 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
             "DELETE FROM Collection WHERE Id = @Id AND UserId = @UserId;",
             new { Id = id, UserId = userId },
             cancellationToken: cancellationToken));
-    }
-
-    private static void ThrowIfSearchRequested(string? query)
-    {
-        string? normalized = query is null ? null : query.Trim();
-        if (!string.IsNullOrEmpty(normalized))
-        {
-            throw new InvalidOperationException("Search queries are not supported before S6.");
-        }
     }
 
     private static Entities.Collection Map(CollectionRow row)

@@ -66,17 +66,27 @@ public sealed class SqliteLinkRepository : ILinkRepository
 
     public async Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
     {
-        ThrowIfSearchRequested(query);
-
+        string? searchQuery = Search.SearchQueryBuilder.Build(Search.SearchTextNormalizer.Normalize(query));
         int offset = (page - 1) * PageSize;
+        string sql = searchQuery is null
+            ? @"SELECT l.Id, l.CollectionId, l.UrlOriginal, l.UrlNormalized, l.Title, l.Description, l.Image, l.IsPublic, l.CreatedAt
+                FROM Link l
+                WHERE l.UserId = @UserId
+                  AND (@CollectionId IS NULL OR l.CollectionId = @CollectionId)
+                ORDER BY l.CreatedAt DESC, l.Id DESC
+                LIMIT @Limit OFFSET @Offset;"
+            : @"SELECT l.Id, l.CollectionId, l.UrlOriginal, l.UrlNormalized, l.Title, l.Description, l.Image, l.IsPublic, l.CreatedAt
+                FROM LinkSearch
+                INNER JOIN Link l ON l.Id = LinkSearch.rowid AND l.UserId = LinkSearch.UserId
+                WHERE LinkSearch MATCH @SearchQuery
+                  AND LinkSearch.UserId = @UserId
+                  AND l.UserId = @UserId
+                  AND (@CollectionId IS NULL OR l.CollectionId = @CollectionId)
+                ORDER BY rank ASC, l.CreatedAt DESC, l.Id DESC
+                LIMIT @Limit OFFSET @Offset;";
         IEnumerable<LinkListRow> rows = await _connection.QueryAsync<LinkListRow>(
-            @"SELECT l.Id, l.CollectionId, l.UrlOriginal, l.UrlNormalized, l.Title, l.Description, l.Image, l.IsPublic, l.CreatedAt
-              FROM Link l
-              WHERE l.UserId = @UserId
-                AND (@CollectionId IS NULL OR l.CollectionId = @CollectionId)
-              ORDER BY l.CreatedAt DESC, l.Id DESC
-              LIMIT @Limit OFFSET @Offset;",
-            new { UserId = userId, CollectionId = collectionId, Limit = PageSize, Offset = offset });
+            sql,
+            new { UserId = userId, CollectionId = collectionId, SearchQuery = searchQuery, Limit = PageSize, Offset = offset });
 
         return rows.Select(row => new LinkDto(
             row.Id,
@@ -92,14 +102,22 @@ public sealed class SqliteLinkRepository : ILinkRepository
 
     public async Task<int> GetPageCountByUser(long userId, string? query, long? collectionId, CancellationToken cancellationToken = default)
     {
-        ThrowIfSearchRequested(query);
-
+        string? searchQuery = Search.SearchQueryBuilder.Build(Search.SearchTextNormalizer.Normalize(query));
+        string sql = searchQuery is null
+            ? @"SELECT COUNT(*)
+                FROM Link
+                WHERE UserId = @UserId
+                  AND (@CollectionId IS NULL OR CollectionId = @CollectionId);"
+            : @"SELECT COUNT(*)
+                FROM LinkSearch
+                INNER JOIN Link l ON l.Id = LinkSearch.rowid AND l.UserId = LinkSearch.UserId
+                WHERE LinkSearch MATCH @SearchQuery
+                  AND LinkSearch.UserId = @UserId
+                  AND l.UserId = @UserId
+                  AND (@CollectionId IS NULL OR l.CollectionId = @CollectionId);";
         long total = await _connection.ExecuteScalarAsync<long>(
-            @"SELECT COUNT(*)
-              FROM Link
-              WHERE UserId = @UserId
-                AND (@CollectionId IS NULL OR CollectionId = @CollectionId);",
-            new { UserId = userId, CollectionId = collectionId });
+            sql,
+            new { UserId = userId, CollectionId = collectionId, SearchQuery = searchQuery });
 
         if (total == 0)
         {
@@ -215,15 +233,6 @@ public sealed class SqliteLinkRepository : ILinkRepository
             "DELETE FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
             new { Id = id, UserId = userId },
             cancellationToken: cancellationToken));
-
-    private static void ThrowIfSearchRequested(string? query)
-    {
-        string? normalized = query is null ? null : query.Trim();
-        if (!string.IsNullOrEmpty(normalized))
-        {
-            throw new InvalidOperationException("Search queries are not supported before S6.");
-        }
-    }
 
     private static Entities.Link Map(LinkRow row)
     {

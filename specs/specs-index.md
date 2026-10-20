@@ -8,6 +8,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | --- | --- | --- | --- |
 | S6.3 — Constructor de consultas FTS5 | [spec.md](s6.3-constructor-consulta-fts5/spec.md) | [plan.md](s6.3-constructor-consulta-fts5/plan.md) | [tasks.md](s6.3-constructor-consulta-fts5/tasks.md#aceptación-y-cierre) — cerrada por DLG («Completado», 20-X-2026) |
 | S6.4 — Sincronización de proyecciones FTS5 | [spec.md](s6.4-sincronizacion-proyecciones-fts5/spec.md) — aprobada por DLG («Siguiente», 20-X-2026) | [plan.md](s6.4-sincronizacion-proyecciones-fts5/plan.md) — aprobado por DLG («Siguiente», 20-X-2026) | [tasks.md](s6.4-sincronizacion-proyecciones-fts5/tasks.md#aceptación-y-cierre) — cerrada por DLG («Tenemos proyecciones», 20-X-2026) |
+| S6.5 — Consultas de búsqueda FTS5 | [spec.md](s6.5-consultas-busqueda-fts5/spec.md) — aprobada por DLG («Siguiente», 20-X-2026) | [plan.md](s6.5-consultas-busqueda-fts5/plan.md) — aprobado por DLG («Siguiente», 20-X-2026) | [tasks.md](s6.5-consultas-busqueda-fts5/tasks.md#aceptación-y-cierre) — cerrada por DLG («Consultas y búsquedas», 20-X-2026) |
 
 ## Trabajos completados
 
