@@ -1,3 +1,4 @@
+using Dapper;
 using Linkubator.Application.Contracts;
 using Linkubator.Infrastructure.Repositories;
 using Linkubator.Domain.Entities;
@@ -72,6 +73,11 @@ public sealed class SqliteLinkRepositoryTests
         Assert.Equal("Title", result.Title);
         Assert.Equal("Description", result.Description);
         Assert.False(result.IsPublic);
+        Assert.Equal(
+            "https://example.test/path|Title|Description|Private",
+            await connection.QuerySingleAsync<string>(
+                "SELECT UrlOriginal || '|' || Title || '|' || Description || '|' || CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+                new { Id = link.Id, UserId = 42 }));
     }
 
     [Fact]
@@ -104,6 +110,74 @@ public sealed class SqliteLinkRepositoryTests
         Link? result = await repository.GetById(linkId, 99);
 
         Assert.NotNull(result);
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = linkId, UserId = 42 }));
+    }
+
+    [Fact]
+    public async Task Update_WhenProjectionWriteFails_RollsBackLinkAndProjection()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        long linkId = await database.SeedLink(42, collectionId, "https://example.test/a", "https://example.test/a", "Original", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        Link link = (await repository.GetById(linkId, 42))!;
+        link.Edit("Changed", null, null);
+        await connection.ExecuteAsync("BEGIN IMMEDIATE;");
+        await connection.ExecuteAsync("DROP TABLE LinkSearch;");
+
+        await Assert.ThrowsAsync<SqliteException>(() => repository.Update(link));
+        await connection.ExecuteAsync("ROLLBACK;");
+
+        Assert.Equal("Original", (await repository.GetById(linkId, 42))!.Title);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'LinkSearch';"));
+        Assert.Equal("Original", await connection.QuerySingleAsync<string>(
+            "SELECT Title FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = linkId, UserId = 42 }));
+    }
+
+    [Fact]
+    public async Task Insert_WhenTextIsDecomposed_NormalizesOnlyProjection()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Cafe\u0301", "cafe", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository collectionRepository = new SqliteCollectionRepository(connection);
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        Collection collection = (await collectionRepository.GetById(collectionId, 42))!;
+        Link link = Link.Create(42, collection, "https://example.test/path", "Cafe\u0301", null, null);
+
+        await repository.Insert(link);
+
+        Assert.Equal("Cafe\u0301", link.Title);
+        Assert.Equal("Café", await connection.QuerySingleAsync<string>(
+            "SELECT Title FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = link.Id, UserId = 42 }));
+        Assert.Equal("Café", await connection.QuerySingleAsync<string>(
+            "SELECT CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = link.Id, UserId = 42 }));
+    }
+
+    [Fact]
+    public async Task Delete_WhenUserOwnsLink_RemovesSearchProjection()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository collectionRepository = new SqliteCollectionRepository(connection);
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        Collection collection = (await collectionRepository.GetById(collectionId, 42))!;
+        Link link = Link.Create(42, collection, "https://example.test/path", "Title", null, null);
+        await repository.Insert(link);
+
+        await repository.Delete(link.Id, 42);
+
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = link.Id, UserId = 42 }));
     }
 
     [Fact]
@@ -126,6 +200,11 @@ public sealed class SqliteLinkRepositoryTests
 
         Assert.Equal(targetCollectionId, result!.CollectionId);
         Assert.False(result.IsPublic);
+        Assert.Equal(
+            "Target",
+            await connection.QuerySingleAsync<string>(
+                "SELECT CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+                new { Id = link.Id, UserId = 42 }));
     }
 
     [Fact]
@@ -144,6 +223,11 @@ public sealed class SqliteLinkRepositoryTests
 
         Assert.Equal("Updated", result!.Title);
         Assert.Equal("New description", result.Description);
+        Assert.Equal(
+            "Updated|New description",
+            await connection.QuerySingleAsync<string>(
+                "SELECT Title || '|' || Description FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+                new { Id = linkId, UserId = 42 }));
     }
 
     [Fact]

@@ -2,7 +2,7 @@
 
 ## Referencias y autorización
 
-- Estado: aprobadas; ejecución técnica completada, aceptación renovada pendiente.
+- Estado: aprobadas; ejecución técnica completada y aceptación renovada por DLG («Sí, acepto S6.2», 20-X-2026), instrucción explícita en esta conversación.
 - Aprobaciones:
   - Especificación: [spec.md](spec.md), aprobada por DLG el 19-X-2026 («Siguiente»), instrucción explícita en esta conversación.
   - Plan: [plan.md](plan.md), aprobado por DLG el 19-X-2026 («Aprobar»), respuesta explícita al formulario de aprobación del plan.

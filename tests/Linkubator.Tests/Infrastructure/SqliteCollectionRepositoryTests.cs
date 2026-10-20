@@ -1,3 +1,4 @@
+using Dapper;
 using Linkubator.Application.Contracts;
 using Linkubator.Infrastructure.Repositories;
 using Linkubator.Domain.Entities;
@@ -66,6 +67,9 @@ public sealed class SqliteCollectionRepositoryTests
         Assert.Equal("Description", result.Description);
         Assert.True(result.IsPublic);
         Assert.NotEqual(default, result.CreatedAt);
+        Assert.Equal("Árbol", await connection.QuerySingleAsync<string>(
+            "SELECT Name FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = collection.Id, UserId = 42 }));
     }
 
     [Fact]
@@ -103,6 +107,68 @@ public sealed class SqliteCollectionRepositoryTests
         Assert.Equal("Renamed", result!.Name);
         Assert.Equal("renamed", result.Slug);
         Assert.Equal("Updated description", result.Description);
+        Assert.Equal("Renamed", await connection.QuerySingleAsync<string>(
+            "SELECT Name FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = collectionId, UserId = 42 }));
+    }
+
+    [Fact]
+    public async Task Update_WhenCollectionIsRenamed_UpdatesItsProjectionAndOnlyItsLinks()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository collectionRepository = new SqliteCollectionRepository(connection);
+        ILinkRepository linkRepository = new SqliteLinkRepository(connection);
+        Collection renamedCollection = Collection.Create(42, "Original", null, false);
+        Collection otherCollection = Collection.Create(42, "Other", null, false);
+        await collectionRepository.Insert(renamedCollection);
+        await collectionRepository.Insert(otherCollection);
+        Link renamedLink = Link.Create(42, renamedCollection, "https://example.test/one", "One", null, null);
+        Link unchangedLink = Link.Create(42, otherCollection, "https://example.test/two", "Two", null, null);
+        await linkRepository.Insert(renamedLink);
+        await linkRepository.Insert(unchangedLink);
+        renamedCollection.Rename("Renamed");
+
+        await collectionRepository.Update(renamedCollection);
+
+        Assert.Equal("Renamed", await connection.QuerySingleAsync<string>(
+            "SELECT Name FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = renamedCollection.Id, UserId = 42 }));
+        Assert.Equal("Renamed", await connection.QuerySingleAsync<string>(
+            "SELECT CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = renamedLink.Id, UserId = 42 }));
+        Assert.Equal("Other", await connection.QuerySingleAsync<string>(
+            "SELECT CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = unchangedLink.Id, UserId = 42 }));
+    }
+
+    [Fact]
+    public async Task Update_WhenTransactionRollsBack_RestoresCollectionAndProjections()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository collectionRepository = new SqliteCollectionRepository(connection);
+        ILinkRepository linkRepository = new SqliteLinkRepository(connection);
+        Collection collection = Collection.Create(42, "Original", null, false);
+        await collectionRepository.Insert(collection);
+        Link link = Link.Create(42, collection, "https://example.test/rollback", "Rollback", null, null);
+        await linkRepository.Insert(link);
+        collection.Rename("Renamed");
+        await connection.ExecuteAsync("BEGIN IMMEDIATE;");
+        await connection.ExecuteAsync("DROP TABLE LinkSearch;");
+
+        await Assert.ThrowsAsync<SqliteException>(() => collectionRepository.Update(collection));
+        await connection.ExecuteAsync("ROLLBACK;");
+
+        Assert.Equal("Original", (await collectionRepository.GetById(collection.Id, 42))!.Name);
+        Assert.Equal("Original", await connection.QuerySingleAsync<string>(
+            "SELECT Name FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = collection.Id, UserId = 42 }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'LinkSearch';"));
+        Assert.Equal("Original", await connection.QuerySingleAsync<string>(
+            "SELECT CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = link.Id, UserId = 42 }));
     }
 
     [Fact]
@@ -131,6 +197,9 @@ public sealed class SqliteCollectionRepositoryTests
         Collection? result = await repository.GetById(collectionId, 42);
 
         Assert.Null(result);
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = collectionId, UserId = 42 }));
     }
 
     [Fact]

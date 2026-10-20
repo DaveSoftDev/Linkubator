@@ -4,6 +4,7 @@ using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
 using Microsoft.Data.Sqlite;
 using Entities = Linkubator.Domain.Entities;
+using Search = Linkubator.Infrastructure.Search;
 
 namespace Linkubator.Infrastructure.Repositories;
 
@@ -118,13 +119,24 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
             });
 
         SetProperty(collection, nameof(Entities.Collection.Id), id);
+
+        await _connection.ExecuteAsync(new CommandDefinition(
+            @"INSERT INTO CollectionSearch (rowid, UserId, Name)
+              VALUES (@Id, @UserId, @Name);",
+            new
+            {
+                Id = id,
+                UserId = collection.UserId,
+                Name = Search.SearchTextNormalizer.Normalize(collection.Name),
+            },
+            cancellationToken: cancellationToken));
     }
 
     public async Task Update(Entities.Collection collection, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        await _connection.ExecuteAsync(
+        int affectedRows = await _connection.ExecuteAsync(new CommandDefinition(
             @"UPDATE Collection
               SET Name = @Name,
                   Slug = @Slug,
@@ -139,14 +151,54 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
                 Slug = collection.Slug,
                 Description = collection.Description,
                 IsPublic = collection.IsPublic ? 1 : 0,
-            });
+            },
+            cancellationToken: cancellationToken));
+
+        if (affectedRows > 0)
+        {
+            await _connection.ExecuteAsync(new CommandDefinition(
+                "DELETE FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+                new { Id = collection.Id, UserId = collection.UserId },
+                cancellationToken: cancellationToken));
+
+            await _connection.ExecuteAsync(new CommandDefinition(
+                @"INSERT INTO CollectionSearch (rowid, UserId, Name)
+                  VALUES (@Id, @UserId, @Name);",
+                new
+                {
+                    Id = collection.Id,
+                    UserId = collection.UserId,
+                    Name = Search.SearchTextNormalizer.Normalize(collection.Name),
+                },
+                cancellationToken: cancellationToken));
+
+            await _connection.ExecuteAsync(new CommandDefinition(
+                @"UPDATE LinkSearch
+                  SET CollectionName = @CollectionName
+                  WHERE UserId = @UserId
+                    AND rowid IN (SELECT Id FROM Link WHERE UserId = @UserId AND CollectionId = @CollectionId);",
+                new
+                {
+                    Id = collection.Id,
+                    UserId = collection.UserId,
+                    CollectionId = collection.Id,
+                    CollectionName = Search.SearchTextNormalizer.Normalize(collection.Name),
+                },
+                cancellationToken: cancellationToken));
+        }
     }
 
     public async Task Delete(long id, long userId, CancellationToken cancellationToken = default)
     {
-        await _connection.ExecuteAsync(
+        await _connection.ExecuteAsync(new CommandDefinition(
+            "DELETE FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = id, UserId = userId },
+            cancellationToken: cancellationToken));
+
+        await _connection.ExecuteAsync(new CommandDefinition(
             "DELETE FROM Collection WHERE Id = @Id AND UserId = @UserId;",
-            new { Id = id, UserId = userId });
+            new { Id = id, UserId = userId },
+            cancellationToken: cancellationToken));
     }
 
     private static void ThrowIfSearchRequested(string? query)

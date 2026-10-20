@@ -4,6 +4,7 @@ using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
 using Microsoft.Data.Sqlite;
 using Entities = Linkubator.Domain.Entities;
+using Search = Linkubator.Infrastructure.Search;
 
 namespace Linkubator.Infrastructure.Repositories;
 
@@ -131,13 +132,15 @@ public sealed class SqliteLinkRepository : ILinkRepository
             });
 
         SetProperty(link, nameof(Entities.Link.Id), id);
+
+        await InsertSearchProjection(id, link.UserId, link.CollectionId, link.UrlOriginal, link.Title, link.Description, cancellationToken);
     }
 
     public async Task Update(Entities.Link link, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(link);
 
-        await _connection.ExecuteAsync(
+        int affectedRows = await _connection.ExecuteAsync(
             @"UPDATE Link
               SET CollectionId = @CollectionId,
                   UrlOriginal = @UrlOriginal,
@@ -161,14 +164,57 @@ public sealed class SqliteLinkRepository : ILinkRepository
                 IsPublic = link.IsPublic ? 1 : 0,
                 ScrapingStatus = (int)link.ScrapingStatus,
             });
+
+        if (affectedRows > 0)
+        {
+            await DeleteSearchProjection(link.Id, link.UserId, cancellationToken);
+            await InsertSearchProjection(link.Id, link.UserId, link.CollectionId, link.UrlOriginal, link.Title, link.Description, cancellationToken);
+        }
     }
 
     public async Task Delete(long id, long userId, CancellationToken cancellationToken = default)
     {
+        await DeleteSearchProjection(id, userId, cancellationToken);
         await _connection.ExecuteAsync(
             "DELETE FROM Link WHERE Id = @Id AND UserId = @UserId;",
             new { Id = id, UserId = userId });
     }
+
+    private async Task InsertSearchProjection(
+        long id,
+        long userId,
+        long collectionId,
+        string urlOriginal,
+        string? title,
+        string? description,
+        CancellationToken cancellationToken)
+    {
+        string? collectionName = await _connection.ExecuteScalarAsync<string?>(
+            new CommandDefinition(
+                "SELECT Name FROM Collection WHERE Id = @CollectionId AND UserId = @UserId;",
+                new { CollectionId = collectionId, UserId = userId },
+                cancellationToken: cancellationToken));
+
+        await _connection.ExecuteAsync(new CommandDefinition(
+            @"INSERT INTO LinkSearch (rowid, UserId, UrlOriginal, Title, Description, CollectionName)
+              VALUES (@Id, @UserId, @UrlOriginal, @Title, @Description, @CollectionName);",
+            new
+            {
+                Id = id,
+                UserId = userId,
+                UrlOriginal = Search.SearchTextNormalizer.Normalize(urlOriginal),
+                Title = Search.SearchTextNormalizer.Normalize(title),
+                Description = Search.SearchTextNormalizer.Normalize(description),
+                CollectionName = Search.SearchTextNormalizer.Normalize(collectionName),
+            },
+            cancellationToken: cancellationToken));
+    }
+
+    private Task DeleteSearchProjection(long id, long userId, CancellationToken cancellationToken)
+        => _connection.ExecuteAsync(new CommandDefinition(
+            "DELETE FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = id, UserId = userId },
+            cancellationToken: cancellationToken));
 
     private static void ThrowIfSearchRequested(string? query)
     {
