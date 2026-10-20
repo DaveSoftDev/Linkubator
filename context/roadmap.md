@@ -89,6 +89,8 @@ La [S6.7 — pruebas integradas de búsqueda FTS5](../specs/s6.7-pruebas-integra
 
 La [S6.8 — datos locales de ejemplo para búsqueda](../specs/s6.8-datos-local-busqueda/spec.md), su [plan técnico](../specs/s6.8-datos-local-busqueda/plan.md) y sus [tareas](../specs/s6.8-datos-local-busqueda/tasks.md#aceptación-y-cierre) fueron aprobados por DLG con «Apruebo la spec y preparar el plan», «Apruebo el plan y preparar tasks.md» y «Aprobar tareas y autorizar implementación», respectivamente, el 20-X-2026. La implementación y validación técnica de CA01–CA04 se completaron el 20-X-2026; DLG aceptó y cerró S6.8 para su alcance técnico con «Tenemos búsqueda» el 20-X-2026. La base local `data/database/Linkubator-S6.8-20261020.db`, ignorada por Git, se conserva para S6.9/S10.6; se creó inicialmente en `%TEMP%` con un override efímero y se trasladó al repositorio sin modificar la configuración habitual. S6.9/S10.6 siguen independientes.
 
+La [S6.9 — validación manual de búsqueda y reconstrucción FTS5](../specs/s6.9-validacion-manual-busqueda/spec.md), su [plan técnico](../specs/s6.9-validacion-manual-busqueda/plan.md) y sus [tareas](../specs/s6.9-validacion-manual-busqueda/tasks.md#aceptación-y-cierre) fueron aprobados por DLG («Apruebo la spec y preparar el plan», «Siguiente» y «Vamos») el 20-X-2026; la implementación se inició con «Aprobar tareas y autorizar inicio». La validación manual de persistencia se completó con evidencia satisfactoria para CA01–CA04 y DLG aceptó y cerró S6.9 para su alcance con «Funciona» el 20-X-2026. Se usó una copia temporal de la base S6.8, se eliminaron las filas temporales y se comprobó que el hash de la base fuente no cambió. S6.9 no incluye Web ni depende de S10.6.
+
 ## Next
 
 ### Interfaz privada - Gestión básica
