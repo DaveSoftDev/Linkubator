@@ -10,6 +10,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | S6.4 — Sincronización de proyecciones FTS5 | [spec.md](s6.4-sincronizacion-proyecciones-fts5/spec.md) — aprobada por DLG («Siguiente», 20-X-2026) | [plan.md](s6.4-sincronizacion-proyecciones-fts5/plan.md) — aprobado por DLG («Siguiente», 20-X-2026) | [tasks.md](s6.4-sincronizacion-proyecciones-fts5/tasks.md#aceptación-y-cierre) — cerrada por DLG («Tenemos proyecciones», 20-X-2026) |
 | S6.5 — Consultas de búsqueda FTS5 | [spec.md](s6.5-consultas-busqueda-fts5/spec.md) — aprobada por DLG («Siguiente», 20-X-2026) | [plan.md](s6.5-consultas-busqueda-fts5/plan.md) — aprobado por DLG («Siguiente», 20-X-2026) | [tasks.md](s6.5-consultas-busqueda-fts5/tasks.md#aceptación-y-cierre) — cerrada por DLG («Consultas y búsquedas», 20-X-2026) |
 | S6.6 — Reconstrucción manual de proyecciones FTS5 | [spec.md](s6.6-reconstruccion-proyecciones/spec.md) | [plan.md](s6.6-reconstruccion-proyecciones/plan.md) | [tasks.md](s6.6-reconstruccion-proyecciones/tasks.md#aceptación-y-cierre) — cerrada por DLG («Tenemos reconstrucción de proyecciones», 20-X-2026) |
+| S6.7 — Pruebas integradas de búsqueda FTS5 | [spec.md](s6.7-pruebas-integradas-fts5/spec.md) — aprobada por DLG («Siguiente», 20-X-2026) | [plan.md](s6.7-pruebas-integradas-fts5/plan.md) — aprobado por DLG («Aprobar el plan», 20-X-2026) | [tasks.md](s6.7-pruebas-integradas-fts5/tasks.md#aceptación-y-cierre) — cerrada por DLG («Fase terminada», 20-X-2026); pruebas focalizadas 4/4 |
 
 ## Trabajos completados
 

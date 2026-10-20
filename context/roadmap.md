@@ -85,6 +85,8 @@ La [S6.5 — consultas de búsqueda FTS5](../specs/s6.5-consultas-busqueda-fts5/
 
 La [S6.6 — reconstrucción manual de proyecciones FTS5](../specs/s6.6-reconstruccion-proyecciones/spec.md), su [plan técnico](../specs/s6.6-reconstruccion-proyecciones/plan.md) y sus [tareas](../specs/s6.6-reconstruccion-proyecciones/tasks.md#aceptación-y-cierre) fueron aprobados por DLG («Siguiente», «Siguiente» y «Vamos») el 20-X-2026. La implementación se inició y completó el 20-X-2026: servicio transaccional y herramienta manual local; pruebas focalizadas 5/5, build de solución correcto sin warnings ni errores, CLI verificada con SQLite 3.53.3 y `git diff --check` limpio. DLG aceptó y cerró S6.6 para su alcance el 20-X-2026 («Tenemos reconstrucción de proyecciones»). La reconstrucción se limita a enlaces y colecciones; las evidencias por criterio constan en sus tareas. La comprobación manual S6.9 sigue en su etapa propietaria.
 
+La [S6.7 — pruebas integradas de búsqueda FTS5](../specs/s6.7-pruebas-integradas-fts5/spec.md), su [plan técnico](../specs/s6.7-pruebas-integradas-fts5/plan.md) y sus [tareas](../specs/s6.7-pruebas-integradas-fts5/tasks.md#aceptación-y-cierre) fueron aprobados por DLG con «Siguiente», «Aprobar el plan» y «Aprobar y autorizar implementación», respectivamente, el 20-X-2026. La implementación y validación técnica se completaron con pruebas focalizadas 4/4, `git diff --check` limpio y enlaces locales verificados. DLG aceptó y cerró S6.7 para su alcance con «Fase terminada» el 20-X-2026; la comprobación manual S6.9 sigue en su etapa propietaria.
+
 ## Next
 
 ### Interfaz privada - Gestión básica
