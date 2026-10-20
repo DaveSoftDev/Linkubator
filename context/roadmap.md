@@ -83,6 +83,8 @@ Las proyecciones FTS5 se implementan en S6 según [architecture.md → «FTS5»]
 
 La [S6.5 — consultas de búsqueda FTS5](../specs/s6.5-consultas-busqueda-fts5/spec.md), su [plan técnico](../specs/s6.5-consultas-busqueda-fts5/plan.md) y sus [tareas](../specs/s6.5-consultas-busqueda-fts5/tasks.md#aceptación-y-cierre) fueron aprobados por DLG el 20-X-2026 («Siguiente» en la spec y el plan; «Vamos» en las tareas). DLG solicitó iniciar la implementación el 20-X-2026 («Inicia la implementación»). La implementación y validación técnica se completaron el 20-X-2026: tests focalizados 61/61, suite completa 1081/1081 con .NET SDK 10.0.401 y `git diff --check` limpio. DLG aceptó y cerró S6.5 el 20-X-2026 («Consultas y búsquedas»); las evidencias por criterio constan en las tareas.
 
+La [S6.6 — reconstrucción manual de proyecciones FTS5](../specs/s6.6-reconstruccion-proyecciones/spec.md), su [plan técnico](../specs/s6.6-reconstruccion-proyecciones/plan.md) y sus [tareas](../specs/s6.6-reconstruccion-proyecciones/tasks.md#aceptación-y-cierre) fueron aprobados por DLG («Siguiente», «Siguiente» y «Vamos») el 20-X-2026. La implementación se inició y completó el 20-X-2026: servicio transaccional y herramienta manual local; pruebas focalizadas 5/5, build de solución correcto sin warnings ni errores, CLI verificada con SQLite 3.53.3 y `git diff --check` limpio. DLG aceptó y cerró S6.6 para su alcance el 20-X-2026 («Tenemos reconstrucción de proyecciones»). La reconstrucción se limita a enlaces y colecciones; las evidencias por criterio constan en sus tareas. La comprobación manual S6.9 sigue en su etapa propietaria.
+
 ## Next
 
 ### Interfaz privada - Gestión básica
