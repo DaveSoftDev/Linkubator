@@ -97,6 +97,20 @@ public sealed class Link : Bases.BaseEntity
     }
 
     /// <summary>
+    /// Establece el Id del enlace.
+    /// </summary>
+    /// <param name="id">Nuevo Id del enlace.</param>
+    internal void SetId(long id)
+    {
+        if (id <= 0 || Id != 0)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        Id = id;
+    }
+
+    /// <summary>
     /// Cambia la privacidad del enlace.
     /// </summary>
     /// <param name="isPublic">Nuevo valor de privacidad.</param>
