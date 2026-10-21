@@ -4,7 +4,6 @@ using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
 using Microsoft.Data.Sqlite;
 using Entities = Linkubator.Domain.Entities;
-using Search = Linkubator.Infrastructure.Search;
 
 namespace Linkubator.Infrastructure.Repositories;
 
@@ -20,38 +19,41 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
 
     public async Task<Entities.Collection?> GetById(long id, long userId, CancellationToken cancellationToken = default)
     {
-        CollectionRow? row = await _connection.QuerySingleOrDefaultAsync<CollectionRow>(
+        CollectionRow? row = await _connection.QuerySingleOrDefaultAsync<CollectionRow>(new CommandDefinition(
             @"SELECT Id, UserId, Name, Slug, Description, IsPublic, CreatedAt
               FROM Collection
               WHERE Id = @Id AND UserId = @UserId;",
             new { Id = id, UserId = userId },
             commandTimeout: null,
-            commandType: null);
+            commandType: null,
+            cancellationToken: cancellationToken));
 
         return row is null ? null : Map(row);
     }
 
     public async Task<Entities.Collection?> GetBySlug(long userId, string slug, CancellationToken cancellationToken = default)
     {
-        CollectionRow? row = await _connection.QuerySingleOrDefaultAsync<CollectionRow>(
+        CollectionRow? row = await _connection.QuerySingleOrDefaultAsync<CollectionRow>(new CommandDefinition(
             @"SELECT Id, UserId, Name, Slug, Description, IsPublic, CreatedAt
               FROM Collection
               WHERE UserId = @UserId AND Slug = @Slug;",
             new { UserId = userId, Slug = slug },
             commandTimeout: null,
-            commandType: null);
+            commandType: null,
+            cancellationToken: cancellationToken));
 
         return row is null ? null : Map(row);
     }
 
     public async Task<IReadOnlyCollection<Entities.Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
     {
-        IEnumerable<CollectionRow> rows = await _connection.QueryAsync<CollectionRow>(
+        IEnumerable<CollectionRow> rows = await _connection.QueryAsync<CollectionRow>(new CommandDefinition(
             @"SELECT Id, UserId, Name, Slug, Description, IsPublic, CreatedAt
               FROM Collection
               WHERE UserId = @UserId
               ORDER BY Name COLLATE LINKUBATOR_ES_ES ASC, Id ASC;",
-            new { UserId = userId });
+            new { UserId = userId },
+            cancellationToken: cancellationToken));
 
         return rows.Select(Map).ToList();
     }
@@ -80,9 +82,10 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
                 GROUP BY c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
                 ORDER BY c.Name COLLATE LINKUBATOR_ES_ES ASC, c.Id ASC
                 LIMIT @Limit OFFSET @Offset;";
-        IEnumerable<CollectionListRow> rows = await _connection.QueryAsync<CollectionListRow>(
+        IEnumerable<CollectionListRow> rows = await _connection.QueryAsync<CollectionListRow>(new CommandDefinition(
             sql,
-            new { UserId = userId, SearchQuery = searchQuery, Limit = PageSize, Offset = offset });
+            new { UserId = userId, SearchQuery = searchQuery, Limit = PageSize, Offset = offset },
+            cancellationToken: cancellationToken));
 
         return rows.Select(row => new CollectionDto(
             row.Id,
@@ -105,9 +108,10 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
                 WHERE CollectionSearch MATCH @SearchQuery
                   AND CollectionSearch.UserId = @UserId
                   AND c.UserId = @UserId;";
-        long total = await _connection.ExecuteScalarAsync<long>(
+        long total = await _connection.ExecuteScalarAsync<long>(new CommandDefinition(
             sql,
-            new { UserId = userId, SearchQuery = searchQuery });
+            new { UserId = userId, SearchQuery = searchQuery },
+            cancellationToken: cancellationToken));
 
         if (total == 0)
         {
@@ -122,7 +126,7 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
         ArgumentNullException.ThrowIfNull(collection);
 
         DateTime createdAt = collection.CreatedAt;
-        long id = await _connection.ExecuteScalarAsync<long>(
+        long id = await _connection.ExecuteScalarAsync<long>(new CommandDefinition(
             @"INSERT INTO Collection (UserId, Name, Slug, Description, IsPublic, CreatedAt)
               VALUES (@UserId, @Name, @Slug, @Description, @IsPublic, @CreatedAt);
               SELECT last_insert_rowid();",
@@ -134,7 +138,8 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
                 Description = collection.Description,
                 IsPublic = collection.IsPublic ? 1 : 0,
                 CreatedAt = createdAt,
-            });
+            },
+            cancellationToken: cancellationToken));
 
         SetProperty(collection, nameof(Entities.Collection.Id), id);
 

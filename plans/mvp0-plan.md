@@ -267,13 +267,13 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [ ] Las proyecciones se mantienen sincronizadas en altas, cambios y borrados.
-- [ ] Renombrar una colección actualiza su proyección y las filas de sus enlaces.
-- [ ] Un fallo en una operación compuesta no deja proyecciones desincronizadas.
-- [ ] Las búsquedas respetan siempre el usuario identificado y usan solo la proyección de su entidad.
-- [ ] Acentos, NFC, operadores como términos literales y entrada sin términos se comportan según la especificación.
-- [ ] El comando de reconstrucción restaura una proyección alterada a mano.
-- [ ] El humano ha probado búsquedas con los datos de ejemplo.
+- [x] Las proyecciones se mantienen sincronizadas en altas, cambios y borrados ([evidencia S6.4](../specs/archive/s6.4-sincronizacion-proyecciones-fts5/tasks.md#evidencia-por-criterio) y [S6.7](../specs/archive/s6.7-pruebas-integradas-fts5/tasks.md#evidencia-por-criterio)).
+- [x] Renombrar una colección actualiza su proyección y las filas de sus enlaces ([evidencia S6.4](../specs/archive/s6.4-sincronizacion-proyecciones-fts5/tasks.md#evidencia-por-criterio) y [S6.7](../specs/archive/s6.7-pruebas-integradas-fts5/tasks.md#evidencia-por-criterio)).
+- [x] Un fallo en una operación compuesta no deja proyecciones desincronizadas ([evidencia S6.4](../specs/archive/s6.4-sincronizacion-proyecciones-fts5/tasks.md#evidencia-por-criterio) y [S6.7](../specs/archive/s6.7-pruebas-integradas-fts5/tasks.md#evidencia-por-criterio)).
+- [x] Las búsquedas respetan siempre el usuario identificado y usan solo la proyección de su entidad ([evidencia S6.5](../specs/archive/s6.5-consultas-busqueda-fts5/tasks.md#evidencia-por-criterio) y [S6.7](../specs/archive/s6.7-pruebas-integradas-fts5/tasks.md#evidencia-por-criterio)).
+- [x] Acentos, NFC, operadores como términos literales y entrada sin términos se comportan según la especificación ([evidencia S6.3](../specs/archive/s6.3-constructor-consulta-fts5/tasks.md#evidencia-por-criterio), [S6.5](../specs/archive/s6.5-consultas-busqueda-fts5/tasks.md#evidencia-por-criterio) y [S6.9](../specs/archive/s6.9-validacion-manual-busqueda/tasks.md#evidencia-por-criterio)).
+- [x] El comando de reconstrucción restaura una proyección alterada a mano ([evidencia S6.6](../specs/archive/s6.6-reconstruccion-proyecciones/tasks.md#evidencia-por-criterio) y [S6.9](../specs/archive/s6.9-validacion-manual-busqueda/tasks.md#evidencia-por-criterio)).
+- [x] El humano ha probado búsquedas con los datos de ejemplo ([evidencia S6.9](../specs/archive/s6.9-validacion-manual-busqueda/tasks.md#aceptación-y-cierre)).
 
 ### S6a: Persistencia: refactor (M)
 

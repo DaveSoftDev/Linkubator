@@ -26,3 +26,16 @@ WHERE Email = @Email
       FROM Collection
       WHERE Collection.UserId = User.Id
   );
+
+INSERT INTO CollectionSearch (rowid, UserId, Name)
+SELECT Collection.Id, Collection.UserId, NormalizeSearchText(Collection.Name)
+FROM Collection
+INNER JOIN User ON User.Id = Collection.UserId
+WHERE User.Email = @Email
+  AND Collection.Slug = @CollectionSlug
+  AND NOT EXISTS (
+      SELECT 1
+      FROM CollectionSearch
+      WHERE CollectionSearch.rowid = Collection.Id
+        AND CollectionSearch.UserId = Collection.UserId
+  );

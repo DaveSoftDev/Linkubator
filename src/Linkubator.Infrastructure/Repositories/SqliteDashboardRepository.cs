@@ -16,15 +16,17 @@ public sealed class SqliteDashboardRepository : IDashboardRepository
 
     public async Task<DashboardDto> GetByUser(long userId, CancellationToken cancellationToken = default)
     {
-        long collectionCount = await _connection.ExecuteScalarAsync<long>(
+        long collectionCount = await _connection.ExecuteScalarAsync<long>(new CommandDefinition(
             "SELECT COUNT(*) FROM Collection WHERE UserId = @UserId;",
-            new { UserId = userId });
+            new { UserId = userId },
+            cancellationToken: cancellationToken));
 
-        long linkCount = await _connection.ExecuteScalarAsync<long>(
+        long linkCount = await _connection.ExecuteScalarAsync<long>(new CommandDefinition(
             "SELECT COUNT(*) FROM Link WHERE UserId = @UserId;",
-            new { UserId = userId });
+            new { UserId = userId },
+            cancellationToken: cancellationToken));
 
-        IReadOnlyList<CollectionDto> collections = (await _connection.QueryAsync<CollectionSummaryRow>(
+        IReadOnlyList<CollectionDto> collections = (await _connection.QueryAsync<CollectionSummaryRow>(new CommandDefinition(
             @"SELECT c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt,
                      COUNT(l.Id) AS LinkCount
               FROM Collection c
@@ -32,7 +34,8 @@ public sealed class SqliteDashboardRepository : IDashboardRepository
               WHERE c.UserId = @UserId
               GROUP BY c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
               ORDER BY c.Name COLLATE LINKUBATOR_ES_ES ASC, c.Id ASC;",
-            new { UserId = userId }))
+            new { UserId = userId },
+            cancellationToken: cancellationToken)))
             .Select(row => new CollectionDto(
                 row.Id,
                 row.Name,
@@ -43,13 +46,14 @@ public sealed class SqliteDashboardRepository : IDashboardRepository
                 row.CreatedAt))
             .ToList();
 
-        IReadOnlyList<LinkDto> recentLinks = (await _connection.QueryAsync<LinkSummaryRow>(
+        IReadOnlyList<LinkDto> recentLinks = (await _connection.QueryAsync<LinkSummaryRow>(new CommandDefinition(
             @"SELECT Id, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, CreatedAt
               FROM Link
               WHERE UserId = @UserId
               ORDER BY CreatedAt DESC, Id DESC
               LIMIT 5;",
-            new { UserId = userId }))
+            new { UserId = userId },
+            cancellationToken: cancellationToken)))
             .Select(row => new LinkDto(
                 row.Id,
                 row.CollectionId,
