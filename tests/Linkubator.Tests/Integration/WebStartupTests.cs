@@ -44,7 +44,7 @@ public class WebStartupTests
             await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
             Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM User WHERE Email = @Email;", new { Email = DemoEmail }));
             Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Collection WHERE UserId = (SELECT Id FROM User WHERE Email = @Email);", new { Email = DemoEmail }));
-            Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
+            Assert.Equal(2L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
         }
         finally
         {
@@ -63,7 +63,7 @@ public class WebStartupTests
             Assert.ThrowsAny<Exception>(() => factory.CreateClient());
 
             await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
-            Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
+            Assert.Equal(2L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
             Assert.Equal(0L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM User WHERE Email = @Email;", new { Email = DemoEmail }));
         }
         finally
@@ -83,7 +83,7 @@ public class WebStartupTests
             Assert.ThrowsAny<Exception>(() => factory.CreateClient());
 
             await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
-            Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
+            Assert.Equal(2L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
             Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM User WHERE Email = @Email;", new { Email = DemoEmail }));
         }
         finally
@@ -117,7 +117,7 @@ public class WebStartupTests
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            builder.UseSetting("ConnectionStrings:DefaultConnection", $"Data Source={databasePath}");
+            builder.UseSetting("ConnectionStrings:Linkubator", $"Data Source={databasePath}");
             builder.UseSetting("DevelopmentIdentity:Email", DemoEmail);
             builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
             builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");

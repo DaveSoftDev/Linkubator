@@ -1,3 +1,4 @@
+using Dapper;
 using Linkubator.Application.Contracts;
 using Linkubator.Infrastructure.Repositories;
 using Linkubator.Domain.Entities;
@@ -72,6 +73,11 @@ public sealed class SqliteLinkRepositoryTests
         Assert.Equal("Title", result.Title);
         Assert.Equal("Description", result.Description);
         Assert.False(result.IsPublic);
+        Assert.Equal(
+            "https://example.test/path|Title|Description|Private",
+            await connection.QuerySingleAsync<string>(
+                "SELECT UrlOriginal || '|' || Title || '|' || Description || '|' || CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+                new { Id = link.Id, UserId = 42 }));
     }
 
     [Fact]
@@ -104,6 +110,74 @@ public sealed class SqliteLinkRepositoryTests
         Link? result = await repository.GetById(linkId, 99);
 
         Assert.NotNull(result);
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = linkId, UserId = 42 }));
+    }
+
+    [Fact]
+    public async Task Update_WhenProjectionWriteFails_RollsBackLinkAndProjection()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        long linkId = await database.SeedLink(42, collectionId, "https://example.test/a", "https://example.test/a", "Original", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        Link link = (await repository.GetById(linkId, 42))!;
+        link.Edit("Changed", null, null);
+        await connection.ExecuteAsync("BEGIN IMMEDIATE;");
+        await connection.ExecuteAsync("DROP TABLE LinkSearch;");
+
+        await Assert.ThrowsAsync<SqliteException>(() => repository.Update(link));
+        await connection.ExecuteAsync("ROLLBACK;");
+
+        Assert.Equal("Original", (await repository.GetById(linkId, 42))!.Title);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'LinkSearch';"));
+        Assert.Equal("Original", await connection.QuerySingleAsync<string>(
+            "SELECT Title FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = linkId, UserId = 42 }));
+    }
+
+    [Fact]
+    public async Task Insert_WhenTextIsDecomposed_NormalizesOnlyProjection()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Cafe\u0301", "cafe", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository collectionRepository = new SqliteCollectionRepository(connection);
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        Collection collection = (await collectionRepository.GetById(collectionId, 42))!;
+        Link link = Link.Create(42, collection, "https://example.test/path", "Cafe\u0301", null, null);
+
+        await repository.Insert(link);
+
+        Assert.Equal("Cafe\u0301", link.Title);
+        Assert.Equal("Café", await connection.QuerySingleAsync<string>(
+            "SELECT Title FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = link.Id, UserId = 42 }));
+        Assert.Equal("Café", await connection.QuerySingleAsync<string>(
+            "SELECT CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = link.Id, UserId = 42 }));
+    }
+
+    [Fact]
+    public async Task Delete_WhenUserOwnsLink_RemovesSearchProjection()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository collectionRepository = new SqliteCollectionRepository(connection);
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        Collection collection = (await collectionRepository.GetById(collectionId, 42))!;
+        Link link = Link.Create(42, collection, "https://example.test/path", "Title", null, null);
+        await repository.Insert(link);
+
+        await repository.Delete(link.Id, 42);
+
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = link.Id, UserId = 42 }));
     }
 
     [Fact]
@@ -126,6 +200,11 @@ public sealed class SqliteLinkRepositoryTests
 
         Assert.Equal(targetCollectionId, result!.CollectionId);
         Assert.False(result.IsPublic);
+        Assert.Equal(
+            "Target",
+            await connection.QuerySingleAsync<string>(
+                "SELECT CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+                new { Id = link.Id, UserId = 42 }));
     }
 
     [Fact]
@@ -144,6 +223,11 @@ public sealed class SqliteLinkRepositoryTests
 
         Assert.Equal("Updated", result!.Title);
         Assert.Equal("New description", result.Description);
+        Assert.Equal(
+            "Updated|New description",
+            await connection.QuerySingleAsync<string>(
+                "SELECT Title || '|' || Description FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+                new { Id = linkId, UserId = 42 }));
     }
 
     [Fact]
@@ -162,18 +246,85 @@ public sealed class SqliteLinkRepositoryTests
         Assert.Equal(new[] { "https://example.test/one" }, result.Select(item => item.UrlOriginal));
     }
 
-    [Theory]
-    [InlineData("term")]
-    [InlineData(" term ")]
-    public async Task GetPageByUser_WhenQueryHasTerms_ThrowsBeforeS6(string query)
+    [Fact]
+    public async Task GetPageByUser_WhenProjectionUserDoesNotMatchLinkOwner_ExcludesTheResult()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long foreignCollectionId = await database.SeedCollection(99, "Foreign", "foreign", false);
+        await database.SeedLink(99, foreignCollectionId, "https://example.test/foreign", "https://example.test/foreign", "needle", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        await connection.ExecuteAsync("UPDATE LinkSearch SET UserId = 42 WHERE UserId = 99;");
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, "needle", null, 1);
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenQueryMatchesLinks_ReturnsOnlyOwnedMatchesInRankOrder()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long ownCollectionId = await database.SeedCollection(42, "Own", "own", false);
+        long otherCollectionId = await database.SeedCollection(99, "Other", "other", false);
+        await database.SeedLink(42, ownCollectionId, "https://example.test/query", "https://example.test/query", "query query", false);
+        await database.SeedLink(42, ownCollectionId, "https://example.test/other", "https://example.test/other", "query", false);
+        await database.SeedLink(99, otherCollectionId, "https://example.test/foreign", "https://example.test/foreign", "query query query", false);
         await using SqliteConnection connection = database.OpenConnection();
         ILinkRepository repository = new SqliteLinkRepository(connection);
 
-        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() => repository.GetPageByUser(42, query, null, 1));
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, "query", null, 1);
 
-        Assert.Equal("Search queries are not supported before S6.", exception.Message);
+        Assert.Equal(new[] { "https://example.test/query", "https://example.test/other" }, result.Select(item => item.UrlOriginal));
+    }
+
+
+    [Fact]
+    public async Task GetPageByUser_WhenRankAndCreatedAtAreEqual_UsesIdAsFinalTieBreaker()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        DateTime createdAt = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        await database.SeedLink(42, collectionId, "https://example.test/first", "https://example.test/first", "needle", false, new SqliteTestLinkOptions(CreatedAt: createdAt));
+        await database.SeedLink(42, collectionId, "https://example.test/second", "https://example.test/second", "needle", false, new SqliteTestLinkOptions(CreatedAt: createdAt));
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, "needle", null, 1);
+
+        Assert.Equal(new[] { "https://example.test/second", "https://example.test/first" }, result.Select(item => item.UrlOriginal));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenQueryHasMultipleTermsAndAccents_RequiresAllNormalizedTerms()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        await database.SeedLink(42, collectionId, "https://example.test/guia", "https://example.test/guia", "cancio\u0301n guia", false);
+        await database.SeedLink(42, collectionId, "https://example.test/other", "https://example.test/other", "canción distinta", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, "cancion guia", null, 1);
+
+        Assert.Equal(new[] { "https://example.test/guia" }, result.Select(item => item.UrlOriginal));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenQueryHasNoTerms_UsesCollectionFilterAndUnsearchedOrder()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        long otherCollectionId = await database.SeedCollection(42, "Other", "other", false);
+        await database.SeedLink(42, collectionId, "https://example.test/earlier", "https://example.test/earlier", "earlier", false, new SqliteTestLinkOptions(CreatedAt: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)));
+        await database.SeedLink(42, collectionId, "https://example.test/later", "https://example.test/later", "later", false, new SqliteTestLinkOptions(CreatedAt: new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc)));
+        await database.SeedLink(42, otherCollectionId, "https://example.test/unfiltered", "https://example.test/unfiltered", "unfiltered", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, "---", collectionId, 1);
+
+        Assert.Equal(new[] { "https://example.test/later", "https://example.test/earlier" }, result.Select(item => item.UrlOriginal));
     }
 
     [Fact]
@@ -202,21 +353,44 @@ public sealed class SqliteLinkRepositoryTests
         await using SqliteConnection connection = database.OpenConnection();
         ILinkRepository repository = new SqliteLinkRepository(connection);
 
-        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, null, collectionId, 2);
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, "link", collectionId, 2);
 
         Assert.Single(result);
         Assert.Equal("https://example.test/00", result.Single().UrlOriginal);
     }
 
     [Fact]
-    public async Task GetPageCountByUser_WhenQueryHasTerms_ThrowsBeforeS6()
+    public async Task GetPageCountByUser_WhenQueryHasTerms_CountsOnlyMatchesAndCollectionFilter()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        long otherCollectionId = await database.SeedCollection(42, "Other", "other", false);
+        long foreignCollectionId = await database.SeedCollection(99, "Foreign", "foreign", false);
+        await database.SeedLink(42, collectionId, "https://example.test/match-one", "https://example.test/match-one", "needle", false);
+        await database.SeedLink(42, collectionId, "https://example.test/match-two", "https://example.test/match-two", "needle", false);
+        await database.SeedLink(42, collectionId, "https://example.test/no-match", "https://example.test/no-match", "different", false);
+        await database.SeedLink(42, otherCollectionId, "https://example.test/other-collection", "https://example.test/other-collection", "needle", false);
+        await database.SeedLink(99, foreignCollectionId, "https://example.test/foreign-match", "https://example.test/foreign-match", "needle", false);
         await using SqliteConnection connection = database.OpenConnection();
         ILinkRepository repository = new SqliteLinkRepository(connection);
 
-        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() => repository.GetPageCountByUser(42, "term", null));
+        int result = await repository.GetPageCountByUser(42, "needle", collectionId);
 
-        Assert.Equal("Search queries are not supported before S6.", exception.Message);
+        Assert.Equal(1, result);
+    }
+
+    [Fact]
+    public async Task GetPageCountByUser_WhenQueryHasTerms_CountsMatchingPages()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        await database.SeedLinkRange(42, collectionId, 16);
+        await using SqliteConnection connection = database.OpenConnection();
+        await connection.ExecuteAsync("UPDATE LinkSearch SET Title = 'needle' WHERE UserId = 42;");
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        int result = await repository.GetPageCountByUser(42, "needle", collectionId);
+
+        Assert.Equal(2, result);
     }
 }

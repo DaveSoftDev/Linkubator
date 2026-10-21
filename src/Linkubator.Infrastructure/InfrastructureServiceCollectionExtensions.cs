@@ -18,10 +18,10 @@ public static class InfrastructureServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        string? connectionString = configuration.GetConnectionString("DefaultConnection");
+        string? connectionString = configuration.GetConnectionString("Linkubator");
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            throw new InvalidOperationException("A connection string named 'DefaultConnection' is required.");
+            throw new InvalidOperationException("A connection string named 'Linkubator' is required.");
         }
 
         services.AddSingleton(new SqliteConnectionFactory(connectionString));

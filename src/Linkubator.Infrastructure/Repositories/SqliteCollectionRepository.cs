@@ -4,6 +4,7 @@ using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
 using Microsoft.Data.Sqlite;
 using Entities = Linkubator.Domain.Entities;
+using Search = Linkubator.Infrastructure.Search;
 
 namespace Linkubator.Infrastructure.Repositories;
 
@@ -57,20 +58,31 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
 
     public async Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
     {
-        ThrowIfSearchRequested(query);
-
+        string? searchQuery = Search.SearchQueryBuilder.Build(Search.SearchTextNormalizer.Normalize(query));
         int offset = (page - 1) * PageSize;
-
+        string sql = searchQuery is null
+            ? @"SELECT c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt,
+                       COUNT(l.Id) AS LinkCount
+                FROM Collection c
+                LEFT JOIN Link l ON l.UserId = c.UserId AND l.CollectionId = c.Id
+                WHERE c.UserId = @UserId
+                GROUP BY c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
+                ORDER BY c.Name COLLATE LINKUBATOR_ES_ES ASC, c.Id ASC
+                LIMIT @Limit OFFSET @Offset;"
+            : @"SELECT c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt,
+                       COUNT(l.Id) AS LinkCount
+                FROM CollectionSearch
+                INNER JOIN Collection c ON c.Id = CollectionSearch.rowid AND c.UserId = CollectionSearch.UserId
+                LEFT JOIN Link l ON l.UserId = c.UserId AND l.CollectionId = c.Id
+                WHERE CollectionSearch MATCH @SearchQuery
+                  AND CollectionSearch.UserId = @UserId
+                  AND c.UserId = @UserId
+                GROUP BY c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
+                ORDER BY c.Name COLLATE LINKUBATOR_ES_ES ASC, c.Id ASC
+                LIMIT @Limit OFFSET @Offset;";
         IEnumerable<CollectionListRow> rows = await _connection.QueryAsync<CollectionListRow>(
-            @"SELECT c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt,
-                     COUNT(l.Id) AS LinkCount
-              FROM Collection c
-              LEFT JOIN Link l ON l.UserId = c.UserId AND l.CollectionId = c.Id
-              WHERE c.UserId = @UserId
-              GROUP BY c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
-              ORDER BY c.Name COLLATE LINKUBATOR_ES_ES ASC, c.Id ASC
-              LIMIT @Limit OFFSET @Offset;",
-            new { UserId = userId, Limit = PageSize, Offset = offset });
+            sql,
+            new { UserId = userId, SearchQuery = searchQuery, Limit = PageSize, Offset = offset });
 
         return rows.Select(row => new CollectionDto(
             row.Id,
@@ -84,11 +96,18 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
 
     public async Task<int> GetPageCountByUser(long userId, string? query, CancellationToken cancellationToken = default)
     {
-        ThrowIfSearchRequested(query);
-
+        string? searchQuery = Search.SearchQueryBuilder.Build(Search.SearchTextNormalizer.Normalize(query));
+        string sql = searchQuery is null
+            ? "SELECT COUNT(*) FROM Collection WHERE UserId = @UserId;"
+            : @"SELECT COUNT(*)
+                FROM CollectionSearch
+                INNER JOIN Collection c ON c.Id = CollectionSearch.rowid AND c.UserId = CollectionSearch.UserId
+                WHERE CollectionSearch MATCH @SearchQuery
+                  AND CollectionSearch.UserId = @UserId
+                  AND c.UserId = @UserId;";
         long total = await _connection.ExecuteScalarAsync<long>(
-            "SELECT COUNT(*) FROM Collection WHERE UserId = @UserId;",
-            new { UserId = userId });
+            sql,
+            new { UserId = userId, SearchQuery = searchQuery });
 
         if (total == 0)
         {
@@ -118,13 +137,24 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
             });
 
         SetProperty(collection, nameof(Entities.Collection.Id), id);
+
+        await _connection.ExecuteAsync(new CommandDefinition(
+            @"INSERT INTO CollectionSearch (rowid, UserId, Name)
+              VALUES (@Id, @UserId, @Name);",
+            new
+            {
+                Id = id,
+                UserId = collection.UserId,
+                Name = Search.SearchTextNormalizer.Normalize(collection.Name),
+            },
+            cancellationToken: cancellationToken));
     }
 
     public async Task Update(Entities.Collection collection, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(collection);
 
-        await _connection.ExecuteAsync(
+        int affectedRows = await _connection.ExecuteAsync(new CommandDefinition(
             @"UPDATE Collection
               SET Name = @Name,
                   Slug = @Slug,
@@ -139,23 +169,54 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
                 Slug = collection.Slug,
                 Description = collection.Description,
                 IsPublic = collection.IsPublic ? 1 : 0,
-            });
+            },
+            cancellationToken: cancellationToken));
+
+        if (affectedRows > 0)
+        {
+            await _connection.ExecuteAsync(new CommandDefinition(
+                "DELETE FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+                new { Id = collection.Id, UserId = collection.UserId },
+                cancellationToken: cancellationToken));
+
+            await _connection.ExecuteAsync(new CommandDefinition(
+                @"INSERT INTO CollectionSearch (rowid, UserId, Name)
+                  VALUES (@Id, @UserId, @Name);",
+                new
+                {
+                    Id = collection.Id,
+                    UserId = collection.UserId,
+                    Name = Search.SearchTextNormalizer.Normalize(collection.Name),
+                },
+                cancellationToken: cancellationToken));
+
+            await _connection.ExecuteAsync(new CommandDefinition(
+                @"UPDATE LinkSearch
+                  SET CollectionName = @CollectionName
+                  WHERE UserId = @UserId
+                    AND rowid IN (SELECT Id FROM Link WHERE UserId = @UserId AND CollectionId = @CollectionId);",
+                new
+                {
+                    Id = collection.Id,
+                    UserId = collection.UserId,
+                    CollectionId = collection.Id,
+                    CollectionName = Search.SearchTextNormalizer.Normalize(collection.Name),
+                },
+                cancellationToken: cancellationToken));
+        }
     }
 
     public async Task Delete(long id, long userId, CancellationToken cancellationToken = default)
     {
-        await _connection.ExecuteAsync(
-            "DELETE FROM Collection WHERE Id = @Id AND UserId = @UserId;",
-            new { Id = id, UserId = userId });
-    }
+        await _connection.ExecuteAsync(new CommandDefinition(
+            "DELETE FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = id, UserId = userId },
+            cancellationToken: cancellationToken));
 
-    private static void ThrowIfSearchRequested(string? query)
-    {
-        string? normalized = query is null ? null : query.Trim();
-        if (!string.IsNullOrEmpty(normalized))
-        {
-            throw new InvalidOperationException("Search queries are not supported before S6.");
-        }
+        await _connection.ExecuteAsync(new CommandDefinition(
+            "DELETE FROM Collection WHERE Id = @Id AND UserId = @UserId;",
+            new { Id = id, UserId = userId },
+            cancellationToken: cancellationToken));
     }
 
     private static Entities.Collection Map(CollectionRow row)

@@ -1,3 +1,4 @@
+using Dapper;
 using Linkubator.Application.Contracts;
 using Linkubator.Infrastructure.Repositories;
 using Linkubator.Domain.Entities;
@@ -66,6 +67,9 @@ public sealed class SqliteCollectionRepositoryTests
         Assert.Equal("Description", result.Description);
         Assert.True(result.IsPublic);
         Assert.NotEqual(default, result.CreatedAt);
+        Assert.Equal("Árbol", await connection.QuerySingleAsync<string>(
+            "SELECT Name FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = collection.Id, UserId = 42 }));
     }
 
     [Fact]
@@ -103,6 +107,68 @@ public sealed class SqliteCollectionRepositoryTests
         Assert.Equal("Renamed", result!.Name);
         Assert.Equal("renamed", result.Slug);
         Assert.Equal("Updated description", result.Description);
+        Assert.Equal("Renamed", await connection.QuerySingleAsync<string>(
+            "SELECT Name FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = collectionId, UserId = 42 }));
+    }
+
+    [Fact]
+    public async Task Update_WhenCollectionIsRenamed_UpdatesItsProjectionAndOnlyItsLinks()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository collectionRepository = new SqliteCollectionRepository(connection);
+        ILinkRepository linkRepository = new SqliteLinkRepository(connection);
+        Collection renamedCollection = Collection.Create(42, "Original", null, false);
+        Collection otherCollection = Collection.Create(42, "Other", null, false);
+        await collectionRepository.Insert(renamedCollection);
+        await collectionRepository.Insert(otherCollection);
+        Link renamedLink = Link.Create(42, renamedCollection, "https://example.test/one", "One", null, null);
+        Link unchangedLink = Link.Create(42, otherCollection, "https://example.test/two", "Two", null, null);
+        await linkRepository.Insert(renamedLink);
+        await linkRepository.Insert(unchangedLink);
+        renamedCollection.Rename("Renamed");
+
+        await collectionRepository.Update(renamedCollection);
+
+        Assert.Equal("Renamed", await connection.QuerySingleAsync<string>(
+            "SELECT Name FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = renamedCollection.Id, UserId = 42 }));
+        Assert.Equal("Renamed", await connection.QuerySingleAsync<string>(
+            "SELECT CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = renamedLink.Id, UserId = 42 }));
+        Assert.Equal("Other", await connection.QuerySingleAsync<string>(
+            "SELECT CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = unchangedLink.Id, UserId = 42 }));
+    }
+
+    [Fact]
+    public async Task Update_WhenTransactionRollsBack_RestoresCollectionAndProjections()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository collectionRepository = new SqliteCollectionRepository(connection);
+        ILinkRepository linkRepository = new SqliteLinkRepository(connection);
+        Collection collection = Collection.Create(42, "Original", null, false);
+        await collectionRepository.Insert(collection);
+        Link link = Link.Create(42, collection, "https://example.test/rollback", "Rollback", null, null);
+        await linkRepository.Insert(link);
+        collection.Rename("Renamed");
+        await connection.ExecuteAsync("BEGIN IMMEDIATE;");
+        await connection.ExecuteAsync("DROP TABLE LinkSearch;");
+
+        await Assert.ThrowsAsync<SqliteException>(() => collectionRepository.Update(collection));
+        await connection.ExecuteAsync("ROLLBACK;");
+
+        Assert.Equal("Original", (await collectionRepository.GetById(collection.Id, 42))!.Name);
+        Assert.Equal("Original", await connection.QuerySingleAsync<string>(
+            "SELECT Name FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = collection.Id, UserId = 42 }));
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'LinkSearch';"));
+        Assert.Equal("Original", await connection.QuerySingleAsync<string>(
+            "SELECT CollectionName FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = link.Id, UserId = 42 }));
     }
 
     [Fact]
@@ -131,6 +197,9 @@ public sealed class SqliteCollectionRepositoryTests
         Collection? result = await repository.GetById(collectionId, 42);
 
         Assert.Null(result);
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM CollectionSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = collectionId, UserId = 42 }));
     }
 
     [Fact]
@@ -164,18 +233,77 @@ public sealed class SqliteCollectionRepositoryTests
         Assert.Equal(new[] { "Árbol", "barranco" }, result.Select(item => item.Name));
     }
 
-    [Theory]
-    [InlineData("tree")]
-    [InlineData(" tree ")]
-    public async Task GetPageByUser_WhenQueryHasTerms_ThrowsBeforeS6(string query)
+    [Fact]
+    public async Task GetPageByUser_WhenQueryHasMultipleTerms_RequiresAllTermsInName()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long matchingId = await database.SeedCollection(42, "Tree public", "tree-public", false);
+        await database.SeedCollection(42, "Tree private", "tree-private", false);
+        await database.SeedCollection(99, "Tree public", "foreign-tree-public", false);
         await using SqliteConnection connection = database.OpenConnection();
         ICollectionRepository repository = new SqliteCollectionRepository(connection);
 
-        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() => repository.GetPageByUser(42, query, 1));
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "tree public", 1);
 
-        Assert.Equal("Search queries are not supported before S6.", exception.Message);
+        Assert.Equal(new[] { matchingId }, result.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenProjectionUserDoesNotMatchCollectionOwner_ExcludesTheResult()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await database.SeedCollection(99, "Foreign tree", "foreign-tree", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        await connection.ExecuteAsync("UPDATE CollectionSearch SET UserId = 42 WHERE UserId = 99;");
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "tree", 1);
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenLinkCountMatchesSearchText_DoesNotMatchCollection()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Unrelated", "unrelated", false);
+        await database.SeedLink(42, collectionId, "https://example.test/tree", "https://example.test/tree", "tree", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "tree", 1);
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenQueryMatchesCollections_ReturnsOwnedNameMatchesAlphabetically()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long zetaId = await database.SeedCollection(42, "Zeta tree", "zeta-tree", false);
+        long alphaId = await database.SeedCollection(42, "Árbol tree", "arbol-tree", false);
+        await database.SeedCollection(42, "No match", "no-match", false);
+        await database.SeedCollection(99, "Foreign tree", "foreign-tree", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "tree", 1);
+
+        Assert.Equal(new[] { alphaId, zetaId }, result.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenQueryHasNoTerms_ReturnsAllCollectionsInAlphabeticalOrder()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await database.SeedCollection(42, "barranco", "barranco", false);
+        await database.SeedCollection(42, "Árbol", "arbol", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "---", 1);
+
+        Assert.Equal(new[] { "Árbol", "barranco" }, result.Select(item => item.Name));
     }
 
     [Fact]
@@ -213,21 +341,39 @@ public sealed class SqliteCollectionRepositoryTests
         await using SqliteConnection connection = database.OpenConnection();
         ICollectionRepository repository = new SqliteCollectionRepository(connection);
 
-        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, null, 2);
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "collection", 2);
 
         Assert.Single(result);
         Assert.Equal("Collection 15", result.Single().Name);
     }
 
     [Fact]
-    public async Task GetPageCountByUser_WhenQueryHasTerms_ThrowsBeforeS6()
+    public async Task GetPageCountByUser_WhenQueryHasTerms_CountsOnlyOwnedNameMatches()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await database.SeedCollection(42, "Tree collection", "tree-collection", false);
+        await database.SeedCollection(42, "Another tree", "another-tree", false);
+        await database.SeedCollection(42, "Unrelated", "unrelated", false);
+        await database.SeedCollection(99, "Foreign tree", "foreign-tree", false);
         await using SqliteConnection connection = database.OpenConnection();
         ICollectionRepository repository = new SqliteCollectionRepository(connection);
 
-        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() => repository.GetPageCountByUser(42, "term"));
+        int result = await repository.GetPageCountByUser(42, "tree");
 
-        Assert.Equal("Search queries are not supported before S6.", exception.Message);
+        Assert.Equal(1, result);
+    }
+
+    [Fact]
+    public async Task GetPageCountByUser_WhenQueryHasTerms_CountsMatchingPages()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await database.SeedCollectionRange(42, 16);
+        await using SqliteConnection connection = database.OpenConnection();
+        await connection.ExecuteAsync("UPDATE CollectionSearch SET Name = 'needle' WHERE UserId = 42;");
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        int result = await repository.GetPageCountByUser(42, "needle");
+
+        Assert.Equal(2, result);
     }
 }

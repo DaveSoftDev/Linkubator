@@ -17,7 +17,7 @@ public sealed class SqliteInfrastructureRegistrationTests
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:DefaultConnection"] = database.ConnectionString
+                ["ConnectionStrings:Linkubator"] = database.ConnectionString
             })
             .Build();
         services.AddInfrastructure(configuration);
@@ -48,6 +48,6 @@ public sealed class SqliteInfrastructureRegistrationTests
 
         InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => services.AddInfrastructure(configuration));
 
-        Assert.Equal("A connection string named 'DefaultConnection' is required.", exception.Message);
+        Assert.Equal("A connection string named 'Linkubator' is required.", exception.Message);
     }
 }

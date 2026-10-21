@@ -33,7 +33,7 @@ internal sealed class SqliteRepositoryTestDatabase : IAsyncDisposable
     public async Task<long> SeedCollection(long userId, string name, string slug, bool isPublic, string? description = null)
     {
         await using SqliteConnection connection = OpenConnection();
-        return await connection.ExecuteScalarAsync<long>(@"
+        long collectionId = await connection.ExecuteScalarAsync<long>(@"
             INSERT INTO Collection (UserId, Name, Slug, Description, IsPublic)
             VALUES (@UserId, @Name, @Slug, @Description, @IsPublic);
             SELECT last_insert_rowid();
@@ -45,6 +45,10 @@ internal sealed class SqliteRepositoryTestDatabase : IAsyncDisposable
             Description = description,
             IsPublic = isPublic ? 1 : 0,
         });
+        await connection.ExecuteAsync(
+            "INSERT INTO CollectionSearch (rowid, UserId, Name) VALUES (@Id, @UserId, @Name);",
+            new { Id = collectionId, UserId = userId, Name = Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize(name) });
+        return collectionId;
     }
 
     public async Task<long> SeedLink(
@@ -58,7 +62,7 @@ internal sealed class SqliteRepositoryTestDatabase : IAsyncDisposable
     {
         SqliteTestLinkOptions linkOptions = options ?? new SqliteTestLinkOptions();
         await using SqliteConnection connection = OpenConnection();
-        return await connection.ExecuteScalarAsync<long>(@"
+        long linkId = await connection.ExecuteScalarAsync<long>(@"
             INSERT INTO Link (UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, CreatedAt)
             VALUES (@UserId, @CollectionId, @UrlOriginal, @UrlNormalized, @Title, @Description, @Image, @IsPublic, @CreatedAt);
             SELECT last_insert_rowid();
@@ -74,6 +78,22 @@ internal sealed class SqliteRepositoryTestDatabase : IAsyncDisposable
             IsPublic = isPublic ? 1 : 0,
             CreatedAt = linkOptions.CreatedAt ?? DateTime.UtcNow,
         });
+        string? collectionName = await connection.ExecuteScalarAsync<string?>(
+            "SELECT Name FROM Collection WHERE Id = @CollectionId AND UserId = @UserId;",
+            new { CollectionId = collectionId, UserId = userId });
+        await connection.ExecuteAsync(
+            @"INSERT INTO LinkSearch (rowid, UserId, UrlOriginal, Title, Description, CollectionName)
+              VALUES (@Id, @UserId, @UrlOriginal, @Title, @Description, @CollectionName);",
+            new
+            {
+                Id = linkId,
+                UserId = userId,
+                UrlOriginal = Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize(url),
+                Title = Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize(title),
+                Description = Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize(linkOptions.Description),
+                CollectionName = Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize(collectionName),
+            });
+        return linkId;
     }
 
     public async Task SeedCollectionRange(long userId, int count)

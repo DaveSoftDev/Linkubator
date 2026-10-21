@@ -60,7 +60,7 @@ nunit-*.xml
 .kilo
 
 # Local development and generated data
-appsettings.Development.json
+/data/local/s6.8-seed.sql
 *.db
 *.db-shm
 *.db-wal
