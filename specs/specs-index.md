@@ -6,20 +6,11 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
-| S6.3 — Constructor de consultas FTS5 | [spec.md](s6.3-constructor-consulta-fts5/spec.md) | [plan.md](s6.3-constructor-consulta-fts5/plan.md) | [tasks.md](s6.3-constructor-consulta-fts5/tasks.md#aceptación-y-cierre) — cerrada por DLG («Completado», 20-X-2026) |
-| S6.4 — Sincronización de proyecciones FTS5 | [spec.md](s6.4-sincronizacion-proyecciones-fts5/spec.md) — aprobada por DLG («Siguiente», 20-X-2026) | [plan.md](s6.4-sincronizacion-proyecciones-fts5/plan.md) — aprobado por DLG («Siguiente», 20-X-2026) | [tasks.md](s6.4-sincronizacion-proyecciones-fts5/tasks.md#aceptación-y-cierre) — cerrada por DLG («Tenemos proyecciones», 20-X-2026) |
-| S6.5 — Consultas de búsqueda FTS5 | [spec.md](s6.5-consultas-busqueda-fts5/spec.md) — aprobada por DLG («Siguiente», 20-X-2026) | [plan.md](s6.5-consultas-busqueda-fts5/plan.md) — aprobado por DLG («Siguiente», 20-X-2026) | [tasks.md](s6.5-consultas-busqueda-fts5/tasks.md#aceptación-y-cierre) — cerrada por DLG («Consultas y búsquedas», 20-X-2026) |
-| S6.6 — Reconstrucción manual de proyecciones FTS5 | [spec.md](s6.6-reconstruccion-proyecciones/spec.md) | [plan.md](s6.6-reconstruccion-proyecciones/plan.md) | [tasks.md](s6.6-reconstruccion-proyecciones/tasks.md#aceptación-y-cierre) — cerrada por DLG («Tenemos reconstrucción de proyecciones», 20-X-2026) |
-| S6.7 — Pruebas integradas de búsqueda FTS5 | [spec.md](s6.7-pruebas-integradas-fts5/spec.md) — aprobada por DLG («Siguiente», 20-X-2026) | [plan.md](s6.7-pruebas-integradas-fts5/plan.md) — aprobado por DLG («Aprobar el plan», 20-X-2026) | [tasks.md](s6.7-pruebas-integradas-fts5/tasks.md#aceptación-y-cierre) — cerrada por DLG («Fase terminada», 20-X-2026); pruebas focalizadas 4/4 |
-| S6.8 — Datos locales de ejemplo para búsqueda | [spec.md](s6.8-datos-local-busqueda/spec.md) — aprobada por DLG («Apruebo la spec y preparar el plan», 20-X-2026) | [plan.md](s6.8-datos-local-busqueda/plan.md) — aprobado por DLG («Apruebo el plan y preparar tasks.md», 20-X-2026) | [tasks.md](s6.8-datos-local-busqueda/tasks.md#aceptación-y-cierre) — cerrada por DLG («Tenemos búsqueda», 20-X-2026); S6.9/S10.6 continúan independientes |
-| S6.9 — Validación manual de búsqueda y reconstrucción FTS5 | [spec.md](s6.9-validacion-manual-busqueda/spec.md) — aprobada por DLG («Apruebo la spec y preparar el plan», 20-X-2026) | [plan.md](s6.9-validacion-manual-busqueda/plan.md) — aprobado por DLG («Siguiente», 20-X-2026) | [tasks.md](s6.9-validacion-manual-busqueda/tasks.md#aceptación-y-cierre) — aceptadas y cerradas por DLG («Funciona», 20-X-2026); evidencia manual CA01–CA04 |
 
 ## Trabajos completados
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
-| S6.2 — Normalización NFC de búsqueda | [spec.md](s6.2-normalizacion-nfc-busqueda/spec.md) | [plan.md](s6.2-normalizacion-nfc-busqueda/plan.md) | [tasks.md](s6.2-normalizacion-nfc-busqueda/tasks.md#aceptación-y-cierre) — cerrada por DLG («Completado», 20-X-2026) |
-| S6.1 — Proyecciones FTS5 de enlaces y colecciones | [spec.md](s6.1-proyecciones-fts5-enlaces-colecciones/spec.md) | [plan.md](s6.1-proyecciones-fts5-enlaces-colecciones/plan.md) | [tasks.md](s6.1-proyecciones-fts5-enlaces-colecciones/tasks.md#aceptación-y-cierre) — cerrada por DLG («Tenemos proyeciones», 19-X-2026) |
 
 ## Trabajos archivados
 
@@ -27,6 +18,15 @@ El estado y la evidencia de cierre constan en las tareas del trabajo; este índi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| S6.1 — Proyecciones FTS5 de enlaces y colecciones | [spec.md](archive/s6.1-proyecciones-fts5-enlaces-colecciones/spec.md) | [plan.md](archive/s6.1-proyecciones-fts5-enlaces-colecciones/plan.md) | [tasks.md](archive/s6.1-proyecciones-fts5-enlaces-colecciones/tasks.md#aceptación-y-cierre) — archivada el 21-X-2026 |
+| S6.2 — Normalización NFC de búsqueda | [spec.md](archive/s6.2-normalizacion-nfc-busqueda/spec.md) | [plan.md](archive/s6.2-normalizacion-nfc-busqueda/plan.md) | [tasks.md](archive/s6.2-normalizacion-nfc-busqueda/tasks.md#aceptación-y-cierre) — archivada el 21-X-2026 |
+| S6.3 — Constructor de consultas FTS5 | [spec.md](archive/s6.3-constructor-consulta-fts5/spec.md) | [plan.md](archive/s6.3-constructor-consulta-fts5/plan.md) | [tasks.md](archive/s6.3-constructor-consulta-fts5/tasks.md#aceptación-y-cierre) — archivada el 21-X-2026 |
+| S6.4 — Sincronización de proyecciones FTS5 | [spec.md](archive/s6.4-sincronizacion-proyecciones-fts5/spec.md) | [plan.md](archive/s6.4-sincronizacion-proyecciones-fts5/plan.md) | [tasks.md](archive/s6.4-sincronizacion-proyecciones-fts5/tasks.md#aceptación-y-cierre) — archivada el 21-X-2026 |
+| S6.5 — Consultas de búsqueda FTS5 | [spec.md](archive/s6.5-consultas-busqueda-fts5/spec.md) | [plan.md](archive/s6.5-consultas-busqueda-fts5/plan.md) | [tasks.md](archive/s6.5-consultas-busqueda-fts5/tasks.md#aceptación-y-cierre) — archivada el 21-X-2026 |
+| S6.6 — Reconstrucción manual de proyecciones FTS5 | [spec.md](archive/s6.6-reconstruccion-proyecciones/spec.md) | [plan.md](archive/s6.6-reconstruccion-proyecciones/plan.md) | [tasks.md](archive/s6.6-reconstruccion-proyecciones/tasks.md#aceptación-y-cierre) — archivada el 21-X-2026 |
+| S6.7 — Pruebas integradas de búsqueda FTS5 | [spec.md](archive/s6.7-pruebas-integradas-fts5/spec.md) | [plan.md](archive/s6.7-pruebas-integradas-fts5/plan.md) | [tasks.md](archive/s6.7-pruebas-integradas-fts5/tasks.md#aceptación-y-cierre) — archivada el 21-X-2026 |
+| S6.8 — Datos locales de ejemplo para búsqueda | [spec.md](archive/s6.8-datos-local-busqueda/spec.md) | [plan.md](archive/s6.8-datos-local-busqueda/plan.md) | [tasks.md](archive/s6.8-datos-local-busqueda/tasks.md#aceptación-y-cierre) — archivada el 21-X-2026 |
+| S6.9 — Validación manual de búsqueda y reconstrucción FTS5 | [spec.md](archive/s6.9-validacion-manual-busqueda/spec.md) | [plan.md](archive/s6.9-validacion-manual-busqueda/plan.md) | [tasks.md](archive/s6.9-validacion-manual-busqueda/tasks.md#aceptación-y-cierre) — archivada el 21-X-2026 |
 | S0.2 — Crear solución | [spec.md](archive/s0.2-crear-solucion/spec.md) | [plan.md](archive/s0.2-crear-solucion/plan.md) | [tasks.md](archive/s0.2-crear-solucion/tasks.md#aceptación-y-cierre) |
 | S0.3 — Configuración base | [spec.md](archive/s0.3-configuracion-base/spec.md) | [plan.md](archive/s0.3-configuracion-base/plan.md) | [tasks.md](archive/s0.3-configuracion-base/tasks.md#aceptación-y-cierre) |
 | S0.4 — Serilog | [spec.md](archive/s0.4-serilog/spec.md) | [plan.md](archive/s0.4-serilog/plan.md) | [tasks.md](archive/s0.4-serilog/tasks.md#aceptación-y-cierre) |
