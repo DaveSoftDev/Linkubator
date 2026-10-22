@@ -35,6 +35,21 @@ public sealed class SqliteCollectionRepositoryTests
     }
 
     [Fact]
+    public async Task GetById_WhenCollectionBelongsToUser_ReturnsCollectionAndInitializesEmptyLinks()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        Collection? result = await repository.GetById(collectionId, 42);
+
+        Assert.NotNull(result);
+        Assert.Equal("Mine", result.Name);
+        Assert.Empty(result.Links);
+    }
+
+    [Fact]
     public async Task GetAllByUser_ReturnsOnlyCollectionsOwnedByRequestedUser()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
@@ -46,6 +61,28 @@ public sealed class SqliteCollectionRepositoryTests
         IReadOnlyCollection<Collection> result = await repository.GetAllByUser(42);
 
         Assert.Equal(new[] { "Mine" }, result.Select(collection => collection.Name));
+    }
+
+    [Fact]
+    public async Task Dapper_WhenMappingCollection_UsesPrivateConstructorAndSetters()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        DateTime createdAt = new(2026, 5, 9, 12, 34, 56, DateTimeKind.Utc);
+        long collectionId = await database.SeedCollection(42, "Stored", "stored", true, "Stored description");
+        await using SqliteConnection connection = database.OpenConnection();
+        await connection.ExecuteAsync("UPDATE Collection SET CreatedAt = @CreatedAt WHERE Id = @Id;", new { Id = collectionId, CreatedAt = createdAt });
+
+        Collection result = await connection.QuerySingleAsync<Collection>(
+            "SELECT Id, UserId, Name, Slug, Description, IsPublic, CreatedAt FROM Collection WHERE Id = @Id;",
+            new { Id = collectionId });
+
+        Assert.Equal(collectionId, result.Id);
+        Assert.Equal(42, result.UserId);
+        Assert.Equal("Stored", result.Name);
+        Assert.Equal("stored", result.Slug);
+        Assert.Equal("Stored description", result.Description);
+        Assert.True(result.IsPublic);
+        Assert.Equal(createdAt, result.CreatedAt);
     }
 
     [Fact]
@@ -217,6 +254,30 @@ public sealed class SqliteCollectionRepositoryTests
 
         Assert.Equal("Mine", result.Single().Name);
         Assert.Equal(1, result.Single().LinkCount);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task GetPageByUser_WhenPageIsLessThanOne_ThrowsArgumentOutOfRangeException(int page)
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => repository.GetPageByUser(42, null, page));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenPageIsIntMaxValue_ReturnsEmptyPageWithoutOverflow()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, null, int.MaxValue);
+
+        Assert.Empty(result);
     }
 
     [Fact]

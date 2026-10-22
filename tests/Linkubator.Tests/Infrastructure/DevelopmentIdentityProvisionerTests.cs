@@ -56,16 +56,20 @@ public sealed class DevelopmentIdentityProvisionerTests
         await provisioner.Provision();
 
         await using SqliteConnection connection = database.OpenConnection();
-        (string Email, string Name, string Alias, string Password, DateTime EmailConfirmedAt) user = await connection.QuerySingleAsync<(string Email, string Name, string Alias, string Password, DateTime EmailConfirmedAt)>(
-            "SELECT Email, Name, Alias, Password, EmailConfirmedAt FROM User WHERE Email = @Email;",
+        (long UserId, string Email, string Name, string Alias, string Password, DateTime EmailConfirmedAt) user = await connection.QuerySingleAsync<(long UserId, string Email, string Name, string Alias, string Password, DateTime EmailConfirmedAt)>(
+            "SELECT Id AS UserId, Email, Name, Alias, Password, EmailConfirmedAt FROM User WHERE Email = @Email;",
             new { Email = DemoEmail });
         (string Name, string Slug, long IsPublic) collection = await connection.QuerySingleAsync<(string Name, string Slug, long IsPublic)>(
             "SELECT Name, Slug, IsPublic FROM Collection WHERE UserId = (SELECT Id FROM User WHERE Email = @Email);",
+            new { Email = DemoEmail });
+        (long UserId, string Name) projection = await connection.QuerySingleAsync<(long UserId, string Name)>(
+            "SELECT UserId, Name FROM CollectionSearch WHERE rowid = (SELECT Id FROM Collection WHERE UserId = (SELECT Id FROM User WHERE Email = @Email));",
             new { Email = DemoEmail });
 
         Assert.Equal((DemoEmail, DemoName, DemoAlias, ValidArgon2idHash), (user.Email, user.Name, user.Alias, user.Password));
         Assert.NotEqual(default, user.EmailConfirmedAt);
         Assert.Equal(("Bandeja de entrada", "bandeja-de-entrada", 0L), collection);
+        Assert.Equal((user.UserId, "Bandeja de entrada"), projection);
     }
 
     [Fact]

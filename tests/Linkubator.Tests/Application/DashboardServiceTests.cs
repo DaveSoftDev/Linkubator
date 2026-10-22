@@ -29,8 +29,8 @@ public class DashboardServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("DASHBOARD_GET_NOT_AUTHENTICATED", result.Errors[0].Code);
-        Assert.Equal(DashboardErrors.UserIdField, result.Errors[0].Field);
+        Assert.Equal("NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.UserIdField, result.Errors[0].Field);
     }
 
     [Fact]

@@ -52,9 +52,4 @@ app.MapRazorPages()
 
 await app.RunAsync();
 
-public partial class Program
-{
-    protected Program()
-    {
-    }
-}
+public partial class Program;

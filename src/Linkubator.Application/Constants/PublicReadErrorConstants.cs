@@ -4,21 +4,18 @@ public static class PublicReadErrors
 {
     public const string AliasField = "Alias";
     public const string SlugField = "Slug";
-    public const string PageField = "page";
 
     public const string AliasInvalidMessage = "El alias es obligatorio.";
     public const string SlugInvalidMessage = "El slug es obligatorio.";
     public const string UserNotAccessibleMessage = "El usuario no es accesible.";
     public const string CollectionsNotAccessibleMessage = "Las colecciones públicas no están disponibles.";
     public const string CollectionNotAccessibleMessage = "La colección no es accesible.";
-    public const string PageInvalidMessage = "La página debe ser mayor que cero.";
 
     private const string AliasInvalidCode = "PUBLIC_READ_ALIAS_INVALID";
     private const string SlugInvalidCode = "PUBLIC_READ_COLLECTION_SLUG_INVALID";
     private const string UserNotAccessibleCode = "PUBLIC_READ_USER_NOT_ACCESSIBLE";
     private const string CollectionsNotAccessibleCode = "PUBLIC_READ_COLLECTIONS_NOT_ACCESSIBLE";
     private const string CollectionNotAccessibleCode = "PUBLIC_READ_COLLECTION_NOT_ACCESSIBLE";
-    private const string PageInvalidCode = "PUBLIC_READ_PAGE_INVALID";
 
     public static ApplicationError AliasInvalid()
         => ApplicationError.Validation(AliasInvalidCode, AliasField, AliasInvalidMessage);
@@ -36,5 +33,5 @@ public static class PublicReadErrors
         => ApplicationError.ResourceNotAccessible(CollectionNotAccessibleCode, SlugField, CollectionNotAccessibleMessage);
 
     public static ApplicationError PageInvalid()
-        => CommonErrors.PageInvalid(PageInvalidCode, PageField, PageInvalidMessage);
+        => CommonErrors.PageInvalid(CommonErrors.PageInvalidCode, CommonErrors.PageField, CommonErrors.PageInvalidMessage);
 }

@@ -161,6 +161,7 @@ public class SomeService
 #### Ubicación de Options
 - `Linkubator.Web/Options/` — opciones específicas de la Web.
 - `Linkubator.Application/Options/` — opciones compartidas entre capas.
+- `Linkubator.Infrastructure/Options/` — opciones específicas de la infraestructura.
 - Inyectar usando `IOptions<T>`, `IOptionsSnapshot<T>` o `IOptionsMonitor<T>`.
 
 ### Uso de Records

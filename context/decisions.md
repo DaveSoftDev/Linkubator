@@ -121,6 +121,10 @@ El scraping está confirmado para MVP1. Quedan pendientes decisiones de diseño 
 9. Alcance de la protección SSRF más allá de las redirecciones: que la dirección comprobada sea la misma a la que se conecta (resolución DNS) y el tratamiento de las direcciones IPv6 y de las IPv4 mapeadas en IPv6.
 10. Qué ocurre si el enlace se borra o el usuario edita sus metadatos mientras hay un intento en curso.
 
+### Pendiente de hidratación de la relación inversa de enlaces
+
+Al cargar un enlace junto con su colección, `Collection.Links` solo contiene los enlaces incluidos en esa consulta; no debe asumirse que la lista representa todos los enlaces de la colección. Los flujos que necesitan la lista completa deben cargarla explícitamente con `GetAllByCollection` y rehidratarla. Se aplaza decidir si el modelo distinguirá entre relación no cargada y relación completa, o si se eliminará la navegación inversa, porque no es necesario resolverlo para los flujos actuales y ampliar ahora el modelo añadiría complejidad.
+
 ### Pendiente de limpieza de tokens
 
 1. Definir cuándo y cómo eliminar los registros `UserToken` usados, caducados o invalidados, y cuánto tiempo conservarlos. La limpieza de los registros de cuentas sin completar está prevista fuera del MVP0.

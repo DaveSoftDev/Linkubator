@@ -78,6 +78,19 @@ public sealed class Collection : Bases.BaseEntity
     }
 
     /// <summary>
+    /// Establece el identificador generado por la persistencia.
+    /// </summary>
+    internal void SetId(long id)
+    {
+        if (id <= 0 || Id != 0)
+        {
+            throw new DomainExceptions.NotValidInputException();
+        }
+
+        Id = id;
+    }
+
+    /// <summary>
     /// Rehidrata la colección con la lista de enlaces que pertenecen a ella.
     /// </summary>
     /// <param name="links">Enlaces asociados a la colección.</param>

@@ -34,6 +34,7 @@ public sealed class DevelopmentIdentityProvisioner
     public async Task Provision()
     {
         using SqliteConnection connection = _connectionFactory.CreateOpenConnection();
+        connection.CreateFunction<string?, string?>("NormalizeSearchText", Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize, isDeterministic: true);
         await connection.ExecuteAsync("BEGIN IMMEDIATE;");
         try
         {

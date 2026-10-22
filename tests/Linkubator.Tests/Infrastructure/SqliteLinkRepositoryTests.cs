@@ -2,6 +2,7 @@ using Dapper;
 using Linkubator.Application.Contracts;
 using Linkubator.Infrastructure.Repositories;
 using Linkubator.Domain.Entities;
+using DomainEnums = Linkubator.Domain.Enums;
 using Microsoft.Data.Sqlite;
 
 namespace Linkubator.Tests.Infrastructure;
@@ -51,6 +52,42 @@ public sealed class SqliteLinkRepositoryTests
     }
 
     [Fact]
+    public async Task Dapper_WhenMappingLink_UsesPrivateConstructorAndSetters()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Private", "private", false);
+        DateTime createdAt = new(2026, 3, 7, 11, 13, 17, DateTimeKind.Utc);
+        long linkId = await database.SeedLink(
+            42,
+            collectionId,
+            "https://example.test/path",
+            "https://example.test/normalized",
+            "Stored title",
+            true,
+            new SqliteTestLinkOptions("Stored description", "https://example.test/image.png", createdAt));
+        await using SqliteConnection connection = database.OpenConnection();
+        await connection.ExecuteAsync(
+            "UPDATE Link SET ScrapingStatus = @ScrapingStatus WHERE Id = @Id;",
+            new { Id = linkId, ScrapingStatus = (int)DomainEnums.ScrapingStatus.Completed });
+
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        Link result = (await repository.GetById(linkId, 42))!;
+
+        Assert.Equal(linkId, result.Id);
+        Assert.Equal(42, result.UserId);
+        Assert.Equal(collectionId, result.CollectionId);
+        Assert.Same(result, Assert.Single(result.Collection.Links));
+        Assert.Equal("https://example.test/path", result.UrlOriginal);
+        Assert.Equal("https://example.test/normalized", result.UrlNormalized);
+        Assert.Equal("Stored title", result.Title);
+        Assert.Equal("Stored description", result.Description);
+        Assert.Equal("https://example.test/image.png", result.Image);
+        Assert.True(result.IsPublic);
+        Assert.Equal(DomainEnums.ScrapingStatus.Completed, result.ScrapingStatus);
+        Assert.Equal(createdAt, result.CreatedAt);
+    }
+
+    [Fact]
     public async Task Insert_ThenGetById_RoundTripsLinkProperties()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
@@ -68,6 +105,8 @@ public sealed class SqliteLinkRepositoryTests
         Assert.Equal(link.Id, result.Id);
         Assert.Equal(42, result.UserId);
         Assert.Equal(collectionId, result.CollectionId);
+        Assert.Equal("Private", result.Collection.Name);
+        Assert.Same(result, Assert.Single(result.Collection.Links));
         Assert.Equal("https://example.test/path", result.UrlOriginal);
         Assert.Equal(link.UrlNormalized, result.UrlNormalized);
         Assert.Equal("Title", result.Title);
@@ -140,6 +179,26 @@ public sealed class SqliteLinkRepositoryTests
     }
 
     [Fact]
+    public async Task Insert_WhenProjectionWriteFails_DoesNotAssignId()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository collectionRepository = new SqliteCollectionRepository(connection);
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        Collection collection = (await collectionRepository.GetById(collectionId, 42))!;
+        Link link = Link.Create(42, collection, "https://example.test/path", "Title", null, null);
+        await connection.ExecuteAsync("BEGIN IMMEDIATE;");
+        await connection.ExecuteAsync("DROP TABLE LinkSearch;");
+
+        await Assert.ThrowsAsync<SqliteException>(() => repository.Insert(link));
+
+        Assert.Equal(0, link.Id);
+        await connection.ExecuteAsync("ROLLBACK;");
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Link WHERE UrlOriginal = @Url;", new { Url = link.UrlOriginal }));
+    }
+
+    [Fact]
     public async Task Insert_WhenTextIsDecomposed_NormalizesOnlyProjection()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
@@ -198,7 +257,10 @@ public sealed class SqliteLinkRepositoryTests
         await repository.Update(link);
         Link? result = await repository.GetById(link.Id, 42);
 
+        Assert.Equal("Target", link.Collection.Name);
         Assert.Equal(targetCollectionId, result!.CollectionId);
+        Assert.Equal("Target", result.Collection.Name);
+        Assert.Same(result, Assert.Single(result.Collection.Links));
         Assert.False(result.IsPublic);
         Assert.Equal(
             "Target",
@@ -230,6 +292,30 @@ public sealed class SqliteLinkRepositoryTests
                 new { Id = linkId, UserId = 42 }));
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task GetPageByUser_WhenPageIsLessThanOne_ThrowsArgumentOutOfRangeException(int page)
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => repository.GetPageByUser(42, null, null, page));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenPageIsIntMaxValue_ReturnsEmptyPageWithoutOverflow()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, null, null, int.MaxValue);
+
+        Assert.Empty(result);
+    }
+
     [Fact]
     public async Task GetPageByUser_WhenQueryIsBlankAndCollectionSpecified_FiltersAndReturnsPage()
     {
@@ -244,6 +330,39 @@ public sealed class SqliteLinkRepositoryTests
         IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, null, firstCollectionId, 1);
 
         Assert.Equal(new[] { "https://example.test/one" }, result.Select(item => item.UrlOriginal));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenLinkHasEveryDtoValue_ReturnsCompleteDto()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        DateTime createdAt = new(2026, 4, 8, 10, 12, 14, DateTimeKind.Utc);
+        long linkId = await database.SeedLink(
+            42,
+            collectionId,
+            "https://example.test/path",
+            "https://example.test/normalized",
+            "Stored title",
+            true,
+            new SqliteTestLinkOptions("Stored description", "https://example.test/image.png", createdAt));
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, null, collectionId, 1);
+
+        Assert.Equal(
+            new Linkubator.Application.Dtos.Models.LinkDto(
+                linkId,
+                collectionId,
+                "https://example.test/path",
+                "https://example.test/normalized",
+                "Stored title",
+                "Stored description",
+                "https://example.test/image.png",
+                true,
+                createdAt),
+            Assert.Single(result));
     }
 
     [Fact]

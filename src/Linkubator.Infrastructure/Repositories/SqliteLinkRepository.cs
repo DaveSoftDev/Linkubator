@@ -1,17 +1,40 @@
-using System.Reflection;
 using Dapper;
 using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
 using Microsoft.Data.Sqlite;
 using Entities = Linkubator.Domain.Entities;
-using Search = Linkubator.Infrastructure.Search;
 
 namespace Linkubator.Infrastructure.Repositories;
 
 public sealed class SqliteLinkRepository : ILinkRepository
 {
     private const int PageSize = 15;
+    private const string LinkAndCollectionSelect = @"SELECT l.Id, l.UserId, l.CollectionId, l.UrlOriginal, l.UrlNormalized, l.Title, l.Description, l.Image, l.IsPublic, l.ScrapingStatus, l.CreatedAt,
+                     c.Id, c.UserId, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
+              FROM Link l
+              INNER JOIN Collection c ON c.Id = l.CollectionId AND c.UserId = l.UserId";
     private readonly SqliteConnection _connection;
+
+    private Task InsertSearchProjection(long id, Entities.Link link, CancellationToken cancellationToken)
+        => _connection.ExecuteAsync(new CommandDefinition(
+            @"INSERT INTO LinkSearch (rowid, UserId, UrlOriginal, Title, Description, CollectionName)
+              VALUES (@Id, @UserId, @UrlOriginal, @Title, @Description, @CollectionName);",
+            new
+            {
+                Id = id,
+                UserId = link.UserId,
+                UrlOriginal = Search.SearchTextNormalizer.Normalize(link.UrlOriginal),
+                Title = Search.SearchTextNormalizer.Normalize(link.Title),
+                Description = Search.SearchTextNormalizer.Normalize(link.Description),
+                CollectionName = Search.SearchTextNormalizer.Normalize(link.Collection.Name),
+            },
+            cancellationToken: cancellationToken));
+
+    private Task DeleteSearchProjection(long id, long userId, CancellationToken cancellationToken)
+        => _connection.ExecuteAsync(new CommandDefinition(
+            "DELETE FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = id, UserId = userId },
+            cancellationToken: cancellationToken));
 
     public SqliteLinkRepository(SqliteConnection connection)
     {
@@ -20,54 +43,50 @@ public sealed class SqliteLinkRepository : ILinkRepository
 
     public async Task<Entities.Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
     {
-        LinkRow? row = await _connection.QuerySingleOrDefaultAsync<LinkRow>(
-            @"SELECT Id, UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, ScrapingStatus, CreatedAt
-              FROM Link
-              WHERE Id = @Id AND UserId = @UserId;",
-            new { Id = id, UserId = userId });
-
-        return row is null ? null : Map(row);
+        IReadOnlyList<Entities.Link> links = await GetLinks(
+            $@"{LinkAndCollectionSelect}
+              WHERE l.Id = @Id AND l.UserId = @UserId;",
+            new { Id = id, UserId = userId },
+            cancellationToken);
+        return links.SingleOrDefault();
     }
 
     public async Task<Entities.Link?> GetByNormalizedUrl(long userId, string normalizedUrl, CancellationToken cancellationToken = default)
     {
-        LinkRow? row = await _connection.QuerySingleOrDefaultAsync<LinkRow>(
-            @"SELECT Id, UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, ScrapingStatus, CreatedAt
-              FROM Link
-              WHERE UserId = @UserId AND UrlNormalized = @UrlNormalized;",
-            new { UserId = userId, UrlNormalized = normalizedUrl });
-
-        return row is null ? null : Map(row);
+        IReadOnlyList<Entities.Link> links = await GetLinks(
+            $@"{LinkAndCollectionSelect}
+              WHERE l.UserId = @UserId AND l.UrlNormalized = @UrlNormalized;",
+            new { UserId = userId, UrlNormalized = normalizedUrl },
+            cancellationToken);
+        return links.SingleOrDefault();
     }
 
     public async Task<IReadOnlyCollection<Entities.Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
     {
-        IEnumerable<LinkRow> rows = await _connection.QueryAsync<LinkRow>(
-            @"SELECT Id, UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, ScrapingStatus, CreatedAt
-              FROM Link
-              WHERE UserId = @UserId
-              ORDER BY CreatedAt DESC, Id DESC;",
-            new { UserId = userId });
-
-        return rows.Select(Map).ToList();
+        return await GetLinks(
+            $@"{LinkAndCollectionSelect}
+              WHERE l.UserId = @UserId
+              ORDER BY l.CreatedAt DESC, l.Id DESC;",
+            new { UserId = userId },
+            cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<Entities.Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
     {
-        IEnumerable<LinkRow> rows = await _connection.QueryAsync<LinkRow>(
-            @"SELECT Id, UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, ScrapingStatus, CreatedAt
-              FROM Link
-              WHERE UserId = @UserId AND CollectionId = @CollectionId
-              ORDER BY CreatedAt DESC, Id DESC;",
-            new { UserId = userId, CollectionId = collectionId });
-
-        return rows.Select(Map).ToList();
+        return await GetLinks(
+            $@"{LinkAndCollectionSelect}
+              WHERE l.UserId = @UserId AND l.CollectionId = @CollectionId
+              ORDER BY l.CreatedAt DESC, l.Id DESC;",
+            new { UserId = userId, CollectionId = collectionId },
+            cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
+
         string? searchQuery = Search.SearchQueryBuilder.Build(Search.SearchTextNormalizer.Normalize(query));
-        int offset = (page - 1) * PageSize;
+        long offset = ((long)page - 1) * PageSize;
         string sql = searchQuery is null
             ? @"SELECT l.Id, l.CollectionId, l.UrlOriginal, l.UrlNormalized, l.Title, l.Description, l.Image, l.IsPublic, l.CreatedAt
                 FROM Link l
@@ -84,20 +103,12 @@ public sealed class SqliteLinkRepository : ILinkRepository
                   AND (@CollectionId IS NULL OR l.CollectionId = @CollectionId)
                 ORDER BY rank ASC, l.CreatedAt DESC, l.Id DESC
                 LIMIT @Limit OFFSET @Offset;";
-        IEnumerable<LinkListRow> rows = await _connection.QueryAsync<LinkListRow>(
+        IEnumerable<LinkDto> links = await _connection.QueryAsync<LinkDto>(new CommandDefinition(
             sql,
-            new { UserId = userId, CollectionId = collectionId, SearchQuery = searchQuery, Limit = PageSize, Offset = offset });
+            new { UserId = userId, CollectionId = collectionId, SearchQuery = searchQuery, Limit = PageSize, Offset = offset },
+            cancellationToken: cancellationToken));
 
-        return rows.Select(row => new LinkDto(
-            row.Id,
-            row.CollectionId,
-            row.UrlOriginal,
-            row.UrlNormalized,
-            row.Title,
-            row.Description,
-            row.Image,
-            row.IsPublic,
-            row.CreatedAt)).ToList();
+        return links.ToList();
     }
 
     public async Task<int> GetPageCountByUser(long userId, string? query, long? collectionId, CancellationToken cancellationToken = default)
@@ -115,9 +126,10 @@ public sealed class SqliteLinkRepository : ILinkRepository
                   AND LinkSearch.UserId = @UserId
                   AND l.UserId = @UserId
                   AND (@CollectionId IS NULL OR l.CollectionId = @CollectionId);";
-        long total = await _connection.ExecuteScalarAsync<long>(
+        long total = await _connection.ExecuteScalarAsync<long>(new CommandDefinition(
             sql,
-            new { UserId = userId, CollectionId = collectionId, SearchQuery = searchQuery });
+            new { UserId = userId, CollectionId = collectionId, SearchQuery = searchQuery },
+            cancellationToken: cancellationToken));
 
         if (total == 0)
         {
@@ -131,7 +143,7 @@ public sealed class SqliteLinkRepository : ILinkRepository
     {
         ArgumentNullException.ThrowIfNull(link);
 
-        long id = await _connection.ExecuteScalarAsync<long>(
+        long id = await _connection.ExecuteScalarAsync<long>(new CommandDefinition(
             @"INSERT INTO Link (UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, ScrapingStatus, CreatedAt)
               VALUES (@UserId, @CollectionId, @UrlOriginal, @UrlNormalized, @Title, @Description, @Image, @IsPublic, @ScrapingStatus, @CreatedAt);
               SELECT last_insert_rowid();",
@@ -147,18 +159,19 @@ public sealed class SqliteLinkRepository : ILinkRepository
                 IsPublic = link.IsPublic ? 1 : 0,
                 ScrapingStatus = (int)link.ScrapingStatus,
                 CreatedAt = link.CreatedAt,
-            });
+            },
+            cancellationToken: cancellationToken));
 
-        SetProperty(link, nameof(Entities.Link.Id), id);
+        await InsertSearchProjection(id, link, cancellationToken);
 
-        await InsertSearchProjection(id, link.UserId, link.CollectionId, link.UrlOriginal, link.Title, link.Description, cancellationToken);
+        link.SetId(id);
     }
 
     public async Task Update(Entities.Link link, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(link);
 
-        int affectedRows = await _connection.ExecuteAsync(
+        int affectedRows = await _connection.ExecuteAsync(new CommandDefinition(
             @"UPDATE Link
               SET CollectionId = @CollectionId,
                   UrlOriginal = @UrlOriginal,
@@ -181,127 +194,51 @@ public sealed class SqliteLinkRepository : ILinkRepository
                 Image = link.Image,
                 IsPublic = link.IsPublic ? 1 : 0,
                 ScrapingStatus = (int)link.ScrapingStatus,
-            });
+            },
+            cancellationToken: cancellationToken));
 
         if (affectedRows > 0)
         {
             await DeleteSearchProjection(link.Id, link.UserId, cancellationToken);
-            await InsertSearchProjection(link.Id, link.UserId, link.CollectionId, link.UrlOriginal, link.Title, link.Description, cancellationToken);
+            await InsertSearchProjection(link.Id, link, cancellationToken);
         }
     }
 
     public async Task Delete(long id, long userId, CancellationToken cancellationToken = default)
     {
         await DeleteSearchProjection(id, userId, cancellationToken);
-        await _connection.ExecuteAsync(
-            "DELETE FROM Link WHERE Id = @Id AND UserId = @UserId;",
-            new { Id = id, UserId = userId });
-    }
-
-    private async Task InsertSearchProjection(
-        long id,
-        long userId,
-        long collectionId,
-        string urlOriginal,
-        string? title,
-        string? description,
-        CancellationToken cancellationToken)
-    {
-        string? collectionName = await _connection.ExecuteScalarAsync<string?>(
-            new CommandDefinition(
-                "SELECT Name FROM Collection WHERE Id = @CollectionId AND UserId = @UserId;",
-                new { CollectionId = collectionId, UserId = userId },
-                cancellationToken: cancellationToken));
-
         await _connection.ExecuteAsync(new CommandDefinition(
-            @"INSERT INTO LinkSearch (rowid, UserId, UrlOriginal, Title, Description, CollectionName)
-              VALUES (@Id, @UserId, @UrlOriginal, @Title, @Description, @CollectionName);",
-            new
-            {
-                Id = id,
-                UserId = userId,
-                UrlOriginal = Search.SearchTextNormalizer.Normalize(urlOriginal),
-                Title = Search.SearchTextNormalizer.Normalize(title),
-                Description = Search.SearchTextNormalizer.Normalize(description),
-                CollectionName = Search.SearchTextNormalizer.Normalize(collectionName),
-            },
-            cancellationToken: cancellationToken));
-    }
-
-    private Task DeleteSearchProjection(long id, long userId, CancellationToken cancellationToken)
-        => _connection.ExecuteAsync(new CommandDefinition(
-            "DELETE FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            "DELETE FROM Link WHERE Id = @Id AND UserId = @UserId;",
             new { Id = id, UserId = userId },
             cancellationToken: cancellationToken));
-
-    private static Entities.Link Map(LinkRow row)
-    {
-        Entities.Link link = CreateEntity();
-        SetProperty(link, nameof(Entities.Link.Id), row.Id);
-        SetProperty(link, nameof(Entities.Link.UserId), row.UserId);
-        SetProperty(link, nameof(Entities.Link.CollectionId), row.CollectionId);
-        SetProperty(link, nameof(Entities.Link.UrlOriginal), row.UrlOriginal);
-        SetProperty(link, nameof(Entities.Link.UrlNormalized), row.UrlNormalized);
-        SetProperty(link, nameof(Entities.Link.Title), row.Title);
-        SetProperty(link, nameof(Entities.Link.Description), row.Description);
-        SetProperty(link, nameof(Entities.Link.Image), row.Image);
-        SetProperty(link, nameof(Entities.Link.IsPublic), row.IsPublic == 1);
-        SetProperty(link, nameof(Entities.Link.ScrapingStatus), (LinkScrapingStatus)row.ScrapingStatus);
-        SetProperty(link, nameof(Entities.Link.CreatedAt), ParseDate(row.CreatedAt));
-        return link;
     }
 
-    private static Entities.Link CreateEntity()
-        => (Entities.Link)Activator.CreateInstance(typeof(Entities.Link), nonPublic: true)!;
-
-    private static void SetProperty<T>(object target, string propertyName, T value)
+    private async Task<IReadOnlyList<Entities.Link>> GetLinks(string sql, object parameters, CancellationToken cancellationToken)
     {
-        PropertyInfo? property = target.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        if (property is null)
+        List<Entities.Link> links = new();
+        Dictionary<long, Entities.Collection> collections = new();
+
+        await _connection.QueryAsync<Entities.Link, Entities.Collection, Entities.Link>(
+            new CommandDefinition(sql, parameters, cancellationToken: cancellationToken),
+            (link, collection) =>
+            {
+                if (!collections.TryGetValue(collection.Id, out Entities.Collection? existingCollection))
+                {
+                    existingCollection = collection;
+                    collections.Add(collection.Id, existingCollection);
+                }
+
+                link.RehydrateCollection(existingCollection);
+                links.Add(link);
+                return link;
+            },
+            splitOn: "Id");
+
+        foreach (KeyValuePair<long, Entities.Collection> entry in collections)
         {
-            return;
+            entry.Value.RehydrateLinks(links.Where(link => link.CollectionId == entry.Key));
         }
 
-        MethodInfo? setter = property.SetMethod ?? property.GetSetMethod(true);
-        setter?.Invoke(target, new object[] { value! });
-    }
-
-    private static DateTime ParseDate(string value)
-        => DateTime.TryParse(value, out DateTime parsed) ? parsed : DateTime.UtcNow;
-
-    private enum LinkScrapingStatus
-    {
-        NotRequested = 0,
-        InProgress = 1,
-        Completed = 2,
-        Failed = 3,
-    }
-
-    private sealed class LinkRow
-    {
-        public long Id { get; set; }
-        public long UserId { get; set; }
-        public long CollectionId { get; set; }
-        public string UrlOriginal { get; set; } = string.Empty;
-        public string UrlNormalized { get; set; } = string.Empty;
-        public string? Title { get; set; }
-        public string? Description { get; set; }
-        public string? Image { get; set; }
-        public long IsPublic { get; set; }
-        public int ScrapingStatus { get; set; }
-        public string CreatedAt { get; set; } = string.Empty;
-    }
-
-    private sealed class LinkListRow
-    {
-        public long Id { get; set; }
-        public long CollectionId { get; set; }
-        public string UrlOriginal { get; set; } = string.Empty;
-        public string UrlNormalized { get; set; } = string.Empty;
-        public string? Title { get; set; }
-        public string? Description { get; set; }
-        public string? Image { get; set; }
-        public bool IsPublic { get; set; }
-        public DateTime CreatedAt { get; set; }
+        return links;
     }
 }

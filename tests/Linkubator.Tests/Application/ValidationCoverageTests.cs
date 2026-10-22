@@ -203,6 +203,9 @@ public class ValidationCoverageTests
     public void CollectionServiceValidators_UseDefaultAndCustomInstances()
     {
         CollectionServiceValidators defaults = new();
+        Assert.Null(defaults.GetCollection);
+        Assert.NotNull(defaults.CollectionGetValidator);
+        Assert.True(defaults.CollectionGetValidator.Validate(new CollectionGetRequest(1)).IsSuccess);
         Assert.Null(defaults.CreateCollection);
         Assert.Null(defaults.RenameCollection);
         Assert.Null(defaults.ChangeCollectionVisibility);
@@ -217,17 +220,20 @@ public class ValidationCoverageTests
         Assert.True(defaults.CollectionChangeVisibilityValidator.Validate(new CollectionChangeVisibilityRequest(1, true)).IsSuccess);
         Assert.True(defaults.CollectionDeleteValidator.Validate(new CollectionDeleteRequest(1)).IsSuccess);
 
+        CollectionGetValidator getValidator = new();
         CollectionCreateValidator createValidator = new();
         CollectionRenameValidator renameValidator = new();
         CollectionChangeVisibilityValidator changeVisibilityValidator = new();
         CollectionDeleteValidator deleteValidator = new();
 
         CollectionServiceValidators custom = new(
+            getValidator,
             createValidator,
             renameValidator,
             changeVisibilityValidator,
             deleteValidator);
 
+        Assert.Same(getValidator, custom.CollectionGetValidator);
         Assert.Same(createValidator, custom.CollectionCreateValidator);
         Assert.Same(renameValidator, custom.CollectionRenameValidator);
         Assert.Same(changeVisibilityValidator, custom.CollectionChangeVisibilityValidator);
@@ -238,6 +244,9 @@ public class ValidationCoverageTests
     public void LinkServiceValidators_UseDefaultAndCustomInstances()
     {
         LinkServiceValidators defaults = new();
+        Assert.Null(defaults.GetLink);
+        Assert.NotNull(defaults.GetLinkValidator);
+        Assert.True(defaults.GetLinkValidator.Validate(new LinkGetRequest(1)).IsSuccess);
         Assert.NotNull(defaults.CreateLinkValidator);
         Assert.NotNull(defaults.EditLinkValidator);
         Assert.NotNull(defaults.MoveLinkValidator);
@@ -250,6 +259,7 @@ public class ValidationCoverageTests
         Assert.True(defaults.ChangeLinkVisibilityValidator.Validate(new LinkChangeVisibilityRequest(1, true)).IsSuccess);
         Assert.True(defaults.DeleteLinkValidator.Validate(new LinkDeleteRequest(1)).IsSuccess);
 
+        LinkGetValidator getValidator = new();
         LinkCreateValidator createValidator = new();
         LinkEditValidator editValidator = new();
         LinkMoveValidator moveValidator = new();
@@ -257,12 +267,14 @@ public class ValidationCoverageTests
         LinkDeleteValidator deleteValidator = new();
 
         LinkServiceValidators custom = new(
+            getValidator,
             createValidator,
             editValidator,
             moveValidator,
             changeVisibilityValidator,
             deleteValidator);
 
+        Assert.Same(getValidator, custom.GetLinkValidator);
         Assert.Same(createValidator, custom.CreateLinkValidator);
         Assert.Same(editValidator, custom.EditLinkValidator);
         Assert.Same(moveValidator, custom.MoveLinkValidator);
