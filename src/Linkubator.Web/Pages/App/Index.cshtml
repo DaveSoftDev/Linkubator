@@ -1,18 +1,266 @@
 @page "/app"
 @model IndexModel
 @{
-    ViewData["Title"] = "Panel privado";
+    ViewData["Title"] = "Dashboard";
 }
 
-<section class="private-panel" aria-labelledby="private-title">
-    <p class="private-eyebrow">Área privada</p>
-    <h1 id="private-title">Panel de Linkubator</h1>
-    <p class="private-copy">
-        Esta vista demuestra el layout privado accesible de la web base, con estructura semántica y foco visible para una navegación por teclado clara.
-    </p>
+<div class="app-layout" role="application" aria-label="Panel principal de Linkubator">
+    <aside class="app-sidebar" aria-label="Menú principal de navegación">
+        <div class="brand-header">
+            <div class="brand-header__left">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                        <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                    </svg>
+                </span>
+                <h1 class="brand-name"><span class="brand-accent">L</span>inkubator</h1>
+            </div>
+            <button class="sidebar-collapse" type="button" aria-label="Colapsar menú lateral">
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                    <path d="M15 18L9 12L15 6"></path>
+                </svg>
+            </button>
+        </div>
 
-    <div class="private-actions" aria-label="Acciones del panel privado">
-        <a class="private-button primary" href="/app">Ver resumen</a>
-        <button class="private-button" type="button">Acción secundaria</button>
-    </div>
-</section>
+        <div class="sidebar-searches" aria-label="Búsquedas rápidas">
+            <label class="sidebar-search">
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                    <circle cx="11" cy="11" r="6"></circle>
+                    <path d="M20 20L16.65 16.65"></path>
+                </svg>
+                <input type="search" placeholder="Buscar enlaces..." aria-label="Buscar enlaces" />
+            </label>
+        </div>
+
+        <nav class="side-nav" aria-label="Navegación principal">
+            <button class="nav-item nav-item--active" type="button" aria-current="page">
+                <span class="nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <path d="M3 10.5L12 3L21 10.5V20H14V13H10V20H3V10.5Z"></path>
+                    </svg>
+                </span>
+                <span>Inicio</span>
+            </button>
+            <button class="nav-item" type="button">
+                <span class="nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                        <path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 1 0-7.07-7.07L10.5 4.5"></path>
+                        <path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 1 0 7.07 7.07l2.83-2.83"></path>
+                    </svg>
+                </span>
+                <span>Mis Enlaces</span>
+            </button>
+        </nav>
+
+        <section class="sidebar-group" aria-labelledby="collections-title">
+            <div class="sidebar-group__header">
+                <h2 id="collections-title">Colecciones</h2>
+                <button type="button" aria-label="Crear nueva colección">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 5V19M5 12H19"></path></svg>
+                </button>
+            </div>
+
+            <ul class="collection-list">
+                <li>
+                    <button type="button" aria-label="Recursos Dev, 24 elementos">
+                        <span class="collection-name">
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l1.5 2H18.5A2.5 2.5 0 0 1 21 9.5V16.5A2.5 2.5 0 0 1 18.5 19H5.5A2.5 2.5 0 0 1 3 16.5V7.5Z"></path></svg>
+                            Recursos Dev
+                        </span>
+                        <span class="count-pill">24</span>
+                    </button>
+                </li>
+                <li>
+                    <button type="button" aria-label="Diseño UI/UX, 18 elementos">
+                        <span class="collection-name">
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l1.5 2H18.5A2.5 2.5 0 0 1 21 9.5V16.5A2.5 2.5 0 0 1 18.5 19H5.5A2.5 2.5 0 0 1 3 16.5V7.5Z"></path></svg>
+                            Diseño UI/UX
+                        </span>
+                        <span class="count-pill">18</span>
+                    </button>
+                </li>
+            </ul>
+        </section>
+
+        <section class="sidebar-group" aria-labelledby="tags-title">
+            <div class="sidebar-group__header">
+                <h2 id="tags-title">Etiquetas</h2>
+                <button type="button" aria-label="Crear nueva etiqueta">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 5V19M5 12H19"></path></svg>
+                </button>
+            </div>
+            <ul class="tag-list" aria-label="Etiquetas recientes">
+                <li class="tag-chip tag-chip--teal">Frontend</li>
+                <li class="tag-chip">Diseño</li>
+                <li class="tag-chip">AI</li>
+            </ul>
+        </section>
+
+        <div class="sidebar-profile" aria-label="Perfil de usuario">
+            <button class="profile-trigger" type="button" aria-haspopup="true">
+                <span class="profile-avatar" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </span>
+                <span class="profile-copy">
+                    <strong>Admin</strong>
+                    <small>Premium</small>
+                </span>
+            </button>
+            <button class="profile-settings" type="button" aria-label="Ajustes del usuario">
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .35 1.85l.05.05a2 2 0 0 1-2.83 2.83l-.05-.05a1.7 1.7 0 0 0-1.86-.35 1.7 1.7 0 0 0-1 1.55V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.86.35l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.35-1.85l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.1A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.85-.35l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05A1.7 1.7 0 0 0 19.4 9c.36.23.77.35 1.2.35H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.2.35A1.7 1.7 0 0 0 19.4 15Z"></path></svg>
+            </button>
+        </div>
+    </aside>
+
+    <main id="main-content" class="app-main" tabindex="-1">
+        <header class="main-header">
+            <div>
+                <p class="main-eyebrow">Panel general</p>
+                <h2>Dashboard</h2>
+            </div>
+            <div class="header-actions">
+                <button class="ghost-button" type="button">Ajustes</button>
+                <button class="ghost-button ghost-button--profile" type="button" aria-label="Abrir perfil">
+                    <span class="dot">A</span>
+                </button>
+            </div>
+        </header>
+
+        <section class="stats-grid" aria-label="Resumen de estadísticas">
+            <article class="stat-card">
+                <div class="stat-card__meta">
+                    <p>Total de enlaces</p>
+                    <strong>156</strong>
+                </div>
+                <span class="stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 1 0-7.07-7.07L10.5 4.5"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 1 0 7.07 7.07l2.83-2.83"></path></svg>
+                </span>
+            </article>
+            <article class="stat-card">
+                <div class="stat-card__meta">
+                    <p>Colecciones</p>
+                    <strong>12</strong>
+                </div>
+                <span class="stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l1.5 2H18.5A2.5 2.5 0 0 1 21 9.5V16.5A2.5 2.5 0 0 1 18.5 19H5.5A2.5 2.5 0 0 1 3 16.5V7.5Z"></path></svg>
+                </span>
+            </article>
+            <article class="stat-card">
+                <div class="stat-card__meta">
+                    <p>Etiquetas</p>
+                    <strong>28</strong>
+                </div>
+                <span class="stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M18 10.5V18a2 2 0 0 1-2 2H8.5A2.5 2.5 0 0 1 6 17.5V7.5A2.5 2.5 0 0 1 8.5 5H16a2 2 0 0 1 2 2v2.5l2.5 2.5-2.5 2.5Z"></path><circle cx="9" cy="9" r="1"></circle></svg>
+                </span>
+            </article>
+        </section>
+
+        <section class="quick-add" aria-labelledby="quick-add-title">
+            <h3 id="quick-add-title">Crear enlace rápido</h3>
+            <div class="quick-add__form">
+                <label for="quick-url" class="quick-add__label">URL</label>
+                <div class="quick-add__field">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 1 0-7.07-7.07L10.5 4.5"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 1 0 7.07 7.07l2.83-2.83"></path></svg>
+                    <input id="quick-url" type="url" placeholder="https://ejemplo.com" aria-label="URL del nuevo enlace" />
+                </div>
+                <button class="primary-button" type="button">
+                    <span>Añadir</span>
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M7 10L12 15L17 10"></path></svg>
+                </button>
+            </div>
+        </section>
+
+        <div class="section-toolbar">
+            <h3>Enlaces recientes</h3>
+            <div class="view-switch" role="radiogroup" aria-label="Cambiar vista">
+                <button type="button" class="view-switch__button view-switch__button--active" aria-label="Vista en cuadrícula" aria-checked="true" role="radio">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+                </button>
+                <button type="button" class="view-switch__button" aria-label="Vista de lista" aria-checked="false" role="radio">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M8 6H21"></path><path d="M8 12H21"></path><path d="M8 18H21"></path><path d="M3 6H3.01"></path><path d="M3 12H3.01"></path><path d="M3 18H3.01"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <section class="links-grid" aria-label="Lista de enlaces guardados">
+            <article class="link-card" aria-label="Enlace: React Documentation">
+                <div class="link-card__thumb link-card__thumb--blue" aria-hidden="true">
+                    <span>React</span>
+                </div>
+                <div class="link-card__body">
+                    <div class="link-card__title-row">
+                        <h4>React Documentation</h4>
+                        <div class="link-card__actions">
+                            <button type="button" aria-label="Editar enlace">✎</button>
+                            <button type="button" aria-label="Copiar enlace">⧉</button>
+                        </div>
+                    </div>
+                    <p>react.dev</p>
+                    <div class="link-card__tags">
+                        <span class="tag-chip tag-chip--teal">Frontend</span>
+                        <span class="tag-chip">Docs</span>
+                    </div>
+                </div>
+            </article>
+            <article class="link-card" aria-label="Enlace: Notion Workspace">
+                <div class="link-card__thumb link-card__thumb--violet" aria-hidden="true">
+                    <span>Notion</span>
+                </div>
+                <div class="link-card__body">
+                    <div class="link-card__title-row">
+                        <h4>Notion Workspace</h4>
+                        <div class="link-card__actions">
+                            <button type="button" aria-label="Editar enlace">✎</button>
+                            <button type="button" aria-label="Copiar enlace">⧉</button>
+                        </div>
+                    </div>
+                    <p>notion.so</p>
+                    <div class="link-card__tags">
+                        <span class="tag-chip tag-chip--teal">Productividad</span>
+                    </div>
+                </div>
+            </article>
+            <article class="link-card" aria-label="Enlace: Figma Design Kit">
+                <div class="link-card__thumb link-card__thumb--green" aria-hidden="true">
+                    <span>Figma</span>
+                </div>
+                <div class="link-card__body">
+                    <div class="link-card__title-row">
+                        <h4>Figma Design Kit</h4>
+                        <div class="link-card__actions">
+                            <button type="button" aria-label="Editar enlace">✎</button>
+                            <button type="button" aria-label="Copiar enlace">⧉</button>
+                        </div>
+                    </div>
+                    <p>figma.com</p>
+                    <div class="link-card__tags">
+                        <span class="tag-chip tag-chip--teal">Diseño</span>
+                    </div>
+                </div>
+            </article>
+            <article class="link-card" aria-label="Enlace: GitHub Team Repo">
+                <div class="link-card__thumb link-card__thumb--slate" aria-hidden="true">
+                    <span>GitHub</span>
+                </div>
+                <div class="link-card__body">
+                    <div class="link-card__title-row">
+                        <h4>GitHub Team Repo</h4>
+                        <div class="link-card__actions">
+                            <button type="button" aria-label="Editar enlace">✎</button>
+                            <button type="button" aria-label="Copiar enlace">⧉</button>
+                        </div>
+                    </div>
+                    <p>github.com</p>
+                    <div class="link-card__tags">
+                        <span class="tag-chip tag-chip--teal">Dev</span>
+                        <span class="tag-chip">Repo</span>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </main>
+</div>
