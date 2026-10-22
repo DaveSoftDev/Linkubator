@@ -4,12 +4,14 @@ using Linkubator.Application.Dtos.Requests;
 namespace Linkubator.Application.Validation.Links;
 
 public sealed record LinkServiceValidators(
+    IValidator<LinkGetRequest>? GetLink = null,
     IValidator<LinkCreateRequest>? CreateLink = null,
     IValidator<LinkEditRequest>? EditLink = null,
     IValidator<LinkMoveRequest>? MoveLink = null,
     IValidator<LinkChangeVisibilityRequest>? ChangeLinkVisibility = null,
     IValidator<LinkDeleteRequest>? DeleteLink = null)
 {
+    public IValidator<LinkGetRequest> GetLinkValidator { get; } = GetLink ?? new LinkGetValidator();
     public IValidator<LinkCreateRequest> CreateLinkValidator { get; } = CreateLink ?? new LinkCreateValidator();
     public IValidator<LinkEditRequest> EditLinkValidator { get; } = EditLink ?? new LinkEditValidator();
     public IValidator<LinkMoveRequest> MoveLinkValidator { get; } = MoveLink ?? new LinkMoveValidator();

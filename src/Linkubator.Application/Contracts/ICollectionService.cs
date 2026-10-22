@@ -5,6 +5,8 @@ namespace Linkubator.Application.Contracts;
 
 public interface ICollectionService
 {
+    Task<Result<CollectionDto>> GetCollection(CollectionGetRequest request, CancellationToken cancellationToken = default);
+
     Task<Result<CollectionDto>> CreateCollection(CollectionCreateRequest request, CancellationToken cancellationToken = default);
 
     Task<Result<CollectionDto>> RenameCollection(CollectionRenameRequest request, CancellationToken cancellationToken = default);

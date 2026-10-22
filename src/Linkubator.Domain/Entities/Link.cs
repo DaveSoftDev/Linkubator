@@ -10,8 +10,6 @@ namespace Linkubator.Domain.Entities;
 /// </summary>
 public sealed class Link : Bases.BaseEntity
 {
-    private Collection? _collection;
-
     private Link()
     {
     }
@@ -25,6 +23,11 @@ public sealed class Link : Bases.BaseEntity
     /// Identificador de la colección a la que pertenece el enlace.
     /// </summary>
     public long CollectionId { get; private set; }
+
+    /// <summary>
+    /// Colección a la que pertenece el enlace.
+    /// </summary>
+    public Collection Collection { get; private set; } = null!;
 
     /// <summary>
     /// URL original ajustada y validada.
@@ -91,8 +94,7 @@ public sealed class Link : Bases.BaseEntity
         }
 
         Link link = CreateInternal(userId, collection.Id, urlOriginal, title, description, image, isPublic);
-        collection.AddLink(link);
-        link._collection = collection;
+        link.RehydrateCollection(collection);
         return link;
     }
 
@@ -143,17 +145,18 @@ public sealed class Link : Bases.BaseEntity
     /// <exception cref="DomainExceptions.NotValidInputException">Si la colección no coincide con el vínculo del enlace.</exception>
     internal void RehydrateCollection(Collection collection)
     {
-        if (collection is null)
+        if (collection is null || collection.UserId != UserId || collection.Id != CollectionId)
         {
             throw new DomainExceptions.NotValidInputException();
         }
 
-        if (collection.UserId != UserId || collection.Id != CollectionId)
+        if (Collection is not null && !ReferenceEquals(Collection, collection))
         {
-            throw new DomainExceptions.NotValidInputException();
+            Collection.RemoveLink(this);
         }
 
-        _collection = collection;
+        Collection = collection;
+        collection.AddLink(this);
     }
 
     /// <summary>
@@ -179,19 +182,19 @@ public sealed class Link : Bases.BaseEntity
             return;
         }
 
-        if (_collection is not null && _collection.Id == CollectionId)
+        if (Collection is not null && Collection.Id == CollectionId)
         {
-            _collection.RemoveLink(this);
+            Collection.RemoveLink(this);
         }
 
         CollectionId = destinationCollection.Id;
 
-        if (!ReferenceEquals(_collection, destinationCollection))
+        if (!ReferenceEquals(Collection, destinationCollection))
         {
             destinationCollection.AddLink(this);
         }
 
-        _collection = destinationCollection;
+        Collection = destinationCollection;
         IsPublic = false;
     }
 

@@ -1,0 +1,173 @@
+﻿using Linkubator.Application.Constants;
+using Linkubator.Application.Logging;
+using Microsoft.Extensions.Logging;
+using DomainExceptions = Linkubator.Domain.Exceptions;
+
+namespace Linkubator.Application.Services;
+
+public abstract class ApplicationServiceBase
+{
+    protected ILogger Logger { get; }
+    protected ICurrentUser CurrentUser => _currentUser ?? throw new InvalidOperationException("This service does not have a current user.");
+    private readonly ICurrentUser? _currentUser;
+    private readonly IUnitOfWorkFactory? _unitOfWorkFactory;
+
+    protected ApplicationServiceBase(ILogger logger)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+        Logger = logger;
+    }
+
+    protected ApplicationServiceBase(ILogger logger, ICurrentUser currentUser)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(currentUser);
+        Logger = logger;
+        _currentUser = currentUser;
+    }
+
+    protected ApplicationServiceBase(ILogger logger, ICurrentUser currentUser, IUnitOfWorkFactory unitOfWorkFactory)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(currentUser);
+        ArgumentNullException.ThrowIfNull(unitOfWorkFactory);
+        Logger = logger;
+        _currentUser = currentUser;
+        _unitOfWorkFactory = unitOfWorkFactory;
+    }
+
+    protected object UserContext => _currentUser is null ? (object)new { } : new { UserId = _currentUser.UserId };
+
+    private IUnitOfWorkFactory UnitOfWorkFactory
+        => _unitOfWorkFactory ?? throw new InvalidOperationException("This service does not have a unit-of-work factory.");
+
+    protected Result EnsureAuthenticated()
+    {
+        if (CurrentUser.IsAuthenticated)
+        {
+            return Result.Success();
+        }
+
+        SafeLogger.Log(Logger, LogLevel.Warning, null, "Request rejected; user is not authenticated", new { UserId = CurrentUser.UserId });
+        return Result.Failure(CommonErrors.NotAuthenticated());
+    }
+
+    protected async Task<Result<TResponse>> ExecuteInTransaction<TRequest, TResponse>(
+        TRequest request,
+        CancellationToken cancellationToken,
+        Func<TRequest, IUnitOfWork, CancellationToken, Task<Result<TResponse>>> operation,
+        string failureMessage)
+    {
+        try
+        {
+            await using IUnitOfWork unitOfWork = UnitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
+            await unitOfWork.Begin(cancellationToken);
+            Result<TResponse> result = await operation(request, unitOfWork, cancellationToken);
+            if (result.IsSuccess)
+            {
+                await unitOfWork.Commit(cancellationToken);
+            }
+
+            return result;
+        }
+        catch (DomainExceptions.DomainException exception)
+        {
+            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, request);
+            return exception.FailDomain<TResponse>();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, UserContext, request);
+            throw;
+        }
+    }
+
+    protected async Task<Result> ExecuteInTransaction<TRequest>(
+        TRequest request,
+        CancellationToken cancellationToken,
+        Func<TRequest, IUnitOfWork, CancellationToken, Task<Result>> operation,
+        string failureMessage)
+    {
+        try
+        {
+            await using IUnitOfWork unitOfWork = UnitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
+            await unitOfWork.Begin(cancellationToken);
+            Result result = await operation(request, unitOfWork, cancellationToken);
+            if (result.IsSuccess)
+            {
+                await unitOfWork.Commit(cancellationToken);
+            }
+
+            return result;
+        }
+        catch (DomainExceptions.DomainException exception)
+        {
+            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, request);
+            return exception.FailDomain();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, UserContext, request);
+            throw;
+        }
+    }
+
+    protected async Task<Result<TResponse>> Execute<TRequest, TResponse>(
+        TRequest request,
+        CancellationToken cancellationToken,
+        Func<TRequest, CancellationToken, Task<Result<TResponse>>> operation,
+        string failureMessage,
+        bool handleDomainExceptions = true,
+        object? logContext = null)
+    {
+        try
+        {
+            return await operation(request, cancellationToken);
+        }
+        catch (DomainExceptions.DomainException exception) when (handleDomainExceptions)
+        {
+            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, request);
+            return exception.FailDomain<TResponse>();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, logContext ?? UserContext, null);
+            throw;
+        }
+    }
+
+    protected async Task<Result> Execute<TRequest>(
+        TRequest request,
+        CancellationToken cancellationToken,
+        Func<TRequest, CancellationToken, Task<Result>> operation,
+        string failureMessage,
+        bool handleDomainExceptions = true)
+    {
+        try
+        {
+            return await operation(request, cancellationToken);
+        }
+        catch (DomainExceptions.DomainException exception) when (handleDomainExceptions)
+        {
+            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, request);
+            return exception.FailDomain();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, UserContext, request);
+            throw;
+        }
+    }
+
+    protected Result<T> Failure<T>(ApplicationError error, string message, object? request = null)
+    {
+        SafeLogger.Log(Logger, LogLevel.Warning, null, message, UserContext, request);
+        return Result<T>.Failure(error);
+    }
+
+    protected Result Failure(ApplicationError error, string message, object? request = null)
+    {
+        SafeLogger.Log(Logger, LogLevel.Warning, null, message, UserContext, request);
+        return Result.Failure(error);
+    }
+}

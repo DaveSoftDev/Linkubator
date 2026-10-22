@@ -218,7 +218,7 @@ public class PublicReadServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
-        Assert.Equal("PUBLIC_READ_PAGE_INVALID", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.PageInvalidCode, result.Errors[0].Code);
     }
 
     [Fact]

@@ -2,15 +2,11 @@ namespace Linkubator.Application.Constants;
 
 public static class LinkErrors
 {
-    public const string UserIdField = CommonErrors.UserIdField;
-    public const string PageField = CommonErrors.PageField;
     public const string LinkIdField = "LinkId";
-    public const string CollectionIdField = CommonErrors.CollectionIdField;
     public const string DestinationCollectionIdField = "DestinationCollectionId";
     public const string UrlField = "Url";
     private const string PublicLinkInPrivateCollectionField = "IsPublic";
 
-    public const string PageInvalidMessage = CommonErrors.PageInvalidMessage;
     public const string LinkNotAccessibleMessage = "El enlace no es accesible para este usuario.";
     public const string CollectionNotAccessibleMessage = "La colección no es accesible para este usuario.";
     public const string PublicLinkInPrivateCollectionMessage = "No se puede hacer público un enlace de una colección privada.";
@@ -21,12 +17,6 @@ public static class LinkErrors
     private const string DeleteNotAccessibleMessage = "No se ha podido eliminar el enlace.";
     private const string UrlRequiredMessage = "La URL es obligatoria.";
 
-    private const string CreateNotAuthenticatedCode = "LINK_CREATE_NOT_AUTHENTICATED";
-    private const string EditNotAuthenticatedCode = "LINK_EDIT_NOT_AUTHENTICATED";
-    private const string MoveNotAuthenticatedCode = "LINK_MOVE_NOT_AUTHENTICATED";
-    private const string VisibilityNotAuthenticatedCode = "LINK_VISIBILITY_NOT_AUTHENTICATED";
-    private const string DeleteNotAuthenticatedCode = "LINK_DELETE_NOT_AUTHENTICATED";
-    private const string ListNotAuthenticatedCode = "LINK_LIST_NOT_AUTHENTICATED";
     private const string LinkIdInvalidCode = "LINK_ID_INVALID";
     private const string DestinationCollectionIdInvalidCode = "LINK_DESTINATION_COLLECTION_ID_INVALID";
     private const string CollectionIdInvalidCode = "LINK_COLLECTION_ID_INVALID";
@@ -35,29 +25,10 @@ public static class LinkErrors
     private const string DeleteNotAccessibleCode = "LINK_DELETE_NOT_ACCESSIBLE";
     private const string PublicLinkInPrivateCollectionCode = "LINK_PUBLIC_IN_PRIVATE_COLLECTION";
     private const string DuplicateUrlCode = "LINK_DUPLICATE_URL";
-    private const string PageInvalidCode = "PAGE_INVALID";
     private const string UrlRequiredCode = "URL_REQUIRED";
 
     public static ApplicationError RequestRequired()
         => CommonErrors.RequestRequired();
-
-    public static ApplicationError CreateNotAuthenticated()
-        => CommonErrors.NotAuthenticated(CreateNotAuthenticatedCode, UserIdField);
-
-    public static ApplicationError EditNotAuthenticated()
-        => CommonErrors.NotAuthenticated(EditNotAuthenticatedCode, UserIdField);
-
-    public static ApplicationError MoveNotAuthenticated()
-        => CommonErrors.NotAuthenticated(MoveNotAuthenticatedCode, UserIdField);
-
-    public static ApplicationError VisibilityNotAuthenticated()
-        => CommonErrors.NotAuthenticated(VisibilityNotAuthenticatedCode, UserIdField);
-
-    public static ApplicationError DeleteNotAuthenticated()
-        => CommonErrors.NotAuthenticated(DeleteNotAuthenticatedCode, UserIdField);
-
-    public static ApplicationError ListNotAuthenticated()
-        => CommonErrors.NotAuthenticated(ListNotAuthenticatedCode, UserIdField);
 
     public static ApplicationError LinkIdInvalid()
         => ApplicationError.Validation(LinkIdInvalidCode, LinkIdField, LinkIdInvalidMessage);
@@ -66,13 +37,13 @@ public static class LinkErrors
         => ApplicationError.Validation(DestinationCollectionIdInvalidCode, DestinationCollectionIdField, DestinationCollectionIdInvalidMessage);
 
     public static ApplicationError CollectionIdInvalid()
-        => ApplicationError.Validation(CollectionIdInvalidCode, CollectionIdField, CollectionIdInvalidMessage);
+        => ApplicationError.Validation(CollectionIdInvalidCode, CommonErrors.CollectionIdField, CollectionIdInvalidMessage);
 
     public static ApplicationError UrlRequired()
         => ApplicationError.Validation(UrlRequiredCode, UrlField, UrlRequiredMessage);
 
     public static ApplicationError CollectionNotAccessible()
-        => ApplicationError.ResourceNotAccessible(CollectionNotAccessibleCode, CollectionIdField, CollectionNotAccessibleMessage);
+        => ApplicationError.ResourceNotAccessible(CollectionNotAccessibleCode, CommonErrors.CollectionIdField, CollectionNotAccessibleMessage);
 
     public static ApplicationError LinkNotAccessible()
         => ApplicationError.ResourceNotAccessible(LinkNotAccessibleCode, LinkIdField, LinkNotAccessibleMessage);
@@ -95,5 +66,5 @@ public static class LinkErrors
     }
 
     public static ApplicationError PageInvalid()
-        => CommonErrors.PageInvalid(PageInvalidCode, PageField, PageInvalidMessage);
+        => CommonErrors.PageInvalid(CommonErrors.PageInvalidCode, CommonErrors.PageField, CommonErrors.PageInvalidMessage);
 }

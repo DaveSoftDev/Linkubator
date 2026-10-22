@@ -5,6 +5,8 @@ namespace Linkubator.Application.Contracts;
 
 public interface ILinkService
 {
+    Task<Result<LinkDto>> GetLink(LinkGetRequest request, CancellationToken cancellationToken = default);
+
     Task<Result<LinkDto>> CreateLink(LinkCreateRequest request, CancellationToken cancellationToken = default);
 
     Task<Result<LinkDto>> EditLink(LinkEditRequest request, CancellationToken cancellationToken = default);

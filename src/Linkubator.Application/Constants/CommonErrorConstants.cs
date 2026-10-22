@@ -11,9 +11,9 @@ public static class CommonErrors
     public const string NotAuthenticatedMessage = "La sesión del usuario no es válida.";
     public const string PageInvalidMessage = "La página debe ser mayor que cero.";
 
-    private const string RequestRequiredCode = "REQUEST_REQUIRED";
-    private const string NotAuthenticatedCode = "NOT_AUTHENTICATED";
-    private const string PageInvalidCode = "PAGE_INVALID";
+    public const string RequestRequiredCode = "REQUEST_REQUIRED";
+    public const string NotAuthenticatedCode = "NOT_AUTHENTICATED";
+    public const string PageInvalidCode = "PAGE_INVALID";
 
     public static ApplicationError RequestRequired(string? field = RequestField, string? message = RequestRequiredMessage)
         => ApplicationError.Validation(RequestRequiredCode, field, message);

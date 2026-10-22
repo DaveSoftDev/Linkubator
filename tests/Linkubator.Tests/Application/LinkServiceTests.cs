@@ -31,6 +31,72 @@ public class LinkServiceTests
     }
 
     [Fact]
+    public async Task GetLink_WhenUserIsUnauthenticated_ReturnsNotAuthenticated()
+    {
+        CurrentUser currentUser = new(0);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        LinkService service = CreateService(currentUser, collectionRepository, linkRepository);
+
+        Result<LinkDto> result = await service.GetLink(new LinkGetRequest(1));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(CommonErrors.NotAuthenticated().Code, result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetLink_WhenLinkIdIsInvalid_ReturnsValidationError()
+    {
+        LinkService service = CreateService(new CurrentUser(7), new InMemoryCollectionRepository(), new InMemoryLinkRepository());
+
+        Result<LinkDto> result = await service.GetLink(new LinkGetRequest(0));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(LinkErrors.LinkIdInvalid().Code, result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetLink_WhenLinkBelongsToCurrentUser_ReturnsLink()
+    {
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(7, "My Collection", null, true);
+        SetId(collection, 10);
+        collectionRepository.Items.Add(collection);
+        Link link = Link.Create(7, collection, "https://example.test/link", "Title", "Description", null, true);
+        SetId(link, 20);
+        linkRepository.Items.Add(link);
+        LinkService service = CreateService(currentUser, collectionRepository, linkRepository);
+
+        Result<LinkDto> result = await service.GetLink(new LinkGetRequest(link.Id));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(link.Id, result.Value!.Id);
+        Assert.Equal(link.Title, result.Value.Title);
+        Assert.True(result.Value.IsPublic);
+    }
+
+    [Fact]
+    public async Task GetLink_WhenLinkBelongsToAnotherUser_ReturnsNotAccessible()
+    {
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(8, "Other Collection", null);
+        SetId(collection, 10);
+        Link link = Link.Create(8, collection, "https://example.test/link", null, null, null);
+        SetId(link, 20);
+        linkRepository.Items.Add(link);
+        LinkService service = CreateService(currentUser, collectionRepository, linkRepository);
+
+        Result<LinkDto> result = await service.GetLink(new LinkGetRequest(link.Id));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(LinkErrors.LinkNotAccessible().Code, result.Errors[0].Code);
+    }
+
+    [Fact]
     public async Task CreateLink_WhenRequestIsValid_ReturnsCreatedLink()
     {
         CurrentUser currentUser = new(7);
@@ -126,7 +192,7 @@ public class LinkServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("LINK_CREATE_NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.NotAuthenticated().Code, result.Errors[0].Code);
     }
 
     [Fact]
@@ -231,7 +297,7 @@ public class LinkServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("LINK_EDIT_NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.NotAuthenticated().Code, result.Errors[0].Code);
     }
 
     [Fact]
@@ -348,7 +414,7 @@ public class LinkServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("LINK_MOVE_NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.NotAuthenticated().Code, result.Errors[0].Code);
     }
 
     [Fact]
@@ -443,7 +509,7 @@ public class LinkServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("LINK_VISIBILITY_NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.NotAuthenticated().Code, result.Errors[0].Code);
     }
 
     [Fact]
@@ -565,7 +631,7 @@ public class LinkServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("LINK_DELETE_NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.NotAuthenticated().Code, result.Errors[0].Code);
     }
 
     [Fact]
@@ -1166,7 +1232,7 @@ public class LinkServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("LINK_LIST_NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, result.Errors[0].Code);
     }
 
     [Fact]
@@ -1196,6 +1262,7 @@ public class LinkServiceTests
     [Fact]
     public void LinkServiceValidators_UsesCustomAndDefaultValidators()
     {
+        StubValidator<LinkGetRequest> getValidator = new();
         StubValidator<LinkCreateRequest> createValidator = new();
         StubValidator<LinkEditRequest> editValidator = new();
         StubValidator<LinkMoveRequest> moveValidator = new();
@@ -1203,12 +1270,14 @@ public class LinkServiceTests
         StubValidator<LinkDeleteRequest> deleteValidator = new();
 
         LinkServiceValidators configured = new(
+            getValidator,
             createValidator,
             editValidator,
             moveValidator,
             changeVisibilityValidator,
             deleteValidator);
 
+        Assert.Same(getValidator, configured.GetLinkValidator);
         Assert.Same(createValidator, configured.CreateLinkValidator);
         Assert.Same(editValidator, configured.EditLinkValidator);
         Assert.Same(moveValidator, configured.MoveLinkValidator);
@@ -1216,6 +1285,7 @@ public class LinkServiceTests
         Assert.Same(deleteValidator, configured.DeleteLinkValidator);
 
         LinkServiceValidators defaults = new();
+        Assert.NotNull(defaults.GetLinkValidator);
         Assert.NotNull(defaults.CreateLinkValidator);
         Assert.NotNull(defaults.EditLinkValidator);
         Assert.NotNull(defaults.MoveLinkValidator);
@@ -1404,12 +1474,14 @@ public class LinkServiceTests
         LinkServiceValidators first = new();
         LinkServiceValidators second = new();
         LinkServiceValidators custom = new(
+            new StubValidator<LinkGetRequest>(),
             new StubValidator<LinkCreateRequest>(),
             new StubValidator<LinkEditRequest>(),
             new StubValidator<LinkMoveRequest>(),
             new StubValidator<LinkChangeVisibilityRequest>(),
             new StubValidator<LinkDeleteRequest>());
 
+        Assert.NotNull(first.GetLinkValidator);
         Assert.NotNull(first.CreateLinkValidator);
         Assert.NotNull(first.EditLinkValidator);
         Assert.NotNull(first.MoveLinkValidator);
@@ -1419,6 +1491,7 @@ public class LinkServiceTests
         Assert.Same(first.CreateLinkValidator.GetType(), second.CreateLinkValidator.GetType());
         Assert.Same(first.EditLinkValidator.GetType(), second.EditLinkValidator.GetType());
         Assert.Same(first.DeleteLinkValidator.GetType(), second.DeleteLinkValidator.GetType());
+        Assert.Same(custom.GetLinkValidator.GetType(), typeof(StubValidator<LinkGetRequest>));
         Assert.Same(custom.CreateLinkValidator.GetType(), typeof(StubValidator<LinkCreateRequest>));
         Assert.Same(custom.EditLinkValidator.GetType(), typeof(StubValidator<LinkEditRequest>));
         Assert.Same(custom.DeleteLinkValidator.GetType(), typeof(StubValidator<LinkDeleteRequest>));
@@ -1428,33 +1501,33 @@ public class LinkServiceTests
     [Fact]
     public void LinkErrors_AllFactoryMethods_ReturnExpectedMetadata()
     {
-        Assert.Equal("REQUEST_REQUIRED", LinkErrors.RequestRequired().Code);
+        Assert.Equal(CommonErrors.RequestRequiredCode, LinkErrors.RequestRequired().Code);
         Assert.Equal(ApplicationErrorCategory.Validation, LinkErrors.RequestRequired().Category);
         Assert.Equal("request", LinkErrors.RequestRequired().Field);
 
-        Assert.Equal("LINK_CREATE_NOT_AUTHENTICATED", LinkErrors.CreateNotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, LinkErrors.CreateNotAuthenticated().Category);
-        Assert.Equal("UserId", LinkErrors.CreateNotAuthenticated().Field);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
+        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
-        Assert.Equal("LINK_EDIT_NOT_AUTHENTICATED", LinkErrors.EditNotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, LinkErrors.EditNotAuthenticated().Category);
-        Assert.Equal("UserId", LinkErrors.EditNotAuthenticated().Field);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
+        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
-        Assert.Equal("LINK_MOVE_NOT_AUTHENTICATED", LinkErrors.MoveNotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, LinkErrors.MoveNotAuthenticated().Category);
-        Assert.Equal("UserId", LinkErrors.MoveNotAuthenticated().Field);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
+        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
-        Assert.Equal("LINK_VISIBILITY_NOT_AUTHENTICATED", LinkErrors.VisibilityNotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, LinkErrors.VisibilityNotAuthenticated().Category);
-        Assert.Equal("UserId", LinkErrors.VisibilityNotAuthenticated().Field);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
+        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
-        Assert.Equal("LINK_DELETE_NOT_AUTHENTICATED", LinkErrors.DeleteNotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, LinkErrors.DeleteNotAuthenticated().Category);
-        Assert.Equal("UserId", LinkErrors.DeleteNotAuthenticated().Field);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
+        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
-        Assert.Equal("LINK_LIST_NOT_AUTHENTICATED", LinkErrors.ListNotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, LinkErrors.ListNotAuthenticated().Category);
-        Assert.Equal("UserId", LinkErrors.ListNotAuthenticated().Field);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
+        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
         Assert.Equal("LINK_ID_INVALID", LinkErrors.LinkIdInvalid().Code);
         Assert.Equal(ApplicationErrorCategory.Validation, LinkErrors.LinkIdInvalid().Category);

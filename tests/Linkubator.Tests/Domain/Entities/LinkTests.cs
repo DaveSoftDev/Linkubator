@@ -21,6 +21,7 @@ public class LinkTests
 
         Assert.Equal(1, link.UserId);
         Assert.Equal(2, link.CollectionId);
+        Assert.Equal(2, link.Collection.Id);
         Assert.StartsWith("https://Example.com", link.UrlOriginal);
         Assert.Equal("examplecompathx2", link.UrlNormalized);
         Assert.Equal("Title", link.Title);

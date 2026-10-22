@@ -6,9 +6,7 @@ using Linkubator.Application.Enums;
 using Linkubator.Application.Models;
 using Linkubator.Application.Results;
 using Linkubator.Application.UseCases.Collections;
-using Linkubator.Application.Validation;
 using Linkubator.Application.Validation.Collections;
-using Linkubator.Domain.Constants;
 using Linkubator.Domain.Entities;
 using DomainExceptions = Linkubator.Domain.Exceptions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -52,6 +50,7 @@ public class CollectionServiceTests
         InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
         FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
         CollectionServiceValidators validators = new(
+            new AcceptAllGetCollectionValidator(),
             new AcceptAllCreateCollectionValidator(),
             new AcceptAllRenameCollectionValidator(),
             new AcceptAllChangeCollectionVisibilityValidator(),
@@ -76,6 +75,80 @@ public class CollectionServiceTests
 
         Assert.InRange(collection.CreatedAt, before, after);
         Assert.InRange(link.CreatedAt, before, after);
+    }
+
+    [Fact]
+    public async Task GetCollection_WhenUserIsUnauthenticated_ReturnsNotAuthenticated()
+    {
+        CurrentUser currentUser = new CurrentUser(0);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, new InMemoryLinkRepository());
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.GetCollection(new CollectionGetRequest(1));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(CommonErrors.NotAuthenticated().Code, result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetCollection_WhenCollectionIdIsInvalid_ReturnsValidationError()
+    {
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        CollectionService service = new CollectionService(
+            NullLogger<CollectionService>.Instance,
+            new CurrentUser(7),
+            repository,
+            new FakeUnitOfWorkFactory(repository, new InMemoryLinkRepository()));
+
+        Result<CollectionDto> result = await service.GetCollection(new CollectionGetRequest(0));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(CollectionErrors.CollectionIdInvalid().Code, result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task GetCollection_WhenCollectionBelongsToCurrentUser_ReturnsCollection()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        Collection collection = Collection.Create(currentUser.UserId, "My Collection", "Description", true);
+        SetId(collection, 21);
+        repository.Items.Add(collection);
+        CollectionService service = new CollectionService(
+            NullLogger<CollectionService>.Instance,
+            currentUser,
+            repository,
+            new FakeUnitOfWorkFactory(repository, new InMemoryLinkRepository()));
+
+        Result<CollectionDto> result = await service.GetCollection(new CollectionGetRequest(collection.Id));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(collection.Id, result.Value!.Id);
+        Assert.Equal(collection.Name, result.Value.Name);
+        Assert.Empty(collection.Links);
+        Assert.Equal(0, result.Value.LinkCount);
+        Assert.Equal(collection.Description, result.Value.Description);
+        Assert.True(result.Value.IsPublic);
+    }
+
+    [Fact]
+    public async Task GetCollection_WhenCollectionBelongsToAnotherUser_ReturnsNotAccessible()
+    {
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        Collection collection = Collection.Create(8, "Other Collection", null);
+        SetId(collection, 21);
+        repository.Items.Add(collection);
+        CollectionService service = new CollectionService(
+            NullLogger<CollectionService>.Instance,
+            new CurrentUser(7),
+            repository,
+            new FakeUnitOfWorkFactory(repository, new InMemoryLinkRepository()));
+
+        Result<CollectionDto> result = await service.GetCollection(new CollectionGetRequest(collection.Id));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(CollectionErrors.GetNotAccessible().Code, result.Errors[0].Code);
     }
 
     [Fact]
@@ -127,7 +200,7 @@ public class CollectionServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("COLLECTION_CREATE_NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, result.Errors[0].Code);
     }
 
     [Fact]
@@ -284,7 +357,7 @@ public class CollectionServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("COLLECTION_RENAME_NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, result.Errors[0].Code);
     }
 
     [Fact]
@@ -385,7 +458,7 @@ public class CollectionServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("COLLECTION_VISIBILITY_NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, result.Errors[0].Code);
     }
 
     [Fact]
@@ -495,7 +568,7 @@ public class CollectionServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("COLLECTION_DELETE_NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, result.Errors[0].Code);
     }
 
     [Fact]
@@ -553,7 +626,7 @@ public class CollectionServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("COLLECTION_LIST_NOT_AUTHENTICATED", result.Errors[0].Code);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, result.Errors[0].Code);
     }
 
     [Fact]
@@ -1010,25 +1083,25 @@ public class CollectionServiceTests
         Assert.Equal(ApplicationErrorCategory.Validation, CollectionErrors.RequestRequired().Category);
         Assert.Equal("request", CollectionErrors.RequestRequired().Field);
 
-        Assert.Equal("COLLECTION_CREATE_NOT_AUTHENTICATED", CollectionErrors.CreateNotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CollectionErrors.CreateNotAuthenticated().Category);
-        Assert.Equal("UserId", CollectionErrors.CreateNotAuthenticated().Field);
+        Assert.Equal("NOT_AUTHENTICATED", CommonErrors.NotAuthenticated().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
+        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
-        Assert.Equal("COLLECTION_RENAME_NOT_AUTHENTICATED", CollectionErrors.RenameNotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CollectionErrors.RenameNotAuthenticated().Category);
-        Assert.Equal("UserId", CollectionErrors.RenameNotAuthenticated().Field);
+        Assert.Equal("NOT_AUTHENTICATED", CommonErrors.NotAuthenticated().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
+        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
-        Assert.Equal("COLLECTION_VISIBILITY_NOT_AUTHENTICATED", CollectionErrors.VisibilityNotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CollectionErrors.VisibilityNotAuthenticated().Category);
-        Assert.Equal("UserId", CollectionErrors.VisibilityNotAuthenticated().Field);
+        Assert.Equal("NOT_AUTHENTICATED", CommonErrors.NotAuthenticated().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
+        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
-        Assert.Equal("COLLECTION_DELETE_NOT_AUTHENTICATED", CollectionErrors.DeleteNotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CollectionErrors.DeleteNotAuthenticated().Category);
-        Assert.Equal("UserId", CollectionErrors.DeleteNotAuthenticated().Field);
+        Assert.Equal("NOT_AUTHENTICATED", CommonErrors.NotAuthenticated().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
+        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
-        Assert.Equal("COLLECTION_LIST_NOT_AUTHENTICATED", CollectionErrors.ListNotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CollectionErrors.ListNotAuthenticated().Category);
-        Assert.Equal("UserId", CollectionErrors.ListNotAuthenticated().Field);
+        Assert.Equal("NOT_AUTHENTICATED", CommonErrors.NotAuthenticated().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
+        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
         Assert.Equal("COLLECTION_NAME_REQUIRED", CollectionErrors.NameRequired().Code);
         Assert.Equal(ApplicationErrorCategory.Validation, CollectionErrors.NameRequired().Category);
@@ -1126,6 +1199,11 @@ public class CollectionServiceTests
         public Task Rollback(CancellationToken cancellationToken = default) => Task.CompletedTask;
         public void Dispose() { }
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    private sealed class AcceptAllGetCollectionValidator : IValidator<CollectionGetRequest>
+    {
+        public Result Validate(CollectionGetRequest request) => Result.Success();
     }
 
     private sealed class AcceptAllCreateCollectionValidator : IValidator<CollectionCreateRequest>
@@ -1481,9 +1559,21 @@ public class CollectionServiceTests
 
         public void Dispose()
         {
+            RollbackIfTransactionActive();
         }
 
         public ValueTask DisposeAsync()
-            => ValueTask.CompletedTask;
+        {
+            RollbackIfTransactionActive();
+            return ValueTask.CompletedTask;
+        }
+
+        private void RollbackIfTransactionActive()
+        {
+            if (BeginCount > CommitCount + RollbackCount)
+            {
+                RollbackCount++;
+            }
+        }
     }
 }

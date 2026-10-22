@@ -41,7 +41,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
             .Select(row => new PublicCollectionSummaryDto(row.Name, row.Slug, row.Description))
             .ToList();
 
-        IReadOnlyList<PublicLinkDto> recentLinks = (await _connection.QueryAsync<PublicLinkRow>(new CommandDefinition(
+        IReadOnlyList<PublicLinkDto> recentLinks = (await _connection.QueryAsync<PublicLinkDto>(new CommandDefinition(
             @"SELECT l.UrlOriginal, l.Title, l.Description, l.Image
               FROM Link l
               INNER JOIN Collection c ON c.Id = l.CollectionId AND c.UserId = l.UserId
@@ -51,9 +51,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
               ORDER BY l.CreatedAt DESC, l.Id DESC
               LIMIT 5;",
             new { UserId = user.Id },
-            cancellationToken: cancellationToken)))
-            .Select(row => new PublicLinkDto(row.UrlOriginal, row.Title, row.Description, row.Image))
-            .ToList();
+            cancellationToken: cancellationToken))).ToList();
 
         return new PublicUserDto(alias, collections, recentLinks);
     }
@@ -108,7 +106,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
             return null;
         }
 
-        List<PublicLinkDto> links = (await _connection.QueryAsync<PublicLinkRow>(new CommandDefinition(
+        IReadOnlyList<PublicLinkDto> links = (await _connection.QueryAsync<PublicLinkDto>(new CommandDefinition(
             @"SELECT l.UrlOriginal, l.Title, l.Description, l.Image
               FROM Link l
               WHERE l.UserId = @UserId
@@ -118,9 +116,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
                        l.Id ASC
               LIMIT @Limit OFFSET @Offset;",
             new { UserId = user.Id, CollectionId = collection.Id, Limit = PageSize, Offset = (page - 1) * PageSize },
-            cancellationToken: cancellationToken)))
-            .Select(row => new PublicLinkDto(row.UrlOriginal, row.Title, row.Description, row.Image))
-            .ToList();
+            cancellationToken: cancellationToken))).ToList();
 
         return new PublicCollectionDto(alias, collection.Name, collection.Slug, links);
     }
@@ -173,14 +169,6 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
         public string Name { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
         public string? Description { get; set; }
-    }
-
-    private sealed class PublicLinkRow
-    {
-        public string UrlOriginal { get; set; } = string.Empty;
-        public string? Title { get; set; }
-        public string? Description { get; set; }
-        public string? Image { get; set; }
     }
 
     private sealed class CollectionPageRow

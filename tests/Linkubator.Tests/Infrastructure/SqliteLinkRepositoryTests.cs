@@ -70,14 +70,13 @@ public sealed class SqliteLinkRepositoryTests
             "UPDATE Link SET ScrapingStatus = @ScrapingStatus WHERE Id = @Id;",
             new { Id = linkId, ScrapingStatus = (int)DomainEnums.ScrapingStatus.Completed });
 
-        Link result = await connection.QuerySingleAsync<Link>(
-            @"SELECT Id, UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, ScrapingStatus, CreatedAt
-              FROM Link WHERE Id = @Id;",
-            new { Id = linkId });
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        Link result = (await repository.GetById(linkId, 42))!;
 
         Assert.Equal(linkId, result.Id);
         Assert.Equal(42, result.UserId);
         Assert.Equal(collectionId, result.CollectionId);
+        Assert.Same(result, Assert.Single(result.Collection.Links));
         Assert.Equal("https://example.test/path", result.UrlOriginal);
         Assert.Equal("https://example.test/normalized", result.UrlNormalized);
         Assert.Equal("Stored title", result.Title);
@@ -106,6 +105,8 @@ public sealed class SqliteLinkRepositoryTests
         Assert.Equal(link.Id, result.Id);
         Assert.Equal(42, result.UserId);
         Assert.Equal(collectionId, result.CollectionId);
+        Assert.Equal("Private", result.Collection.Name);
+        Assert.Same(result, Assert.Single(result.Collection.Links));
         Assert.Equal("https://example.test/path", result.UrlOriginal);
         Assert.Equal(link.UrlNormalized, result.UrlNormalized);
         Assert.Equal("Title", result.Title);
@@ -256,7 +257,10 @@ public sealed class SqliteLinkRepositoryTests
         await repository.Update(link);
         Link? result = await repository.GetById(link.Id, 42);
 
+        Assert.Equal("Target", link.Collection.Name);
         Assert.Equal(targetCollectionId, result!.CollectionId);
+        Assert.Equal("Target", result.Collection.Name);
+        Assert.Same(result, Assert.Single(result.Collection.Links));
         Assert.False(result.IsPublic);
         Assert.Equal(
             "Target",
@@ -286,6 +290,30 @@ public sealed class SqliteLinkRepositoryTests
             await connection.QuerySingleAsync<string>(
                 "SELECT Title || '|' || Description FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
                 new { Id = linkId, UserId = 42 }));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task GetPageByUser_WhenPageIsLessThanOne_ThrowsArgumentOutOfRangeException(int page)
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => repository.GetPageByUser(42, null, null, page));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenPageIsIntMaxValue_ReturnsEmptyPageWithoutOverflow()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, null, null, int.MaxValue);
+
+        Assert.Empty(result);
     }
 
     [Fact]

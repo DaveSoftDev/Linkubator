@@ -9,7 +9,32 @@ namespace Linkubator.Infrastructure.Repositories;
 public sealed class SqliteLinkRepository : ILinkRepository
 {
     private const int PageSize = 15;
+    private const string LinkAndCollectionSelect = @"SELECT l.Id, l.UserId, l.CollectionId, l.UrlOriginal, l.UrlNormalized, l.Title, l.Description, l.Image, l.IsPublic, l.ScrapingStatus, l.CreatedAt,
+                     c.Id, c.UserId, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
+              FROM Link l
+              INNER JOIN Collection c ON c.Id = l.CollectionId AND c.UserId = l.UserId";
     private readonly SqliteConnection _connection;
+
+    private Task InsertSearchProjection(long id, Entities.Link link, CancellationToken cancellationToken)
+        => _connection.ExecuteAsync(new CommandDefinition(
+            @"INSERT INTO LinkSearch (rowid, UserId, UrlOriginal, Title, Description, CollectionName)
+              VALUES (@Id, @UserId, @UrlOriginal, @Title, @Description, @CollectionName);",
+            new
+            {
+                Id = id,
+                UserId = link.UserId,
+                UrlOriginal = Search.SearchTextNormalizer.Normalize(link.UrlOriginal),
+                Title = Search.SearchTextNormalizer.Normalize(link.Title),
+                Description = Search.SearchTextNormalizer.Normalize(link.Description),
+                CollectionName = Search.SearchTextNormalizer.Normalize(link.Collection.Name),
+            },
+            cancellationToken: cancellationToken));
+
+    private Task DeleteSearchProjection(long id, long userId, CancellationToken cancellationToken)
+        => _connection.ExecuteAsync(new CommandDefinition(
+            "DELETE FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
+            new { Id = id, UserId = userId },
+            cancellationToken: cancellationToken));
 
     public SqliteLinkRepository(SqliteConnection connection)
     {
@@ -18,54 +43,50 @@ public sealed class SqliteLinkRepository : ILinkRepository
 
     public async Task<Entities.Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
     {
-        return await _connection.QuerySingleOrDefaultAsync<Entities.Link>(new CommandDefinition(
-            @"SELECT Id, UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, ScrapingStatus, CreatedAt
-              FROM Link
-              WHERE Id = @Id AND UserId = @UserId;",
+        IReadOnlyList<Entities.Link> links = await GetLinks(
+            $@"{LinkAndCollectionSelect}
+              WHERE l.Id = @Id AND l.UserId = @UserId;",
             new { Id = id, UserId = userId },
-            cancellationToken: cancellationToken));
+            cancellationToken);
+        return links.SingleOrDefault();
     }
 
     public async Task<Entities.Link?> GetByNormalizedUrl(long userId, string normalizedUrl, CancellationToken cancellationToken = default)
     {
-        return await _connection.QuerySingleOrDefaultAsync<Entities.Link>(new CommandDefinition(
-            @"SELECT Id, UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, ScrapingStatus, CreatedAt
-              FROM Link
-              WHERE UserId = @UserId AND UrlNormalized = @UrlNormalized;",
+        IReadOnlyList<Entities.Link> links = await GetLinks(
+            $@"{LinkAndCollectionSelect}
+              WHERE l.UserId = @UserId AND l.UrlNormalized = @UrlNormalized;",
             new { UserId = userId, UrlNormalized = normalizedUrl },
-            cancellationToken: cancellationToken));
+            cancellationToken);
+        return links.SingleOrDefault();
     }
 
     public async Task<IReadOnlyCollection<Entities.Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
     {
-        IEnumerable<Entities.Link> links = await _connection.QueryAsync<Entities.Link>(new CommandDefinition(
-            @"SELECT Id, UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, ScrapingStatus, CreatedAt
-              FROM Link
-              WHERE UserId = @UserId
-              ORDER BY CreatedAt DESC, Id DESC;",
+        return await GetLinks(
+            $@"{LinkAndCollectionSelect}
+              WHERE l.UserId = @UserId
+              ORDER BY l.CreatedAt DESC, l.Id DESC;",
             new { UserId = userId },
-            cancellationToken: cancellationToken));
-
-        return links.ToList();
+            cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<Entities.Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
     {
-        IEnumerable<Entities.Link> links = await _connection.QueryAsync<Entities.Link>(new CommandDefinition(
-            @"SELECT Id, UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, ScrapingStatus, CreatedAt
-              FROM Link
-              WHERE UserId = @UserId AND CollectionId = @CollectionId
-              ORDER BY CreatedAt DESC, Id DESC;",
+        return await GetLinks(
+            $@"{LinkAndCollectionSelect}
+              WHERE l.UserId = @UserId AND l.CollectionId = @CollectionId
+              ORDER BY l.CreatedAt DESC, l.Id DESC;",
             new { UserId = userId, CollectionId = collectionId },
-            cancellationToken: cancellationToken));
-
-        return links.ToList();
+            cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
+
         string? searchQuery = Search.SearchQueryBuilder.Build(Search.SearchTextNormalizer.Normalize(query));
-        int offset = (page - 1) * PageSize;
+        long offset = ((long)page - 1) * PageSize;
         string sql = searchQuery is null
             ? @"SELECT l.Id, l.CollectionId, l.UrlOriginal, l.UrlNormalized, l.Title, l.Description, l.Image, l.IsPublic, l.CreatedAt
                 FROM Link l
@@ -141,7 +162,7 @@ public sealed class SqliteLinkRepository : ILinkRepository
             },
             cancellationToken: cancellationToken));
 
-        await InsertSearchProjection(id, link.UserId, link.CollectionId, link.UrlOriginal, link.Title, link.Description, cancellationToken);
+        await InsertSearchProjection(id, link, cancellationToken);
 
         link.SetId(id);
     }
@@ -179,7 +200,7 @@ public sealed class SqliteLinkRepository : ILinkRepository
         if (affectedRows > 0)
         {
             await DeleteSearchProjection(link.Id, link.UserId, cancellationToken);
-            await InsertSearchProjection(link.Id, link.UserId, link.CollectionId, link.UrlOriginal, link.Title, link.Description, cancellationToken);
+            await InsertSearchProjection(link.Id, link, cancellationToken);
         }
     }
 
@@ -192,40 +213,32 @@ public sealed class SqliteLinkRepository : ILinkRepository
             cancellationToken: cancellationToken));
     }
 
-    private async Task InsertSearchProjection(
-        long id,
-        long userId,
-        long collectionId,
-        string urlOriginal,
-        string? title,
-        string? description,
-        CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<Entities.Link>> GetLinks(string sql, object parameters, CancellationToken cancellationToken)
     {
-        string? collectionName = await _connection.ExecuteScalarAsync<string?>(
-            new CommandDefinition(
-                "SELECT Name FROM Collection WHERE Id = @CollectionId AND UserId = @UserId;",
-                new { CollectionId = collectionId, UserId = userId },
-                cancellationToken: cancellationToken));
+        List<Entities.Link> links = new();
+        Dictionary<long, Entities.Collection> collections = new();
 
-        await _connection.ExecuteAsync(new CommandDefinition(
-            @"INSERT INTO LinkSearch (rowid, UserId, UrlOriginal, Title, Description, CollectionName)
-              VALUES (@Id, @UserId, @UrlOriginal, @Title, @Description, @CollectionName);",
-            new
+        await _connection.QueryAsync<Entities.Link, Entities.Collection, Entities.Link>(
+            new CommandDefinition(sql, parameters, cancellationToken: cancellationToken),
+            (link, collection) =>
             {
-                Id = id,
-                UserId = userId,
-                UrlOriginal = Search.SearchTextNormalizer.Normalize(urlOriginal),
-                Title = Search.SearchTextNormalizer.Normalize(title),
-                Description = Search.SearchTextNormalizer.Normalize(description),
-                CollectionName = Search.SearchTextNormalizer.Normalize(collectionName),
+                if (!collections.TryGetValue(collection.Id, out Entities.Collection? existingCollection))
+                {
+                    existingCollection = collection;
+                    collections.Add(collection.Id, existingCollection);
+                }
+
+                link.RehydrateCollection(existingCollection);
+                links.Add(link);
+                return link;
             },
-            cancellationToken: cancellationToken));
+            splitOn: "Id");
+
+        foreach (KeyValuePair<long, Entities.Collection> entry in collections)
+        {
+            entry.Value.RehydrateLinks(links.Where(link => link.CollectionId == entry.Key));
+        }
+
+        return links;
     }
-
-    private Task DeleteSearchProjection(long id, long userId, CancellationToken cancellationToken)
-        => _connection.ExecuteAsync(new CommandDefinition(
-            "DELETE FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
-            new { Id = id, UserId = userId },
-            cancellationToken: cancellationToken));
-
 }

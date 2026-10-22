@@ -1,26 +1,23 @@
-﻿using Linkubator.Application.Constants;
+using Linkubator.Application.Constants;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Dtos.Requests;
 using Linkubator.Application.Logging;
 using Linkubator.Application.Services;
 using Linkubator.Application.Validation.Collections;
-using DomainEntities = Linkubator.Domain.Entities;
-using DomainExceptions = Linkubator.Domain.Exceptions;
-using DomainPolicies = Linkubator.Domain.Policies;
 using Microsoft.Extensions.Logging;
+using DomainEntities = Linkubator.Domain.Entities;
+using DomainPolicies = Linkubator.Domain.Policies;
 
 namespace Linkubator.Application.UseCases.Collections;
 
-public sealed class CollectionService : ICollectionService
+public sealed class CollectionService : ApplicationServiceBase, ICollectionService
 {
-    private readonly ICurrentUser _currentUser;
     private readonly ICollectionRepository _collectionRepository;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
+    private readonly IValidator<CollectionGetRequest> _getCollectionValidator;
     private readonly IValidator<CollectionCreateRequest> _createCollectionValidator;
     private readonly IValidator<CollectionRenameRequest> _renameCollectionValidator;
     private readonly IValidator<CollectionChangeVisibilityRequest> _changeCollectionVisibilityValidator;
     private readonly IValidator<CollectionDeleteRequest> _deleteCollectionValidator;
-    private readonly ILogger<CollectionService> _logger;
 
     public CollectionService(
         ILogger<CollectionService> logger,
@@ -28,22 +25,44 @@ public sealed class CollectionService : ICollectionService
         ICollectionRepository collectionRepository,
         IUnitOfWorkFactory unitOfWorkFactory,
         CollectionServiceValidators? validators = null)
+        : base(logger, currentUser, unitOfWorkFactory)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(currentUser);
         ArgumentNullException.ThrowIfNull(collectionRepository);
-        ArgumentNullException.ThrowIfNull(unitOfWorkFactory);
-
         CollectionServiceValidators resolvedValidators = validators ?? new CollectionServiceValidators();
-
-        _logger = logger;
-        _currentUser = currentUser;
         _collectionRepository = collectionRepository;
-        _unitOfWorkFactory = unitOfWorkFactory;
+        _getCollectionValidator = resolvedValidators.CollectionGetValidator;
         _createCollectionValidator = resolvedValidators.CollectionCreateValidator;
         _renameCollectionValidator = resolvedValidators.CollectionRenameValidator;
         _changeCollectionVisibilityValidator = resolvedValidators.CollectionChangeVisibilityValidator;
         _deleteCollectionValidator = resolvedValidators.CollectionDeleteValidator;
+    }
+
+    public async Task<Result<CollectionDto>> GetCollection(CollectionGetRequest request, CancellationToken cancellationToken = default)
+    {
+        Result validation = _getCollectionValidator.Validate(request);
+        if (!validation.IsSuccess)
+        {
+            return Failure<CollectionDto>(CollectionErrors.CollectionIdInvalid(), "Collection lookup validation failed for user; invalid collection ID", request);
+        }
+        Result authentication = EnsureAuthenticated();
+        if (!authentication.IsSuccess)
+        {
+            return Result<CollectionDto>.Failure(authentication.Errors);
+        }
+        return await Execute(
+            request,
+            cancellationToken,
+            async (getRequest, token) =>
+            {
+                DomainEntities.Collection? collection = await _collectionRepository.GetById(getRequest.CollectionId, CurrentUser.UserId, token);
+                if (collection is null)
+                {
+                    return Failure<CollectionDto>(CollectionErrors.GetNotAccessible(), "Collection lookup rejected for user; collection not accessible", getRequest);
+                }
+
+                return Result<CollectionDto>.Success(Map(collection));
+            },
+            "Collection lookup failed for user");
     }
 
     public async Task<Result<CollectionDto>> CreateCollection(CollectionCreateRequest request, CancellationToken cancellationToken = default)
@@ -51,312 +70,233 @@ public sealed class CollectionService : ICollectionService
         Result validation = _createCollectionValidator.Validate(request);
         if (!validation.IsSuccess)
         {
-            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection creation validation failed for user;", new { UserId = _currentUser.UserId, ErrorCount = validation.Errors.Count }, request);
+            SafeLogger.Log(Logger, LogLevel.Warning, null, "Collection creation validation failed for user", new { UserId = CurrentUser.UserId, ErrorCount = validation.Errors.Count }, request);
             return Result<CollectionDto>.Failure(validation.Errors);
         }
-        if (!CurrentUserGuard.EnsureAuthenticated(_currentUser, _logger, CollectionErrors.CreateNotAuthenticated, "Collection creation rejected for user; not authenticated", out Result<CollectionDto> authenticationFailure))
+        Result authentication = EnsureAuthenticated();
+        if (!authentication.IsSuccess)
         {
-            return authenticationFailure;
+            return Result<CollectionDto>.Failure(authentication.Errors);
         }
-        try
-        {
-            long userId = _currentUser.UserId;
-            DomainEntities.Collection newCollection = DomainEntities.Collection.Create(userId, request.Name, request.Description, request.IsPublic);
-
-            Result<CollectionDto> result = await _unitOfWorkFactory.ExecuteInTransaction(
-                UnitOfWorkContexts.Linkubator,
-                async (unitOfWork, token) =>
-                {
-                    ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
-                    DomainEntities.Collection? existing = await repository.GetBySlug(userId, newCollection.Slug, token);
-                    if (existing is not null)
-                    {
-                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection creation rejected for user; name already in use", new { UserId = _currentUser.UserId }, request);
-                        return Result<CollectionDto>.Failure(CollectionErrors.NameInUse(existing.Name));
-                    }
-
-                    await repository.Insert(newCollection, token);
-                    return Result<CollectionDto>.Success(Map(newCollection));
-                },
-                cancellationToken);
-
-            if (result.IsSuccess)
+        Result<CollectionDto> result = await ExecuteInTransaction(
+            request,
+            cancellationToken,
+            async (createRequest, unitOfWork, token) =>
             {
-                SafeLogger.Log(_logger, LogLevel.Information, null, "Collection created for user", new { UserId = userId });
-            }
+                DomainEntities.Collection collection = DomainEntities.Collection.Create(CurrentUser.UserId, createRequest.Name, createRequest.Description, createRequest.IsPublic);
+                ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
+                DomainEntities.Collection? existing = await repository.GetBySlug(CurrentUser.UserId, collection.Slug, token);
+                if (existing is not null)
+                {
+                    return Failure<CollectionDto>(CollectionErrors.NameInUse(existing.Name), "Collection creation rejected for user; name already in use", createRequest);
+                }
 
-            return result;
-        }
-        catch (DomainExceptions.DomainException exception)
+                await repository.Insert(collection, token);
+                return Result<CollectionDto>.Success(Map(collection));
+            },
+            "Collection creation failed for user");
+        if (result.IsSuccess)
         {
-            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Collection creation failed for user", new { UserId = _currentUser.UserId }, request);
-            return exception.FailDomain<CollectionDto>();
+            SafeLogger.Log(Logger, LogLevel.Information, null, "Collection created for user", UserContext);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            SafeLogger.Log(_logger, LogLevel.Error, exception, "Collection creation failed for user", new { UserId = _currentUser.UserId }, request);
-            throw;
-        }
+        return result;
     }
-
     public async Task<Result<CollectionDto>> RenameCollection(CollectionRenameRequest request, CancellationToken cancellationToken = default)
     {
         Result validation = _renameCollectionValidator.Validate(request);
         if (!validation.IsSuccess)
         {
-            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection rename validation failed for user", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId, Name = request.Name });
+            SafeLogger.Log(Logger, LogLevel.Warning, null, "Collection rename validation failed for user", UserContext, new { CollectionId = request.CollectionId, Name = request.Name });
             return Result<CollectionDto>.Failure(validation.Errors);
         }
-        if (!CurrentUserGuard.EnsureAuthenticated(_currentUser, _logger, CollectionErrors.RenameNotAuthenticated, "Collection rename rejected for user; not authenticated", out Result<CollectionDto> authenticationFailure))
+        Result authentication = EnsureAuthenticated();
+        if (!authentication.IsSuccess)
         {
-            return authenticationFailure;
+            return Result<CollectionDto>.Failure(authentication.Errors);
         }
-        try
-        {
-            Result<CollectionDto> result = await _unitOfWorkFactory.ExecuteInTransaction(
-                UnitOfWorkContexts.Linkubator,
-                async (unitOfWork, token) =>
-                {
-                    ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
-                    (DomainEntities.Collection? collection, Result? collectionFailure) = await GetCollectionForCurrentUserOrFailure(
-                        request.CollectionId,
-                        CollectionErrors.RenameNotAccessible,
-                        "Collection rename rejected for user; collection not accessible",
-                        token,
-                        repository);
-                    if (collectionFailure is not null)
-                    {
-                        return Result<CollectionDto>.Failure(collectionFailure.Errors);
-                    }
-
-                    string newName = request.Name?.Trim() ?? string.Empty;
-                    DomainEntities.Collection ownedCollection = collection!;
-                    string candidateSlug = DomainPolicies.SlugPolicy.Generate(newName);
-                    DomainEntities.Collection? duplicate = await repository.GetBySlug(_currentUser.UserId, candidateSlug, token);
-                    if (duplicate is not null && duplicate.Id != ownedCollection.Id)
-                    {
-                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection rename rejected for user; name already in use", new { UserId = _currentUser.UserId });
-                        return Result<CollectionDto>.Failure(CollectionErrors.NameInUse(duplicate.Name));
-                    }
-
-                    ownedCollection.Rename(newName);
-                    await repository.Update(ownedCollection, token);
-                    return Result<CollectionDto>.Success(Map(ownedCollection));
-                },
-                cancellationToken);
-
-            if (result.IsSuccess)
+        Result<CollectionDto> result = await ExecuteInTransaction(
+            request,
+            cancellationToken,
+            async (renameRequest, unitOfWork, token) =>
             {
-                SafeLogger.Log(_logger, LogLevel.Information, null, "Collection renamed for user", new { UserId = _currentUser.UserId });
-            }
+                ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
+                (DomainEntities.Collection? collection, Result? collectionFailure) = await GetCollectionForCurrentUserOrFailure(
+                    renameRequest.CollectionId,
+                    CollectionErrors.RenameNotAccessible,
+                    "Collection rename rejected for user; collection not accessible",
+                    token,
+                    repository);
+                if (collectionFailure is not null)
+                {
+                    return Result<CollectionDto>.Failure(collectionFailure.Errors);
+                }
 
-            return result;
-        }
-        catch (DomainExceptions.DomainException exception)
+                string newName = renameRequest.Name?.Trim() ?? string.Empty;
+                DomainEntities.Collection ownedCollection = collection!;
+                string candidateSlug = DomainPolicies.SlugPolicy.Generate(newName);
+                DomainEntities.Collection? duplicate = await repository.GetBySlug(CurrentUser.UserId, candidateSlug, token);
+                if (duplicate is not null && duplicate.Id != ownedCollection.Id)
+                {
+                    return Failure<CollectionDto>(CollectionErrors.NameInUse(duplicate.Name), "Collection rename rejected for user; name already in use", new { CollectionId = renameRequest.CollectionId });
+                }
+
+                ownedCollection.Rename(newName);
+                await repository.Update(ownedCollection, token);
+                return Result<CollectionDto>.Success(Map(ownedCollection));
+            },
+            "Collection rename failed for user");
+        if (result.IsSuccess)
         {
-            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Collection rename failed for user", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId, Name = request.Name });
-            return exception.FailDomain<CollectionDto>();
+            SafeLogger.Log(Logger, LogLevel.Information, null, "Collection renamed for user", UserContext);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            SafeLogger.Log(_logger, LogLevel.Error, exception, "Collection rename failed for user", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId, Name = request.Name });
-            throw;
-        }
+        return result;
     }
 
     public async Task<Result<CollectionDto>> ChangeCollectionVisibility(CollectionChangeVisibilityRequest request, CancellationToken cancellationToken = default)
     {
-        Result visibilityValidation = _changeCollectionVisibilityValidator.Validate(request);
-        if (!visibilityValidation.IsSuccess)
+        Result validation = _changeCollectionVisibilityValidator.Validate(request);
+        if (!validation.IsSuccess)
         {
-            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection change visibility validation failed for user", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId, IsPublic = request.IsPublic });
-            return Result<CollectionDto>.Failure(visibilityValidation.Errors);
+            SafeLogger.Log(Logger, LogLevel.Warning, null, "Collection change visibility validation failed for user", UserContext, new { CollectionId = request.CollectionId, IsPublic = request.IsPublic });
+            return Result<CollectionDto>.Failure(validation.Errors);
         }
-        if (!CurrentUserGuard.EnsureAuthenticated(_currentUser, _logger, CollectionErrors.VisibilityNotAuthenticated, "Collection visibility change rejected for user; not authenticated", out Result<CollectionDto> authenticationFailure))
+        Result authentication = EnsureAuthenticated();
+        if (!authentication.IsSuccess)
         {
-            return authenticationFailure;
+            return Result<CollectionDto>.Failure(authentication.Errors);
         }
-
-        try
-        {
-            Result<CollectionDto> result = await _unitOfWorkFactory.ExecuteInTransaction(
-                UnitOfWorkContexts.Linkubator,
-                async (unitOfWork, token) =>
-                {
-                    ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
-                    ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
-
-                    (DomainEntities.Collection? collection, Result? collectionFailure) = await GetCollectionForCurrentUserOrFailure(
-                        request.CollectionId,
-                        CollectionErrors.VisibilityNotAccessible,
-                        "Collection visibility change rejected for user; collection not accessible",
-                        token,
-                        repository);
-                    if (collectionFailure is not null)
-                    {
-                        return Result<CollectionDto>.Failure(collectionFailure.Errors);
-                    }
-
-                    DomainEntities.Collection ownedCollection = collection!;
-                    IReadOnlyCollection<DomainEntities.Link> links = await linkRepository.GetAllByCollection(_currentUser.UserId, ownedCollection.Id, token);
-                    ownedCollection.RehydrateLinks(links);
-
-                    DomainEntities.Link[] linksToMakePrivate = !request.IsPublic
-                        ? links.Where(link => link.IsPublic).ToArray()
-                        : [];
-
-                    ownedCollection.ChangePrivacy(request.IsPublic, links);
-                    await repository.Update(ownedCollection, token);
-                    foreach (DomainEntities.Link link in linksToMakePrivate)
-                    {
-                        await linkRepository.Update(link, token);
-                    }
-
-                    return Result<CollectionDto>.Success(Map(ownedCollection));
-                },
-                cancellationToken);
-
-            if (result.IsSuccess)
+        Result<CollectionDto> result = await ExecuteInTransaction(
+            request,
+            cancellationToken,
+            async (visibilityRequest, unitOfWork, token) =>
             {
-                SafeLogger.Log(_logger, LogLevel.Information, null, "Collection visibility changed for user", new { UserId = _currentUser.UserId });
-            }
+                ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
+                ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
+                (DomainEntities.Collection? collection, Result? collectionFailure) = await GetCollectionForCurrentUserOrFailure(
+                    visibilityRequest.CollectionId,
+                    CollectionErrors.VisibilityNotAccessible,
+                    "Collection visibility change rejected for user; collection not accessible",
+                    token,
+                    collectionRepository);
+                if (collectionFailure is not null)
+                {
+                    return Result<CollectionDto>.Failure(collectionFailure.Errors);
+                }
 
-            return result;
-        }
-        catch (DomainExceptions.DomainException exception)
+                DomainEntities.Collection ownedCollection = collection!;
+                IReadOnlyCollection<DomainEntities.Link> links = await linkRepository.GetAllByCollection(CurrentUser.UserId, ownedCollection.Id, token);
+                ownedCollection.RehydrateLinks(links);
+                DomainEntities.Link[] linksToMakePrivate = !visibilityRequest.IsPublic ? links.Where(link => link.IsPublic).ToArray() : [];
+                ownedCollection.ChangePrivacy(visibilityRequest.IsPublic, links);
+                await collectionRepository.Update(ownedCollection, token);
+                foreach (DomainEntities.Link link in linksToMakePrivate)
+                {
+                    await linkRepository.Update(link, token);
+                }
+
+                return Result<CollectionDto>.Success(Map(ownedCollection));
+            },
+            "Collection visibility change failed");
+        if (result.IsSuccess)
         {
-            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Collection visibility change failed", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId, IsPublic = request.IsPublic });
-            return exception.FailDomain<CollectionDto>();
+            SafeLogger.Log(Logger, LogLevel.Information, null, "Collection visibility changed for user", UserContext);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            SafeLogger.Log(_logger, LogLevel.Error, exception, "Collection visibility change failed", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId, IsPublic = request.IsPublic });
-            throw;
-        }
+        return result;
     }
 
     public async Task<Result> DeleteCollection(CollectionDeleteRequest request, CancellationToken cancellationToken = default)
     {
-        Result deleteValidation = _deleteCollectionValidator.Validate(request);
-        if (!deleteValidation.IsSuccess)
+        Result validation = _deleteCollectionValidator.Validate(request);
+        if (!validation.IsSuccess)
         {
-            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion validation failed for user", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId });
-            return Result.Failure(deleteValidation.Errors);
+            SafeLogger.Log(Logger, LogLevel.Warning, null, "Collection deletion validation failed for user", UserContext, new { CollectionId = request.CollectionId });
+            return Result.Failure(validation.Errors);
         }
-        if (!CurrentUserGuard.EnsureAuthenticated(_currentUser, _logger, CollectionErrors.DeleteNotAuthenticated, "Collection deletion rejected for user; not authenticated", out Result authenticationFailure))
+        Result authentication = EnsureAuthenticated();
+        if (!authentication.IsSuccess)
         {
-            return authenticationFailure;
+            return authentication;
         }
-
-        try
-        {
-            Result result = await _unitOfWorkFactory.ExecuteInTransaction(
-                UnitOfWorkContexts.Linkubator,
-                async (unitOfWork, token) =>
-                {
-                    ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
-                    ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
-
-                    (DomainEntities.Collection? collection, Result? collectionFailure) = await GetCollectionForCurrentUserOrFailure(
-                        request.CollectionId,
-                        CollectionErrors.DeleteNotAccessible,
-                        "Collection deletion rejected for user; collection not accessible",
-                        token,
-                        repository);
-                    if (collectionFailure is not null)
-                    {
-                        return collectionFailure;
-                    }
-
-                    DomainEntities.Collection ownedCollection = collection!;
-                    IReadOnlyCollection<DomainEntities.Link> links = await linkRepository.GetAllByCollection(_currentUser.UserId, ownedCollection.Id, token);
-                    if (links.Count > 0)
-                    {
-                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; collection still has links", new { UserId = _currentUser.UserId });
-                        return Result.Failure(CollectionErrors.HasLinks());
-                    }
-
-                    IReadOnlyCollection<DomainEntities.Collection> allCollections = await repository.GetAllByUser(_currentUser.UserId, token);
-                    if (allCollections.Count == 1)
-                    {
-                        SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection deletion rejected for user; last collection cannot be deleted", new { UserId = _currentUser.UserId });
-                        return Result.Failure(CollectionErrors.LastCollectionCannotBeDeleted());
-                    }
-
-                    await repository.Delete(ownedCollection.Id, _currentUser.UserId, token);
-                    return Result.Success();
-                },
-                cancellationToken);
-
-            if (result.IsSuccess)
+        Result result = await ExecuteInTransaction(
+            request,
+            cancellationToken,
+            async (deleteRequest, unitOfWork, token) =>
             {
-                SafeLogger.Log(_logger, LogLevel.Information, null, "Collection deleted for user", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId });
-            }
+                ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
+                ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
+                (DomainEntities.Collection? collection, Result? collectionFailure) = await GetCollectionForCurrentUserOrFailure(
+                    deleteRequest.CollectionId,
+                    CollectionErrors.DeleteNotAccessible,
+                    "Collection deletion rejected for user; collection not accessible",
+                    token,
+                    collectionRepository);
+                if (collectionFailure is not null)
+                {
+                    return collectionFailure;
+                }
 
-            return result;
-        }
-        catch (DomainExceptions.DomainException exception)
+                DomainEntities.Collection ownedCollection = collection!;
+                IReadOnlyCollection<DomainEntities.Link> links = await linkRepository.GetAllByCollection(CurrentUser.UserId, ownedCollection.Id, token);
+                if (links.Count > 0)
+                {
+                    return Failure(CollectionErrors.HasLinks(), "Collection deletion rejected for user; collection still has links", deleteRequest);
+                }
+
+                IReadOnlyCollection<DomainEntities.Collection> allCollections = await collectionRepository.GetAllByUser(CurrentUser.UserId, token);
+                if (allCollections.Count == 1)
+                {
+                    return Failure(CollectionErrors.LastCollectionCannotBeDeleted(), "Collection deletion rejected for user; last collection cannot be deleted", deleteRequest);
+                }
+
+                await collectionRepository.Delete(ownedCollection.Id, CurrentUser.UserId, token);
+                return Result.Success();
+            },
+            "Collection deletion failed");
+        if (result.IsSuccess)
         {
-            SafeLogger.Log(_logger, LogLevel.Warning, exception, "Collection deletion failed", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId });
-            return exception.FailDomain();
+            SafeLogger.Log(Logger, LogLevel.Information, null, "Collection deleted for user", UserContext, new { CollectionId = request.CollectionId });
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            SafeLogger.Log(_logger, LogLevel.Error, exception, "Collection deletion failed", new { UserId = _currentUser.UserId }, new { CollectionId = request.CollectionId });
-            throw;
-        }
+        return result;
     }
-
     public async Task<Result<IReadOnlyList<CollectionDto>>> ListCollections(string? query = null, int page = 1, CancellationToken cancellationToken = default)
     {
-        if (!CurrentUserGuard.EnsureAuthenticated(_currentUser, _logger, CollectionErrors.ListNotAuthenticated, "Collection listing rejected for user; not authenticated", out Result<IReadOnlyList<CollectionDto>> authenticationFailure))
+        Result authentication = EnsureAuthenticated();
+        if (!authentication.IsSuccess)
         {
-            return authenticationFailure;
+            return Result<IReadOnlyList<CollectionDto>>.Failure(authentication.Errors);
         }
         if (page < 1)
         {
-            SafeLogger.Log(_logger, LogLevel.Warning, null, "Collection listing validation failed for user; invalid page", new { UserId = _currentUser.UserId }, new { Page = page });
-            return Result<IReadOnlyList<CollectionDto>>.Failure(CollectionErrors.PageInvalid());
+            return Failure<IReadOnlyList<CollectionDto>>(CollectionErrors.PageInvalid(), "Collection listing validation failed for user; invalid page", new { Page = page });
         }
-        string? trimmedQuery = query?.Trim();
-        IReadOnlyCollection<CollectionDto> items;
-        try
+        Result<IReadOnlyList<CollectionDto>> result = await Execute(
+            new CollectionListOperation(query?.Trim(), page),
+            cancellationToken,
+            async (operation, token) =>
+            {
+                IReadOnlyCollection<CollectionDto> items = await _collectionRepository.GetPageByUser(CurrentUser.UserId, operation.Query, operation.Page, token);
+                return Result<IReadOnlyList<CollectionDto>>.Success(items.ToList());
+            },
+            "Collection listing failed");
+        if (result.IsSuccess)
         {
-            items = await _collectionRepository.GetPageByUser(_currentUser.UserId, trimmedQuery, page, cancellationToken);
+            SafeLogger.Log(Logger, LogLevel.Information, null, "Collections listed for user", UserContext);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            SafeLogger.Log(_logger, LogLevel.Error, exception, "Collection listing failed", new { UserId = _currentUser.UserId }, new { Page = page });
-            throw;
-        }
-        SafeLogger.Log(_logger, LogLevel.Information, null, "Collections listed for user", new { UserId = _currentUser.UserId });
-        return Result<IReadOnlyList<CollectionDto>>.Success(items.ToList());
+        return result;
     }
 
-    private async Task<(DomainEntities.Collection? Collection, Result? Failure)> GetCollectionForCurrentUserOrFailure(
-        long collectionId,
-        Func<ApplicationError> notAccessibleFactory,
-        string logMessage,
-        CancellationToken cancellationToken,
-        ICollectionRepository repository)
+    private async Task<(DomainEntities.Collection? Collection, Result? Failure)> GetCollectionForCurrentUserOrFailure(long collectionId, Func<ApplicationError> notAccessibleFactory, string logMessage, CancellationToken cancellationToken, ICollectionRepository repository)
     {
-        DomainEntities.Collection? collection = await repository.GetById(collectionId, _currentUser.UserId, cancellationToken);
+        DomainEntities.Collection? collection = await repository.GetById(collectionId, CurrentUser.UserId, cancellationToken);
         if (collection is null)
         {
-            SafeLogger.Log(_logger, LogLevel.Warning, null, logMessage, new { UserId = _currentUser.UserId }, new { CollectionId = collectionId });
-            return (null, Result.Failure(notAccessibleFactory()));
+            return (null, Failure(notAccessibleFactory(), logMessage, new { CollectionId = collectionId }));
         }
-
         return (collection, null);
     }
 
     private static CollectionDto Map(DomainEntities.Collection collection)
-        => new(
-            collection.Id,
-            collection.Name,
-            collection.Slug,
-            collection.Description,
-            collection.IsPublic,
-            collection.Links.Count,
-            collection.CreatedAt);
+        => new(collection.Id, collection.Name, collection.Slug, collection.Description, collection.IsPublic, collection.Links.Count, collection.CreatedAt);
+
+    private sealed record CollectionListOperation(string? Query, int Page);
 }
