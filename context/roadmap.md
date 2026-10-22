@@ -97,7 +97,8 @@ La [S6.9 — validación manual de búsqueda y reconstrucción FTS5](../specs/ar
 
 Objetivos:
 
-- Seguridad web para la aplicación local: HTTPS, antiforgery y cabeceras ([architecture.md → «Seguridad web»](architecture.md#seguridad-web)).
+- Seguridad web para la aplicación local: HTTPS, antiforgery y cabeceras ([architecture.md → «Seguridad web»](architecture.md#seguridad-web)); [S7.1 — Seguridad web básica](../specs/s7.1-seguridad-web/spec.md), su [plan técnico](../specs/s7.1-seguridad-web/plan.md) y sus [tareas](../specs/s7.1-seguridad-web/tasks.md) concretan el primer bloque. S7.1 se completó y fue aceptada por DLG con «Seguridad ready» el 22-X-2026: petición HTTP redirigida a HTTPS, respuesta HTTPS `200 OK` con TLS válido y rechazo `400` del `Host` ajeno. CA03 no es aplicable a las rutas actuales porque no hay operación de modificación mediante formulario. La suite amplia S7.9 continúa como trabajo independiente.
+- [S7.2 — Cabeceras de seguridad web](../specs/s7.2-cabeceras-seguridad/spec.md), su [plan técnico](../specs/s7.2-cabeceras-seguridad/plan.md) y sus [tareas](../specs/s7.2-cabeceras-seguridad/tasks.md) están aprobados por DLG el 22-X-2026 con «Siguiente» en la especificación y el plan, y «Vamos» en las tareas. La implementación y validación técnica quedaron completadas y DLG aceptó el resultado el 22-X-2026 («Completado»): tests focalizados 5/5, comprobación negativa de las tres cabeceras, revisión integrada sin hallazgos y `git diff --check` correcto. El detalle consta en las tareas.
 - Gestión de colecciones y enlaces.
 - Dashboard y rutas privadas según [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas).
 - Búsqueda de enlaces con filtro por colección y búsqueda de colecciones por nombre, cada una en su propio listado ([specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros)).

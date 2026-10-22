@@ -1,11 +1,18 @@
 using Linkubator.Infrastructure;
 using Linkubator.Infrastructure.Contracts;
 using Linkubator.Infrastructure.DevelopmentIdentity;
+using Microsoft.AspNetCore.HostFiltering;
 using Serilog;
 using ApplicationContracts = Linkubator.Application.Contracts;
 using WebDevelopmentIdentity = Linkubator.Web.DevelopmentIdentity;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+string[] allowedHosts = builder.Configuration.GetValue<string>("AllowedHosts")?
+    .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+    ?? ["localhost", "127.0.0.1", "[::1]"];
+
+builder.Services.Configure<HostFilteringOptions>(options => options.AllowedHosts = allowedHosts);
 
 builder.Host.UseSerilog((context, services, loggerConfiguration) =>
     loggerConfiguration
@@ -40,6 +47,19 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseHostFiltering();
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        context.Response.Headers["Content-Security-Policy"] = "frame-ancestors 'none'";
+        context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
 app.UseRouting();

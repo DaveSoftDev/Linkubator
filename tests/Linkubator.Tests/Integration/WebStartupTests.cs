@@ -31,6 +31,26 @@ public class WebStartupTests
     }
 
     [Fact]
+    public async Task HomePage_IncludesSecurityHeaders()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
+            using HttpClient client = factory.CreateClient();
+            using HttpResponseMessage response = await client.GetAsync("/");
+
+            Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
+            Assert.Equal("frame-ancestors 'none'", response.Headers.GetValues("Content-Security-Policy").Single());
+            Assert.Equal("strict-origin-when-cross-origin", response.Headers.GetValues("Referrer-Policy").Single());
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
     public async Task Startup_WhenDatabaseIsNew_AppliesMigrationsBeforeProvisioningAndServing()
     {
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
