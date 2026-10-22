@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="description" content="Área privada de Linkubator" />
+    <title>@ViewData["Title"] - Linkubator</title>
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+</head>
+<body class="private-shell">
+    <a class="skip-link" href="#main-content">Saltar al contenido principal</a>
+
+    <div class="private-page">
+        <header class="private-header">
+            <div class="private-header__inner">
+                <a class="private-brand" href="/app">Linkubator</a>
+                <nav class="private-nav" aria-label="Navegación principal">
+                    <a href="/app">Inicio</a>
+                    <a href="#main-content">Contenido</a>
+                </nav>
+            </div>
+        </header>
+
+        <main id="main-content" class="private-main" tabindex="-1">
+            @RenderBody()
+        </main>
+
+        <footer class="private-footer">
+            <p>Área privada · Acceso restringido</p>
+        </footer>
+    </div>
+
+    <script src="~/js/site.js" defer asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

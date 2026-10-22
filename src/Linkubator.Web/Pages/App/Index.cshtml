@@ -1,0 +1,18 @@
+@page "/app"
+@model IndexModel
+@{
+    ViewData["Title"] = "Panel privado";
+}
+
+<section class="private-panel" aria-labelledby="private-title">
+    <p class="private-eyebrow">Área privada</p>
+    <h1 id="private-title">Panel de Linkubator</h1>
+    <p class="private-copy">
+        Esta vista demuestra el layout privado accesible de la web base, con estructura semántica y foco visible para una navegación por teclado clara.
+    </p>
+
+    <div class="private-actions" aria-label="Acciones del panel privado">
+        <a class="private-button primary" href="/app">Ver resumen</a>
+        <button class="private-button" type="button">Acción secundaria</button>
+    </div>
+</section>

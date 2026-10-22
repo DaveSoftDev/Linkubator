@@ -4,6 +4,16 @@
 
 :root {
   color-scheme: dark;
+  --private-bg: #020817;
+  --private-panel: #0f172a;
+  --private-panel-soft: #111827;
+  --private-border: #475569;
+  --private-text: #e2e8f0;
+  --private-muted: #dbeafe;
+  --private-accent: #38bdf8;
+  --private-accent-strong: #7dd3fc;
+  --private-focus-ring: #f8fafc;
+  --private-focus-shadow: rgba(56, 189, 248, 0.45);
 }
 
 html {
@@ -12,6 +22,200 @@ html {
 
 body {
   margin: 0;
-  background: #020617;
-  color: #e2e8f0;
+  background: var(--private-bg);
+  color: var(--private-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 20;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: #e2e8f0;
+  color: #0f172a;
+  font-weight: 700;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 1rem;
+  outline: 3px solid var(--private-focus-ring);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--private-focus-shadow);
+}
+
+.private-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #020817 0%, #0b1120 100%);
+}
+
+.private-header {
+  border-bottom: 1px solid var(--private-border);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+}
+
+.private-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  gap: 1rem;
+}
+
+.private-brand,
+.private-nav a,
+.private-button {
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.private-brand {
+  color: #f8fafc;
+  text-decoration: none;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.private-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.private-nav a {
+  padding: 0.5rem 0.875rem;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  color: var(--private-muted);
+  text-decoration: none;
+}
+
+.private-nav a:hover,
+.private-nav a:focus-visible {
+  border-color: rgba(125, 211, 252, 0.8);
+  background: rgba(14, 165, 233, 0.18);
+  color: #f8fafc;
+}
+
+.private-main {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.private-panel {
+  border: 1px solid var(--private-border);
+  border-radius: 1.5rem;
+  background: rgba(15, 23, 42, 0.92);
+  padding: clamp(1.5rem, 3vw, 3rem);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.5);
+}
+
+.private-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(125, 211, 252, 0.9);
+  border-radius: 9999px;
+  background: rgba(125, 211, 252, 0.12);
+  padding: 0.35rem 0.7rem;
+  color: #dbeafe;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.private-panel h1 {
+  margin: 1rem 0 0.75rem;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.1;
+  color: #f8fafc;
+}
+
+.private-copy {
+  max-width: 40rem;
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--private-muted);
+}
+
+.private-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.private-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.75rem 1.125rem;
+  border: 1px solid var(--private-border);
+  border-radius: 0.875rem;
+  background: #111827;
+  color: #f8fafc;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.private-button.primary {
+  border-color: rgba(125, 211, 252, 0.8);
+  background: rgba(14, 165, 233, 0.22);
+  color: #f0f9ff;
+}
+
+.private-button:hover,
+.private-button:focus-visible,
+.private-brand:focus-visible,
+.private-nav a:focus-visible,
+.private-button.primary:focus-visible {
+  outline: 3px solid var(--private-focus-ring);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--private-focus-shadow);
+}
+
+.private-footer {
+  border-top: 1px solid var(--private-border);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--private-muted);
+}
+
+.private-footer p {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 2rem;
+}
+
+@media (max-width: 640px) {
+  .private-header__inner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .private-nav {
+    width: 100%;
+  }
+
+  .private-nav a {
+    flex: 1 1 auto;
+    text-align: center;
+  }
 }

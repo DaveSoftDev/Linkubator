@@ -28,7 +28,7 @@ La Definition of Done de S2 está completada. Las tareas y su evidencia se manti
 
 La Definition of Done de S3 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S3: Dominio III (M)»](../plans/mvp0-plan.md#s3-dominio-iii-entidades-e-invariantes-m).
 
-### Dominio IV
+### Dominio - Refactor
 
 La Definition of Done de S3a está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S3a: Dominio IV (M)»](../plans/mvp0-plan.md#s3a-dominio-iv-refactor-m).
 
@@ -36,95 +36,69 @@ La Definition of Done de S3a está completada. Las tareas y su evidencia se mant
 
 La Definition of Done de S4 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S4: Aplicación: casos de uso (L)»](../plans/mvp0-plan.md#s4-aplicación-casos-de-uso-l).
 
+### Aplicación - Refactor
+
+La Definition of Done de S4a está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S4a: Aplicación: refactor (M)»](../plans/mvp0-plan.md#s4a-aplicación-refactor-m).
+
+### Persistencia I
+
+La Definition of Done de S5 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S5: Persistencia I: SQLite y transacciones (L)»](../plans/mvp0-plan.md#s5-persistencia-i-sqlite-y-transacciones-l).
+
+### Persistencia II
+
+La Definition of Done de S6 está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S6: Persistencia II: FTS5 (L)»](../plans/mvp0-plan.md#s6-persistencia-ii-fts5-l).
+
+### Persistencia - Refactor
+
+La Definition of Done de S6a está completada. Las tareas y su evidencia se mantienen en [mvp0-plan.md → «S6a: Persistencia: refactor (M)»](../plans/mvp0-plan.md#s6a-persistencia-refactor-m).
+
 ## Now
 
-Esta es la etapa activa del roadmap. La persistencia en curso se detalla bajo esta sección; la fase de Aplicación está completada y documentada en [Hecho → «Aplicación»](#aplicación).
+Esta es la etapa activa del roadmap: S7, Web base, seguridad y accesibilidad. El trabajo de aplicación y persistencia ya está completado y consta en [Hecho](#hecho).
 
-### Persistencia — trabajos S5 cerrados y archivados
+### Web base, seguridad y accesibilidad
 
 Objetivos:
 
-- Preparar SQLite, incorporar Dapper y crear los scripts SQL versionados.
-- Preparar el archivo SQL local especial que provisiona el usuario de desarrollo y su colección privada base, según [decisions.md → «Identidad de desarrollo»](decisions.md#identidad-de-desarrollo).
-- Añadir las restricciones únicas y los índices.
-- Registrar la colación propia del orden alfabético en todas las conexiones ([architecture.md → «Persistencia»](architecture.md#persistencia)).
-- Implementar el Unit of Work y las transacciones según [architecture.md → «Persistencia»](architecture.md#persistencia). Las proyecciones FTS5 pertenecen a S6 y no bloquean el cierre de Persistencia.
-
-La [S5.1 — configuración de SQLite y Dapper](../specs/archive/s5.1-configuracion-sqlite-dapper/spec.md), su [plan técnico](../specs/archive/s5.1-configuracion-sqlite-dapper/plan.md) y sus [tareas](../specs/archive/s5.1-configuracion-sqlite-dapper/tasks.md) fueron aprobados por DLG el 19-X-2026 («Siguiente» en cada artefacto). La implementación quedó completada y aceptada por DLG el 19-X-2026 («Tenemos BBDD»); los tests focalizados pasaron 2/2 y el build de solución fue correcto. El archivo físico se creará al abrir una conexión de la aplicación; el directorio `data/database` está preparado. S5.1 queda cerrada para su alcance.
-
-La [S5.2 — ejecutor de scripts SQL versionados](../specs/archive/s5.2-ejecutor-scripts-sql-versionados/spec.md) y su [plan técnico](../specs/archive/s5.2-ejecutor-scripts-sql-versionados/plan.md) fueron aprobados por DLG el 19-X-2026 («Siguiente»). DLG aprobó las [tareas](../specs/archive/s5.2-ejecutor-scripts-sql-versionados/tasks.md) con «Completado» y aceptó el resultado con «Migraciones ready», ambas referencias el 19-X-2026. La implementación y validación quedaron completadas; los tests focalizados pasaron 3/3 y el build de solución fue correcto. La evidencia consta en sus tareas. Los criterios cubren aplicación ordenada, idempotencia y registro de fallos mediante scripts de prueba, sin depender del esquema de S5.3.
-
-La [S5.3 — esquema de `User`, `Collection` y `Link`](../specs/archive/s5.3-esquema-user-collection-link/spec.md) y su [plan técnico](../specs/archive/s5.3-esquema-user-collection-link/plan.md) fueron aprobados por DLG el 19-X-2026 («Siguiente» en cada artefacto); DLG aprobó las [tareas](../specs/archive/s5.3-esquema-user-collection-link/tasks.md) el mismo día («Ready»). La implementación y la validación estructural quedaron completadas el 19-X-2026. La revisión final amplió la inspección de columnas, tipos y nulabilidad, índices únicos y secundarios (incluida su dirección), acciones FK, FK compuesta, valores por defecto, alias nulos, formato UTC ISO-8601 y ausencia de cascadas/triggers. Se quitó de `V004` el índice redundante sobre `(UserId, Id)`, ya cubierto por la clave única; como no hay bases creadas, no se necesita una migración correctiva adicional. Los tests focalizados pasaron 4/4 y el build de solución fue correcto. DLG aceptó y cerró S5.3 el 19-X-2026 («Tenemos schema»); el registro está en las tareas.
-
-La [S5.4 — registro de la colación `es-ES` en las conexiones SQLite](../specs/archive/s5.4-colacion-es-es/spec.md), su [plan técnico](../specs/archive/s5.4-colacion-es-es/plan.md) y sus [tareas](../specs/archive/s5.4-colacion-es-es/tasks.md) fueron aprobados por DLG el 19-X-2026 («Siguiente» en cada artefacto); el nombre SQL `LINKUBATOR_ES_ES` quedó confirmado al aprobar el plan. La implementación y validación quedaron completadas el 19-X-2026: tests focalizados 5/5, build correcto y `git diff --check` limpio. DLG aceptó y cerró S5.4 para su alcance el 19-X-2026 («Colación añadida»); el detalle y la evidencia constan en sus [tareas → «Aceptación y cierre»](../specs/archive/s5.4-colacion-es-es/tasks.md#aceptación-y-cierre). S5.8 contiene las pruebas integradas del orden completo de los listados.
-
-La [S5.5 — Unit of Work y repositorios Dapper](../specs/archive/s5.5-unit-of-work-y-repositorios-dapper/spec.md) fue aprobada por DLG el 19-X-2026 («Siguiente»), el [plan técnico](../specs/archive/s5.5-unit-of-work-y-repositorios-dapper/plan.md) con «Siguiente» y las [tareas](../specs/archive/s5.5-unit-of-work-y-repositorios-dapper/tasks.md) con «Ready». DLG confirmó que la búsqueda textual queda para S6. La implementación y validación técnica se completaron: tests focalizados SQLite 60/60, suite completa 1005/1005, build correcto y `git diff --check` limpio el 19-X-2026. DLG aceptó y cerró S5.5 para su alcance el 19-X-2026 («Repositorios listos»); el riesgo de `LinkService.CreateLink` sigue como seguimiento independiente y no reabre este trabajo.
-
-La [S5.6 — aprovisionamiento SQL de identidad de desarrollo](../specs/archive/s5.6-sql-local-identidad-desarrollo/spec.md) fue aprobada por DLG el 19-X-2026 («Validado y confirmado»), su [plan técnico](../specs/archive/s5.6-sql-local-identidad-desarrollo/plan.md) por «Siguiente» y sus [tareas](../specs/archive/s5.6-sql-local-identidad-desarrollo/tasks.md) por «Vamos», el mismo día. DLG confirma que la implementación comenzó después de aprobar las tareas; el día exacto de inicio no consta. La implementación y validación técnica incluyen escrituras condicionales de cuenta/colección y un verificador criptográfico Argon2id PHC en `Infrastructure.Security.PasswordHashing`; el 19-X-2026 pasaron los tests focalizados 26/26, la suite 1026/1026, el build y la publicación Web. DLG comunicó la aceptación «Tenemos demo user» y confirmó que la comprobación PHC con vectores de prueba basta en este momento; S5.6 queda cerrada para su alcance. El detalle y las evidencias constan en sus [tareas → «Evidencia por criterio» y «Aceptación y cierre»](../specs/archive/s5.6-sql-local-identidad-desarrollo/tasks.md#evidencia-por-criterio). Las reglas y el riesgo aceptado constan en [specifications.md → «Identidad de desarrollo»](specifications.md#identidad-de-desarrollo) y [decisions.md → «Identidad de desarrollo»](decisions.md#identidad-de-desarrollo).
-
-La [S5.7 — proveedor de identidad de desarrollo](../specs/archive/s5.7-proveedor-identidad-desarrollo/spec.md), su [plan técnico](../specs/archive/s5.7-proveedor-identidad-desarrollo/plan.md) y sus [tareas](../specs/archive/s5.7-proveedor-identidad-desarrollo/tasks.md) fueron aprobados por DLG el 19-X-2026 («Siguiente»). La implementación y validación técnica se completaron el 19-X-2026: proveedor SQLite registrado en todos los entornos, resolución comprobada al arranque después del aprovisionamiento, y middleware asíncrono de `/app` que establece el usuario scoped sin aceptar un identificador de la petición. Pasaron los tests focalizados 11/11, la suite 1032/1032 y el build de solución; el detalle consta en las tareas. DLG aceptó y cerró S5.7 para su alcance el 19-X-2026 («Completado»).
-
-La [S5.8 — tests de integración de persistencia](../specs/archive/s5.8-tests-integracion-persistencia/spec.md), su [plan técnico](../specs/archive/s5.8-tests-integracion-persistencia/plan.md) y sus [tareas](../specs/archive/s5.8-tests-integracion-persistencia/tasks.md) están aprobados por DLG. La implementación terminó el 19-X-2026: tests focalizados 13/13, suite completa 1045/1045, build y `git diff --check` correctos. DLG aceptó y cerró S5.8 para su alcance el 19-X-2026 («Completada»).
-
-La [S5.9 — revisión manual de migraciones y esquema SQLite](../specs/archive/s5.9-revision-manual-migraciones-esquema/spec.md), su [plan técnico](../specs/archive/s5.9-revision-manual-migraciones-esquema/plan.md) y sus [tareas](../specs/archive/s5.9-revision-manual-migraciones-esquema/tasks.md) quedaron archivados el 19-X-2026. CA04 se completó con una verificación suplementaria identificada como tal: base temporal `s59-review-20261019-003.db`, .NET SDK 10.0.401, Microsoft.Data.Sqlite 10.0.0.0 y SQLite 3.53.3; V004 y el esquema se inspeccionaron sin discrepancias. Se conserva sin cambios la aceptación anterior de DLG («Completada»).
-
-La especificación S5.10, [revisión manual de la aplicación repetida del script local](../specs/archive/s5.10-revision-manual-aplicacion-script-local/spec.md), y su [plan técnico](../specs/archive/s5.10-revision-manual-aplicacion-script-local/plan.md) fueron aprobados por DLG con «Siguiente» el 19-X-2026; sus [tareas](../specs/archive/s5.10-revision-manual-aplicacion-script-local/tasks.md) fueron aprobadas por DLG con «Vamos» el 19-X-2026. La comprobación manual se completó el 19-X-2026 y CA01–CA03 tienen evidencia satisfactoria. DLG aceptó y cerró S5.10 para su alcance el 19-X-2026 con «Completado»; el detalle y la evidencia constan en las tareas archivadas.
-
-La spec, el [plan técnico](../specs/archive/s5.2.1-separar-scripts-prueba-catalogo/plan.md) y las [tareas](../specs/archive/s5.2.1-separar-scripts-prueba-catalogo/tasks.md) de [S5.2.1 — separación de scripts de prueba del catálogo de migraciones](../specs/archive/s5.2.1-separar-scripts-prueba-catalogo/spec.md) fueron aprobados por DLG («Siguiente», «Siguiente» y «Aprobado», respectivamente, 19-X-2026). La implementación y validación terminaron el 19-X-2026: suite completa 1046/1046, build correcto, catálogo real solo con V004 y compatibilidad comprobada con un historial previo V001–V004. DLG aceptó y cerró S5.2.1 para su alcance con «Completada» el 19-X-2026; el trabajo se archivó el 19-X-2026. Todos los trabajos S5 del roadmap están archivados.
+- Completar la base Web privada y su seguridad según [architecture.md → «Seguridad web»](architecture.md#seguridad-web).
+- [S7.1 — Seguridad web básica](../specs/s7.1-seguridad-web/spec.md), su [plan técnico](../specs/s7.1-seguridad-web/plan.md) y sus [tareas](../specs/s7.1-seguridad-web/tasks.md) están completados y aceptados por DLG el 22-X-2026 («Seguridad ready»): redirección HTTP a HTTPS, respuesta HTTPS válida y rechazo de un `Host` ajeno. CA03 no era aplicable porque aún no había operaciones de modificación mediante formulario; la suite amplia S7.9 es trabajo independiente.
+- [S7.2 — Cabeceras de seguridad web](../specs/s7.2-cabeceras-seguridad/spec.md), su [plan técnico](../specs/s7.2-cabeceras-seguridad/plan.md) y sus [tareas](../specs/s7.2-cabeceras-seguridad/tasks.md) están completados y aceptados por DLG el 22-X-2026 («Completado»): tests focalizados 5/5, comprobaciones negativas, revisión integrada y `git diff --check` satisfactorios.
+- [S7.3 — Identidad de desarrollo en `/app`](../specs/s7.3-identidad-desarrollo-app/spec.md), su [plan técnico](../specs/s7.3-identidad-desarrollo-app/plan.md) y sus [tareas → «Aceptación y cierre»](../specs/s7.3-identidad-desarrollo-app/tasks.md#aceptación-y-cierre) están completados y aceptados por DLG el 22-X-2026 («Fase Completada»). La implementación y validación técnica se completaron ese día: tests focalizados `WebStartupTests` 7/7, incluido el caso HTTP que confirma el `UserId` del proveedor frente a `?userId=99` y la prueba de ruta pública sin resolución de identidad. La prueba negativa de sensibilidad falló al esperar el ID manipulado 99 (observado 42); el valor original se restauró y la suite pasó. `git diff --check` quedó limpio. La ejecución de tests no reconstruyó referencias porque había procesos Web activos que bloqueaban ensamblados; se observó una advertencia HTTPS no bloqueante de `WebApplicationFactory`. Los detalles y límites de validación están registrados en las tareas. Concreta el paso de la identidad de desarrollo hacia Application sin volver a implementar S5.7.
+- [S7.4 — Layout privado accesible](../specs/s7.4-layout-privado/spec.md), su [plan técnico](../specs/s7.4-layout-privado/plan.md) y sus [tareas](../specs/s7.4-layout-privado/tasks.md) están aprobados; la implementación no se ha iniciado.
+- Completar el dashboard, las rutas privadas, los parámetros comunes y los errores accesibles que forman parte de S7, según [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas) y [requirements.md → «Accesibilidad»](requirements.md#accesibilidad).
 
 Criterio de finalización:
 
-- Las operaciones de enlaces y colecciones son atómicas.
-- La búsqueda respeta siempre el usuario identificado y consulta solo la proyección de la entidad de su listado.
-- Las transacciones son breves y no contienen operaciones externas.
-- WAL, `busy_timeout` y claves foráneas están configurados.
-
-Las proyecciones FTS5 se implementan en S6 según [architecture.md → «FTS5»](architecture.md#fts5); no son prerrequisito para cerrar Persistencia. Las specs S6.1–S6.9 están aceptadas y archivadas en `specs/archive/`; los artefactos y evidencias de cada unidad se enlazan desde [specs-index.md](../specs/specs-index.md). S6.1 entregó las proyecciones base; S6.2, el normalizador NFC; S6.3, el constructor de consultas; S6.4, la sincronización de escrituras; S6.5, las consultas integradas; S6.6, la reconstrucción manual; S6.7, la cobertura integrada; S6.8, los datos locales; y S6.9, la validación manual. Cada trabajo fue aceptado y cerrado para su alcance, con evidencia detallada en sus tareas archivadas. Las tareas futuras que dependían de los resultados de S6 permanecen independientes y no reabren estos cierres.
-
-La [S6.5 — consultas de búsqueda FTS5](../specs/archive/s6.5-consultas-busqueda-fts5/spec.md), su [plan técnico](../specs/archive/s6.5-consultas-busqueda-fts5/plan.md) y sus [tareas](../specs/archive/s6.5-consultas-busqueda-fts5/tasks.md#aceptación-y-cierre) fueron aprobados por DLG el 20-X-2026 («Siguiente» en la spec y el plan; «Vamos» en las tareas). DLG solicitó iniciar la implementación el 20-X-2026 («Inicia la implementación»). La implementación y validación técnica se completaron el 20-X-2026: tests focalizados 61/61, suite completa 1081/1081 con .NET SDK 10.0.401 y `git diff --check` limpio. DLG aceptó y cerró S6.5 el 20-X-2026 («Consultas y búsquedas»); las evidencias por criterio constan en las tareas.
-
-La [S6.6 — reconstrucción manual de proyecciones FTS5](../specs/archive/s6.6-reconstruccion-proyecciones/spec.md), su [plan técnico](../specs/archive/s6.6-reconstruccion-proyecciones/plan.md) y sus [tareas](../specs/archive/s6.6-reconstruccion-proyecciones/tasks.md#aceptación-y-cierre) fueron aprobados por DLG («Siguiente», «Siguiente» y «Vamos») el 20-X-2026. La implementación se inició y completó el 20-X-2026: servicio transaccional y herramienta manual local; pruebas focalizadas 5/5, build de solución correcto sin warnings ni errores, CLI verificada con SQLite 3.53.3 y `git diff --check` limpio. DLG aceptó y cerró S6.6 para su alcance el 20-X-2026 («Tenemos reconstrucción de proyecciones»). La reconstrucción se limita a enlaces y colecciones; las evidencias por criterio constan en sus tareas. La comprobación manual S6.9 se completó y archivó el 21-X-2026.
-
-La [S6.7 — pruebas integradas de búsqueda FTS5](../specs/archive/s6.7-pruebas-integradas-fts5/spec.md), su [plan técnico](../specs/archive/s6.7-pruebas-integradas-fts5/plan.md) y sus [tareas](../specs/archive/s6.7-pruebas-integradas-fts5/tasks.md#aceptación-y-cierre) fueron aprobados por DLG con «Siguiente», «Aprobar el plan» y «Aprobar y autorizar implementación», respectivamente, el 20-X-2026. La implementación y validación técnica se completaron con pruebas focalizadas 4/4, `git diff --check` limpio y enlaces locales verificados. DLG aceptó y cerró S6.7 para su alcance con «Fase terminada» el 20-X-2026; la comprobación manual S6.9 se completó y archivó el 21-X-2026.
-
-La [S6.8 — datos locales de ejemplo para búsqueda](../specs/archive/s6.8-datos-local-busqueda/spec.md), su [plan técnico](../specs/archive/s6.8-datos-local-busqueda/plan.md) y sus [tareas](../specs/archive/s6.8-datos-local-busqueda/tasks.md#aceptación-y-cierre) fueron aprobados por DLG con «Apruebo la spec y preparar el plan», «Apruebo el plan y preparar tasks.md» y «Aprobar tareas y autorizar implementación», respectivamente, el 20-X-2026. La implementación y validación técnica de CA01–CA04 se completaron el 20-X-2026; DLG aceptó y cerró S6.8 para su alcance técnico con «Tenemos búsqueda» el 20-X-2026. La base local `data/database/Linkubator-S6.8-20261020.db`, ignorada por Git, se conserva para S6.9/S10.6; se creó inicialmente en `%TEMP%` con un override efímero y se trasladó al repositorio sin modificar la configuración habitual. S6.9 se completó y archivó el 21-X-2026; S10.6 sigue siendo independiente.
-
-La [S6.9 — validación manual de búsqueda y reconstrucción FTS5](../specs/archive/s6.9-validacion-manual-busqueda/spec.md), su [plan técnico](../specs/archive/s6.9-validacion-manual-busqueda/plan.md) y sus [tareas](../specs/archive/s6.9-validacion-manual-busqueda/tasks.md#aceptación-y-cierre) fueron aprobados por DLG («Apruebo la spec y preparar el plan», «Siguiente» y «Vamos») el 20-X-2026; la implementación se inició con «Aprobar tareas y autorizar inicio». La validación manual de persistencia se completó con evidencia satisfactoria para CA01–CA04 y DLG aceptó y cerró S6.9 para su alcance con «Funciona» el 20-X-2026. Se usó una copia temporal de la base S6.8, se eliminaron las filas temporales y se comprobó que el hash de la base fuente no cambió. S6.9 no incluye Web ni depende de S10.6.
+- Las rutas privadas resuelven la identidad de desarrollo inyectada y no permiten elegir o alterar el `UserId` desde el cliente.
+- El dashboard y la base de las páginas privadas respetan [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas).
+- La seguridad web y la accesibilidad de la base privada cumplen sus fuentes funcionales y técnicas enlazadas arriba.
 
 ## Next
 
-### Interfaz privada - Gestión básica
+Siguientes etapas de implementación, en el orden aprobado en [mvp0-plan.md → «Resumen de sprints»](../plans/mvp0-plan.md#2-resumen-de-sprints):
 
-Objetivos:
+1. [S8: Gestión de colecciones (L)](../plans/mvp0-plan.md#s8-gestión-de-colecciones-l).
+2. [S9: Gestión de enlaces (L)](../plans/mvp0-plan.md#s9-gestión-de-enlaces-l).
+3. [S10: Listado y búsqueda de enlaces (L)](../plans/mvp0-plan.md#s10-listado-y-búsqueda-de-enlaces-l).
+4. [S10a: Web: refactor (M)](../plans/mvp0-plan.md#s10a-web-refactor-m).
 
-- Seguridad web para la aplicación local: HTTPS, antiforgery y cabeceras ([architecture.md → «Seguridad web»](architecture.md#seguridad-web)); [S7.1 — Seguridad web básica](../specs/s7.1-seguridad-web/spec.md), su [plan técnico](../specs/s7.1-seguridad-web/plan.md) y sus [tareas](../specs/s7.1-seguridad-web/tasks.md) concretan el primer bloque. S7.1 se completó y fue aceptada por DLG con «Seguridad ready» el 22-X-2026: petición HTTP redirigida a HTTPS, respuesta HTTPS `200 OK` con TLS válido y rechazo `400` del `Host` ajeno. CA03 no es aplicable a las rutas actuales porque no hay operación de modificación mediante formulario. La suite amplia S7.9 continúa como trabajo independiente.
-- [S7.2 — Cabeceras de seguridad web](../specs/s7.2-cabeceras-seguridad/spec.md), su [plan técnico](../specs/s7.2-cabeceras-seguridad/plan.md) y sus [tareas](../specs/s7.2-cabeceras-seguridad/tasks.md) están aprobados por DLG el 22-X-2026 con «Siguiente» en la especificación y el plan, y «Vamos» en las tareas. La implementación y validación técnica quedaron completadas y DLG aceptó el resultado el 22-X-2026 («Completado»): tests focalizados 5/5, comprobación negativa de las tres cabeceras, revisión integrada sin hallazgos y `git diff --check` correcto. El detalle consta en las tareas.
-- Gestión de colecciones y enlaces.
-- Dashboard y rutas privadas según [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas).
-- Búsqueda de enlaces con filtro por colección y búsqueda de colecciones por nombre, cada una en su propio listado ([specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros)).
-- Estados vacíos y errores accesibles ([requirements.md → «Accesibilidad»](requirements.md#accesibilidad)).
-
-Criterio de finalización:
-
-- La gestión privada usa la identidad de desarrollo inyectada y solo opera sobre los datos de ese usuario.
-- Cada listado aplica solo sus propios parámetros, ignora el resto y conserva sus filtros al buscar y al paginar ([specifications.md → «Rutas privadas»](specifications.md#rutas-privadas)).
-- El formulario de creación de enlaces muestra la casilla de público desmarcada; al crear un enlace en una colección privada, la opción pública está deshabilitada y la aplicación rechaza una petición manipulada de creación, edición o cambio de privacidad según [specifications.md → «Errores controlados»](specifications.md#errores-controlados), mediante integración HTTP.
-- El dashboard, los listados y los formularios privados respetan [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas); los casos de uso no permiten elegir o alterar el `UserId` desde el cliente.
+Estas etapas completan la gestión privada y su búsqueda según [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas), [«Búsqueda y filtros»](specifications.md#búsqueda-y-filtros) y [«Rutas privadas»](specifications.md#rutas-privadas). Deben conservar la propiedad por usuario, el aislamiento de cada listado y la accesibilidad definida en [requirements.md → «Accesibilidad»](requirements.md#accesibilidad).
 
 ## Later
 
-### Área pública y fundamentos SEO
+Después de completar las etapas de Next:
 
-Objetivos:
+1. [S11: Área pública y SEO (L)](../plans/mvp0-plan.md#s11-área-pública-y-seo-l): landing, página de usuario, página de colecciones y página de colección, según [specifications.md → «Páginas públicas»](specifications.md#páginas-públicas). Incluye solo los fundamentos SEO comprometidos para MVP0; el SEO avanzado queda fuera de alcance ([decisions.md → «Fuera de alcance del MVP0»](decisions.md#fuera-de-alcance-del-mvp0)).
+2. [S12: Cierre y hardening (M)](../plans/mvp0-plan.md#s12-cierre-y-hardening-m): completar la checklist de calidad del MVP0 y aceptar el cierre de la etapa.
 
-- Crear la landing, la página de usuario (con los últimos enlaces públicos, después las últimas colecciones que se muestran en público y acceso a todas), la página de colecciones y la página de colección según [specifications.md → «Páginas públicas»](specifications.md#páginas-públicas).
+Criterios para las páginas públicas:
 
-Criterio de finalización:
-
-- No quedan textos pendientes en las páginas públicas.
+- No quedan textos pendientes.
 - Las colecciones y los enlaces privados nunca aparecen en las páginas públicas.
 - El HTML público se renderiza en servidor y es legible por los buscadores.
 - En la landing del MVP0, el enlace de registro tiene `href="#"` y no navega a un formulario ni envía una solicitud.
+
+Las etapas confirmadas de MVP1 y el backlog no comprometido se detallan más adelante en este documento.
 
 ## Checklist de calidad del MVP0
 

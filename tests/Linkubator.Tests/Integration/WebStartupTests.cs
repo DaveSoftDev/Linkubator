@@ -1,11 +1,20 @@
+using System.Collections.Concurrent;
 using Dapper;
 using Linkubator.Application.Contracts;
 using Linkubator.Infrastructure.Sqlite;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using ApplicationContracts = Linkubator.Application.Contracts;
+using ApplicationDtos = Linkubator.Application.Dtos.Models;
+using ApplicationResults = Linkubator.Application.Results;
+using ApplicationUseCases = Linkubator.Application.UseCases.Dashboard;
 
 namespace Linkubator.Tests.Integration;
 
@@ -43,6 +52,47 @@ public class WebStartupTests
             Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
             Assert.Equal("frame-ancestors 'none'", response.Headers.GetValues("Content-Security-Policy").Single());
             Assert.Equal("strict-origin-when-cross-origin", response.Headers.GetValues("Referrer-Policy").Single());
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task AppDashboardTestEndpoint_UsesResolvedIdentityEvenWhenRequestContainsUserId()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            await using IdentityTestWebApplicationFactory factory = new(databasePath, expectedUserId: 42);
+            using HttpClient client = factory.CreateClient();
+            factory.ResetProviderCallCount();
+            using HttpResponseMessage response = await client.GetAsync("/app/test-dashboard?userId=99");
+
+            Assert.True(response.IsSuccessStatusCode);
+            Assert.Equal(42L, factory.CapturedUserIds.Single());
+            Assert.Equal(1, factory.ProviderCallCount);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task HomePage_DoesNotResolvePrivateIdentity()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            await using IdentityTestWebApplicationFactory factory = new(databasePath, expectedUserId: 42);
+            using HttpClient client = factory.CreateClient();
+            factory.ResetProviderCallCount();
+            using HttpResponseMessage response = await client.GetAsync("/");
+
+            Assert.True(response.IsSuccessStatusCode);
+            Assert.Equal(0, factory.ProviderCallCount);
         }
         finally
         {
@@ -130,6 +180,79 @@ public class WebStartupTests
                     // SQLite can release temporary database files after the host shuts down.
                 }
             }
+        }
+    }
+
+    private sealed class IdentityTestWebApplicationFactory(string databasePath, long expectedUserId) : WebApplicationFactory<Program>
+    {
+        private readonly CapturingDashboardRepository _dashboardRepository = new();
+        private readonly CountingDevelopmentIdentityProvider _identityProvider = new(expectedUserId);
+
+        public IReadOnlyCollection<long> CapturedUserIds => _dashboardRepository.UserIds;
+        public int ProviderCallCount => _identityProvider.CallCount;
+
+        public void ResetProviderCallCount() => _identityProvider.ResetCallCount();
+
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            builder.UseSetting("ConnectionStrings:Linkubator", $"Data Source={databasePath}");
+            builder.UseSetting("DevelopmentIdentity:Email", DemoEmail);
+            builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
+            builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");
+            builder.UseSetting("DevelopmentIdentity:PasswordHash", ValidArgon2idHash);
+            builder.ConfigureTestServices(services =>
+            {
+                services.Replace(ServiceDescriptor.Singleton<IDevelopmentIdentityProvider>(_identityProvider));
+                services.RemoveAll<ApplicationContracts.IDashboardRepository>();
+                services.AddScoped<ApplicationContracts.IDashboardRepository>(_ => _dashboardRepository);
+                services.AddScoped<ApplicationContracts.IDashboardService, ApplicationUseCases.DashboardService>();
+                services.AddSingleton<IStartupFilter, TestDashboardEndpointStartupFilter>();
+            });
+        }
+    }
+
+    private sealed class TestDashboardEndpointStartupFilter : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+            => app =>
+            {
+                next(app);
+                app.UseEndpoints(endpoints => endpoints.MapGet("/app/test-dashboard", async context =>
+                {
+                    ApplicationContracts.IDashboardService dashboardService = context.RequestServices
+                        .GetRequiredService<ApplicationContracts.IDashboardService>();
+                    ApplicationResults.Result<ApplicationDtos.DashboardDto> result =
+                        await dashboardService.GetDashboard(context.RequestAborted);
+                    await context.Response.WriteAsync(result.IsSuccess ? "Dashboard loaded" : "Dashboard failed");
+                }));
+            };
+    }
+
+    private sealed class CountingDevelopmentIdentityProvider(long userId) : IDevelopmentIdentityProvider
+    {
+        private int _callCount;
+
+        public int CallCount => Volatile.Read(ref _callCount);
+
+        public void ResetCallCount() => Interlocked.Exchange(ref _callCount, 0);
+
+        public Task<long> GetUserId(CancellationToken cancellationToken = default)
+        {
+            Interlocked.Increment(ref _callCount);
+            return Task.FromResult(userId);
+        }
+    }
+
+    private sealed class CapturingDashboardRepository : ApplicationContracts.IDashboardRepository
+    {
+        private readonly ConcurrentQueue<long> _userIds = new();
+
+        public IReadOnlyCollection<long> UserIds => _userIds.ToArray();
+
+        public Task<ApplicationDtos.DashboardDto> GetByUser(long userId, CancellationToken cancellationToken = default)
+        {
+            _userIds.Enqueue(userId);
+            return Task.FromResult(new ApplicationDtos.DashboardDto(0, 0, [], []));
         }
     }
 
