@@ -2,17 +2,17 @@
 
 ## Referencias y autorización
 
-- Estado: aprobado.
+- Estado de las tareas: completadas y aceptadas.
 - Aprobaciones:
   - Especificación: [spec.md](spec.md), aprobada por DLG el 22-X-2026 («Siguiente»).
   - Plan: [plan.md](plan.md), aprobado por DLG el 22-X-2026 («Siguiente»).
   - Tareas: DLG, aprobadas el 22-X-2026 («Vamos»).
 - Implementación:
-  - Estado: iniciada y validada focalmente.
+  - Estado: completada.
   - Inicio: 22-X-2026, primera implementación del layout privado y sus estilos.
-  - Finalización: pendiente de aceptación humana final; la validación técnica focalizada está realizada.
-  - Evidencia consolidada: enlazar las tareas y validaciones que sustentan el estado.
-- La preparación de tareas no inventa aprobaciones ni evidencias de implementación.
+  - Finalización: 23-X-2026; build Web satisfactorio y aceptación humana registrada abajo.
+  - Evidencia técnica: [T01–T05](#descomposición) y [evidencia por criterio](#evidencia-por-criterio).
+- Aceptación humana del resultado: DLG, 23-X-2026 («Dashboard ready»).
 
 ## Descomposición
 
@@ -24,8 +24,8 @@ T02–T04 esperan identificar las páginas privadas y su layout de prueba sin an
 | T02 | Crear o ajustar el layout privado y aplicarlo a páginas privadas; incluir idioma, metadatos, landmarks y enlace de salto al contenido. | CA01, CA02, CA06; [plan.md → «Componentes y contratos»](plan.md#componentes-y-contratos) y «Flujos internos» | T01 | Compilar el proyecto Web y solicitar la página privada seleccionada. Resultado: HTML servido contiene el idioma, landmarks, salto con destino presente y metadato robots; no se altera el layout público. | completada | HTML inspeccionado en `/app` con `lang="es"`, `meta robots` y `main id="main-content"` |
 | T03 | Implementar estilos de foco y combinaciones de color del layout con contraste conforme a WCAG AA. | CA03, CA04; [plan.md → «Garantías técnicas»](plan.md#garantías-técnicas) y «Estrategia de validación», V02 | T01, T02 | Revisar las reglas de foco y medir combinaciones de texto, controles y superficies. Resultado: indicación de foco visible y valores medidos dentro de WCAG AA. | completada | Foco visible y contrastes actuales medidos por encima de 10:1 para las combinaciones aplicables |
 | T04 | Implementar la respuesta a `prefers-reduced-motion` para los movimientos no esenciales del layout. | CA05; [plan.md → «Flujos internos»](plan.md#flujos-internos) y «Estrategia de validación», V03 | T01, T02 | Inspeccionar el CSS compilado y realizar la comprobación negativa temporal descrita en V03. Resultado: la regla de reducción está presente, sensible al test y el cambio temporal queda revertido. | completada | La regla `@media (prefers-reduced-motion: reduce)` está presente en `develop.css` |
-| T05 | Ejecutar validación integrada de los seis criterios y revisión técnica del alcance; sincronizar el índice y el roadmap con el estado comprobado. | CA01–CA06; [plan.md → «Estrategia de validación»](plan.md#estrategia-de-validación), V01–V04 | T02, T03, T04 | Ejecutar comprobaciones focalizadas, revisar separación de layout privado/público y protecciones existentes y `git diff --check`. Resultado: criterios con evidencia propia satisfactoria, cambios acotados y documentación consistente. | completada | `dotnet build`, `Invoke-WebRequest` y `git diff --check` ejecutados |
-| T06 | Revisar la evidencia y registrar aceptación humana o bloqueo y correcciones solicitadas. | CA01–CA06; [plan.md → «Orden de ejecución y cierre»](plan.md#orden-de-ejecución-y-cierre) | T05 | Registrar decisión explícita, responsable, fecha y referencia. Resultado: aceptación documentada o tarea bloqueada con el motivo; esta tarea no se completa sin aceptación expresa. | pendiente | Se requiere aceptación humana final tras revisión del cierre técnico |
+| T05 | Ejecutar validación integrada de los seis criterios y revisión técnica del alcance; sincronizar el índice y el roadmap con el estado comprobado. | CA01–CA06; [plan.md → «Estrategia de validación»](plan.md#estrategia-de-validación), V01–V04 | T02, T03, T04 | Ejecutar comprobaciones focalizadas, revisar separación de layout privado/público y protecciones existentes y `git diff --check`. Resultado: criterios con evidencia propia satisfactoria, cambios acotados y documentación consistente. | completada | `dotnet build`, `Invoke-WebRequest` y `git diff --check` ejecutados el 22-X-2026; build Web posterior del 23-X-2026, 0 warnings y 0 errores. Se sincronizaron roadmap e índice. |
+| T06 | Revisar la evidencia y registrar aceptación humana o bloqueo y correcciones solicitadas. | CA01–CA06; [plan.md → «Orden de ejecución y cierre»](plan.md#orden-de-ejecución-y-cierre) | T05 | Registrar decisión explícita, responsable, fecha y referencia. Resultado: aceptación documentada o tarea bloqueada con el motivo; esta tarea no se completa sin aceptación expresa. | completada | DLG aceptó el resultado el 23-X-2026 con la referencia «Dashboard ready». |
 
 
 ## Evidencia por criterio
@@ -43,11 +43,11 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no registrar r
 
 ## Aceptación y cierre
 
-- Estado del trabajo: validado focalmente y listo para cierre técnico.
+- Estado del trabajo: completado y aceptado.
 - Criterios sin evidencia satisfactoria: ninguno.
-- Bloqueos y riesgos restantes: ninguno de alcance técnico detectados para este trabajo; se mantiene la separación del layout privado y público y la validación no depende de etapas futuras.
-- Aceptación humana: pendiente; responsable, fecha y referencia cuando exista.
+- Bloqueos y riesgos restantes: ninguno identificado dentro del alcance de S7.4. El cierre no declara completadas las etapas vecinas ni la etapa S7 completa.
+- Aceptación humana: DLG, 23-X-2026, referencia explícita «Dashboard ready».
+- Evidencia técnica reciente: `dotnet build src/Linkubator.Web/Linkubator.Web.csproj -nologo`, satisfactorio el 23-X-2026 (net10.0; 0 warnings, 0 errors). La evidencia focalizada anterior de CA01–CA06 y el alcance de cada comprobación se mantienen en la tabla [Evidencia por criterio](#evidencia-por-criterio) y en T01–T05.
 - Archivado: no solicitado.
-- Ubicación archivada: pendiente.
-- Fecha efectiva de archivado y comprobación de enlaces: pendientes.
-- Siguiente paso autorizado, sin cerrar otras etapas: cerrar la evidencia con la revisión humana final o documentar una corrección si se detecta un ajuste UX posterior; no atribuir cierre operativo sin la aceptación explícita del responsable.
+- Ubicación archivada: no aplica; los artefactos permanecen en su ruta activa.
+- Siguiente paso: ninguno para S7.4; las tareas restantes de S7 continúan según el [roadmap](../../context/roadmap.md).

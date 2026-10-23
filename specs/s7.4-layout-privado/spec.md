@@ -49,4 +49,5 @@ Proporcionar a las páginas privadas un layout base coherente y accesible que cu
 
 ## Artefactos relacionados
 
-Aún no hay plan técnico ni tareas: se crearán después de las aprobaciones correspondientes.
+- [Plan técnico](plan.md): diseño y estrategia de validación aprobados.
+- [Tareas y evidencia](tasks.md): implementación completada y aceptación humana registrada.

@@ -8,13 +8,13 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | --- | --- | --- | --- |
 | S7.2 — Cabeceras de seguridad web | [spec.md](s7.2-cabeceras-seguridad/spec.md) | [plan.md](s7.2-cabeceras-seguridad/plan.md) | [tasks.md](s7.2-cabeceras-seguridad/tasks.md) |
 | S7.3 — Identidad de desarrollo en `/app` | [spec.md](s7.3-identidad-desarrollo-app/spec.md) | [plan.md](s7.3-identidad-desarrollo-app/plan.md) | [tasks.md](s7.3-identidad-desarrollo-app/tasks.md#aceptación-y-cierre) — completada y aceptada el 22-X-2026 («Fase Completada») |
-| S7.4 — Layout privado accesible | [spec.md](s7.4-layout-privado/spec.md) | [plan.md](s7.4-layout-privado/plan.md) | [tasks.md](s7.4-layout-privado/tasks.md) |
 
 ## Trabajos completados
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
 | S7.1 — Seguridad web básica | [spec.md](s7.1-seguridad-web/spec.md) | [plan.md](s7.1-seguridad-web/plan.md) | [tasks.md](s7.1-seguridad-web/tasks.md#aceptación-y-cierre) — completada y aceptada el 22-X-2026 |
+| S7.4 — Layout privado accesible | [spec.md](s7.4-layout-privado/spec.md) | [plan.md](s7.4-layout-privado/plan.md) | [tasks.md](s7.4-layout-privado/tasks.md#aceptación-y-cierre) — completada y aceptada el 23-X-2026 («Dashboard ready») |
 
 ## Trabajos archivados
 
