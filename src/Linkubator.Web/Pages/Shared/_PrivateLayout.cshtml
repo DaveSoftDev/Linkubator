@@ -9,13 +9,27 @@
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
 </head>
 <body class="private-shell">
-    <a class="skip-link" href="#main-content">Saltar al contenido principal</a>
-
     <div class="private-page">
-        @RenderBody()
+        <div class="app-layout" role="application" aria-label="Panel principal de Linkubator">
+            <button class="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="app-sidebar" aria-label="Abrir menú">
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                    <path d="M4 7H20M4 12H20M4 17H20"></path>
+                </svg>
+            </button>
+
+            @{ 
+                var sidebarModel = Model is Linkubator.Web.Pages.App.DashboardModel dashboardModel
+                    ? dashboardModel.Sidebar
+                    : Linkubator.Web.Models.AppSidebar.AppSidebarViewModelFactory.CreateDefault();
+            }
+
+            @await Html.PartialAsync("~/Pages/Shared/_AppSidebar.cshtml", sidebarModel)
+
+            @RenderBody()
+        </div>
 
         <footer class="private-footer">
-            <p>Área privada · Acceso restringido</p>
+            <p>Área privada Linkubator · 2026</p>
         </footer>
     </div>
 

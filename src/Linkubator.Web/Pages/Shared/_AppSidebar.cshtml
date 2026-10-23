@@ -1,0 +1,115 @@
+@using Linkubator.Web.Models.AppSidebar
+@model AppSidebarViewModel
+
+<aside id="app-sidebar" class="app-sidebar" aria-label="Menú principal de navegación">
+    <div class="brand-header">
+        <div class="brand-header__left">
+            <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                    <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                    <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                </svg>
+            </span>
+            <h1 class="brand-name"><span class="brand-accent">L</span>inkubator</h1>
+        </div>
+        <button class="sidebar-collapse" type="button" aria-label="Colapsar menú lateral">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M15 18L9 12L15 6"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div class="sidebar-searches" aria-label="Búsquedas rápidas">
+        <label class="sidebar-search">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <circle cx="11" cy="11" r="6"></circle>
+                <path d="M20 20L16.65 16.65"></path>
+            </svg>
+            <input type="search" placeholder="Buscar enlaces..." aria-label="Buscar enlaces" />
+        </label>
+    </div>
+
+    <nav class="side-nav" aria-label="Navegación principal">
+        @foreach (AppSidebarNavItem item in Model.Navigation)
+        {
+            <a class="nav-item @(item.IsActive ? "nav-item--active" : string.Empty)" href="@item.Route" aria-current="@(item.IsActive ? "page" : null)">
+                <span class="nav-item__content">
+                    <span class="nav-icon" aria-hidden="true">
+                        @switch (item.Id)
+                        {
+                            case "home":
+                                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                    <path d="M3 10.5L12 3L21 10.5V20H14V13H10V20H3V10.5Z"></path>
+                                </svg>
+                                break;
+                            case "links":
+                                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                    <path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 1 0-7.07-7.07L10.5 4.5"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 1 0 7.07 7.07l2.83-2.83"></path>
+                                </svg>
+                                break;
+                            case "collections":
+                                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                                    <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l1.5 2H18.5A2.5 2.5 0 0 1 21 9.5V16.5A2.5 2.5 0 0 1 18.5 19H5.5A2.5 2.5 0 0 1 3 16.5V7.5Z"></path>
+                                </svg>
+                                break;
+                            default:
+                                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 5V19M5 12H19"></path></svg>
+                                break;
+                        }
+                    </span>
+                    <span>@item.Label</span>
+                </span>
+                @if (item.Count.HasValue)
+                {
+                    <span class="count-pill">@item.Count.Value</span>
+                }
+            </a>
+        }
+    </nav>
+
+    <section class="sidebar-group" aria-labelledby="collections-title">
+        <div class="sidebar-group__header">
+            <h2 id="collections-title">Colecciones</h2>
+            <button type="button" class="sidebar-create-collection" aria-label="Crear nueva colección">
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 5V19M5 12H19"></path></svg>
+            </button>
+        </div>
+
+        <div class="sidebar-group__compact" aria-label="Acciones rápidas de colecciones">
+            <button type="button" class="collection-quick-action" aria-label="Abrir colecciones">
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l1.5 2H18.5A2.5 2.5 0 0 1 21 9.5V16.5A2.5 2.5 0 0 1 18.5 19H5.5A2.5 2.5 0 0 1 3 16.5V7.5Z"></path></svg>
+                <span class="collection-quick-action__plus" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 5V19M5 12H19"></path></svg>
+                </span>
+            </button>
+        </div>
+
+        <ul class="collection-list">
+            @foreach (AppSidebarCollectionItem collection in Model.Collections)
+            {
+                <li>
+                    <a href="@collection.Route" class="@(collection.IsActive ? "is-active" : string.Empty)" aria-label="@collection.Name, @collection.LinkCount elementos">
+                        <span class="collection-name">
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l1.5 2H18.5A2.5 2.5 0 0 1 21 9.5V16.5A2.5 2.5 0 0 1 18.5 19H5.5A2.5 2.5 0 0 1 3 16.5V7.5Z"></path></svg>
+                            @collection.Name
+                        </span>
+                        <span class="count-pill">@collection.LinkCount</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </section>
+
+    <div class="sidebar-profile" aria-label="Perfil de usuario">
+        <a class="profile-trigger" href="/app/perfil" aria-label="Perfil de @Model.User.Name">
+            <span class="profile-avatar" aria-hidden="true">@Model.User.Initial</span>
+            <span class="profile-copy">
+                <strong>@Model.User.Name</strong>
+                <small>@Model.User.Alias</small>
+            </span>
+        </a>
+    </div>
+</aside>
