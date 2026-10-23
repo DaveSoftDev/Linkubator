@@ -1,0 +1,9 @@
+@using Linkubator.Web.Models.Presentation
+@model PageAlertViewModel
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="app-alert app-alert--@Model.Kind" role="status" aria-live="polite">
+        <p>@Model.Message</p>
+    </div>
+}

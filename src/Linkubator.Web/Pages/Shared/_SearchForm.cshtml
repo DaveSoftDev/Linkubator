@@ -1,0 +1,15 @@
+@using Linkubator.Web.Models.Presentation
+@model SearchFormViewModel
+
+<form class="search-form" method="@Model.Method" action="@Model.Action" role="search" aria-label="@Model.Label">
+    <label class="search-form__label" for="@Model.QueryInputId">@Model.Label</label>
+    <div class="search-form__field">
+        <span class="search-form__icon" aria-hidden="true">⌕</span>
+        <input id="@Model.QueryInputId" class="search-form__input" type="search" name="@Model.QueryParameterName" value="@Model.QueryValue" placeholder="@Model.Placeholder" aria-label="@Model.Label" />
+    </div>
+    @foreach (KeyValuePair<string, string> hiddenField in Model.HiddenFields)
+    {
+        <input type="hidden" name="@hiddenField.Key" value="@hiddenField.Value" />
+    }
+    <button type="submit" class="search-form__submit">@Model.ButtonText</button>
+</form>

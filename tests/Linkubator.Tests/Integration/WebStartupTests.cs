@@ -40,6 +40,37 @@ public class WebStartupTests
     }
 
     [Fact]
+    public async Task PresentationPage_RendersAccessiblePresentationComponents()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
+            using HttpClient client = factory.CreateClient();
+            using HttpResponseMessage response = await client.GetAsync("/app/presentacion");
+            string html = await response.Content.ReadAsStringAsync();
+
+            Assert.True(response.IsSuccessStatusCode);
+            Assert.Contains("role=\"alert\"", html, StringComparison.Ordinal);
+            Assert.Contains("aria-live=\"assertive\"", html, StringComparison.Ordinal);
+            Assert.Contains("href=\"#email\"", html, StringComparison.Ordinal);
+            Assert.Contains("role=\"status\"", html, StringComparison.Ordinal);
+            Assert.Contains("aria-current=\"page\"", html, StringComparison.Ordinal);
+            Assert.Contains("method=\"get\"", html, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("action=\"/app/presentacion\"", html, StringComparison.Ordinal);
+            Assert.Contains("for=\"search-links\"", html, StringComparison.Ordinal);
+            Assert.Contains("id=\"search-links\"", html, StringComparison.Ordinal);
+            Assert.Contains("name=\"q\"", html, StringComparison.Ordinal);
+            Assert.Contains("name=\"status\" value=\"all\"", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("name=\"page\"", html, StringComparison.Ordinal);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
     public async Task HomePage_IncludesSecurityHeaders()
     {
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
