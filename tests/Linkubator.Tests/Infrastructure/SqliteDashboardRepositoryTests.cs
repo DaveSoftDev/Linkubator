@@ -7,7 +7,7 @@ namespace Linkubator.Tests.Infrastructure;
 public sealed class SqliteDashboardRepositoryTests
 {
     [Fact]
-    public async Task GetByUser_WhenUserHasNoData_ReturnsEmptyCountsAndCollections()
+    public async Task GetByUser_WhenUserHasNoData_ReturnsEmptyRecentLinks()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         await using SqliteConnection connection = database.OpenConnection();
@@ -15,14 +15,11 @@ public sealed class SqliteDashboardRepositoryTests
 
         Linkubator.Application.Dtos.Models.DashboardDto result = await repository.GetByUser(42);
 
-        Assert.Equal(0, result.CollectionCount);
-        Assert.Equal(0, result.LinkCount);
-        Assert.Empty(result.Collections);
         Assert.Empty(result.RecentLinks);
     }
 
     [Fact]
-    public async Task GetByUser_WhenUserHasData_ReturnsCountsAndOnlyTheirRows()
+    public async Task GetByUser_WhenUserHasData_ReturnsOnlyTheirRecentLinks()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long ownCollectionId = await database.SeedCollection(42, "Árbol", "arbol", false);
@@ -34,26 +31,23 @@ public sealed class SqliteDashboardRepositoryTests
 
         Linkubator.Application.Dtos.Models.DashboardDto result = await repository.GetByUser(42);
 
-        Assert.Equal(1, result.CollectionCount);
-        Assert.Equal(1, result.LinkCount);
-        Assert.Equal(new[] { "Árbol" }, result.Collections.Select(item => item.Name));
         Assert.Equal(new[] { "https://example.test/own" }, result.RecentLinks.Select(item => item.UrlOriginal));
-        Assert.Equal(1, result.Collections.Single().LinkCount);
+        Assert.Equal(new[] { "Árbol" }, result.RecentLinks.Select(item => item.CollectionName));
     }
 
     [Fact]
-    public async Task GetByUser_WhenUserHasMoreThanFiveLinks_ReturnsFiveMostRecent()
+    public async Task GetByUser_WhenUserHasMoreThanTwelveLinks_ReturnsTwelveMostRecent()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
-        await database.SeedLinkRange(42, collectionId, 7);
+        await database.SeedLinkRange(42, collectionId, 13);
 
         await using SqliteConnection connection = database.OpenConnection();
         IDashboardRepository repository = new SqliteDashboardRepository(connection);
 
         Linkubator.Application.Dtos.Models.DashboardDto result = await repository.GetByUser(42);
 
-        Assert.Equal(5, result.RecentLinks.Count);
-        Assert.Equal("https://example.test/06", result.RecentLinks[0].UrlOriginal);
+        Assert.Equal(12, result.RecentLinks.Count);
+        Assert.Equal("https://example.test/12", result.RecentLinks[0].UrlOriginal);
     }
 }

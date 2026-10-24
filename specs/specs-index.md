@@ -6,11 +6,22 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| S7.2 — Cabeceras de seguridad web | [spec.md](s7.2-cabeceras-seguridad/spec.md) | [plan.md](s7.2-cabeceras-seguridad/plan.md) | [tasks.md](s7.2-cabeceras-seguridad/tasks.md) |
+| S7.3 — Identidad de desarrollo en `/app` | [spec.md](s7.3-identidad-desarrollo-app/spec.md) | [plan.md](s7.3-identidad-desarrollo-app/plan.md) | [tasks.md](s7.3-identidad-desarrollo-app/tasks.md#aceptación-y-cierre) — completada y aceptada el 22-X-2026 («Fase Completada») |
+| S7.5 — Componentes de presentación accesible | [spec.md](s7.5-componentes-presentacion/spec.md) | [plan.md](s7.5-componentes-presentacion/plan.md) | [tasks.md](s7.5-componentes-presentacion/tasks.md#aceptación-y-cierre) — completada y aceptada por DLG el 23-X-2026 («Componentes realizados»), como base técnica; sin integración funcional de producto |
+| S7.7 — Dashboard y respuestas privadas | [spec.md](s7.7-dashboard-y-respuestas-privadas/spec.md) — aprobada por DLG el 23-X-2026 («Siguiente») | [plan.md](s7.7-dashboard-y-respuestas-privadas/plan.md) — aprobado por DLG el 23-X-2026 («Siguiente») | [tasks.md](s7.7-dashboard-y-respuestas-privadas/tasks.md) — aprobadas por DLG el 23-X-2026 («Vamos»); implementación no iniciada |
+| S7.8 — Registro de peticiones Web | [spec.md](s7.8-registro-peticiones-web/spec.md) — aprobada por DLG el 24-X-2026 («Siguiente») | [plan.md](s7.8-registro-peticiones-web/plan.md) — aprobado por DLG el 24-X-2026 («Siguiente») | [tasks.md](s7.8-registro-peticiones-web/tasks.md) — aprobadas por DLG el 24-X-2026 («Vamos»); implementación en curso desde 24-X; aceptación «Completado» registrada; cierre técnico pendiente |
+| S7.6 — Análisis de parámetros de listados | [spec.md](s7.6-analisis-parametros-listados/spec.md) — aprobada por DLG el 23-X-2026 («Siguiente») | [plan.md](s7.6-analisis-parametros-listados/plan.md) — aprobado por DLG el 23-X-2026 («Siguiente») | [tasks.md](s7.6-analisis-parametros-listados/tasks.md#aceptación-y-cierre) — base técnica implementada y aceptada por DLG el 23-X-2026 («parámetros validados»); integración funcional pendiente |
+| S7.9 — Pruebas de integración HTTP | [spec.md](s7.9-pruebas-integracion-http/spec.md) — aprobada por DLG el 24-X-2026 («Siguiente») | [plan.md](s7.9-pruebas-integracion-http/plan.md) — aprobado por DLG el 24-X-2026 («Siguiente») | [tasks.md](s7.9-pruebas-integracion-http/tasks.md#aceptación-y-cierre) — completadas y aceptadas por DLG el 24-X-2026 («Completado»); suite HTTP focalizada 17/17 |
+| S7.10 — Revisión manual del dashboard | [spec.md](s7.10-revision-manual-dashboard/spec.md) — aprobada por DLG el 24-X-2026 («Siguiente») | [plan.md](s7.10-revision-manual-dashboard/plan.md) — aprobado por DLG el 24-X-2026 («Vamos») | [tasks.md](s7.10-revision-manual-dashboard/tasks.md#aceptación-y-cierre) — completada y aceptada por DLG el 24-X-2026 («Dashboard correcto») |
+| S7.11 — Validación del estilo base | [spec.md](s7.11-validacion-estilo-base/spec.md) — aprobada por DLG el 24-X-2026 («Siguiente») | [plan.md](s7.11-validacion-estilo-base/plan.md) — aprobado por DLG el 24-X-2026 («Siguiente») | [tasks.md](s7.11-validacion-estilo-base/tasks.md#aceptación-y-cierre) — revisión aceptada y completada por DLG el 24-X-2026 («Pues por mi lo daría por finalizado a falta de pulir flecos de diseño»); flecos pendientes como seguimiento separado |
 
 ## Trabajos completados
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
+| S7.1 — Seguridad web básica | [spec.md](s7.1-seguridad-web/spec.md) | [plan.md](s7.1-seguridad-web/plan.md) | [tasks.md](s7.1-seguridad-web/tasks.md#aceptación-y-cierre) — completada y aceptada el 22-X-2026 |
+| S7.4 — Layout privado accesible | [spec.md](s7.4-layout-privado/spec.md) | [plan.md](s7.4-layout-privado/plan.md) | [tasks.md](s7.4-layout-privado/tasks.md#aceptación-y-cierre) — completada y aceptada el 23-X-2026 («Dashboard ready») |
 
 ## Trabajos archivados
 

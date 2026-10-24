@@ -1,0 +1,13 @@
+namespace Linkubator.Web.Models.AppDashboard;
+
+public sealed class LinkCardViewModel
+{
+    public string Domain => Uri.TryCreate(Url, UriKind.Absolute, out Uri? uri) ? uri.Host : Url;
+
+    public string Title { get; init; } = string.Empty;
+    public string CollectionName { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public string? ImageUrl { get; init; }
+    public string AccentClass { get; init; } = "blue";
+    public string Url { get; init; } = string.Empty;
+}

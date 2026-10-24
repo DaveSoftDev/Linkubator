@@ -1,0 +1,40 @@
+@page "/app/presentacion"
+@using Linkubator.Web.Models.Presentation
+@model Linkubator.Web.Pages.App.PresentationDemoModel
+@{
+    ViewData["Title"] = "Componentes de presentación";
+}
+
+<main id="main-content" class="app-main" tabindex="-1">
+    <header class="main-header">
+        <div>
+            <p class="main-eyebrow">Componentes reutilizables</p>
+            <h2>Presentación accesible</h2>
+        </div>
+    </header>
+
+    <section aria-labelledby="presentation-demo-title">
+        <h3 id="presentation-demo-title">Resumen de errores</h3>
+        @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
+    </section>
+
+    <section aria-labelledby="alert-demo-title">
+        <h3 id="alert-demo-title">Avisos</h3>
+        @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
+    </section>
+
+    <section aria-labelledby="empty-demo-title">
+        <h3 id="empty-demo-title">Estado vacío</h3>
+        @await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", Model.EmptyState)
+    </section>
+
+    <section aria-labelledby="pagination-demo-title">
+        <h3 id="pagination-demo-title">Paginación</h3>
+        @await Html.PartialAsync("~/Pages/Shared/_Pagination.cshtml", Model.Pagination)
+    </section>
+
+    <section aria-labelledby="search-demo-title">
+        <h3 id="search-demo-title">Búsqueda</h3>
+        @await Html.PartialAsync("~/Pages/Shared/_SearchForm.cshtml", Model.SearchForm)
+    </section>
+</main>

@@ -1,0 +1,27 @@
+@using Linkubator.Web.Models.Presentation
+@model PaginationViewModel
+
+@if (Model.Pages.Count > 0)
+{
+    <nav class="pagination" aria-label="@Model.Label">
+        @foreach (PaginationPageLinkViewModel pageItem in Model.Pages)
+        {
+            if (pageItem.IsCurrent)
+            {
+                <span class="pagination__item pagination__item--current" aria-current="page">@pageItem.Label</span>
+            }
+            else if (pageItem.IsDisabled)
+            {
+                <span class="pagination__item pagination__item--disabled" aria-disabled="true">@pageItem.Label</span>
+            }
+            else if (!string.IsNullOrWhiteSpace(pageItem.Url))
+            {
+                <a class="pagination__item" href="@pageItem.Url">@pageItem.Label</a>
+            }
+            else
+            {
+                <span class="pagination__item pagination__item--more" aria-hidden="true">@pageItem.Label</span>
+            }
+        }
+    </nav>
+}

@@ -1,0 +1,22 @@
+@using Linkubator.Web.Models.Presentation
+@model PageErrorSummaryViewModel
+
+@if (Model.Items.Count > 0)
+{
+    <div class="form-summary" role="alert" aria-live="assertive" aria-labelledby="page-error-summary-title">
+        <h2 id="page-error-summary-title">@Model.Title</h2>
+        <ul class="form-summary__list">
+            @foreach (PageErrorSummaryItemViewModel item in Model.Items)
+            {
+                if (!string.IsNullOrWhiteSpace(item.FieldId))
+                {
+                    <li><a class="form-summary__link" href="#@item.FieldId">@item.Message</a></li>
+                }
+                else
+                {
+                    <li>@item.Message</li>
+                }
+            }
+        </ul>
+    </div>
+}

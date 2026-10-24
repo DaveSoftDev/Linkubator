@@ -2,9 +2,13 @@ using ApplicationContracts = Linkubator.Application.Contracts;
 
 namespace Linkubator.Web.DevelopmentIdentity;
 
-public sealed class DevelopmentCurrentUser : ApplicationContracts.ICurrentUser
+public sealed class DevelopmentCurrentUser : ApplicationContracts.ICurrentUser, IWebUserProfile
 {
     public long UserId { get; private set; }
+
+    public string Name { get; private set; } = string.Empty;
+
+    public string Alias { get; private set; } = string.Empty;
 
     public bool IsAuthenticated => UserId > 0;
 
@@ -16,5 +20,11 @@ public sealed class DevelopmentCurrentUser : ApplicationContracts.ICurrentUser
         }
 
         UserId = userId;
+    }
+
+    internal void SetProfile(string name, string alias)
+    {
+        Name = name.Trim();
+        Alias = alias.Trim();
     }
 }

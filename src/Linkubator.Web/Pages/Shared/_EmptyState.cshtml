@@ -1,0 +1,10 @@
+@using Linkubator.Web.Models.Presentation
+@model EmptyStateViewModel
+
+<div class="empty-state" role="status" aria-live="polite">
+    <h2>@Model.Title</h2>
+    @if (!string.IsNullOrWhiteSpace(Model.Description))
+    {
+        <p>@Model.Description</p>
+    }
+</div>

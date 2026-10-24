@@ -1,0 +1,38 @@
+@using Linkubator.Web.Models.AppDashboard
+@model LinkCardViewModel
+
+<article class="link-card" aria-label="Enlace: @Model.Title">
+    <div class="link-card__thumb link-card__thumb--@Model.AccentClass">
+        @if (string.IsNullOrWhiteSpace(Model.ImageUrl))
+        {
+            <div class="link-card__thumb-fake-overlay" aria-hidden="true">
+                <div class="link-card__thumb-fake-overlay-circle"></div>
+                <div class="link-card__thumb-fake-overlay-rectangle"></div>
+                <div class="link-card__thumb-fake-overlay-line"></div>
+            </div>
+        }
+        else
+        {
+            <div class="link-card__thumb-overlay" aria-hidden="true">
+                <img src="@Model.ImageUrl" alt="@(string.IsNullOrWhiteSpace(Model.Title) ? Model.Url : Model.Title)" />
+            </div>
+        }
+        <h4>@Model.Title</h4>
+    </div>
+
+    <div class="link-card__body">
+        <div class="link-card__meta">
+            <span class="link-card__collection">@Model.CollectionName</span>
+            <div class="link-card__actions" aria-hidden="true"></div>
+        </div>
+
+        <p>@Model.Description</p>
+
+        <div class="link-card__footer">
+            <span class="link-card__domain">@Model.Domain</span>
+            <a class="link-card__open" href="@Model.Url" aria-label="@($"Abrir {Model.Title} (se abre en una pestaña nueva)")" rel="noopener noreferrer" target="_blank">
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7H17V16"></path></svg>
+            </a>
+        </div>
+    </div>
+</article>

@@ -1,0 +1,15 @@
+@page "/404"
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Página no encontrada";
+    Response.StatusCode = 404;
+}
+
+<main class="page-shell" aria-labelledby="not-found-title">
+    <section class="page-card" aria-live="polite">
+        <p class="page-eyebrow">404</p>
+        <h1 id="not-found-title">Página pública no encontrada</h1>
+        <p>La dirección que has solicitado no existe o ya no está disponible.</p>
+        <p><a href="/">Volver a la página principal</a></p>
+    </section>
+</main>

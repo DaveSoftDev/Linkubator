@@ -2,7 +2,7 @@ using Dapper;
 using Microsoft.Data.Sqlite;
 using ApplicationContracts = Linkubator.Application.Contracts;
 using InfrastructureContracts = Linkubator.Infrastructure.Contracts;
-using Linkubator.Infrastructure.Options;
+using InfrastructureOptions = Linkubator.Infrastructure.Options;
 
 namespace Linkubator.Infrastructure.DevelopmentIdentity;
 
@@ -19,11 +19,11 @@ public sealed class DevelopmentIdentityProvider : ApplicationContracts.IDevelopm
         """;
 
     private readonly InfrastructureContracts.ISqliteConnectionFactory _connectionFactory;
-    private readonly DevelopmentIdentityOptions _options;
+    private readonly InfrastructureOptions.DevelopmentIdentityOptions _options;
 
     public DevelopmentIdentityProvider(
         InfrastructureContracts.ISqliteConnectionFactory connectionFactory,
-        DevelopmentIdentityOptions options)
+        InfrastructureOptions.DevelopmentIdentityOptions options)
     {
         ArgumentNullException.ThrowIfNull(connectionFactory);
         ArgumentNullException.ThrowIfNull(options);

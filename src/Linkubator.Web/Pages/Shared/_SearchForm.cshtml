@@ -1,0 +1,42 @@
+@using Linkubator.Web.Models.Presentation
+@model SearchFormViewModel
+
+<section class="main-section" aria-label="@Model.Label">
+    <div class="main-section__form">
+        <form class="search-form" method="@Model.Method" action="@Model.Action" role="search" aria-label="@Model.Label">
+            <label for="@Model.QueryInputId" class="main-section__label">@Model.Label</label>
+            <div class="main-section__field">
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                    <circle cx="11" cy="11" r="6"></circle>
+                    <path d="M20 20L16.65 16.65"></path>
+                </svg>
+                <input id="@Model.QueryInputId" type="search" name="@Model.QueryParameterName" value="@Model.QueryValue" placeholder="@Model.Placeholder" aria-label="@Model.Label" />
+            </div>
+            @foreach (KeyValuePair<string, string> hiddenField in Model.HiddenFields)
+            {
+                <input type="hidden" name="@hiddenField.Key" value="@hiddenField.Value" />
+            }
+            <div class="main-section__actions">
+                <button type="submit" class="primary-button search-form__submit">@Model.ButtonText</button>
+            </div>
+        </form>
+
+@*
+<form class="search-form" method="@Model.Method" action="@Model.Action" role="search" aria-label="@Model.Label">
+    <label class="search-form__label" for="@Model.QueryInputId">@Model.Label</label>
+    <div class="search-form__field">
+        <span class="search-form__icon" aria-hidden="true">⌕</span>
+        <input id="@Model.QueryInputId" class="search-form__input" type="search" name="@Model.QueryParameterName" value="@Model.QueryValue" placeholder="@Model.Placeholder" aria-label="@Model.Label" />
+    </div>
+    @foreach (KeyValuePair<string, string> hiddenField in Model.HiddenFields)
+    {
+        <input type="hidden" name="@hiddenField.Key" value="@hiddenField.Value" />
+    }
+    <button type="submit" class="search-form__submit">@Model.ButtonText</button>
+</form>
+*@
+
+
+
+    </div>
+</section>

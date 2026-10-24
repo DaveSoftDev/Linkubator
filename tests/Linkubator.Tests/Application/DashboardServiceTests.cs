@@ -38,18 +38,18 @@ public class DashboardServiceTests
     {
         FakeDashboardRepository repository = new();
         DashboardService service = new(NullLogger<DashboardService>.Instance, new CurrentUser(7), repository);
-        CollectionDto collection = new(11, "My collection", "my-collection", "desc", true, 2, new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc));
-        LinkDto recentLink = new(21, 11, "https://example.com/path", "https://example.com/path", "Example", "Preview", "https://example.com/icon.png", true, new DateTime(2026, 10, 2, 0, 0, 0, DateTimeKind.Utc));
-        repository.Dashboard = new DashboardDto(1, 1, new[] { collection }, new[] { recentLink });
+        LinkDto recentLink = new(21, 11, "https://example.com/path", "https://example.com/path", "Example", "Preview", "https://example.com/icon.png", true, new DateTime(2026, 10, 2, 0, 0, 0, DateTimeKind.Utc))
+        {
+            CollectionName = "My collection"
+        };
+        repository.Dashboard = new DashboardDto(new[] { recentLink });
 
         Result<DashboardDto> result = await service.GetDashboard();
 
         Assert.True(result.IsSuccess);
         Assert.Equal(7, repository.LastUserId);
-        Assert.Equal(1, result.Value!.CollectionCount);
-        Assert.Equal(1, result.Value.LinkCount);
-        Assert.Single(result.Value.Collections);
-        Assert.Single(result.Value.RecentLinks);
+        Assert.Single(result.Value!.RecentLinks);
+        Assert.Equal("My collection", result.Value.RecentLinks[0].CollectionName);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class DashboardServiceTests
     {
         public Exception? Throw { get; set; }
 
-        public DashboardDto Dashboard { get; set; } = new DashboardDto(0, 0, Array.Empty<CollectionDto>(), Array.Empty<LinkDto>());
+        public DashboardDto Dashboard { get; set; } = new DashboardDto(Array.Empty<LinkDto>());
 
         public long LastUserId { get; private set; }
 

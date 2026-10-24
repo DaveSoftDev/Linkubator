@@ -285,8 +285,8 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [ ] Persistencia sigue funcionando como hasta ahora.
-- [ ] El humano ha aprobado la nueva Persistencia.
+- [x] Persistencia sigue funcionando como hasta ahora.
+- [x] El humano ha aprobado la nueva Persistencia.
 
 ### S7: Web base, seguridad y accesibilidad (L)
 
@@ -299,7 +299,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 | S7.3 | Resolver la identidad de desarrollo en `/app` e inyectarla en los casos de uso | IA |
 | S7.4 | Crear el layout privado: idioma `es`, landmarks, enlace de salto, foco visible, contraste AA, `prefers-reduced-motion` y `noindex, nofollow` | IA |
 | S7.5 | Crear componentes: resumen de errores accesible, avisos, estado vacío, paginación y formulario de búsqueda | IA |
-| S7.6 | Implementar el análisis de `p`, `c` y `q` con sus reglas de ignorar y de error ([«Rutas privadas»](../context/specifications.md#rutas-privadas)) | IA |
+| S7.6 | Implementar la base técnica de análisis de `p`, `c` y `q` con pruebas focalizadas; completar la integración con consumidores de listados y verificación Application del filtro `c` ([«Rutas privadas»](../context/specifications.md#rutas-privadas) | IA |
 | S7.7 | Implementar `/app` → dashboard, `404` genérico por método no permitido y el mensaje «No se ha podido acceder al elemento solicitado.» | IA |
 | S7.8 | Configurar el registro de peticiones sin cadena de consulta de los listados privados | IA |
 | S7.9 | Escribir tests de integración HTTP: HTTPS, cabeceras, `Host`, antiforgery, redirección, `404` y parámetros | IA |
@@ -308,13 +308,13 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [ ] Los tests de HTTPS, cabeceras, `Host` y antiforgery pasan.
-- [ ] El `UserId` solo procede de la identidad inyectada.
-- [ ] El análisis de parámetros cubre todas las reglas de «Rutas privadas».
-- [ ] El dashboard cumple «Páginas privadas», sin resultados, edición ni eliminación.
-- [ ] Los logs no incluyen `q`.
-- [ ] La revisión de teclado y de foco del layout está aceptada por el humano.
-- [ ] El estilo base está aceptado por el humano.
+- [x] Los tests de HTTPS, cabeceras, `Host` y antiforgery pasan; evidencia: [S7.9 → tareas y cierre](../specs/s7.9-pruebas-integracion-http/tasks.md#aceptación-y-cierre) (suite HTTP combinada 17/17; incluye estos controles).
+- [x] El `UserId` solo procede de la identidad inyectada; evidencia: [S7.3 → tareas y evidencia](../specs/s7.3-identidad-desarrollo-app/tasks.md#evidencia-por-criterio) y [S7.7 → tareas](../specs/s7.7-dashboard-y-respuestas-privadas/tasks.md#evidencia-por-criterio).
+- [ ] La base técnica de análisis de `p`, `c` y `q` está implementada; la integración de rutas y la comprobación de propiedad de `c` se completan según el cierre de [S7.6](../specs/s7.6-analisis-parametros-listados/tasks.md#aceptación-y-cierre) y las reglas de «Rutas privadas». La base técnica existe; siguen pendientes la integración con rutas consumidoras y la verificación de propiedad de `c` mediante Application.
+- [x] El dashboard cumple «Páginas privadas», sin resultados, edición ni eliminación; evidencia: [S7.7 → tareas y evidencia](../specs/s7.7-dashboard-y-respuestas-privadas/tasks.md#evidencia-por-criterio), aceptadas por DLG.
+- [ ] Los logs no incluyen `q`. Sigue pendiente demostrar en un evento real del middleware que la query privada no se registra; véase [S7.8 → evidencia y bloqueos](../specs/s7.8-registro-peticiones-web/tasks.md#evidencia-por-criterio).
+- [x] La revisión manual del dashboard (teclado/foco, contraste y encabezados) está aceptada por DLG; consultar [S7.10 → tareas y cierre](../specs/s7.10-revision-manual-dashboard/tasks.md#aceptación-y-cierre).
+- [ ] El estilo base está aceptado por el humano. S7.11 se aceptó como revisión finalizada con flecos de diseño pendientes; esto no equivale a aceptar globalmente el estilo base. Véase [S7.11 → tareas y cierre](../specs/s7.11-validacion-estilo-base/tasks.md#aceptación-y-cierre).
 
 ### S8: Gestión de colecciones (L)
 
