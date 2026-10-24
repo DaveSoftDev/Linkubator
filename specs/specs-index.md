@@ -9,6 +9,8 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | S7.2 — Cabeceras de seguridad web | [spec.md](s7.2-cabeceras-seguridad/spec.md) | [plan.md](s7.2-cabeceras-seguridad/plan.md) | [tasks.md](s7.2-cabeceras-seguridad/tasks.md) |
 | S7.3 — Identidad de desarrollo en `/app` | [spec.md](s7.3-identidad-desarrollo-app/spec.md) | [plan.md](s7.3-identidad-desarrollo-app/plan.md) | [tasks.md](s7.3-identidad-desarrollo-app/tasks.md#aceptación-y-cierre) — completada y aceptada el 22-X-2026 («Fase Completada») |
 | S7.5 — Componentes de presentación accesible | [spec.md](s7.5-componentes-presentacion/spec.md) | [plan.md](s7.5-componentes-presentacion/plan.md) | [tasks.md](s7.5-componentes-presentacion/tasks.md#aceptación-y-cierre) — completada y aceptada por DLG el 23-X-2026 («Componentes realizados»), como base técnica; sin integración funcional de producto |
+| S7.7 — Dashboard y respuestas privadas | [spec.md](s7.7-dashboard-y-respuestas-privadas/spec.md) — aprobada por DLG el 23-X-2026 («Siguiente») | [plan.md](s7.7-dashboard-y-respuestas-privadas/plan.md) — aprobado por DLG el 23-X-2026 («Siguiente») | [tasks.md](s7.7-dashboard-y-respuestas-privadas/tasks.md) — aprobadas por DLG el 23-X-2026 («Vamos»); implementación no iniciada |
+| S7.6 — Análisis de parámetros de listados | [spec.md](s7.6-analisis-parametros-listados/spec.md) — aprobada por DLG el 23-X-2026 («Siguiente») | [plan.md](s7.6-analisis-parametros-listados/plan.md) — aprobado por DLG el 23-X-2026 («Siguiente») | [tasks.md](s7.6-analisis-parametros-listados/tasks.md#aceptación-y-cierre) — base técnica implementada y aceptada por DLG el 23-X-2026 («parámetros validados»); integración funcional pendiente |
 
 ## Trabajos completados
 

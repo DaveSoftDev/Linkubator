@@ -1,0 +1,10 @@
+@using Linkubator.Web.Models.Presentation
+@model PrivateResourceUnavailableViewModel
+
+@await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", new PageAlertViewModel
+{
+    Message = Model.Message,
+    Kind = "error",
+})
+
+<p><a href="@Model.ListRoute">Volver al listado</a></p>

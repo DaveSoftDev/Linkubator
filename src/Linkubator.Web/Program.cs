@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.HostFiltering;
 using Serilog;
 using ApplicationContracts = Linkubator.Application.Contracts;
 using WebDevelopmentIdentity = Linkubator.Web.DevelopmentIdentity;
+using DashboardService = Linkubator.Application.UseCases.Dashboard.DashboardService;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) =>
         .Enrich.FromLogContext());
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<ApplicationContracts.IDashboardService, DashboardService>();
 builder.Services.AddScoped<WebDevelopmentIdentity.DevelopmentCurrentUser>();
 builder.Services.AddScoped<ApplicationContracts.ICurrentUser>(serviceProvider =>
     serviceProvider.GetRequiredService<WebDevelopmentIdentity.DevelopmentCurrentUser>());
@@ -60,12 +62,26 @@ app.Use(async (context, next) =>
 
     await next();
 });
+app.UseStatusCodePages(async ctx =>
+{
+    if (ctx.HttpContext.Response.StatusCode == 404 && (ctx.HttpContext.Request.Path != "/404" && ctx.HttpContext.Request.Path != "/app/404"))
+    {
+        string requestPath = ctx.HttpContext.Request.Path.Value ?? string.Empty;
+
+        string targetPath = requestPath.StartsWith("/app", StringComparison.OrdinalIgnoreCase)
+            ? "/app/404"
+            : "/404";
+        ctx.HttpContext.SetEndpoint(null);
+        ctx.HttpContext.Request.Path = targetPath;
+        await ctx.Next(ctx.HttpContext);
+    }
+});
+
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
 app.UseRouting();
 app.UseMiddleware<WebDevelopmentIdentity.DevelopmentIdentityMiddleware>();
 app.UseAuthorization();
-
 app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();

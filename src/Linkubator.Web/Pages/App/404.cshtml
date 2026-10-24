@@ -1,0 +1,23 @@
+@page "/app/404"
+@{
+    Layout = "~/Pages/Shared/_PrivateLayout.cshtml";
+    ViewData["Title"] = "Recurso no encontrado";
+    Response.StatusCode = 404;
+}
+
+<main id="main-not-found" class="app-main" aria-labelledby="app-not-found-title">
+    <header class="main-header">
+        <div>
+            <p class="main-eyebrow">Recurso no encontrado</p>
+            <h2>404</h2>
+        </div>
+    </header>
+
+    <section class="page-shell" aria-live="polite">
+        <div class="empty-state" aria-live="polite">
+            <h2>No se ha podido acceder al recurso solicitado dentro del área privada.</h2>
+            <a href="/app">Volver al Inicio</a>
+        </div>
+    </section>
+</main>
+

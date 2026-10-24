@@ -299,7 +299,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 | S7.3 | Resolver la identidad de desarrollo en `/app` e inyectarla en los casos de uso | IA |
 | S7.4 | Crear el layout privado: idioma `es`, landmarks, enlace de salto, foco visible, contraste AA, `prefers-reduced-motion` y `noindex, nofollow` | IA |
 | S7.5 | Crear componentes: resumen de errores accesible, avisos, estado vacío, paginación y formulario de búsqueda | IA |
-| S7.6 | Implementar el análisis de `p`, `c` y `q` con sus reglas de ignorar y de error ([«Rutas privadas»](../context/specifications.md#rutas-privadas)) | IA |
+| S7.6 | Implementar la base técnica de análisis de `p`, `c` y `q` con pruebas focalizadas; completar la integración con consumidores de listados y verificación Application del filtro `c` ([«Rutas privadas»](../context/specifications.md#rutas-privadas) | IA |
 | S7.7 | Implementar `/app` → dashboard, `404` genérico por método no permitido y el mensaje «No se ha podido acceder al elemento solicitado.» | IA |
 | S7.8 | Configurar el registro de peticiones sin cadena de consulta de los listados privados | IA |
 | S7.9 | Escribir tests de integración HTTP: HTTPS, cabeceras, `Host`, antiforgery, redirección, `404` y parámetros | IA |
@@ -310,7 +310,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 - [ ] Los tests de HTTPS, cabeceras, `Host` y antiforgery pasan.
 - [ ] El `UserId` solo procede de la identidad inyectada.
-- [ ] El análisis de parámetros cubre todas las reglas de «Rutas privadas».
+- [ ] La base técnica de análisis de `p`, `c` y `q` está implementada; la integración de rutas y la comprobación de propiedad de `c` se completan según el cierre de [S7.6](../specs/s7.6-analisis-parametros-listados/tasks.md#aceptación-y-cierre) y las reglas de «Rutas privadas».
 - [ ] El dashboard cumple «Páginas privadas», sin resultados, edición ni eliminación.
 - [ ] Los logs no incluyen `q`.
 - [ ] La revisión de teclado y de foco del layout está aceptada por el humano.

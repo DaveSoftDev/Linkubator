@@ -71,7 +71,7 @@ svg {
   .nav-item:hover,
   .nav-item:focus-visible,
   .stat-card:hover,
-  .quick-add:hover,
+  .main-section:hover,
   .link-card:hover,
   .link-card:focus-within,
   .view-switch__button:hover,
@@ -130,9 +130,10 @@ svg {
 .empty-state {
   margin: 1rem 0 1.5rem;
   padding: 2rem 1.25rem;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 2px dashed rgba(95, 255, 166, 0.7);
   border-radius: 0.75rem;
   text-align: center;
+  color: rgba(95, 255, 166, 0.7);
 }
 
 .empty-state h2 {
@@ -171,6 +172,15 @@ svg {
 }
 
 .search-form {
+  display: flex;
+  margin: 0;
+  padding: 1rem 0;
+  width: 100%;
+  gap: .9rem;
+}
+
+/*
+.search-form {
   display: grid;
   gap: 0.75rem;
   margin: 1rem 0 1.5rem;
@@ -204,11 +214,13 @@ svg {
 
 .search-form__input:focus-visible,
 .search-form__submit:focus-visible,
+*/
 .pagination__item:focus-visible,
 .form-summary__link:focus-visible {
   outline: 3px solid rgba(248, 250, 252, 0.8);
   outline-offset: 2px;
 }
+
 
 .search-form__submit {
   justify-self: start;
@@ -219,6 +231,7 @@ svg {
   color: #020817;
   font-weight: 700;
 }
+
 
 /*
 .skip-link {
@@ -451,7 +464,7 @@ svg {
   font-size: 1rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #000;
+  color: var(--private-white);
 }
 
 .brand-accent {
@@ -970,7 +983,7 @@ svg {
 }
 */
 
-.quick-add {
+.main-section {
   background: linear-gradient(180deg, rgba(29, 29, 29, 0.96), rgba(20, 20, 20, 0.96));
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 1rem;
@@ -980,35 +993,39 @@ svg {
   transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.quick-add:hover {
+.main-section:hover {
   border-color: rgba(95, 255, 166, 0.18);
   box-shadow: 0 18px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.quick-add h3 {
+.main-section h3 {
   margin: 0 0 0.9rem;
   color: var(--private-accent);
   font-size: 0.95rem;
 }
 
-.quick-add__form {
+.main-section__form {
   display: flex;
   align-items: center;
   gap: 0.9rem;
 }
 
-.quick-add__label {
+.main-section__label {
   color: var(--private-accent);
   font-size: 0.82rem;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.quick-add__field {
+.main-section__field {
+  display: flex;
   position: relative;
   flex: 1;
 }
 
-.quick-add__field svg {
+.main-section__field svg {
   position: absolute;
   left: 0.8rem;
   top: 50%;
@@ -1018,7 +1035,7 @@ svg {
   color: #9ca3af;
 }
 
-.quick-add__field input {
+.main-section__field input {
   width: 100%;
   min-height: 2.75rem;
   border: 1px solid rgb(from var(--border-cl) r g b / 0.8);
@@ -1028,11 +1045,11 @@ svg {
   padding: 0.7rem 0.85rem 0.7rem 2.5rem;
 }
 
-.quick-add__field input::placeholder {
+.main-section__field input::placeholder {
   color: #a3a3a3;
 }
 
-.quick-add__field input:focus,
+.main-section__field input:focus,
 .primary-button:focus-visible,
 /*.ghost-button:focus-visible,*/
 .view-switch__button:focus-visible,
@@ -1041,12 +1058,12 @@ svg {
   box-shadow: 0 0 0 3px rgba(95, 255, 166, 0.24);
 }
 
-.quick-add__field input:focus {
+.main-section__field input:focus {
   border-color: rgba(95, 255, 166, 0.85);
   box-shadow: 0 0 0 3px rgba(95, 255, 166, 0.18);
 }
 
-.quick-add__actions {
+.main-section__actions {
   display: inline-flex;
   align-items: stretch;
   gap: 0.1rem;
@@ -1097,7 +1114,7 @@ svg {
   color: var(--private-white);
 }
 
-.quick-add__status {
+.main-section__status {
   min-height: 1.2rem;
   margin: 0.5rem 0 0;
   color: var(--private-accent);
@@ -1533,4 +1550,12 @@ svg {
     justify-content: flex-start;
   }
 */
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-internal-autofill-selected {
+    -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+    -webkit-text-fill-color: #000000 !important; /* Cambiar color del texto */
 }

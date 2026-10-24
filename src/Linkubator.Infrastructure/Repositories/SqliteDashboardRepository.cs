@@ -43,7 +43,7 @@ public sealed class SqliteDashboardRepository : IDashboardRepository
               FROM Link
               WHERE UserId = @UserId
               ORDER BY CreatedAt DESC, Id DESC
-              LIMIT 5;",
+              LIMIT 15;",
             new { UserId = userId },
             cancellationToken: cancellationToken)))
             .ToList();

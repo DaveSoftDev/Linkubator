@@ -8,21 +8,21 @@
 <main id="main-content" class="app-main" tabindex="-1">
     <header class="main-header">
         <div>
-            <p class="main-eyebrow">Gestiona tus enlaces de forma inteligente</p>
+            <p class="main-eyebrow">Gestiona tus enlaces</p>
             <h2>Dashboard</h2>
         </div>
     </header>
 
-    <section class="quick-add" aria-labelledby="quick-add-title">
-        <h3 id="quick-add-title">Crear enlace rápido</h3>
-        <div class="quick-add__form">
-            <label for="quick-url" class="quick-add__label">URL</label>
-            <div class="quick-add__field">
+    <section class="main-section" aria-labelledby="main-section-title">
+        <h3 id="main-section-title">Crear enlace rápido</h3>
+        <div class="main-section__form">
+            <label for="quick-url" class="main-section__label">URL</label>
+            <div class="main-section__field">
                 <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 1 0-7.07-7.07L10.5 4.5"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 1 0 7.07 7.07l2.83-2.83"></path></svg>
                 <input id="quick-url" type="url" placeholder="https://ejemplo.com" aria-label="URL del nuevo enlace" data-quick-add-input />
             </div>
 
-            <div class="quick-add__actions">
+            <div class="main-section__actions">
                 <button class="primary-button quick-add__main-trigger" type="button" data-quick-add-trigger>
                     <span>Añadir</span>
                 </button>
@@ -41,25 +41,27 @@
             </div>
         </div>
 
-        <p class="quick-add__status" aria-live="polite"></p>
+        <p class="main-section__status" aria-live="polite"></p>
     </section>
 
-    <div class="section-toolbar">
-        <h3>Enlaces recientes</h3>
-        <div class="view-switch" role="radiogroup" aria-label="Cambiar vista">
-            <button type="button" class="view-switch__button view-switch__button--active" aria-label="Vista en cuadrícula" aria-checked="true" role="radio">
-                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
-            </button>
-            <button type="button" class="view-switch__button" aria-label="Vista de lista" aria-checked="false" role="radio">
-                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M8 6H21"></path><path d="M8 12H21"></path><path d="M8 18H21"></path><path d="M3 6H3.01"></path><path d="M3 12H3.01"></path><path d="M3 18H3.01"></path></svg>
-            </button>
-        </div>
-    </div>
+    @await Html.PartialAsync("~/Pages/Shared/_SearchForm.cshtml", Model.SearchForm)
 
-    <section class="links-grid" aria-label="Lista de enlaces guardados">
-        @foreach (var card in Model.Cards)
+    <section aria-labelledby="recent-links-title">
+        <div class="section-toolbar">
+            <h3 id="recent-links-title">Enlaces recientes</h3>
+        </div>
+        @if (Model.Cards.Count == 0)
         {
-            @await Html.PartialAsync("~/Pages/Shared/_LinkCard.cshtml", card)
+            @await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", Model.EmptyState)
+        }
+        else
+        {
+            <div class="links-grid" aria-label="Lista de enlaces guardados">
+                @foreach (LinkCardViewModel card in Model.Cards)
+                {
+                    @await Html.PartialAsync("~/Pages/Shared/_LinkCard.cshtml", card)
+                }
+            </div>
         }
     </section>
 </main>
