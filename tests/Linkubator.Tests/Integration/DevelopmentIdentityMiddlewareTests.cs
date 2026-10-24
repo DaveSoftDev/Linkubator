@@ -59,5 +59,11 @@ public sealed class DevelopmentIdentityMiddlewareTests
             CallCount++;
             return Task.FromResult(userId);
         }
+
+        public Task<Linkubator.Application.Models.DevelopmentIdentityProfile> GetProfile(CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            return Task.FromResult(new Linkubator.Application.Models.DevelopmentIdentityProfile(userId, "Demo User", "my-demo-user"));
+        }
     }
 }

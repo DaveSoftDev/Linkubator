@@ -14,14 +14,11 @@
             </span>
             <h1 class="brand-name"><span class="brand-accent">L</span>inkubator</h1>
         </div>
-        @if (!Model.Navigation.Any(item => item.Id == "home" && item.IsActive))
-        {
-            <button class="sidebar-collapse" type="button" aria-label="Colapsar menú lateral">
-                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                    <path d="M15 18L9 12L15 6"></path>
-                </svg>
-            </button>
-        }
+        <button class="sidebar-collapse" type="button" aria-label="Colapsar menú lateral">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path d="M15 18L9 12L15 6"></path>
+            </svg>
+        </button>
     </div>
 
     <div class="sidebar-searches" aria-label="Búsquedas rápidas">

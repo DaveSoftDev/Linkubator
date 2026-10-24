@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Dapper;
 using Linkubator.Application.Contracts;
 using Linkubator.Infrastructure.Sqlite;
+using Linkubator.Web.Logging;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
@@ -11,6 +12,10 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using ApplicationContracts = Linkubator.Application.Contracts;
 using ApplicationDtos = Linkubator.Application.Dtos.Models;
 using ApplicationUseCases = Linkubator.Application.UseCases.Dashboard;
@@ -64,6 +69,29 @@ public class WebStartupTests
     }
 
     [Fact]
+    public async Task AppNotFoundPage_RendersActiveUserSidebar()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
+            using HttpClient client = factory.CreateClient();
+
+            using HttpResponseMessage response = await client.GetAsync("/app/404");
+            string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+            Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Contains("Demo User", html, StringComparison.Ordinal);
+            Assert.Contains("my-demo-user", html, StringComparison.Ordinal);
+            Assert.Contains("No se ha podido acceder al recurso solicitado dentro del área privada.", html, StringComparison.Ordinal);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
     public async Task AppDashboard_RendersRecentLinksFromDashboardUseCase()
     {
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
@@ -104,6 +132,48 @@ public class WebStartupTests
         {
             DeleteDatabaseFiles(databasePath);
         }
+    }
+
+    [Fact]
+    public void RequestLogging_OmitsPrivateQueryStringAndTokenUrls()
+    {
+        const string privateSearch = "private-search-sentinel-4f9c";
+        const string tokenValue = "token-sentinel-4f9c";
+
+        HttpContext privateSearchContext = new DefaultHttpContext();
+        privateSearchContext.Request.Path = "/app/enlaces";
+        privateSearchContext.Request.QueryString = new QueryString($"?q={privateSearch}");
+
+        CapturingDiagnosticContext privateContext = new();
+        RequestLoggingDiagnosticContext.Enrich(privateContext, privateSearchContext);
+
+        Assert.Equal("/app/enlaces", privateContext.Properties["RequestPath"]);
+        Assert.Equal(string.Empty, privateContext.Properties["RequestQueryString"]);
+        Assert.DoesNotContain(privateSearch, privateContext.Properties["RequestPath"]?.ToString() ?? string.Empty, StringComparison.Ordinal);
+        Assert.DoesNotContain(privateSearch, privateContext.Properties["RequestQueryString"]?.ToString() ?? string.Empty, StringComparison.Ordinal);
+
+        HttpContext tokenContext = new DefaultHttpContext();
+        tokenContext.Request.Path = "/app/enlaces/verify";
+        tokenContext.Request.QueryString = new QueryString($"?token={tokenValue}");
+
+        CapturingDiagnosticContext tokenDiagnosticContext = new();
+        RequestLoggingDiagnosticContext.Enrich(tokenDiagnosticContext, tokenContext);
+
+        Assert.Equal("[redacted-token-url]", tokenDiagnosticContext.Properties["RequestPath"]);
+        Assert.Equal(string.Empty, tokenDiagnosticContext.Properties["RequestQueryString"]);
+        Assert.DoesNotContain(tokenValue, tokenDiagnosticContext.Properties["RequestPath"]?.ToString() ?? string.Empty, StringComparison.Ordinal);
+        Assert.DoesNotContain(tokenValue, tokenDiagnosticContext.Properties["RequestQueryString"]?.ToString() ?? string.Empty, StringComparison.Ordinal);
+    }
+
+    private sealed class CapturingDiagnosticContext : IDiagnosticContext
+    {
+        public Dictionary<string, object?> Properties { get; } = [];
+
+        public void Set(string name, object? value, bool destructureObjects = false)
+            => Properties[name] = value;
+
+        public void SetException(Exception exception)
+            => Properties["Exception"] = exception;
     }
 
     [Fact]
@@ -369,6 +439,12 @@ public class WebStartupTests
             Interlocked.Increment(ref _callCount);
             return Task.FromResult(userId);
         }
+
+        public Task<Linkubator.Application.Models.DevelopmentIdentityProfile> GetProfile(CancellationToken cancellationToken = default)
+        {
+            Interlocked.Increment(ref _callCount);
+            return Task.FromResult(new Linkubator.Application.Models.DevelopmentIdentityProfile(userId, "Demo User", "my-demo-user"));
+        }
     }
 
     private sealed class CapturingDashboardRepository : ApplicationContracts.IDashboardRepository
@@ -461,6 +537,60 @@ public class WebStartupTests
             };
     }
 
+    private sealed class CapturingRequestLoggingWebApplicationFactory(string databasePath, string passwordHash) : WebApplicationFactory<Program>
+    {
+        private readonly List<LogEvent> _requestLogEvents = [];
+
+        public IReadOnlyCollection<LogEvent> RequestLogEvents => _requestLogEvents;
+
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            builder.UseSetting("ConnectionStrings:Linkubator", $"Data Source={databasePath}");
+            builder.UseSetting("DevelopmentIdentity:Email", DemoEmail);
+            builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
+            builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");
+            builder.UseSetting("DevelopmentIdentity:PasswordHash", passwordHash);
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSingleton<IStartupFilter, RequestLoggingTestEndpointFilter>();
+                services.RemoveAll<Serilog.ILogger>();
+                services.AddSingleton<Serilog.ILogger>(_ => new LoggerConfiguration()
+                    .MinimumLevel.Information()
+                    .Enrich.FromLogContext()
+                    .WriteTo.Sink(new CapturingLogEventSink(_requestLogEvents))
+                    .CreateLogger());
+            });
+        }
+
+        private sealed class CapturingLogEventSink(List<LogEvent> target) : ILogEventSink
+        {
+            public void Emit(LogEvent logEvent) => target.Add(logEvent);
+        }
+
+        private sealed class RequestLoggingTestEndpointFilter : IStartupFilter
+        {
+            public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+                => app =>
+                {
+                    next(app);
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapGet("/app/enlaces", context =>
+                        {
+                            context.Response.StatusCode = StatusCodes.Status200OK;
+                            return context.Response.WriteAsync("ok");
+                        });
+
+                        endpoints.MapGet("/app/enlaces/verify", context =>
+                        {
+                            context.Response.StatusCode = StatusCodes.Status200OK;
+                            return context.Response.WriteAsync("ok");
+                        });
+                    });
+                };
+        }
+    }
+
     private sealed class ConfiguredWebApplicationFactory(string databasePath, string passwordHash, bool failIdentityResolution = false) : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -482,6 +612,9 @@ public class WebStartupTests
     private sealed class UnresolvableDevelopmentIdentityProvider : IDevelopmentIdentityProvider
     {
         public Task<long> GetUserId(CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("The configured development identity cannot be resolved.");
+
+        public Task<Linkubator.Application.Models.DevelopmentIdentityProfile> GetProfile(CancellationToken cancellationToken = default)
             => throw new InvalidOperationException("The configured development identity cannot be resolved.");
     }
 }

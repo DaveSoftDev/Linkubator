@@ -1,3 +1,5 @@
+using SearchFormViewModel = Linkubator.Web.Models.Presentation.SearchFormViewModel;
+
 namespace Linkubator.Web.Models.AppSidebar;
 
 public sealed class AppSidebarViewModel
@@ -5,6 +7,16 @@ public sealed class AppSidebarViewModel
     public int TotalLinks => Collections.Sum(item => item.LinkCount);
 
     public AppSidebarUserViewModel User { get; init; } = new();
+
+    public SearchFormViewModel SidebarSearchForm { get; init; } = new()
+    {
+        Action = "/app/enlaces",
+        Label = "Buscar enlaces",
+        Placeholder = "Buscar enlaces...",
+        ButtonText = "Buscar",
+        QueryInputId = "sidebar-search-links",
+    };
+
     public IReadOnlyList<AppSidebarNavItem> Navigation { get; init; } = [];
     public IReadOnlyList<AppSidebarCollectionItem> Collections { get; init; } = [];
     public AppSidebarSelection Selection { get; init; } = new();

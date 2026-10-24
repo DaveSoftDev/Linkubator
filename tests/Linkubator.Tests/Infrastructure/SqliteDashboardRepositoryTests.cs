@@ -42,18 +42,18 @@ public sealed class SqliteDashboardRepositoryTests
     }
 
     [Fact]
-    public async Task GetByUser_WhenUserHasMoreThanFiveLinks_ReturnsFiveMostRecent()
+    public async Task GetByUser_WhenUserHasMoreThanTwelveLinks_ReturnsTwelveMostRecent()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
-        await database.SeedLinkRange(42, collectionId, 7);
+        await database.SeedLinkRange(42, collectionId, 13);
 
         await using SqliteConnection connection = database.OpenConnection();
         IDashboardRepository repository = new SqliteDashboardRepository(connection);
 
         Linkubator.Application.Dtos.Models.DashboardDto result = await repository.GetByUser(42);
 
-        Assert.Equal(5, result.RecentLinks.Count);
-        Assert.Equal("https://example.test/06", result.RecentLinks[0].UrlOriginal);
+        Assert.Equal(12, result.RecentLinks.Count);
+        Assert.Equal("https://example.test/12", result.RecentLinks[0].UrlOriginal);
     }
 }

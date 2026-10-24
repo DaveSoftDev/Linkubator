@@ -36,7 +36,8 @@
         }
 
         if (sidebarCollapse) {
-            sidebarCollapse.addEventListener('click', () => {
+            sidebarCollapse.addEventListener('click', (event) => {
+                event.stopPropagation();
                 const isCollapsed = appLayout.classList.toggle('sidebar-collapsed');
                 sidebarCollapse.setAttribute('aria-label', isCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral');
                 sidebarCollapse.setAttribute('aria-expanded', String(!isCollapsed));
@@ -45,7 +46,12 @@
 
         sidebar.addEventListener('click', (event) => {
             const target = event.target;
-            if (mobileToggle && target instanceof HTMLElement && target.closest('button')) {
+            if (!(target instanceof HTMLElement)) {
+                return;
+            }
+
+            const clickedButton = target.closest('button');
+            if (mobileToggle && clickedButton && !clickedButton.classList.contains('sidebar-collapse')) {
                 closeMobileSidebar();
             }
         });

@@ -1,6 +1,7 @@
 using Linkubator.Infrastructure;
 using Linkubator.Infrastructure.Contracts;
 using Linkubator.Infrastructure.DevelopmentIdentity;
+using Linkubator.Web.Logging;
 using Microsoft.AspNetCore.HostFiltering;
 using Serilog;
 using ApplicationContracts = Linkubator.Application.Contracts;
@@ -24,6 +25,8 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) =>
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<ApplicationContracts.IDashboardService, DashboardService>();
 builder.Services.AddScoped<WebDevelopmentIdentity.DevelopmentCurrentUser>();
+builder.Services.AddScoped<WebDevelopmentIdentity.IWebUserProfile>(serviceProvider =>
+    serviceProvider.GetRequiredService<WebDevelopmentIdentity.DevelopmentCurrentUser>());
 builder.Services.AddScoped<ApplicationContracts.ICurrentUser>(serviceProvider =>
     serviceProvider.GetRequiredService<WebDevelopmentIdentity.DevelopmentCurrentUser>());
 builder.Services.AddRazorPages();
@@ -100,7 +103,13 @@ app.UseStatusCodePages(async ctx =>
 });
 
 app.UseHttpsRedirection();
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(options =>
+{
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        RequestLoggingDiagnosticContext.Enrich(diagnosticContext, httpContext);
+    };
+});
 app.UseRouting();
 app.UseMiddleware<WebDevelopmentIdentity.DevelopmentIdentityMiddleware>();
 app.UseAuthorization();

@@ -2,14 +2,22 @@ namespace Linkubator.Web.Models.AppSidebar;
 
 public static class AppSidebarViewModelFactory
 {
-    public static AppSidebarViewModel CreateSidebar(AppSidebarSelectionKind selectionKind, Application.Dtos.Models.CollectionDto[] collections)
+    public static AppSidebarViewModel CreateSidebar(
+        AppSidebarSelectionKind selectionKind,
+        Application.Dtos.Models.CollectionDto[] collections,
+        AppSidebarUserViewModel? user = null)
     {
+        AppSidebarUserViewModel sidebarUser = user ?? CreateNoUser();
         AppSidebarViewModel sidebarViewModel = new AppSidebarViewModel
         {
-            User = new AppSidebarUserViewModel
+            User = sidebarUser,
+            SidebarSearchForm = new()
             {
-                Name = "Daniel",
-                Alias = "daniel",
+                Action = "/app/enlaces",
+                Label = "Buscar enlaces",
+                Placeholder = "Buscar enlaces...",
+                ButtonText = "Buscar",
+                QueryInputId = "sidebar-search-links",
             },
             Navigation =
             [
@@ -39,7 +47,7 @@ public static class AppSidebarViewModelFactory
         return sidebarViewModel;
     }
 
-    public static AppSidebarViewModel CreateDefault()
+    public static AppSidebarViewModel CreateDefault(AppSidebarUserViewModel? user = null)
     {
         AppSidebarSelection selection = new()
         {
@@ -47,12 +55,18 @@ public static class AppSidebarViewModelFactory
             ItemId = null,
         };
 
+        AppSidebarUserViewModel sidebarUser = user ?? CreateNoUser();
+
         AppSidebarViewModel viewModel = new()
         {
-            User = new AppSidebarUserViewModel
+            User = sidebarUser,
+            SidebarSearchForm = new()
             {
-                Name = "Daniel",
-                Alias = "daniel",
+                Action = "/app/enlaces",
+                Label = "Buscar enlaces",
+                Placeholder = "Buscar enlaces...",
+                ButtonText = "Buscar",
+                QueryInputId = "sidebar-search-links",
             },
             Navigation =
             [
@@ -73,5 +87,14 @@ public static class AppSidebarViewModelFactory
         };
 
         return viewModel;
+    }
+
+    private static AppSidebarUserViewModel CreateNoUser()
+    {
+        return new AppSidebarUserViewModel
+        {
+            Name = "No User",
+            Alias = "no-user-exception",
+        };
     }
 }

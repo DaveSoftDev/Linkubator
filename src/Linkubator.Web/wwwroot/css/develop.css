@@ -1482,6 +1482,7 @@ svg {
     background: rgba(15, 23, 42, 0.95);
     color: var(--private-accent);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+    margin-left: auto;
   }
 
   .app-layout:not(.is-open) .app-sidebar {
