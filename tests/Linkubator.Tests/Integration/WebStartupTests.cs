@@ -456,7 +456,7 @@ public class WebStartupTests
         public Task<ApplicationDtos.DashboardDto> GetByUser(long userId, CancellationToken cancellationToken = default)
         {
             _userIds.Enqueue(userId);
-            return Task.FromResult(new ApplicationDtos.DashboardDto(0, 0, [], []));
+            return Task.FromResult(new ApplicationDtos.DashboardDto([]));
         }
     }
 

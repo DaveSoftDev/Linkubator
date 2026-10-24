@@ -26,7 +26,7 @@ public sealed class AppSidebarViewModelFactoryTests
     }
 
     [Fact]
-    public void CreateDefault_WhenUserProvided_UsesDevelopmentIdentityData()
+    public void CreateSidebar_WithEmptyCollections_UsesDevelopmentIdentityData()
     {
         // Arrange
         AppSidebarUserViewModel user = new()
@@ -36,10 +36,15 @@ public sealed class AppSidebarViewModelFactoryTests
         };
 
         // Act
-        AppSidebarViewModel sidebar = AppSidebarViewModelFactory.CreateDefault(user);
+        AppSidebarViewModel sidebar = AppSidebarViewModelFactory.CreateSidebar(
+            AppSidebarSelectionKind.Home,
+            [],
+            user);
 
         // Assert
         Assert.Equal("Demo User", sidebar.User.Name);
         Assert.Equal("my-demo-user", sidebar.User.Alias);
+        Assert.Empty(sidebar.Collections);
+        Assert.Equal(0, sidebar.Navigation.First(item => item.Id == "links").Count);
     }
 }

@@ -10,13 +10,13 @@
     <meta name="robots" content="noindex, nofollow" />
     <meta name="description" content="Área privada de Linkubator" />
     <title>@ViewData["Title"] - Linkubator</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
 </head>
 <body class="private-shell">
     <div class="private-page">
         <div class="app-layout" role="application" aria-label="Panel principal de Linkubator">
             @{
-                bool isDashboard = Model is Linkubator.Web.Pages.App.DashboardModel;
                 AppSidebarUserViewModel currentSidebarUser = new()
                 {
                     Name = CurrentUser.Name,
@@ -25,7 +25,7 @@
 
                 AppSidebarViewModel sidebarModel = Model is Linkubator.Web.Pages.App.PrivatePageModel privatePageModel
                     ? privatePageModel.Sidebar
-                    : AppSidebarViewModelFactory.CreateDefault(currentSidebarUser);
+                    : AppSidebarViewModelFactory.CreateSidebar(AppSidebarSelectionKind.Home, [], currentSidebarUser);
             }
 
             @await Html.PartialAsync("~/Pages/Shared/_AppSidebar.cshtml", sidebarModel)

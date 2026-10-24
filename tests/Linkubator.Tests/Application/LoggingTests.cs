@@ -438,7 +438,7 @@ public sealed class LoggingTests
     private sealed class FakeDashboardRepository : IDashboardRepository
     {
         public Task<DashboardDto> GetByUser(long userId, CancellationToken cancellationToken = default)
-            => Task.FromResult(new DashboardDto(0, 0, [], []));
+            => Task.FromResult(new DashboardDto([]));
     }
 
     private sealed class FakePublicReadRepository : IPublicReadRepository

@@ -2,19 +2,7 @@ namespace Linkubator.Web.Models.AppDashboard;
 
 public static class LinkCardViewModelFactory
 {
-    private static readonly string[] _accentClasses = ["blue", "violet", "green", "slate", "orange", "cyan", "rose", "amber"];
-
-    private static readonly Dictionary<string, string> _collectionAccentMap = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["React"] = "blue",
-        ["Trabajo"] = "amber",
-        ["Diseño"] = "violet",
-        ["Código"] = "green",
-        ["Recursos"] = "cyan",
-        ["Inspiración"] = "rose",
-        ["Aprendizaje"] = "orange",
-        ["Productos"] = "slate",
-    };
+    private static readonly string[] _accentClasses = ["blue", "violet", "green", "slate", "orange", "cyan", "rose", "amber", "yellow"];
 
     public static string ResolveAccent(string collectionName)
     {
@@ -27,48 +15,30 @@ public static class LinkCardViewModelFactory
         [
             new LinkCardViewModel
             {
-                Title = "React Documentation",
-                CollectionName = "React",
-                Description = "Documentación oficial para construir interfaces con componentes, hooks y rendimiento.",
-                Url = "https://react.dev/",
+                Title = "Documentación de referencia",
+                CollectionName = "Colección A",
+                Description = "Material técnico para consultar y revisar dentro del flujo de trabajo.",
+                Url = "https://example.com/a",
                 ImageUrl = null,
-                AccentClass = ResolveAccentClass("React"),
+                AccentClass = ResolveAccentClass("Colección A"),
             },
             new LinkCardViewModel
             {
-                Title = "Notion Workspace",
-                CollectionName = "Trabajo",
-                Description = "Espacio compartido para tareas, documentación y reuniones del equipo.",
-                Url = "https://notion.so",
-                AccentClass = ResolveAccentClass("Trabajo"),
-                ImageUrl = null,
-            },
-            new LinkCardViewModel
-            {
-                Title = "Figma Design Kit",
-                CollectionName = "Diseño",
-                Description = "Componentes visuales, tokens y sistema de diseño para la interfaz web.",
-                Url = "https://figma.com",
-                AccentClass = ResolveAccentClass("Diseño"),
-                ImageUrl = "https://biologue.plos.org/wp-content/uploads/sites/7/2023/03/690x320_BioSci_blog-header.png",
-            },
-            new LinkCardViewModel
-            {
-                Title = "GitHub Team Repo",
-                CollectionName = "Código",
-                Description = "Repositorio principal para el trabajo en equipo y la revisión de código.",
-                Url = "https://github.com",
-                AccentClass = ResolveAccentClass("Código"),
+                Title = "Notas de proyecto",
+                CollectionName = "Colección B",
+                Description = "Ideas, tareas y decisiones tomadas durante la evolución del trabajo.",
+                Url = "https://example.com/b",
+                AccentClass = ResolveAccentClass("Colección B"),
                 ImageUrl = null,
             },
             new LinkCardViewModel
             {
-                Title = "Capacities",
-                CollectionName = "Trabajo",
-                Description = "Gestor de notas con enfoque en productividad y organización y permite implementar la metodología Zettelkasten.",
-                Url = "https://capacities.io",
-                AccentClass = ResolveAccentClass("Trabajo"),
-                ImageUrl = "https://capacities.io/thumbnail/thumbnail_index.png",
+                Title = "Diseño visual",
+                CollectionName = "Colección C",
+                Description = "Recursos visuales y referencias para mantener consistencia en la interfaz.",
+                Url = "https://example.com/c",
+                AccentClass = ResolveAccentClass("Colección C"),
+                ImageUrl = "https://example.com/image.jpg",
             },
         ];
     }
@@ -77,18 +47,15 @@ public static class LinkCardViewModelFactory
     {
         if (string.IsNullOrWhiteSpace(collectionName))
         {
-            return "blue";
+            return _accentClasses[0];
         }
 
-        if (_collectionAccentMap.TryGetValue(collectionName.Trim(), out var mappedAccentClass))
-        {
-            return mappedAccentClass;
-        }
+        string normalizedName = collectionName.Trim();
 
-        var hash = 0;
-        foreach (var character in collectionName)
+        int hash = 0;
+        foreach (var character in normalizedName)
         {
-            hash = (hash * 31) + character;
+            hash = (hash * 31) + char.ToUpperInvariant(character);
         }
 
         return _accentClasses[Math.Abs(hash) % _accentClasses.Length];

@@ -2,17 +2,15 @@
 
 ## Referencias y autorización
 
-- Estado: pendiente de aprobación.
+- Estado: completadas y aceptadas.
 - Aprobaciones:
   - Especificación: [spec.md](spec.md), aprobada por DLG el 24-X-2026 («Siguiente»).
   - Plan: [plan.md](plan.md), aprobado por DLG el 24-X-2026 («Vamos»).
-  - Tareas: pendiente; registrar responsable, fecha y referencia real cuando se apruebe.
+  - Tareas y resultado: aceptados por DLG el 24-X-2026 («Dashboard correcto»).
 - Implementación:
-  - Estado: no iniciada.
-  - Inicio: pendiente; registrar fecha y referencia real al iniciarla.
-  - Finalización: pendiente; registrar fecha, comprobación y referencia real al completar la revisión y consolidar su evidencia.
-  - Evidencia consolidada: pendiente.
-- La creación de estas tareas no registra la ejecución de la revisión ni aceptación del resultado.
+  - Estado: completada.
+  - Finalización: 24-X-2026; revisión manual T01–T04 ejecutada y resultado aceptado por DLG con «Dashboard correcto».
+  - Evidencia consolidada: estado de ejecución registrado en T01–T04 y aceptación en T05 y «Aceptación y cierre». El navegador/entorno y observaciones detalladas no quedaron registrados en el artefacto.
 
 ## Descomposición
 
@@ -20,28 +18,28 @@ Las revisiones manuales de teclado/foco, contraste y encabezados son comprobacio
 
 | ID | Acción y entregable | Criterios y diseño | Depende de | Check inmediato y resultado esperado | Estado | Evidencia o bloqueo |
 | --- | --- | --- | --- | --- | --- | --- |
-| T01 | Preparar el entorno manual: confirmar host, acceso al dashboard, navegador y herramientas disponibles; registrar versión y contexto de la página. | CA01–CA04; [plan.md → «Componentes y contratos»](plan.md#componentes-y-contratos), V01–V04. | Ninguna | Abrir el dashboard disponible y confirmar que puede inspeccionarse sin modificar el producto; registrar navegador/versión, entorno y cualquier limitación. | pendiente | No ejecutada. |
-| T02 | Recorrer el dashboard mediante teclado y documentar tabulación y foco visible de los controles disponibles. | CA01; [plan.md → «Flujos internos»](plan.md#flujos-internos), V01. | T01 | Completar el recorrido sin ratón, comparar orden de tabulación con presentación y documentar foco y hallazgos reproducibles. | pendiente | No ejecutada. |
-| T03 | Inspeccionar y medir el contraste de las combinaciones visibles aplicables al dashboard. | CA02; [plan.md → «Flujos internos»](plan.md#flujos-internos), V02. | T01 | Registrar cada combinación revisada, colores observados, método/herramienta y resultado respecto de la fuente; anotar incumplimientos con contexto. | pendiente | No ejecutada. |
-| T04 | Revisar la jerarquía semántica y el orden de encabezados del dashboard renderizado. | CA03; [plan.md → «Flujos internos»](plan.md#flujos-internos), V03. | T01 | Inspeccionar el documento renderizado y comparar estructura semántica con las secciones visibles; registrar niveles y hallazgos reproducibles. | pendiente | No ejecutada. |
-| T05 | Consolidar la evidencia CA01–CA03, describir límites/hallazgos y solicitar o registrar la decisión humana. | CA01–CA04; [plan.md → «Garantías técnicas»](plan.md#garantías-técnicas), V04. | T02, T03, T04 | Verificar que cada criterio tiene evidencia actual, contexto y resultado; registrar aceptación o solicitud de ajustes sin afirmar cambios no realizados. | pendiente | Sin aceptación. |
+| T01 | Preparar y abrir el dashboard en el entorno manual. | CA01–CA04; [plan.md → «Componentes y contratos»](plan.md#componentes-y-contratos). | Ninguna | Confirmar que el dashboard está disponible para las revisiones. | completada | Ejecutada; se revisó el dashboard disponible. El navegador y la configuración del entorno no quedaron anotados. |
+| T02 | Recorrer el dashboard con teclado y comprobar el orden de tabulación y el foco visible. | CA01; [plan.md → V01](plan.md#estrategia-de-validación). | T01 | Completar el recorrido y anotar problemas observados. | completada | Ejecutada; aceptada por DLG como parte de «Dashboard correcto». No se registraron observaciones detalladas. |
+| T03 | Comprobar el contraste de los elementos del dashboard. | CA02; [plan.md → V02](plan.md#estrategia-de-validación). | T01 | Revisar los contrastes aplicables y anotar problemas observados. | completada | Ejecutada; aceptada por DLG como parte de «Dashboard correcto». No se registraron mediciones ni observaciones detalladas. |
+| T04 | Leer los encabezados del dashboard de arriba abajo y comprobar que organizan el contenido con claridad. | CA03; [plan.md → V03](plan.md#estrategia-de-validación). | T01 | Anotar si el orden resulta claro o si algún título falta o confunde. | completada | Ejecutada; aceptada por DLG el 24-X-2026 con «Dashboard correcto». No se reportaron problemas. |
+| T05 | Registrar la aceptación humana de la revisión. | CA04; [plan.md → V04](plan.md#estrategia-de-validación). | T02, T03, T04 | Registrar la decisión explícita y su referencia, sin repetir las comprobaciones anteriores. | aceptada | Aceptada por DLG el 24-X-2026 con «Dashboard correcto». |
 
 ## Evidencia por criterio
 
 | Criterio | Tareas | Validación | Resultado real | Fecha y entorno o versión | Referencia a evidencia |
 | --- | --- | --- | --- | --- | --- |
-| CA01 | T01–T02, T05 | V01 y V04 de [plan.md](plan.md#estrategia-de-validación) | Pendiente | No ejecutada | Sin evidencia |
-| CA02 | T01, T03, T05 | V02 y V04 de [plan.md](plan.md#estrategia-de-validación) | Pendiente | No ejecutada | Sin evidencia |
-| CA03 | T01, T04–T05 | V03 y V04 de [plan.md](plan.md#estrategia-de-validación) | Pendiente | No ejecutada | Sin evidencia |
-| CA04 | T01–T05 | V04 de [plan.md](plan.md#estrategia-de-validación) | Pendiente | No ejecutada | Sin evidencia |
+| CA01 | T01–T02, T05 | V01 y V04 de [plan.md](plan.md#estrategia-de-validación) | Revisión ejecutada y aceptada por DLG; no se reportaron problemas | 24-X-2026; entorno y navegador no registrados | T02; aceptación T05: «Dashboard correcto» |
+| CA02 | T01, T03, T05 | V02 y V04 de [plan.md](plan.md#estrategia-de-validación) | Revisión ejecutada y aceptada por DLG; no se reportaron problemas | 24-X-2026; mediciones y herramienta no registradas | T03; aceptación T05: «Dashboard correcto» |
+| CA03 | T01, T04–T05 | V03 y V04 de [plan.md](plan.md#estrategia-de-validación) | Revisión ejecutada y aceptada por DLG; no se reportaron problemas | 24-X-2026; método de inspección no registrado | T04; aceptación T05: «Dashboard correcto» |
+| CA04 | T01–T05 | V04 de [plan.md](plan.md#estrategia-de-validación) | Aceptada por DLG | 24-X-2026 | T05: «Dashboard correcto» |
 
 ## Aceptación y cierre
 
-- Estado del trabajo: pendiente.
-- Criterios sin evidencia satisfactoria: CA01, CA02, CA03, CA04.
-- Bloqueos y riesgos restantes: revisión manual no iniciada; entorno, navegador y herramienta de contraste se registrarán en T01.
-- Aceptación humana: pendiente; responsable, fecha y referencia cuando exista.
+- Estado del trabajo: aceptado y completado.
+- Criterios sin evidencia satisfactoria: ninguno según la revisión y aceptación humana registradas; el detalle instrumental de entorno, herramienta y mediciones no quedó anotado.
+- Bloqueos y riesgos restantes: ninguno para el alcance de S7.10; S7.11 mantiene su alcance independiente.
+- Aceptación humana: DLG, 24-X-2026 («Dashboard correcto»).
 - Archivado: no solicitado.
 - Ubicación archivada: no aplica.
 - Fecha efectiva de archivado y comprobación de enlaces: no aplica.
-- Siguiente paso autorizado: obtener aprobación explícita de estas tareas; luego iniciar la revisión registrando fecha y referencia real.
+- Siguiente paso autorizado: continuar con S7.11; esta aceptación no cierra la etapa S7 completa.

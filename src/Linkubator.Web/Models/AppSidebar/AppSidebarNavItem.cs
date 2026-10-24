@@ -5,6 +5,6 @@ public sealed class AppSidebarNavItem
     public string Id { get; init; } = string.Empty;
     public string Label { get; init; } = string.Empty;
     public string Route { get; init; } = string.Empty;
-    public int? Count { get; internal set; }
+    public int? Count { get; init; }
     public bool IsActive { get; init; }
 }

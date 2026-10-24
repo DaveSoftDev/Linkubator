@@ -49,4 +49,5 @@ Los casos negativos y límites aplicables se evalúan mediante CA01–CA03: incl
 
 ## Artefactos relacionados
 
-Todavía no existen otros artefactos de esta spec. El plan técnico se preparará después de la aprobación explícita de esta especificación.
+- [Plan técnico](plan.md), aprobado por DLG el 24-X-2026 («Vamos»).
+- [Tareas, evidencia y aceptación](tasks.md#aceptación-y-cierre), completadas y aceptadas por DLG el 24-X-2026 («Dashboard correcto»).

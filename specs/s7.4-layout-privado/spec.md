@@ -28,7 +28,7 @@ Proporcionar a las páginas privadas un layout base coherente y accesible que cu
 - La configuración base de Razor Pages/Web está disponible desde S0.5.
 - S7.1 y S7.2 están completadas y aceptadas; el layout reutiliza el host existente sin modificar sus protecciones.
 - S7.3 resuelve la identidad para `/app`; la integración visual del layout puede prepararse sin ampliar ni alterar ese contrato.
-- La revisión manual posterior de S7.10 y S7.11 es seguimiento independiente y no un prerrequisito de cierre.
+- La revisión manual del dashboard S7.10 y la validación global del estilo base S7.11 son seguimientos independientes y no prerrequisitos de cierre.
 
 ## Criterios de aceptación
 

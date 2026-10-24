@@ -1,3 +1,4 @@
+using AppRoutes = Linkubator.Web.Constants.AppRoutes;
 using SearchFormViewModel = Linkubator.Web.Models.Presentation.SearchFormViewModel;
 
 namespace Linkubator.Web.Models.AppSidebar;
@@ -10,7 +11,7 @@ public sealed class AppSidebarViewModel
 
     public SearchFormViewModel SidebarSearchForm { get; init; } = new()
     {
-        Action = "/app/enlaces",
+        Action = AppRoutes.Links,
         Label = "Buscar enlaces",
         Placeholder = "Buscar enlaces...",
         ButtonText = "Buscar",

@@ -1,95 +1,124 @@
+using CollectionDto = Linkubator.Application.Dtos.Models.CollectionDto;
+using AppRoutes = Linkubator.Web.Constants.AppRoutes;
+using SearchFormViewModel = Linkubator.Web.Models.Presentation.SearchFormViewModel;
+
 namespace Linkubator.Web.Models.AppSidebar;
 
 public static class AppSidebarViewModelFactory
 {
     public static AppSidebarViewModel CreateSidebar(
         AppSidebarSelectionKind selectionKind,
-        Application.Dtos.Models.CollectionDto[] collections,
+        IReadOnlyList<CollectionDto> collections,
         AppSidebarUserViewModel? user = null)
     {
-        AppSidebarUserViewModel sidebarUser = user ?? CreateNoUser();
-        AppSidebarViewModel sidebarViewModel = new AppSidebarViewModel
+        AppSidebarUserViewModel sidebarUser = user ?? CreateFallbackUser();
+        return new AppSidebarViewModelBuilder(selectionKind, collections, sidebarUser).Build();
+    }
+
+    private sealed class AppSidebarViewModelBuilder
+    {
+        private readonly AppSidebarSelectionKind _selectionKind;
+        private readonly IReadOnlyList<CollectionDto> _collections;
+        private readonly AppSidebarUserViewModel _user;
+
+        public AppSidebarViewModelBuilder(
+            AppSidebarSelectionKind selectionKind,
+            IReadOnlyList<CollectionDto> collections,
+            AppSidebarUserViewModel user)
         {
-            User = sidebarUser,
-            SidebarSearchForm = new()
+            _selectionKind = selectionKind;
+            _collections = collections;
+            _user = user;
+        }
+
+        public AppSidebarViewModel Build()
+        {
+            int totalLinks = _collections.Sum(collection => collection.LinkCount);
+
+            return new AppSidebarViewModel
             {
-                Action = "/app/enlaces",
+                User = _user,
+                SidebarSearchForm = BuildSearchForm(),
+                Navigation = BuildNavigationItems(totalLinks, _collections.Count),
+                Collections = BuildCollectionItems(),
+                Selection = BuildSelection(),
+                IsCollapsed = false,
+                IsMobileOpen = false,
+            };
+        }
+
+        private SearchFormViewModel BuildSearchForm()
+        {
+            return new SearchFormViewModel
+            {
+                Action = AppRoutes.Links,
                 Label = "Buscar enlaces",
                 Placeholder = "Buscar enlaces...",
                 ButtonText = "Buscar",
                 QueryInputId = "sidebar-search-links",
-            },
-            Navigation =
-            [
-                new AppSidebarNavItem { Id = "home", Label = "Inicio", Route = "/app", IsActive = true, Count = null },
-                new AppSidebarNavItem { Id = "links", Label = "Mis Enlaces", Route = "/app/enlaces", IsActive = false, Count = -1 },
-                new AppSidebarNavItem { Id = "collections", Label = "Mis colecciones", Route = "/app/colecciones", IsActive = false, Count = collections.Count() },
-            ],
-            Collections = collections.Select(collection => new AppSidebarCollectionItem
+            };
+        }
+
+        private IReadOnlyList<AppSidebarCollectionItem> BuildCollectionItems()
+        {
+            return _collections.Select(collection => new AppSidebarCollectionItem
             {
                 Id = collection.Slug,
                 Name = collection.Name,
-                Route = $"/app/colecciones/{collection.Slug}",
+                Route = $"{AppRoutes.Collections}/{collection.Slug}",
                 LinkCount = collection.LinkCount,
                 IsActive = false,
-            }).ToList(),
-            Selection = new AppSidebarSelection { Kind = selectionKind, ItemId = null },
-            IsCollapsed = false,
-            IsMobileOpen = false,
-        };
-
-        AppSidebarNavItem? linksItem = sidebarViewModel.Navigation.FirstOrDefault(item => item.Id == "links");
-        if (linksItem is not null)
-        {
-            linksItem.Count = sidebarViewModel.TotalLinks;
+            }).ToList();
         }
 
-        return sidebarViewModel;
-    }
-
-    public static AppSidebarViewModel CreateDefault(AppSidebarUserViewModel? user = null)
-    {
-        AppSidebarSelection selection = new()
+        private AppSidebarSelection BuildSelection()
         {
-            Kind = AppSidebarSelectionKind.Home,
-            ItemId = null,
-        };
-
-        AppSidebarUserViewModel sidebarUser = user ?? CreateNoUser();
-
-        AppSidebarViewModel viewModel = new()
-        {
-            User = sidebarUser,
-            SidebarSearchForm = new()
+            return new AppSidebarSelection
             {
-                Action = "/app/enlaces",
-                Label = "Buscar enlaces",
-                Placeholder = "Buscar enlaces...",
-                ButtonText = "Buscar",
-                QueryInputId = "sidebar-search-links",
-            },
-            Navigation =
-            [
-                new AppSidebarNavItem { Id = "home", Label = "Inicio", Route = "/app", IsActive = true, Count = null },
-                new AppSidebarNavItem { Id = "links", Label = "Mis Enlaces", Route = "/app/enlaces", IsActive = false, Count = 0 },
-                new AppSidebarNavItem { Id = "collections", Label = "Mis colecciones", Route = "/app/colecciones", IsActive = false, Count = 0 },
-            ],
-            /*
-            Collections =
-            [
-                new AppSidebarCollectionItem { Id = "resources-dev", Name = "Recursos Dev", Route = "/app/colecciones/recursos-dev", LinkCount = 24, IsActive = false },
-                new AppSidebarCollectionItem { Id = "design-uiux", Name = "Diseño UI/UX", Route = "/app/colecciones/diseno-uiux", LinkCount = 18, IsActive = false },
-            ],
-            */
-            Selection = selection,
-            IsCollapsed = false,
-            IsMobileOpen = false,
-        };
+                Kind = _selectionKind,
+                ItemId = null,
+            };
+        }
 
-        return viewModel;
+        private AppSidebarNavItem[] BuildNavigationItems(int totalLinks, int totalCollections)
+        {
+            return
+            [
+                BuildNavigationItem("home", "Inicio", AppRoutes.Root, null),
+                BuildNavigationItem("links", "Mis Enlaces", AppRoutes.Links, totalLinks),
+                BuildNavigationItem("collections", "Mis colecciones", AppRoutes.Collections, totalCollections),
+            ];
+        }
+
+        private AppSidebarNavItem BuildNavigationItem(
+            string id,
+            string label,
+            string route,
+            int? count)
+        {
+            return new AppSidebarNavItem
+            {
+                Id = id,
+                Label = label,
+                Route = route,
+                Count = count,
+                IsActive = IsNavigationItemActive(id),
+            };
+        }
+
+        private bool IsNavigationItemActive(string id)
+        {
+            return id switch
+            {
+                "home" => _selectionKind == AppSidebarSelectionKind.Home,
+                "links" => _selectionKind == AppSidebarSelectionKind.Links,
+                "collections" => _selectionKind == AppSidebarSelectionKind.Collections || _selectionKind == AppSidebarSelectionKind.Collection,
+                _ => false,
+            };
+        }
     }
 
-    private static AppSidebarUserViewModel CreateNoUser()
+    private static AppSidebarUserViewModel CreateFallbackUser()
     {
         return new AppSidebarUserViewModel
         {

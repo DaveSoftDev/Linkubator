@@ -22,7 +22,7 @@
     </div>
 
     <div class="sidebar-searches" aria-label="Búsquedas rápidas">
-        <form class="sidebar-search" method="get" action="/app/enlaces" role="search">
+        <form class="sidebar-search" method="get" action="@Model.SidebarSearchForm.Action" role="search">
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                 <circle cx="11" cy="11" r="6"></circle>
                 <path d="M20 20L16.65 16.65"></path>
@@ -34,7 +34,7 @@
     <nav class="side-nav" aria-label="Navegación principal">
         @foreach (AppSidebarNavItem item in Model.Navigation)
         {
-            <a class="nav-item @(item.IsActive ? "nav-item--active" : string.Empty)" href="@item.Route" aria-current="@(item.IsActive ? "page" : null)">
+            <a class="nav-item @(item.IsActive ? "nav-item--active" : string.Empty)" href="@item.Route" aria-label="@item.Label" aria-current="@(item.IsActive ? "page" : null)">
                 <span class="nav-item__content">
                     <span class="nav-icon" aria-hidden="true">
                         @switch (item.Id)

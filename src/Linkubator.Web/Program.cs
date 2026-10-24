@@ -1,12 +1,13 @@
 using Linkubator.Infrastructure;
-using Linkubator.Infrastructure.Contracts;
-using Linkubator.Infrastructure.DevelopmentIdentity;
-using Linkubator.Web.Logging;
 using Microsoft.AspNetCore.HostFiltering;
 using Serilog;
 using ApplicationContracts = Linkubator.Application.Contracts;
-using WebDevelopmentIdentity = Linkubator.Web.DevelopmentIdentity;
+using CollectionService = Linkubator.Application.UseCases.Collections.CollectionService;
 using DashboardService = Linkubator.Application.UseCases.Dashboard.DashboardService;
+using InfrastructureContracts = Linkubator.Infrastructure.Contracts;
+using InfrastructureDevelopmentIdentity = Linkubator.Infrastructure.DevelopmentIdentity;
+using WebDevelopmentIdentity = Linkubator.Web.DevelopmentIdentity;
+using WebLogging = Linkubator.Web.Logging;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,7 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) =>
         .Enrich.FromLogContext());
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<ApplicationContracts.ICollectionService, CollectionService>();
 builder.Services.AddScoped<ApplicationContracts.IDashboardService, DashboardService>();
 builder.Services.AddScoped<WebDevelopmentIdentity.DevelopmentCurrentUser>();
 builder.Services.AddScoped<WebDevelopmentIdentity.IWebUserProfile>(serviceProvider =>
@@ -35,10 +37,10 @@ WebApplication app = builder.Build();
 
 using (AsyncServiceScope scope = app.Services.CreateAsyncScope())
 {
-    ISqliteMigrationService migrationService = scope.ServiceProvider.GetRequiredService<ISqliteMigrationService>();
+    InfrastructureContracts.ISqliteMigrationService migrationService = scope.ServiceProvider.GetRequiredService<InfrastructureContracts.ISqliteMigrationService>();
     await migrationService.ApplyPendingMigrations();
 
-    DevelopmentIdentityProvisioner provisioner = scope.ServiceProvider.GetRequiredService<DevelopmentIdentityProvisioner>();
+    InfrastructureDevelopmentIdentity.DevelopmentIdentityProvisioner provisioner = scope.ServiceProvider.GetRequiredService<InfrastructureDevelopmentIdentity.DevelopmentIdentityProvisioner>();
     await provisioner.Provision();
 
     ApplicationContracts.IDevelopmentIdentityProvider identityProvider =
@@ -68,8 +70,8 @@ app.Use(async (context, next) =>
 app.Use(async (context, next) =>
 {
     string requestPath = context.Request.Path.Value ?? string.Empty;
-    bool isKnownNotFoundPage = requestPath.Equals("/404", StringComparison.OrdinalIgnoreCase)
-        || requestPath.Equals("/app/404", StringComparison.OrdinalIgnoreCase);
+    bool isKnownNotFoundPage = requestPath.Equals(Linkubator.Web.Constants.AppRoutes.PublicNotFoundPage, StringComparison.OrdinalIgnoreCase)
+        || requestPath.Equals(Linkubator.Web.Constants.AppRoutes.PrivateNotFoundPage, StringComparison.OrdinalIgnoreCase);
 
     bool isDisallowedMethod = !HttpMethods.IsGet(context.Request.Method)
         && !HttpMethods.IsHead(context.Request.Method)
@@ -79,9 +81,9 @@ app.Use(async (context, next) =>
     {
         context.Response.StatusCode = StatusCodes.Status404NotFound;
         context.Request.Method = HttpMethods.Get;
-        context.Request.Path = requestPath.StartsWith("/app", StringComparison.OrdinalIgnoreCase)
-            ? "/app/404"
-            : "/404";
+        context.Request.Path = requestPath.StartsWith(Linkubator.Web.Constants.AppRoutes.Root, StringComparison.OrdinalIgnoreCase)
+            ? Linkubator.Web.Constants.AppRoutes.PrivateNotFoundPage
+            : Linkubator.Web.Constants.AppRoutes.PublicNotFoundPage;
     }
 
     await next();
@@ -89,13 +91,13 @@ app.Use(async (context, next) =>
 
 app.UseStatusCodePages(async ctx =>
 {
-    if (ctx.HttpContext.Response.StatusCode == 404 && (ctx.HttpContext.Request.Path != "/404" && ctx.HttpContext.Request.Path != "/app/404"))
+    if (ctx.HttpContext.Response.StatusCode == 404 && (ctx.HttpContext.Request.Path != Linkubator.Web.Constants.AppRoutes.PublicNotFoundPage && ctx.HttpContext.Request.Path != Linkubator.Web.Constants.AppRoutes.PrivateNotFoundPage))
     {
         string requestPath = ctx.HttpContext.Request.Path.Value ?? string.Empty;
 
         string targetPath = requestPath.StartsWith("/app", StringComparison.OrdinalIgnoreCase)
-            ? "/app/404"
-            : "/404";
+            ? Linkubator.Web.Constants.AppRoutes.PrivateNotFoundPage
+            : Linkubator.Web.Constants.AppRoutes.PublicNotFoundPage;
         ctx.HttpContext.SetEndpoint(null);
         ctx.HttpContext.Request.Path = targetPath;
         await ctx.Next(ctx.HttpContext);
@@ -107,7 +109,7 @@ app.UseSerilogRequestLogging(options =>
 {
     options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
-        RequestLoggingDiagnosticContext.Enrich(diagnosticContext, httpContext);
+        WebLogging.RequestLoggingDiagnosticContext.Enrich(diagnosticContext, httpContext);
     };
 });
 app.UseRouting();
@@ -119,4 +121,9 @@ app.MapRazorPages()
 
 await app.RunAsync();
 
-public partial class Program;
+public partial class Program
+{
+    protected Program()
+    {
+    }
+}

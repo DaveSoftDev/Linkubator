@@ -1,6 +1,7 @@
 using ApplicationContracts = Linkubator.Application.Contracts;
 using ApplicationDtos = Linkubator.Application.Dtos.Models;
 using ApplicationResults = Linkubator.Application.Results;
+using AppRoutes = Linkubator.Web.Constants.AppRoutes;
 using WebDevelopmentIdentity = Linkubator.Web.DevelopmentIdentity;
 using AppSidebarSelectionKind = Linkubator.Web.Models.AppSidebar.AppSidebarSelectionKind;
 using LinkCardViewModel = Linkubator.Web.Models.AppDashboard.LinkCardViewModel;
@@ -16,8 +17,9 @@ public class DashboardModel : PrivatePageModel
 
     public DashboardModel(
         ApplicationContracts.IDashboardService dashboardService,
+        ApplicationContracts.ICollectionService collectionService,
         WebDevelopmentIdentity.IWebUserProfile userProfile)
-        : base(userProfile)
+        : base(userProfile, collectionService)
     {
         _dashboardService = dashboardService;
     }
@@ -32,7 +34,7 @@ public class DashboardModel : PrivatePageModel
     {
         SearchForm = new SearchFormViewModel
         {
-            Action = "/app/enlaces",
+            Action = AppRoutes.Links,
             Label = "Buscar enlaces",
             Placeholder = "Buscar enlaces...",
             ButtonText = "Buscar",
@@ -52,18 +54,20 @@ public class DashboardModel : PrivatePageModel
         }
 
         ApplicationDtos.DashboardDto dashboard = result.Value;
-        Cards = dashboard.RecentLinks.Select(link => new LinkCardViewModel
+        Cards = dashboard.RecentLinks.Select(link =>
         {
-            Title = string.IsNullOrWhiteSpace(link.Title) ? link.UrlOriginal : link.Title,
-            CollectionName = dashboard.Collections.FirstOrDefault(collection => collection.Id == link.CollectionId)?.Name ?? string.Empty,
-            Description = link.Description ?? string.Empty,
-            ImageUrl = link.Image,
-            AccentClass = Linkubator.Web.Models.AppDashboard.LinkCardViewModelFactory.ResolveAccent(dashboard.Collections.FirstOrDefault(collection => collection.Id == link.CollectionId)?.Name ?? string.Empty),
-            Url = link.UrlOriginal,
+            string collectionName = link.CollectionName ?? string.Empty;
+            return new LinkCardViewModel
+            {
+                Title = string.IsNullOrWhiteSpace(link.Title) ? link.UrlOriginal : link.Title,
+                CollectionName = collectionName,
+                Description = link.Description ?? string.Empty,
+                ImageUrl = link.Image,
+                AccentClass = Linkubator.Web.Models.AppDashboard.LinkCardViewModelFactory.ResolveAccent(collectionName),
+                Url = link.UrlOriginal,
+            };
         }).ToList();
 
-        Sidebar = CreateSidebar(AppSidebarSelectionKind.Home, dashboard.Collections);
-        
         return Page();
     }
 }
