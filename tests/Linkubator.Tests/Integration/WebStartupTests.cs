@@ -163,6 +163,27 @@ public class WebStartupTests
     }
 
     [Fact]
+    public async Task AppDashboard_WhenRequestedWithUnsupportedMethod_ReturnsNotFound()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
+            using HttpClient client = factory.CreateClient();
+            using HttpResponseMessage response = await client.PutAsync("/app", new StringContent(string.Empty));
+            string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+            Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Contains("No se ha podido acceder al recurso solicitado dentro del área privada.", html, StringComparison.Ordinal);
+            Assert.Contains("href=\"/app\"", html, StringComparison.Ordinal);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
     public async Task HomePage_IncludesSecurityHeaders()
     {
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");

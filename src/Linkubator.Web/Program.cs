@@ -62,6 +62,28 @@ app.Use(async (context, next) =>
 
     await next();
 });
+app.Use(async (context, next) =>
+{
+    string requestPath = context.Request.Path.Value ?? string.Empty;
+    bool isKnownNotFoundPage = requestPath.Equals("/404", StringComparison.OrdinalIgnoreCase)
+        || requestPath.Equals("/app/404", StringComparison.OrdinalIgnoreCase);
+
+    bool isDisallowedMethod = !HttpMethods.IsGet(context.Request.Method)
+        && !HttpMethods.IsHead(context.Request.Method)
+        && !HttpMethods.IsOptions(context.Request.Method);
+
+    if (!isKnownNotFoundPage && isDisallowedMethod)
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        context.Request.Method = HttpMethods.Get;
+        context.Request.Path = requestPath.StartsWith("/app", StringComparison.OrdinalIgnoreCase)
+            ? "/app/404"
+            : "/404";
+    }
+
+    await next();
+});
+
 app.UseStatusCodePages(async ctx =>
 {
     if (ctx.HttpContext.Response.StatusCode == 404 && (ctx.HttpContext.Request.Path != "/404" && ctx.HttpContext.Request.Path != "/app/404"))

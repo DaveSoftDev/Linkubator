@@ -2,8 +2,8 @@
 
 ## Estado y aprobación
 
-- Estado: aprobada.
-- Aprobación: DLG, 23-X-2026 («Siguiente»).
+- Estado: completada y aceptada.
+- Aprobación: DLG, 23-X-2026 («Siguiente») para especificación y plan; DLG, 24-X-2026 («Prueba superada») para cierre funcional y evidencia final.
 
 ## Objetivo
 
@@ -46,9 +46,9 @@ Completar la entrada al área privada y el dashboard, así como la respuesta com
 
 | Pregunta o contradicción | Fuente afectada | Criterio bloqueado | Decisión humana necesaria |
 | --- | --- | --- | --- |
-| Ninguno identificado tras la aclaración de alcance: la gestión de etiquetas queda fuera de MVP0. La navegación desde `/app` se verifica por su resultado visible y su ruta canónica, sin hacer depender el criterio de si el cliente muestra el salto de redirección. | — | — | — |
+| Ninguno identificado en la implementación final. La navegación desde `/app` se verifica por resultado visible y ruta canónica; el 404 genérico para métodos no permitidos queda resuelto mediante la página `/app/404` del host y la prueba de integración `AppDashboard_WhenRequestedWithUnsupportedMethod_ReturnsNotFound`. | — | — | — |
 
 ## Artefactos relacionados
 
 - [Plan técnico](plan.md): aprobado por DLG el 23-X-2026 («Siguiente»).
-- [Tareas](tasks.md): propuestas; aprobación pendiente.
+- [Tareas](tasks.md): ejecutadas y aceptadas por DLG el 24-X-2026 («Prueba superada»).
