@@ -118,7 +118,7 @@ public sealed class SqliteMigrationServiceTests
 
         using (SqliteConnection connection = factory.CreateOpenConnection())
         {
-            Assert.Equal(new[] { "V001", "V002", "V003", "V004", "V005" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version")).ToArray());
+            Assert.Equal(new[] { "V001", "V002", "V003", "V004", "V005", "V006" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version")).ToArray());
             Assert.Equal("legacy-seed", await connection.QuerySingleAsync<string>("SELECT value FROM sample_data WHERE id = 1;"));
         }
 

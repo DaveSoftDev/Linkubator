@@ -9,8 +9,8 @@ public sealed class SqliteSearchProjectionRebuilder : ISqliteSearchProjectionReb
 {
     private const string ClearProjectionsSql = "DELETE FROM LinkSearch; DELETE FROM CollectionSearch;";
     private const string RebuildCollectionsSql = """
-        INSERT INTO CollectionSearch (rowid, UserId, Name)
-        SELECT Id, UserId, NormalizeSearchText(Name)
+        INSERT INTO CollectionSearch (rowid, UserId, Name, Description)
+        SELECT Id, UserId, NormalizeSearchText(Name), NormalizeSearchText(Description)
         FROM Collection;
         """;
     private const string RebuildLinksSql = """

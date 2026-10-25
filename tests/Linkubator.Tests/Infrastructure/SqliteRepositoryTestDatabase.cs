@@ -46,8 +46,14 @@ internal sealed class SqliteRepositoryTestDatabase : IAsyncDisposable
             IsPublic = isPublic ? 1 : 0,
         });
         await connection.ExecuteAsync(
-            "INSERT INTO CollectionSearch (rowid, UserId, Name) VALUES (@Id, @UserId, @Name);",
-            new { Id = collectionId, UserId = userId, Name = Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize(name) });
+            "INSERT INTO CollectionSearch (rowid, UserId, Name, Description) VALUES (@Id, @UserId, @Name, @Description);",
+            new
+            {
+                Id = collectionId,
+                UserId = userId,
+                Name = Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize(name),
+                Description = Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize(description),
+            });
         return collectionId;
     }
 

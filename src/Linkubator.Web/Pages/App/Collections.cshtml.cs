@@ -60,7 +60,7 @@ public sealed class CollectionsModel : PrivatePageModel
             Alert = new PageAlertViewModel { Message = CollectionDeleteError, Kind = "error" };
         }
 
-        var analysis = PrivateListingQueryAnalyzer.Analyze(Request.Query, PrivateListingKind.Collections);
+        Models.PrivateListing.PrivateListingQueryAnalysisResult analysis = PrivateListingQueryAnalyzer.Analyze(Request.Query, PrivateListingKind.Collections);
         SearchForm = new SearchFormViewModel
         {
             Action = AppRoutes.Collections,

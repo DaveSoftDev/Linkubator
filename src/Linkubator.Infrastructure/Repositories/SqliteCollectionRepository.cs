@@ -130,13 +130,14 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
         collection.SetId(id);
 
         await _connection.ExecuteAsync(new CommandDefinition(
-            @"INSERT INTO CollectionSearch (rowid, UserId, Name)
-              VALUES (@Id, @UserId, @Name);",
+            @"INSERT INTO CollectionSearch (rowid, UserId, Name, Description)
+              VALUES (@Id, @UserId, @Name, @Description);",
             new
             {
                 Id = id,
                 UserId = collection.UserId,
                 Name = Search.SearchTextNormalizer.Normalize(collection.Name),
+                Description = Search.SearchTextNormalizer.Normalize(collection.Description),
             },
             cancellationToken: cancellationToken));
     }
@@ -171,13 +172,14 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
                 cancellationToken: cancellationToken));
 
             await _connection.ExecuteAsync(new CommandDefinition(
-                @"INSERT INTO CollectionSearch (rowid, UserId, Name)
-                  VALUES (@Id, @UserId, @Name);",
+                @"INSERT INTO CollectionSearch (rowid, UserId, Name, Description)
+                  VALUES (@Id, @UserId, @Name, @Description);",
                 new
                 {
                     Id = collection.Id,
                     UserId = collection.UserId,
                     Name = Search.SearchTextNormalizer.Normalize(collection.Name),
+                    Description = Search.SearchTextNormalizer.Normalize(collection.Description),
                 },
                 cancellationToken: cancellationToken));
 

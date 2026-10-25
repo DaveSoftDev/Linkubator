@@ -38,7 +38,7 @@ public static class SearchQueryBuilder
 
         return terms.Count == 0
             ? null
-            : string.Join(' ', terms.Select(static term => $"\"{term}\""));
+            : string.Join(' ', terms.Select(static term => $"\"{term}\"*"));
     }
 
     private static void AddCurrentTerm(List<string> terms, StringBuilder currentTerm)

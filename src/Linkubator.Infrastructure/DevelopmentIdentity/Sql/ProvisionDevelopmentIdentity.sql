@@ -27,8 +27,8 @@ WHERE Email = @Email
       WHERE Collection.UserId = User.Id
   );
 
-INSERT INTO CollectionSearch (rowid, UserId, Name)
-SELECT Collection.Id, Collection.UserId, NormalizeSearchText(Collection.Name)
+INSERT INTO CollectionSearch (rowid, UserId, Name, Description)
+SELECT Collection.Id, Collection.UserId, NormalizeSearchText(Collection.Name), NormalizeSearchText(Collection.Description)
 FROM Collection
 INNER JOIN User ON User.Id = Collection.UserId
 WHERE User.Email = @Email

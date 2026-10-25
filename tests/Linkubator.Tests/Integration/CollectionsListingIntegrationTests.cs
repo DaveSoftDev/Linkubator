@@ -97,7 +97,7 @@ public sealed class CollectionsListingIntegrationTests
             await SeedCollections(databasePath, DemoEmail, ["Owned collection"]);
             await SeedOtherUsersCollection(databasePath);
 
-            using HttpResponseMessage response = await client.GetAsync("/app/colecciones?userId=2");
+            using HttpResponseMessage response = await client.GetAsync("/app/colecciones?userId=2&c=not-a-collection-id");
             string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
             string listingHtml = GetCollectionListHtml(html);
 
@@ -251,11 +251,13 @@ public sealed class CollectionsListingIntegrationTests
             long foreignCollectionId = await SeedOtherUsersCollection(databasePath);
             long missingCollectionId = foreignCollectionId + 1000;
             long initialCount = await GetCollectionCount(databasePath, DemoEmail);
+            long initialForeignCount = await GetCollectionCount(databasePath, "other-user@linkubator.test");
             string token = await GetAntiforgeryToken(client, ownedCollectionId);
 
             using HttpResponseMessage missingResponse = await PostDelete(client, missingCollectionId, token);
             using HttpResponseMessage foreignResponse = await PostDelete(client, foreignCollectionId, token);
             long finalCount = await GetCollectionCount(databasePath, DemoEmail);
+            long finalForeignCount = await GetCollectionCount(databasePath, "other-user@linkubator.test");
             using HttpResponseMessage noticeResponse = await client.GetAsync("/app/colecciones");
             string noticeHtml = System.Net.WebUtility.HtmlDecode(await noticeResponse.Content.ReadAsStringAsync());
 
@@ -264,6 +266,7 @@ public sealed class CollectionsListingIntegrationTests
             Assert.Equal(missingResponse.StatusCode, foreignResponse.StatusCode);
             Assert.Equal(missingResponse.Headers.Location?.OriginalString, foreignResponse.Headers.Location?.OriginalString);
             Assert.Equal(initialCount, finalCount);
+            Assert.Equal(initialForeignCount, finalForeignCount);
             Assert.Equal(System.Net.HttpStatusCode.OK, noticeResponse.StatusCode);
             Assert.Contains("No se ha podido eliminar la colección", noticeHtml, StringComparison.Ordinal);
         }
@@ -376,6 +379,215 @@ public sealed class CollectionsListingIntegrationTests
         }
     }
 
+    [Fact]
+    public async Task PostCreateCollection_WhenAntiforgeryTokenIsMissing_RejectsRequestWithoutCreatingCollection()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            long initialCount = await GetCollectionCount(databasePath, DemoEmail);
+
+            using HttpResponseMessage response = await client.PostAsync(
+                "/app/colecciones/nueva",
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["Input.Name"] = "Antiforgery collection",
+                    ["Input.Description"] = "",
+                    ["Input.IsPublic"] = "false",
+                }));
+            long finalCount = await GetCollectionCount(databasePath, DemoEmail);
+
+            Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(initialCount, finalCount);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task PostCreateCollection_WhenInputIsValid_CreatesCollectionAndRedirectsToListing()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            string token = await GetAntiforgeryToken(client, "/app/colecciones/nueva");
+            long initialCount = await GetCollectionCount(databasePath, DemoEmail);
+
+            using HttpResponseMessage response = await client.PostAsync(
+                "/app/colecciones/nueva",
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["Input.Name"] = "Created over HTTP",
+                    ["Input.Description"] = "Created by integration test",
+                    ["Input.IsPublic"] = "false",
+                    ["__RequestVerificationToken"] = token,
+                }));
+            long finalCount = await GetCollectionCount(databasePath, DemoEmail);
+            long createdCollectionId = await GetCollectionId(databasePath, DemoEmail, "Created over HTTP");
+
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal("/app/colecciones", response.Headers.Location?.OriginalString);
+            Assert.Equal(initialCount + 1, finalCount);
+            Assert.Equal("Created over HTTP", await GetCollectionName(databasePath, createdCollectionId));
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task PostEditCollection_WhenAntiforgeryTokenIsMissing_RejectsRequestWithoutChangingCollection()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            await SeedCollections(databasePath, DemoEmail, ["Collection before edit"]);
+            long collectionId = await GetCollectionId(databasePath, DemoEmail, "Collection before edit");
+
+            using HttpResponseMessage response = await client.PostAsync(
+                $"/app/colecciones/{collectionId}/editar",
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["id"] = collectionId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["Input.Name"] = "Tampered collection",
+                    ["Input.Description"] = "",
+                    ["Input.IsPublic"] = "false",
+                }));
+
+            Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal("Collection before edit", await GetCollectionName(databasePath, collectionId));
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task PostEditCollection_WhenInputIsValid_UpdatesCollectionAndRedirectsToListing()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            await SeedCollections(databasePath, DemoEmail, ["Collection before edit"]);
+            long collectionId = await GetCollectionId(databasePath, DemoEmail, "Collection before edit");
+            string token = await GetAntiforgeryToken(client, $"/app/colecciones/{collectionId}/editar");
+
+            using HttpResponseMessage response = await client.PostAsync(
+                $"/app/colecciones/{collectionId}/editar",
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["id"] = collectionId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["Input.Name"] = "Collection after edit",
+                    ["Input.Description"] = "Edited by integration test",
+                    ["Input.IsPublic"] = "false",
+                    ["__RequestVerificationToken"] = token,
+                }));
+
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal("/app/colecciones", response.Headers.Location?.OriginalString);
+            Assert.Equal("Collection after edit", await GetCollectionName(databasePath, collectionId));
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task GetDeleteCollection_WhenConfirmationPageIsRequested_DoesNotDeleteCollection()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient();
+            await SeedCollections(databasePath, DemoEmail, ["Collection awaiting confirmation"]);
+            long collectionId = await GetCollectionId(databasePath, DemoEmail, "Collection awaiting confirmation");
+            long initialCount = await GetCollectionCount(databasePath, DemoEmail);
+
+            using HttpResponseMessage response = await client.GetAsync($"/app/colecciones/{collectionId}/eliminar");
+            long finalCount = await GetCollectionCount(databasePath, DemoEmail);
+            string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+            Assert.Contains("Collection awaiting confirmation", html, StringComparison.Ordinal);
+            Assert.Equal(initialCount, finalCount);
+            Assert.Equal("Collection awaiting confirmation", await GetCollectionName(databasePath, collectionId));
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task PostDeleteCollection_WhenAntiforgeryTokenIsMissing_RejectsRequestWithoutDeletingCollection()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            await SeedCollections(databasePath, DemoEmail, ["Collection protected from deletion"]);
+            long collectionId = await GetCollectionId(databasePath, DemoEmail, "Collection protected from deletion");
+            long initialCount = await GetCollectionCount(databasePath, DemoEmail);
+
+            using HttpResponseMessage response = await client.PostAsync(
+                $"/app/colecciones/{collectionId}/eliminar",
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["id"] = collectionId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                }));
+            long finalCount = await GetCollectionCount(databasePath, DemoEmail);
+
+            Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(initialCount, finalCount);
+            Assert.Equal("Collection protected from deletion", await GetCollectionName(databasePath, collectionId));
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task PostDeleteCollection_WhenAntiforgeryTokenIsValid_DeletesCollectionAndRedirectsToListing()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            await SeedCollections(databasePath, DemoEmail, ["Collection to delete"]);
+            long collectionId = await GetCollectionId(databasePath, DemoEmail, "Collection to delete");
+            string token = await GetAntiforgeryToken(client, $"/app/colecciones/{collectionId}/eliminar");
+            long initialCount = await GetCollectionCount(databasePath, DemoEmail);
+
+            using HttpResponseMessage response = await PostDelete(client, collectionId, token);
+            long finalCount = await GetCollectionCount(databasePath, DemoEmail);
+
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal("/app/colecciones", response.Headers.Location?.OriginalString);
+            Assert.Equal(initialCount - 1, finalCount);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
     private static string GetCollectionListHtml(string html)
     {
         int start = html.IndexOf("<table", StringComparison.Ordinal);
@@ -406,8 +618,8 @@ public sealed class CollectionsListingIntegrationTests
             "INSERT INTO Collection (UserId, Name, Slug, IsPublic) VALUES (@UserId, @Name, @Slug, 0); SELECT last_insert_rowid();",
             new { UserId = userId, Name = "Foreign collection", Slug = "foreign-collection" });
         await connection.ExecuteAsync(
-            "INSERT INTO CollectionSearch (rowid, UserId, Name) VALUES (@Id, @UserId, @Name);",
-            new { Id = collectionId, UserId = userId, Name = "Foreign collection" });
+            "INSERT INTO CollectionSearch (rowid, UserId, Name, Description) VALUES (@Id, @UserId, @Name, @Description);",
+            new { Id = collectionId, UserId = userId, Name = "Foreign collection", Description = "" });
         return collectionId;
     }
 
@@ -421,8 +633,8 @@ public sealed class CollectionsListingIntegrationTests
                 "INSERT INTO Collection (UserId, Name, Slug, IsPublic) VALUES (@UserId, @Name, @Slug, 0); SELECT last_insert_rowid();",
                 new { UserId = userId, Name = names[index], Slug = $"test-collection-{index + 1}" });
             await connection.ExecuteAsync(
-                "INSERT INTO CollectionSearch (rowid, UserId, Name) VALUES (@Id, @UserId, @Name);",
-                new { Id = collectionId, UserId = userId, Name = names[index] });
+                "INSERT INTO CollectionSearch (rowid, UserId, Name, Description) VALUES (@Id, @UserId, @Name, @Description);",
+                new { Id = collectionId, UserId = userId, Name = names[index], Description = string.Empty });
         }
     }
 
@@ -454,6 +666,14 @@ public sealed class CollectionsListingIntegrationTests
         return await connection.ExecuteScalarAsync<long>(
             "SELECT COUNT(*) FROM Collection INNER JOIN User ON User.Id = Collection.UserId WHERE User.Email = @Email;",
             new { Email = email });
+    }
+
+    private static async Task<string?> GetCollectionName(string databasePath, long collectionId)
+    {
+        await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+        return await connection.ExecuteScalarAsync<string>(
+            "SELECT Name FROM Collection WHERE Id = @CollectionId;",
+            new { CollectionId = collectionId });
     }
 
     private static async Task<string> GetAntiforgeryToken(HttpClient client, long collectionId)

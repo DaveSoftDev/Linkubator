@@ -61,7 +61,6 @@ public sealed class EditModel : PrivatePageModel
             cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
-            Sidebar = CreateSidebar(SidebarSelectionKind, []);
             ApplyErrors(result.Errors);
             return Page();
         }
@@ -76,7 +75,6 @@ public sealed class EditModel : PrivatePageModel
     {
         if (!TryGetCollectionId(out long collectionId))
         {
-            Sidebar = CreateSidebar(SidebarSelectionKind, []);
             Alert = new PageAlertViewModel { Message = Linkubator.Application.Constants.CollectionErrors.CollectionIdInvalidMessage, Kind = "error" };
             return Page();
         }

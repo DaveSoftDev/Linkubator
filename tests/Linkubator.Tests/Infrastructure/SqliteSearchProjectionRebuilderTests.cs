@@ -54,7 +54,7 @@ public sealed class SqliteSearchProjectionRebuilderTests
         long otherLinkId = await database.SeedLink(OtherUserId, otherCollectionId, "https://example.test/other", "https://example.test/other", "Other link", false);
         await using SqliteConnection connection = database.OpenConnection();
         await connection.ExecuteAsync(
-            "DELETE FROM CollectionSearch WHERE rowid = @Id; DELETE FROM LinkSearch WHERE rowid = @LinkId; INSERT INTO CollectionSearch (rowid, UserId, Name) VALUES (999999, @UserId, 'Stale collection'); INSERT INTO LinkSearch (rowid, UserId, UrlOriginal, Title, Description, CollectionName) VALUES (999999, @UserId, '', 'Stale link', '', '');",
+            "DELETE FROM CollectionSearch WHERE rowid = @Id; DELETE FROM LinkSearch WHERE rowid = @LinkId; INSERT INTO CollectionSearch (rowid, UserId, Name, Description) VALUES (999999, @UserId, 'Stale collection', 'Stale description'); INSERT INTO LinkSearch (rowid, UserId, UrlOriginal, Title, Description, CollectionName) VALUES (999999, @UserId, '', 'Stale link', '', '');",
             new { Id = otherCollectionId, LinkId = otherLinkId, UserId = OwnerUserId });
         ISqliteSearchProjectionRebuilder rebuilder = new SqliteSearchProjectionRebuilder(new SqliteConnectionFactory(database.ConnectionString));
 

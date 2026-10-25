@@ -60,7 +60,6 @@ public sealed class DeleteModel : PrivatePageModel
 
         if (!result.IsSuccess || result.Value is null)
         {
-            Sidebar = CreateSidebar(SidebarSelectionKind, []);
             ApplyErrors(result.Errors);
             return Page();
         }
@@ -73,7 +72,6 @@ public sealed class DeleteModel : PrivatePageModel
     {
         if (!TryGetCollectionId(out long collectionId))
         {
-            Sidebar = CreateSidebar(SidebarSelectionKind, []);
             Alert = new PageAlertViewModel { Message = Linkubator.Application.Constants.CollectionErrors.CollectionIdInvalidMessage, Kind = "error" };
             return Page();
         }
@@ -84,7 +82,6 @@ public sealed class DeleteModel : PrivatePageModel
 
         if (!result.IsSuccess)
         {
-            Sidebar = CreateSidebar(SidebarSelectionKind, []);
             if (result.Errors.Any(error => error.Category == ApplicationEnums.ApplicationErrorCategory.ResourceNotAccessible))
             {
                 TempData[nameof(CollectionsModel.CollectionDeleteError)] = DeleteNotAccessibleMessage;
