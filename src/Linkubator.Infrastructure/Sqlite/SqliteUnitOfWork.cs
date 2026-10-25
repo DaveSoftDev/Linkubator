@@ -1,6 +1,5 @@
 using System.Data;
 using Dapper;
-using Linkubator.Application.Constants;
 using Linkubator.Application.Contracts;
 using Linkubator.Infrastructure.Repositories;
 using Microsoft.Data.Sqlite;

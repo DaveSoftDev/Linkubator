@@ -32,6 +32,7 @@ public abstract class PrivatePageModel : PageModel
     {
         Name = UserProfile.Name,
         Alias = UserProfile.Alias,
+        Email = UserProfile.Email,
     };
 
     public override async Task OnPageHandlerExecutionAsync(PageHandlerExecutingContext context, PageHandlerExecutionDelegate next)
@@ -42,7 +43,7 @@ public abstract class PrivatePageModel : PageModel
 
     protected async Task LoadSidebarCollections(AppSidebarSelectionKind selectionKind = AppSidebarSelectionKind.Home, CancellationToken cancellationToken = default)
     {
-        ApplicationResults.Result<IReadOnlyList<CollectionDto>> result = await _collectionService.ListCollections(cancellationToken: cancellationToken);
+        ApplicationResults.Result<IReadOnlyCollection<CollectionDto>> result = await _collectionService.ListAllCollections(cancellationToken: cancellationToken);
 
         if (!result.IsSuccess || result.Value is null)
         {

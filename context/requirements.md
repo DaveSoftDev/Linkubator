@@ -34,8 +34,8 @@ El comportamiento exacto de cada operación está en [specifications.md → «Cu
 El usuario podrá:
 
 - Crear y editar colecciones, con nombre y descripción.
+- La edición de una colección permite cambiar en el mismo formulario su nombre, descripción y visibilidad; no hay una acción separada que solo la renombre ni una ruta independiente para cambiar su visibilidad. La operación está en [specifications.md → «Rutas privadas»](specifications.md#rutas-privadas).
 - Buscar colecciones.
-- Hacer pública o privada una colección.
 - Eliminar una colección solo si no tiene enlaces y no es la última que le queda.
 
 La colección «Bandeja de entrada» es una colección normal como cualquier otra, aunque sea creada por la aplicación. El usuario puede realizar sobre ella las mismas operaciones que sobre las demás colecciones —editarla, cambiar su privacidad, eliminarla y asignarle enlaces—, sujetas a las mismas restricciones.

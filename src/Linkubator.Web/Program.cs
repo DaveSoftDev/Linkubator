@@ -67,28 +67,6 @@ app.Use(async (context, next) =>
 
     await next();
 });
-app.Use(async (context, next) =>
-{
-    string requestPath = context.Request.Path.Value ?? string.Empty;
-    bool isKnownNotFoundPage = requestPath.Equals(Linkubator.Web.Constants.AppRoutes.PublicNotFoundPage, StringComparison.OrdinalIgnoreCase)
-        || requestPath.Equals(Linkubator.Web.Constants.AppRoutes.PrivateNotFoundPage, StringComparison.OrdinalIgnoreCase);
-
-    bool isDisallowedMethod = !HttpMethods.IsGet(context.Request.Method)
-        && !HttpMethods.IsHead(context.Request.Method)
-        && !HttpMethods.IsOptions(context.Request.Method);
-
-    if (!isKnownNotFoundPage && isDisallowedMethod)
-    {
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
-        context.Request.Method = HttpMethods.Get;
-        context.Request.Path = requestPath.StartsWith(Linkubator.Web.Constants.AppRoutes.Root, StringComparison.OrdinalIgnoreCase)
-            ? Linkubator.Web.Constants.AppRoutes.PrivateNotFoundPage
-            : Linkubator.Web.Constants.AppRoutes.PublicNotFoundPage;
-    }
-
-    await next();
-});
-
 app.UseStatusCodePages(async ctx =>
 {
     if (ctx.HttpContext.Response.StatusCode == 404 && (ctx.HttpContext.Request.Path != Linkubator.Web.Constants.AppRoutes.PublicNotFoundPage && ctx.HttpContext.Request.Path != Linkubator.Web.Constants.AppRoutes.PrivateNotFoundPage))
@@ -103,7 +81,6 @@ app.UseStatusCodePages(async ctx =>
         await ctx.Next(ctx.HttpContext);
     }
 });
-
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging(options =>
 {

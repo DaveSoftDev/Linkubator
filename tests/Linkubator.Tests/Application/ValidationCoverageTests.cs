@@ -189,6 +189,23 @@ public class ValidationCoverageTests
     }
 
     [Fact]
+    public void CollectionGetValidator_CoversNullInvalidAndValidCases()
+    {
+        CollectionGetValidator validator = new();
+
+        Result nullResult = validator.Validate(null!);
+        Assert.False(nullResult.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", nullResult.Errors[0].Code);
+
+        Result invalidId = validator.Validate(new CollectionGetRequest(0));
+        Assert.False(invalidId.IsSuccess);
+        Assert.Equal("COLLECTION_ID_INVALID", invalidId.Errors[0].Code);
+
+        Result valid = validator.Validate(new CollectionGetRequest(1));
+        Assert.True(valid.IsSuccess);
+    }
+
+    [Fact]
     public void CollectionValidations_ValidateAllStaticBranches()
     {
         Assert.False(CollectionValidations.ValidateCollectionId(0).IsSuccess);
@@ -238,6 +255,23 @@ public class ValidationCoverageTests
         Assert.Same(renameValidator, custom.CollectionRenameValidator);
         Assert.Same(changeVisibilityValidator, custom.CollectionChangeVisibilityValidator);
         Assert.Same(deleteValidator, custom.CollectionDeleteValidator);
+    }
+
+    [Fact]
+    public void LinkGetValidator_CoversNullInvalidAndValidCases()
+    {
+        LinkGetValidator validator = new();
+
+        Result nullResult = validator.Validate(null!);
+        Assert.False(nullResult.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", nullResult.Errors[0].Code);
+
+        Result invalidId = validator.Validate(new LinkGetRequest(0));
+        Assert.False(invalidId.IsSuccess);
+        Assert.Equal("LINK_ID_INVALID", invalidId.Errors[0].Code);
+
+        Result valid = validator.Validate(new LinkGetRequest(1));
+        Assert.True(valid.IsSuccess);
     }
 
     [Fact]

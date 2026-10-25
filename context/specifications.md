@@ -697,8 +697,7 @@ Reglas de los filtros del listado de enlaces:
 | Cambiar la visibilidad de un enlace | `/app/enlaces/{id}/visibilidad` | POST |
 | Eliminar enlace | `/app/enlaces/{id}/eliminar` | GET y POST |
 | Crear colección | `/app/colecciones/nueva` | GET y POST |
-| Editar colección | `/app/colecciones/{id}/editar` | GET y POST |
-| Cambiar la visibilidad de una colección | `/app/colecciones/{id}/visibilidad` | POST |
+| Editar colección (nombre, descripción y visibilidad) | `/app/colecciones/{id}/editar` | GET y POST |
 | Eliminar colección | `/app/colecciones/{id}/eliminar` | GET y POST |
 | Crear etiqueta | `/app/etiquetas/nueva` | GET y POST |
 | Editar etiqueta | `/app/etiquetas/{id}/editar` | GET y POST |
@@ -707,7 +706,7 @@ Reglas de los filtros del listado de enlaces:
 - El dashboard muestra las acciones para crear un enlace, una colección o una etiqueta y permite acceder a todos los listados. Su formulario de búsqueda envía por GET a `/app/enlaces` con `q`; no muestra resultados ni permite editar o eliminar elementos directamente.
 - El identificador de ruta `id` y los parámetros de listado `p`, `c` y `e` son enteros positivos escritos solo con dígitos. Los ceros iniciales se aceptan: `003` se interpreta como `3`.
 - En los listados, cada filtro `c` o `e` vacío se ignora independientemente de los demás filtros; `p` ausente o vacío indica la primera página. Se conservan los demás filtros válidos.
-- Un valor de `p`, `c` o `e` inválido o fuera de rango muestra un mensaje accesible indicando que los valores no son correctos.
+- Un valor de `p`, `c` o `e` inválido o fuera de rango muestra un mensaje accesible indicando que los valores no son correctos. En el listado privado de colecciones, un `p` inválido o fuera de rango se ignora y se muestra la primera página, sin error (ver [«Paginación de las páginas públicas»](#paginación-de-las-páginas-públicas) para la regla de las páginas públicas).
 - Un filtro `c` o `e` que identifica una colección o etiqueta inexistente o ajena al usuario se ignora; se conservan los demás filtros válidos.
 - En las rutas que identifican un recurso mediante `id`, un valor que no cumpla el formato de identificador válido produce un error de validación y no consulta ni modifica un recurso. Si el identificador tiene formato válido pero el recurso no existe o pertenece a otro usuario, ambos casos reciben el mismo resultado de recurso no accesible; no se muestran datos ni se revela cuál de esas causas ocurrió. En GET se muestra el mensaje genérico «No se ha podido acceder al elemento solicitado.» con un enlace al listado correspondiente; en POST se redirige a ese listado con el mismo aviso accesible.
 - El GET de edición de un enlace o colección carga sus datos desde su caso de uso de aplicación mediante el `id` de ruta; la consulta se limita al usuario identificado. Si no existe o pertenece a otro usuario, aplica la respuesta GET de recurso no accesible indicada arriba.
@@ -724,7 +723,7 @@ Reglas de los filtros del listado de enlaces:
 - Cada listado con búsqueda ofrece un formulario que envía por GET a su propia ruta con `q`, conserva los filtros aplicables de ese listado y descarta `p`, de modo que la búsqueda empieza en la primera página. El texto de `q` no se registra (ver [«Registro de eventos»](#registro-de-eventos)).
 - Los selectores de colección o la asignación etiquetas para crear o mover un enlace y el filtro `c` y `e` incluyen todas las colecciones o etiquetas del usuario, ordenadas según [«Listados»](#listados) y sin paginar.
 - Al crear o editar un enlace en una colección privada, la opción para hacerlo público está deshabilitada y explica el motivo. Una petición manipulada que intente hacerlo público se rechaza según [«Errores controlados»](#errores-controlados).
-- El cambio privacidad incluye exactamente un estado destino `IsPublic`, con el valor `true` o `false`; nunca alterna el estado actual. Si falta, se repite o no es válido, no modifica nada y redirige a la lista con un aviso accesible. Si solicita hacer público un enlace de una colección privada, se rechaza según [«Errores controlados»](#errores-controlados).
+- El formulario de edición de una colección permite cambiar conjuntamente nombre, descripción y visibilidad. Si se hace privada, la colección y sus enlaces pasan a privados atómicamente; al hacerla pública, sus enlaces permanecen privados. El formulario envía un único estado destino explícito. La ruta y método de edición se indican en la tabla anterior.
 - Una acción POST realizada correctamente redirige a la lista correspondiente: los enlaces a `/app/enlaces`, las colecciones a `/app/colecciones` y las etiquetas a `/app/etiquetas`. No conserva filtros ni página. Un error de validación vuelve a mostrar su formulario; una acción de privacidad rechazada redirige a su lista con un aviso accesible.
 - Las rutas GET de crear, editar, mover y eliminar son las páginas canónicas de sus formularios. La página de eliminar pide confirmación antes de enviar su POST. En la gestión de enlaces y colecciones, la interfaz presenta esos mismos formularios en diálogos, sin cambiar las rutas, los métodos ni el comportamiento. Los errores de validación y de reglas del dominio se muestran en el diálogo correspondiente; los errores de validación siguen asociados a sus campos.
 - Una ruta con un método distinto del indicado en la tabla responde el mismo `404` genérico, incluso si el recurso existe y pertenece al usuario.
@@ -754,7 +753,7 @@ Las páginas públicas no muestran el nombre ni el email del usuario.
 
 - Solo se pagina la página de colección (ver [«Listados»](#listados)).
 - La página se indica con el parámetro de consulta `p`: `/{alias}/colecciones/{slug}?p=2`.
-- `p` acepta un entero positivo escrito solo con dígitos; los ceros iniciales se aceptan. Si falta, está vacío o su valor no es válido o está fuera de rango, se muestra la primera página, sin error. Los parámetros desconocidos se ignoran. Si `p` aparece varias veces, se usa el primer valor.
+- `p` acepta un entero positivo escrito solo con dígitos; los ceros iniciales se aceptan. Si falta, está vacío o su valor no es válido o está fuera de rango, se muestra la primera página, sin error. Los parámetros desconocidos se ignoran. Si `p` aparece varias veces, se usa el primer valor. Esta regla aplica a la paginación de la página pública de colección.
 - La primera página es la URL sin parámetro. `?p=1`, cualquier otra representación de 1 con ceros iniciales y cualquier valor inválido de `p` se sirven con el mismo contenido; su canonical apunta a la URL sin parámetro.
 - Las páginas 2 y siguientes tienen como canonical la URL con el número de página en decimal y sin ceros iniciales. Por ejemplo, `?p=02` sirve la página 2 y su canonical apunta a `?p=2`.
 

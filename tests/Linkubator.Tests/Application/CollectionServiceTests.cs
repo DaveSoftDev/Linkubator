@@ -598,6 +598,68 @@ public class CollectionServiceTests
     }
 
     [Fact]
+    public async Task ListAllCollections_WhenUserHasCollections_ReturnsAllOwnedCollections()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        Collection alpha = Collection.Create(7, "Alpha", null);
+        Collection beta = Collection.Create(7, "Beta", null);
+        Collection gamma = Collection.Create(3, "Gamma", null);
+        SetId(alpha, 1);
+        SetId(beta, 2);
+        SetId(gamma, 3);
+        repository.Items.Add(alpha);
+        repository.Items.Add(beta);
+        repository.Items.Add(gamma);
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<IReadOnlyCollection<CollectionDto>> result = await service.ListAllCollections();
+
+        Assert.True(result.IsSuccess);
+        IReadOnlyCollection<CollectionDto> list = result.Value!;
+        Assert.Equal(2, list.Count);
+        Assert.Contains(list, item => item.Name == "Alpha");
+        Assert.Contains(list, item => item.Name == "Beta");
+    }
+
+    [Fact]
+    public async Task ListAllCollections_WhenUserIsUnauthenticated_ReturnsResourceNotAccessible()
+    {
+        CurrentUser currentUser = new CurrentUser(0);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<IReadOnlyCollection<CollectionDto>> result = await service.ListAllCollections();
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
+        Assert.Equal(CommonErrors.NotAuthenticatedCode, result.Errors[0].Code);
+    }
+
+    [Fact]
+    public async Task ListCollectionsPage_ReturnsItemsAndPageCountForCurrentUser()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        repository.Items.Add(Collection.Create(7, "Alpha", null));
+        repository.Items.Add(Collection.Create(7, "Beta", null));
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<Linkubator.Application.Dtos.Models.CollectionPageDto> result = await service.ListCollectionsPage(page: 1);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, result.Value!.Page);
+        Assert.Equal(1, result.Value.PageCount);
+        Assert.Equal(2, result.Value.Items.Count);
+    }
+
+    [Fact]
     public async Task ListCollections_WhenPageIsInvalid_ReturnsValidationError()
     {
         CurrentUser currentUser = new CurrentUser(7);

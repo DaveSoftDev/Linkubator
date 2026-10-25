@@ -350,6 +350,21 @@ public class UrlValidationPolicyTests
 
     [Trait("Category", "Validation")]
     [Theory]
+    [InlineData("https://example.com:443", false)]
+    [InlineData("https://example.com:70000", true)]
+    [InlineData("https://example.com:abc", true)]
+    public void HasInvalidPortDetectsPortProblemsInRecognizedAuthorities(string input, bool expected)
+    {
+        object? hasInvalidPort = PrivatePolicyInvoker.InvokeStatic(
+            typeof(DomainPolicies.UrlValidationPolicy),
+            "HasInvalidPort",
+            input);
+
+        Assert.Equal(expected, hasInvalidPort as bool?);
+    }
+
+    [Trait("Category", "Validation")]
+    [Theory]
     [InlineData("https://intranet", typeof(DomainExceptions.UrlHostInvalidException))]
     [InlineData("intranet", typeof(DomainExceptions.UrlHostInvalidException))]
     [InlineData("https://ana:clave@example.com", typeof(DomainExceptions.UrlCredentialsNotAllowedException))]

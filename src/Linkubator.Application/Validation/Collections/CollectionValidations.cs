@@ -27,4 +27,11 @@ public static class CollectionValidations
 
         return Result.Success();
     }
+
+    public static Result ValidateDescription(string? value)
+    {
+        return value is not null && !Linkubator.Domain.Policies.UserTextPolicy.IsWithinMaximumLength(value.Trim(), Linkubator.Domain.Constants.LengthLimitsConstants.CollectionDescription)
+            ? Result.Failure(CollectionErrors.DescriptionTooLong())
+            : Result.Success();
+    }
 }

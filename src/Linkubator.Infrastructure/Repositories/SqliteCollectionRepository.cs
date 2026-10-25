@@ -39,7 +39,7 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
     public async Task<IReadOnlyCollection<Entities.Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
     {
         IEnumerable<Entities.Collection> collections = await _connection.QueryAsync<Entities.Collection>(new CommandDefinition(
-            @"SELECT Id, UserId, Name, Slug, Description, IsPublic, CreatedAt
+            @"SELECT Id, Name, Slug, IsPublic
               FROM Collection
               WHERE UserId = @UserId
               ORDER BY Name COLLATE LINKUBATOR_ES_ES ASC, Id ASC;",

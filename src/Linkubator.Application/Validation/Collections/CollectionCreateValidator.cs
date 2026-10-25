@@ -18,6 +18,12 @@ public sealed class CollectionCreateValidator : IValidator<CollectionCreateReque
             return Result.Failure(CollectionErrors.NameRequired());
         }
 
+        result = CollectionValidations.ValidateDescription(request.Description);
+        if (!result.IsSuccess)
+        {
+            return result;
+        }
+
         return Result.Success();
     }
 }

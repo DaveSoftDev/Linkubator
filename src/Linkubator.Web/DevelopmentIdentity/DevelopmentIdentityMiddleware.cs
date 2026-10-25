@@ -33,7 +33,8 @@ public sealed class DevelopmentIdentityMiddleware
 
             string name = configuration?["DevelopmentIdentity:Name"] ?? "Demo User";
             string alias = configuration?["DevelopmentIdentity:Alias"] ?? "my-demo-user";
-            currentUser.SetProfile(name, alias);
+            string email = configuration?["DevelopmentIdentity:Email"] ?? "demo@user.com";
+            currentUser.SetProfile(name, alias, email);
         }
 
         await _next(context);

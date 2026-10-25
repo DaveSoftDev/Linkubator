@@ -135,6 +135,30 @@ public class WebStartupTests
     }
 
     [Fact]
+    public async Task AppCollections_RendersSearchAndDatabaseBackedEmptyState()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
+            using HttpClient client = factory.CreateClient();
+            using HttpResponseMessage response = await client.GetAsync("/app/colecciones?q=no-matching-collection");
+            string html = await response.Content.ReadAsStringAsync();
+            string decodedHtml = System.Net.WebUtility.HtmlDecode(html);
+
+            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+            Assert.Contains("action=\"/app/colecciones\"", html, StringComparison.Ordinal);
+            Assert.Contains("name=\"q\"", html, StringComparison.Ordinal);
+            Assert.Contains("No se han encontrado colecciones.", decodedHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("<ul class=\"collection-listing\"", html, StringComparison.Ordinal);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
     public void RequestLogging_OmitsPrivateQueryStringAndTokenUrls()
     {
         const string privateSearch = "private-search-sentinel-4f9c";
