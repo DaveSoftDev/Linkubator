@@ -85,7 +85,7 @@ public sealed class LoggingTests
 
         Assert.True(result.IsSuccess);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
-        Assert.Contains("Collection visibility changed", entry.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Collection updated for user", entry.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Null(entry.Exception);
     }
 

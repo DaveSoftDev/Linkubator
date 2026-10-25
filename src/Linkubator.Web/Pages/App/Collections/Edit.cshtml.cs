@@ -51,6 +51,7 @@ public sealed class EditModel : PrivatePageModel
     {
         if (!TryGetCollectionId(out long collectionId))
         {
+            Sidebar = CreateSidebar(SidebarSelectionKind, []);
             Alert = new PageAlertViewModel { Message = Linkubator.Application.Constants.CollectionErrors.CollectionIdInvalidMessage, Kind = "error" };
             return Page();
         }
@@ -60,6 +61,7 @@ public sealed class EditModel : PrivatePageModel
             cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
+            Sidebar = CreateSidebar(SidebarSelectionKind, []);
             ApplyErrors(result.Errors);
             return Page();
         }
@@ -74,6 +76,7 @@ public sealed class EditModel : PrivatePageModel
     {
         if (!TryGetCollectionId(out long collectionId))
         {
+            Sidebar = CreateSidebar(SidebarSelectionKind, []);
             Alert = new PageAlertViewModel { Message = Linkubator.Application.Constants.CollectionErrors.CollectionIdInvalidMessage, Kind = "error" };
             return Page();
         }
@@ -130,10 +133,11 @@ public sealed class EditModel : PrivatePageModel
             }
             else if (!string.IsNullOrWhiteSpace(error.Field))
             {
+                AddModelError(error.Field, error.Message ?? string.Empty);
                 items.Add(new PageErrorSummaryItemViewModel
                 {
                     Message = error.Message ?? string.Empty,
-                    FieldId = error.Field == NameField ? NameInputId : error.Field == DescriptionField ? DescriptionInputId : null,
+                    FieldId = GetFieldId(error.Field),
                 });
             }
             else
@@ -144,4 +148,32 @@ public sealed class EditModel : PrivatePageModel
 
         ErrorSummary = new PageErrorSummaryViewModel { Items = items };
     }
+
+    private void AddModelError(string field, string message)
+    {
+        if (string.IsNullOrWhiteSpace(field))
+        {
+            return;
+        }
+
+        string modelStateKey = field switch
+        {
+            NameField => "Input.Name",
+            DescriptionField => "Input.Description",
+            _ => string.Empty,
+        };
+
+        if (!string.IsNullOrWhiteSpace(modelStateKey))
+        {
+            ModelState.AddModelError(modelStateKey, message);
+        }
+    }
+
+    private static string? GetFieldId(string field)
+        => field switch
+        {
+            NameField => NameInputId,
+            DescriptionField => DescriptionInputId,
+            _ => null,
+        };
 }

@@ -5,17 +5,22 @@ using ApplicationRequestDtos = Linkubator.Application.Dtos.Requests;
 using ApplicationResults = Linkubator.Application.Results;
 using AppRoutes = Linkubator.Web.Constants.AppRoutes;
 using AppSidebarSelectionKind = Linkubator.Web.Models.AppSidebar.AppSidebarSelectionKind;
+using CollectionsModel = Linkubator.Web.Pages.App.CollectionsModel;
 using PageAlertViewModel = Linkubator.Web.Models.Presentation.PageAlertViewModel;
 using PageErrorSummaryItemViewModel = Linkubator.Web.Models.Presentation.PageErrorSummaryItemViewModel;
 using PageErrorSummaryViewModel = Linkubator.Web.Models.Presentation.PageErrorSummaryViewModel;
+using PrivateResourceUnavailablePresenter = Linkubator.Web.Models.Presentation.PrivateResourceUnavailablePresenter;
+using PrivateResourceUnavailableViewModel = Linkubator.Web.Models.Presentation.PrivateResourceUnavailableViewModel;
 using WebDevelopmentIdentity = Linkubator.Web.DevelopmentIdentity;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 
 namespace Linkubator.Web.Pages.App.Collections;
 
 public sealed class DeleteModel : PrivatePageModel
 {
     private const string CollectionListRoute = AppRoutes.Collections;
+    private const string DeleteNotAccessibleMessage = "No se ha podido eliminar la colección";
 
     private readonly ApplicationContracts.ICollectionService _collectionService;
 
@@ -38,10 +43,13 @@ public sealed class DeleteModel : PrivatePageModel
 
     public PageAlertViewModel Alert { get; private set; } = new();
 
+    public PrivateResourceUnavailableViewModel? ResourceUnavailable { get; private set; }
+
     public async Task<IActionResult> OnGet(CancellationToken cancellationToken)
     {
         if (!TryGetCollectionId(out long collectionId))
         {
+            Sidebar = CreateSidebar(SidebarSelectionKind, []);
             Alert = new PageAlertViewModel { Message = Linkubator.Application.Constants.CollectionErrors.CollectionIdInvalidMessage, Kind = "error" };
             return Page();
         }
@@ -52,6 +60,7 @@ public sealed class DeleteModel : PrivatePageModel
 
         if (!result.IsSuccess || result.Value is null)
         {
+            Sidebar = CreateSidebar(SidebarSelectionKind, []);
             ApplyErrors(result.Errors);
             return Page();
         }
@@ -64,6 +73,7 @@ public sealed class DeleteModel : PrivatePageModel
     {
         if (!TryGetCollectionId(out long collectionId))
         {
+            Sidebar = CreateSidebar(SidebarSelectionKind, []);
             Alert = new PageAlertViewModel { Message = Linkubator.Application.Constants.CollectionErrors.CollectionIdInvalidMessage, Kind = "error" };
             return Page();
         }
@@ -74,6 +84,13 @@ public sealed class DeleteModel : PrivatePageModel
 
         if (!result.IsSuccess)
         {
+            Sidebar = CreateSidebar(SidebarSelectionKind, []);
+            if (result.Errors.Any(error => error.Category == ApplicationEnums.ApplicationErrorCategory.ResourceNotAccessible))
+            {
+                TempData[nameof(CollectionsModel.CollectionDeleteError)] = DeleteNotAccessibleMessage;
+                return Redirect(CollectionListRoute);
+            }
+
             ApplyErrors(result.Errors);
             return Page();
         }
@@ -88,7 +105,7 @@ public sealed class DeleteModel : PrivatePageModel
         if (!string.IsNullOrWhiteSpace(RouteId))
         {
             string value = RouteId.Trim();
-            return value.Length > 0 && value.All(char.IsAsciiDigit) && long.TryParse(value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out collectionId) && collectionId > 0;
+            return value.Length > 0 && value.All(char.IsAsciiDigit) && long.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out collectionId) && collectionId > 0;
         }
 
         string?[] values = Request.Query["id"].ToArray();
@@ -106,7 +123,7 @@ public sealed class DeleteModel : PrivatePageModel
         string? formValue = values[0];
         return !string.IsNullOrWhiteSpace(formValue)
             && formValue.All(char.IsAsciiDigit)
-            && long.TryParse(formValue, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out collectionId)
+            && long.TryParse(formValue, NumberStyles.None, CultureInfo.InvariantCulture, out collectionId)
             && collectionId > 0;
     }
 
@@ -117,7 +134,10 @@ public sealed class DeleteModel : PrivatePageModel
         {
             if (error.Category == ApplicationEnums.ApplicationErrorCategory.ResourceNotAccessible)
             {
-                Alert = new PageAlertViewModel { Message = error.Message ?? string.Empty, Kind = "error" };
+                ResourceUnavailable = PrivateResourceUnavailablePresenter.Create(
+                    error,
+                    CollectionListRoute,
+                    DeleteNotAccessibleMessage);
             }
             else if (!string.IsNullOrWhiteSpace(error.Field))
             {

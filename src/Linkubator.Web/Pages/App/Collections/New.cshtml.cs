@@ -60,14 +60,16 @@ public sealed class NewModel : PrivatePageModel
         {
             if (error.Category == ApplicationEnums.ApplicationErrorCategory.Validation && !string.IsNullOrWhiteSpace(error.Field))
             {
+                AddModelError(error.Field, error.Message ?? string.Empty);
                 items.Add(new PageErrorSummaryItemViewModel
                 {
                     Message = error.Message ?? string.Empty,
-                    FieldId = error.Field == NameField ? NameInputId : error.Field == DescriptionField ? DescriptionInputId : null,
+                    FieldId = GetFieldId(error.Field),
                 });
             }
             else if (error.Category == ApplicationEnums.ApplicationErrorCategory.DomainRule && !string.IsNullOrWhiteSpace(error.Field))
             {
+                AddModelError(error.Field, error.Message ?? string.Empty);
                 items.Add(new PageErrorSummaryItemViewModel
                 {
                     Message = error.Message ?? string.Empty,
@@ -82,4 +84,32 @@ public sealed class NewModel : PrivatePageModel
 
         ErrorSummary = new PageErrorSummaryViewModel { Items = items };
     }
+
+    private void AddModelError(string field, string message)
+    {
+        if (string.IsNullOrWhiteSpace(field))
+        {
+            return;
+        }
+
+        string modelStateKey = field switch
+        {
+            NameField => "Input.Name",
+            DescriptionField => "Input.Description",
+            _ => string.Empty,
+        };
+
+        if (!string.IsNullOrWhiteSpace(modelStateKey))
+        {
+            ModelState.AddModelError(modelStateKey, message);
+        }
+    }
+
+    private static string? GetFieldId(string field)
+        => field switch
+        {
+            NameField => NameInputId,
+            DescriptionField => DescriptionInputId,
+            _ => null,
+        };
 }

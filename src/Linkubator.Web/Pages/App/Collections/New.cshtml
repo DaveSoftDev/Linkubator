@@ -45,4 +45,18 @@
             <button class="primary-button" type="submit">Crear colección</button>
         </div>
     </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const invalidField = Array.from(document.querySelectorAll('.input-validation-error, [aria-invalid="true"]'))
+                .find((element) => ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName));
+
+            if (invalidField instanceof HTMLElement) {
+                invalidField.focus();
+                if (typeof invalidField.select === 'function' && invalidField.tagName === 'INPUT') {
+                    invalidField.select();
+                }
+            }
+        });
+    </script>
 </main>

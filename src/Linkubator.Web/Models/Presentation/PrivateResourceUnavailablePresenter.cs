@@ -9,7 +9,8 @@ public static class PrivateResourceUnavailablePresenter
 
     public static PrivateResourceUnavailableViewModel? Create(
         ApplicationError error,
-        string listRoute)
+        string listRoute,
+        string? message = null)
     {
         ArgumentNullException.ThrowIfNull(error);
         ArgumentException.ThrowIfNullOrWhiteSpace(listRoute);
@@ -21,7 +22,7 @@ public static class PrivateResourceUnavailablePresenter
 
         return new PrivateResourceUnavailableViewModel
         {
-            Message = GenericMessage,
+            Message = string.IsNullOrWhiteSpace(message) ? GenericMessage : message,
             ListRoute = listRoute,
         };
     }

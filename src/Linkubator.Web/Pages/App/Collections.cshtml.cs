@@ -50,8 +50,16 @@ public sealed class CollectionsModel : PrivatePageModel
 
     public bool HasListingError { get; private set; }
 
+    [TempData]
+    public string? CollectionDeleteError { get; set; }
+
     public async Task<IActionResult> OnGet(CancellationToken cancellationToken)
     {
+        if (!string.IsNullOrWhiteSpace(CollectionDeleteError))
+        {
+            Alert = new PageAlertViewModel { Message = CollectionDeleteError, Kind = "error" };
+        }
+
         var analysis = PrivateListingQueryAnalyzer.Analyze(Request.Query, PrivateListingKind.Collections);
         SearchForm = new SearchFormViewModel
         {
