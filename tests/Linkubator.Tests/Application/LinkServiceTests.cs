@@ -390,18 +390,6 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task ChangeLinkVisibility_WhenLinkIdIsInvalid_ReturnsValidationError()
-    {
-        LinkService service = CreateService(new(7), new(), new());
-
-        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(0, true));
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
-        Assert.Equal("LINK_ID_INVALID", result.Errors[0].Code);
-    }
-
-    [Fact]
     public async Task MoveLink_WhenUserIsUnauthenticated_ReturnsResourceNotAccessible()
     {
         CurrentUser currentUser = new(0);
@@ -497,33 +485,6 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task ChangeLinkVisibility_WhenUserIsUnauthenticated_ReturnsResourceNotAccessible()
-    {
-        CurrentUser currentUser = new(0);
-        InMemoryCollectionRepository collectionRepository = new();
-        InMemoryLinkRepository linkRepository = new();
-        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
-
-        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, true));
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal(CommonErrors.NotAuthenticated().Code, result.Errors[0].Code);
-    }
-
-    [Fact]
-    public async Task ChangeLinkVisibility_WhenRequestIsNull_ReturnsRequestRequired()
-    {
-        LinkService service = CreateService(new(7), new(), new());
-
-        Result<LinkDto> result = await service.ChangeLinkVisibility(null!);
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
-    }
-
-    [Fact]
     public async Task MoveLink_WhenLinkDoesNotBelongToUser_ReturnsResourceNotAccessible()
     {
         CurrentUser currentUser = new(7);
@@ -546,76 +507,6 @@ public class LinkServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
         Assert.Equal("LINK_NOT_ACCESSIBLE", result.Errors[0].Code);
-    }
-
-    [Fact]
-    public async Task ChangeLinkVisibility_WhenLinkDoesNotBelongToUser_ReturnsResourceNotAccessible()
-    {
-        CurrentUser currentUser = new(7);
-        InMemoryCollectionRepository collectionRepository = new();
-        InMemoryLinkRepository linkRepository = new();
-        Collection collection = Collection.Create(9, "Other user's collection", null, true);
-        SetId(collection, 10);
-        collectionRepository.Items.Add(collection);
-        Link link = Link.Create(9, collection, "https://example.com/path", null, null, null, false);
-        SetId(link, 20);
-        linkRepository.Items.Add(link);
-        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
-
-        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, true));
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("LINK_NOT_ACCESSIBLE", result.Errors[0].Code);
-        Assert.False(link.IsPublic);
-        Assert.Empty(linkRepository.UpdatedItems);
-    }
-
-    [Fact]
-    public async Task ChangeLinkVisibility_WhenRepositoryThrowsUnexpectedException_ReThrows()
-    {
-        CurrentUser currentUser = new(7);
-        InMemoryCollectionRepository collectionRepository = new();
-        UnexpectedLinkRepository linkRepository = new();
-        UnexpectedUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, true)));
-    }
-
-    [Fact]
-    public async Task ChangeLinkVisibility_WhenUpdateThrowsAfterAwait_ReThrows()
-    {
-        CurrentUser currentUser = new(7);
-        InMemoryCollectionRepository collectionRepository = new();
-        Collection collection = Collection.Create(7, "Owned collection", null, true);
-        SetId(collection, 10);
-        collectionRepository.Items.Add(collection);
-        AsyncThrowingLinkRepository linkRepository = new() { ThrowOnUpdate = true };
-        Link link = Link.Create(7, collection, "https://example.com/path", "Title", null, null, false);
-        SetId(link, 20);
-        linkRepository.Items.Add(link);
-        UnexpectedUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, true)));
-    }
-
-    [Fact]
-    public async Task ChangeLinkVisibility_WhenDomainExceptionIsThrown_ReturnsDomainFailure()
-    {
-        CurrentUser currentUser = new(7);
-        InMemoryCollectionRepository collectionRepository = new();
-        ThrowingLinkRepository linkRepository = new();
-        UnexpectedUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
-
-        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, true));
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
-        Assert.Equal("NotValidInput", result.Errors[0].Code);
     }
 
     [Fact]
@@ -1064,29 +955,6 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task ChangeLinkVisibility_WhenMakingPublicLinkInPrivateCollection_ReturnsStableDomainError()
-    {
-        CurrentUser currentUser = new(7);
-        InMemoryCollectionRepository collectionRepository = new();
-        InMemoryLinkRepository linkRepository = new();
-        Collection collection = Collection.Create(7, "Private collection", null, false);
-        SetId(collection, 10);
-        collectionRepository.Items.Add(collection);
-        Link link = Link.Create(7, collection, "https://example.com/path", null, null, null, false);
-        SetId(link, 20);
-        linkRepository.Items.Add(link);
-        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
-
-        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, true));
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal("LINK_PUBLIC_IN_PRIVATE_COLLECTION", result.Errors[0].Code);
-        Assert.False(link.IsPublic);
-        Assert.Empty(linkRepository.UpdatedItems);
-    }
-
-    [Fact]
     public async Task ListLinks_WhenPageIsInvalid_ReturnsValidationError()
     {
         CurrentUser currentUser = new(7);
@@ -1266,7 +1134,6 @@ public class LinkServiceTests
         StubValidator<LinkCreateRequest> createValidator = new();
         StubValidator<LinkEditRequest> editValidator = new();
         StubValidator<LinkMoveRequest> moveValidator = new();
-        StubValidator<LinkChangeVisibilityRequest> changeVisibilityValidator = new();
         StubValidator<LinkDeleteRequest> deleteValidator = new();
 
         LinkServiceValidators configured = new(
@@ -1274,14 +1141,12 @@ public class LinkServiceTests
             createValidator,
             editValidator,
             moveValidator,
-            changeVisibilityValidator,
             deleteValidator);
 
         Assert.Same(getValidator, configured.GetLinkValidator);
         Assert.Same(createValidator, configured.CreateLinkValidator);
         Assert.Same(editValidator, configured.EditLinkValidator);
         Assert.Same(moveValidator, configured.MoveLinkValidator);
-        Assert.Same(changeVisibilityValidator, configured.ChangeLinkVisibilityValidator);
         Assert.Same(deleteValidator, configured.DeleteLinkValidator);
 
         LinkServiceValidators defaults = new();
@@ -1289,19 +1154,16 @@ public class LinkServiceTests
         Assert.NotNull(defaults.CreateLinkValidator);
         Assert.NotNull(defaults.EditLinkValidator);
         Assert.NotNull(defaults.MoveLinkValidator);
-        Assert.NotNull(defaults.ChangeLinkVisibilityValidator);
         Assert.NotNull(defaults.DeleteLinkValidator);
 
         Result createResult = defaults.CreateLinkValidator.Validate(new LinkCreateRequest(1, "https://example.com"));
         Result editResult = defaults.EditLinkValidator.Validate(new LinkEditRequest(1, 1, "Title"));
         Result moveResult = defaults.MoveLinkValidator.Validate(new LinkMoveRequest(1, 1));
-        Result visibilityResult = defaults.ChangeLinkVisibilityValidator.Validate(new LinkChangeVisibilityRequest(1, true));
         Result deleteResult = defaults.DeleteLinkValidator.Validate(new LinkDeleteRequest(1));
 
         Assert.True(createResult.IsSuccess);
         Assert.True(editResult.IsSuccess);
         Assert.True(moveResult.IsSuccess);
-        Assert.True(visibilityResult.IsSuccess);
         Assert.True(deleteResult.IsSuccess);
     }
 
@@ -1352,50 +1214,6 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task ChangeLinkVisibility_WhenMakingPrivateOnPublicCollection_ChangesVisibility()
-    {
-        CurrentUser currentUser = new(7);
-        InMemoryCollectionRepository collectionRepository = new();
-        InMemoryLinkRepository linkRepository = new();
-        Collection collection = Collection.Create(7, "Public collection", null, true);
-        SetId(collection, 10);
-        collectionRepository.Items.Add(collection);
-        Link link = Link.Create(7, collection, "https://example.com/path", "Title", null, null, true);
-        SetId(link, 20);
-        linkRepository.Items.Add(link);
-        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
-
-        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, false));
-
-        Assert.True(result.IsSuccess);
-        Assert.False(link.IsPublic);
-        Assert.Contains(link, linkRepository.UpdatedItems);
-    }
-
-    [Fact]
-    public async Task ChangeLinkVisibility_WhenMakingPublicOnPublicCollection_ChangesVisibility()
-    {
-        CurrentUser currentUser = new(7);
-        InMemoryCollectionRepository collectionRepository = new();
-        InMemoryLinkRepository linkRepository = new();
-        Collection collection = Collection.Create(7, "Public collection", null, true);
-        SetId(collection, 10);
-        collectionRepository.Items.Add(collection);
-        Link link = Link.Create(7, collection, "https://example.com/path", "Title", null, null, false);
-        SetId(link, 20);
-        linkRepository.Items.Add(link);
-        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
-
-        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, true));
-
-        Assert.True(result.IsSuccess);
-        Assert.True(link.IsPublic);
-        Assert.Contains(link, linkRepository.UpdatedItems);
-    }
-
-    [Fact]
     public async Task DeleteLink_WhenRepositoryThrowsAfterLookup_RollsBackAndReThrows()
     {
         CurrentUser currentUser = new(7);
@@ -1436,27 +1254,6 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task ChangeLinkVisibility_WhenCollectionIsMissing_ReturnsCollectionNotAccessible()
-    {
-        CurrentUser currentUser = new(7);
-        InMemoryCollectionRepository collectionRepository = new();
-        InMemoryLinkRepository linkRepository = new();
-        Collection collection = Collection.Create(7, "Owned collection", null, true);
-        SetId(collection, 10);
-        Link link = Link.Create(7, collection, "https://example.com/path", "Title", null, null, false);
-        SetId(link, 20);
-        linkRepository.Items.Add(link);
-        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
-
-        Result<LinkDto> result = await service.ChangeLinkVisibility(new LinkChangeVisibilityRequest(20, true));
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("LINK_COLLECTION_NOT_ACCESSIBLE", result.Errors[0].Code);
-    }
-
-    [Fact]
     public async Task ListLinks_WhenCollectionRepositoryThrowsUnexpectedException_ReThrows()
     {
         CurrentUser currentUser = new(7);
@@ -1478,14 +1275,12 @@ public class LinkServiceTests
             new StubValidator<LinkCreateRequest>(),
             new StubValidator<LinkEditRequest>(),
             new StubValidator<LinkMoveRequest>(),
-            new StubValidator<LinkChangeVisibilityRequest>(),
             new StubValidator<LinkDeleteRequest>());
 
         Assert.NotNull(first.GetLinkValidator);
         Assert.NotNull(first.CreateLinkValidator);
         Assert.NotNull(first.EditLinkValidator);
         Assert.NotNull(first.MoveLinkValidator);
-        Assert.NotNull(first.ChangeLinkVisibilityValidator);
         Assert.NotNull(first.DeleteLinkValidator);
         Assert.NotNull(second.CreateLinkValidator);
         Assert.Same(first.CreateLinkValidator.GetType(), second.CreateLinkValidator.GetType());

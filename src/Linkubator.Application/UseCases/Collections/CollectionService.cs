@@ -16,8 +16,6 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
     private readonly IValidator<CollectionGetRequest> _getCollectionValidator;
     private readonly IValidator<CollectionCreateRequest> _createCollectionValidator;
     private readonly IValidator<CollectionUpdateRequest> _collectionUpdateValidator;
-    private readonly IValidator<CollectionRenameRequest> _renameCollectionValidator;
-    private readonly IValidator<CollectionChangeVisibilityRequest> _changeCollectionVisibilityValidator;
     private readonly IValidator<CollectionDeleteRequest> _deleteCollectionValidator;
 
     public CollectionService(
@@ -34,8 +32,6 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         _getCollectionValidator = resolvedValidators.CollectionGetValidator;
         _createCollectionValidator = resolvedValidators.CollectionCreateValidator;
         _collectionUpdateValidator = resolvedValidators.CollectionUpdateValidator;
-        _renameCollectionValidator = resolvedValidators.CollectionRenameValidator;
-        _changeCollectionVisibilityValidator = resolvedValidators.CollectionChangeVisibilityValidator;
         _deleteCollectionValidator = resolvedValidators.CollectionDeleteValidator;
     }
 
@@ -165,70 +161,6 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         return result;
     }
 
-    public async Task<Result<CollectionDto>> RenameCollection(CollectionRenameRequest request, CancellationToken cancellationToken = default)
-    {
-        Result validation = _renameCollectionValidator.Validate(request);
-        if (!validation.IsSuccess)
-        {
-            return Result<CollectionDto>.Failure(validation.Errors);
-        }
-
-        Result authentication = EnsureAuthenticated();
-        if (!authentication.IsSuccess)
-        {
-            return Result<CollectionDto>.Failure(authentication.Errors);
-        }
-
-        return await Execute(
-            request,
-            cancellationToken,
-            async (renameRequest, token) =>
-            {
-                DomainEntities.Collection? collection = await _collectionRepository.GetById(renameRequest.CollectionId, CurrentUser.UserId, token);
-                if (collection is null)
-                {
-                    return Failure<CollectionDto>(CollectionErrors.RenameNotAccessible(), "Collection rename rejected for user; collection not accessible", renameRequest);
-                }
-
-                return await UpdateCollection(
-                    new CollectionUpdateRequest(renameRequest.CollectionId, renameRequest.Name, collection.Description, collection.IsPublic),
-                    token);
-            },
-            "Collection rename failed for user");
-    }
-
-    public async Task<Result<CollectionDto>> ChangeCollectionVisibility(CollectionChangeVisibilityRequest request, CancellationToken cancellationToken = default)
-    {
-        Result validation = _changeCollectionVisibilityValidator.Validate(request);
-        if (!validation.IsSuccess)
-        {
-            return Result<CollectionDto>.Failure(validation.Errors);
-        }
-
-        Result authentication = EnsureAuthenticated();
-        if (!authentication.IsSuccess)
-        {
-            return Result<CollectionDto>.Failure(authentication.Errors);
-        }
-
-        return await Execute(
-            request,
-            cancellationToken,
-            async (changeVisibilityRequest, token) =>
-            {
-                DomainEntities.Collection? collection = await _collectionRepository.GetById(changeVisibilityRequest.CollectionId, CurrentUser.UserId, token);
-                if (collection is null)
-                {
-                    return Failure<CollectionDto>(CollectionErrors.VisibilityNotAccessible(), "Collection visibility update rejected for user; collection not accessible", changeVisibilityRequest);
-                }
-
-                return await UpdateCollection(
-                    new CollectionUpdateRequest(changeVisibilityRequest.CollectionId, collection.Name, collection.Description, changeVisibilityRequest.IsPublic),
-                    token);
-            },
-            "Collection visibility update failed for user");
-    }
-
     public async Task<Result> DeleteCollection(CollectionDeleteRequest request, CancellationToken cancellationToken = default)
     {
         Result validation = _deleteCollectionValidator.Validate(request);
@@ -283,33 +215,6 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         }
         return result;
     }
-    public async Task<Result<IReadOnlyList<CollectionDto>>> ListCollections(string? query = null, int page = 1, CancellationToken cancellationToken = default)
-    {
-        Result authentication = EnsureAuthenticated();
-        if (!authentication.IsSuccess)
-        {
-            return Result<IReadOnlyList<CollectionDto>>.Failure(authentication.Errors);
-        }
-        if (page < 1)
-        {
-            return Failure<IReadOnlyList<CollectionDto>>(CollectionErrors.PageInvalid(), "Collection listing validation failed for user; invalid page", new { Page = page });
-        }
-        Result<IReadOnlyList<CollectionDto>> result = await Execute(
-            new CollectionListOperation(query?.Trim(), page),
-            cancellationToken,
-            async (operation, token) =>
-            {
-                IReadOnlyCollection<CollectionDto> items = await _collectionRepository.GetPageByUser(CurrentUser.UserId, operation.Query, operation.Page, token);
-                return Result<IReadOnlyList<CollectionDto>>.Success(items.ToList());
-            },
-            "Collection listing failed");
-        if (result.IsSuccess)
-        {
-            SafeLogger.Log(Logger, LogLevel.Information, null, "Collections listed for user", UserContext);
-        }
-        return result;
-    }
-
     public async Task<Result<CollectionPageDto>> ListCollectionsPage(string? query = null, int page = 1, CancellationToken cancellationToken = default)
     {
         Result authentication = EnsureAuthenticated();

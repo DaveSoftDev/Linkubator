@@ -69,7 +69,7 @@ public sealed class LoggingTests
     }
 
     [Fact]
-    public async Task CollectionService_ChangeVisibility_LogsSafeVisibilityMetadata()
+    public async Task CollectionService_UpdateCollection_LogsSafeMetadata()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -81,7 +81,7 @@ public sealed class LoggingTests
         TestLogger<CollectionService> logger = new();
         CollectionService service = new(logger, currentUser, collectionRepository, unitOfWorkFactory);
 
-        Result<CollectionDto> result = await service.ChangeCollectionVisibility(new CollectionChangeVisibilityRequest(10, false));
+        Result<CollectionDto> result = await service.UpdateCollection(new CollectionUpdateRequest(10, "My Collection", "desc", false));
 
         Assert.True(result.IsSuccess);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);

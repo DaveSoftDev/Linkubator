@@ -11,13 +11,7 @@ public interface ICollectionService
 
     Task<Result<CollectionDto>> UpdateCollection(CollectionUpdateRequest request, CancellationToken cancellationToken = default);
 
-    Task<Result<CollectionDto>> RenameCollection(CollectionRenameRequest request, CancellationToken cancellationToken = default);
-
-    Task<Result<CollectionDto>> ChangeCollectionVisibility(CollectionChangeVisibilityRequest request, CancellationToken cancellationToken = default);
-
     Task<Result> DeleteCollection(CollectionDeleteRequest request, CancellationToken cancellationToken = default);
-
-    Task<Result<IReadOnlyList<CollectionDto>>> ListCollections(string? query = null, int page = 1, CancellationToken cancellationToken = default);
 
     Task<Result<CollectionPageDto>> ListCollectionsPage(string? query = null, int page = 1, CancellationToken cancellationToken = default);
 
