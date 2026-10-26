@@ -4,6 +4,7 @@ using Serilog;
 using ApplicationContracts = Linkubator.Application.Contracts;
 using CollectionService = Linkubator.Application.UseCases.Collections.CollectionService;
 using DashboardService = Linkubator.Application.UseCases.Dashboard.DashboardService;
+using LinkService = Linkubator.Application.UseCases.Links.LinkService;
 using InfrastructureContracts = Linkubator.Infrastructure.Contracts;
 using InfrastructureDevelopmentIdentity = Linkubator.Infrastructure.DevelopmentIdentity;
 using WebDevelopmentIdentity = Linkubator.Web.DevelopmentIdentity;
@@ -26,6 +27,7 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) =>
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<ApplicationContracts.ICollectionService, CollectionService>();
 builder.Services.AddScoped<ApplicationContracts.IDashboardService, DashboardService>();
+builder.Services.AddScoped<ApplicationContracts.ILinkService, LinkService>();
 builder.Services.AddScoped<WebDevelopmentIdentity.DevelopmentCurrentUser>();
 builder.Services.AddScoped<WebDevelopmentIdentity.IWebUserProfile>(serviceProvider =>
     serviceProvider.GetRequiredService<WebDevelopmentIdentity.DevelopmentCurrentUser>());

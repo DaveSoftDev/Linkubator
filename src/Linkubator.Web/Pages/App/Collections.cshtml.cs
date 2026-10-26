@@ -10,7 +10,7 @@ using EmptyStateViewModel = Linkubator.Web.Models.Presentation.EmptyStateViewMod
 using PageAlertViewModel = Linkubator.Web.Models.Presentation.PageAlertViewModel;
 using PageErrorSummaryItemViewModel = Linkubator.Web.Models.Presentation.PageErrorSummaryItemViewModel;
 using PageErrorSummaryViewModel = Linkubator.Web.Models.Presentation.PageErrorSummaryViewModel;
-using PaginationPageLinkViewModel = Linkubator.Web.Models.Presentation.PaginationPageLinkViewModel;
+using PaginationViewModelFactory = Linkubator.Web.Models.Presentation.PaginationViewModelFactory;
 using PaginationViewModel = Linkubator.Web.Models.Presentation.PaginationViewModel;
 using PrivateListingKind = Linkubator.Web.Models.PrivateListing.PrivateListingKind;
 using PrivateListingQueryAnalyzer = Linkubator.Web.Models.PrivateListing.PrivateListingQueryAnalyzer;
@@ -110,51 +110,9 @@ public sealed class CollectionsModel : PrivatePageModel
 
         CollectionPageDto collectionPage = result.Value;
         Collections = collectionPage.Items;
-        Pagination = new PaginationViewModel
-        {
-            Pages = BuildPageLinks(collectionPage.Page, collectionPage.PageCount, analysis.SearchText),
-        };
+        Pagination = PaginationViewModelFactory.Create(collectionPage.Page, collectionPage.PageCount, page => BuildPageUrl(page, analysis.SearchText));
 
         return Page();
-    }
-
-    private static IReadOnlyList<PaginationPageLinkViewModel> BuildPageLinks(int currentPage, int pageCount, string? query)
-    {
-        if (pageCount <= 1)
-        {
-            return [];
-        }
-
-        List<PaginationPageLinkViewModel> pages = [];
-        if (currentPage > 1)
-        {
-            pages.Add(new PaginationPageLinkViewModel
-            {
-                Label = "Anterior",
-                Url = BuildPageUrl(currentPage - 1, query),
-            });
-        }
-
-        for (int page = 1; page <= pageCount; page++)
-        {
-            pages.Add(new PaginationPageLinkViewModel
-            {
-                Label = page.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                Url = page == currentPage ? null : page == 1 ? BuildPageUrl(null, query) : BuildPageUrl(page, query),
-                IsCurrent = page == currentPage,
-            });
-        }
-
-        if (currentPage < pageCount)
-        {
-            pages.Add(new PaginationPageLinkViewModel
-            {
-                Label = "Siguiente",
-                Url = BuildPageUrl(currentPage + 1, query),
-            });
-        }
-
-        return pages;
     }
 
     private static string BuildPageUrl(int? page, string? query)

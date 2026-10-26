@@ -85,11 +85,11 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 
 #### AC-LINK-02 — Editar enlace
 
-- Fuente: [requirements.md → «Enlaces»](../context/requirements.md#enlaces), [specifications.md → «URLs de los enlaces»](../context/specifications.md#urls-de-los-enlaces), [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas) y [«Errores controlados»](../context/specifications.md#errores-controlados)
+- Fuente: [requirements.md → «Enlaces»](../context/requirements.md#enlaces), [specifications.md → «URLs de los enlaces»](../context/specifications.md#urls-de-los-enlaces), [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas), [«Errores controlados»](../context/specifications.md#errores-controlados) y [domain-model.md → «Público y privado»](../context/domain-model.md#público-y-privado)
 - Dado un enlace del usuario identificado.
-- Cuando edita su título, descripción, imagen o visibilidad, sin cambiar la URL base.
-- Entonces solo se actualizan los campos válidos; si la edición falla, se conserva el estado original. La publicación solo se permite si la colección actual es pública.
-- Si la imagen no es válida, la operación se rechaza sin cambiar la entidad. El cambio de colección se cubre en AC-LINK-03.
+- Cuando edita su título, descripción, imagen, colección y estado público o privado en el mismo formulario, sin cambiar la URL base.
+- Entonces solo se actualizan los campos válidos; si cambia la colección, se aplica la regla de privacidad del movimiento; si conserva la colección actual, el checkbox establece el estado del enlace conforme a las reglas de privacidad. Un valor del checkbox que no se pueda interpretar como booleano rechaza la edición completa y conserva el estado original. La opción de hacerlo público solo está disponible cuando conserva su colección actual pública.
+- Si la colección seleccionada es inválida o ajena, o la imagen no es válida, la operación se rechaza sin cambiar la entidad. El formulario independiente de movimiento y su acción se mantienen conforme a AC-LINK-03.
 - Dado un enlace del usuario identificado en una colección privada.
 - Cuando intenta editarlo para hacerlo público, incluso si la petición incluye otros cambios válidos.
 - Entonces se rechaza la edición completa, no se modifica ningún campo del enlace y se muestra el mensaje «No se puede hacer público un enlace de una colección privada».
@@ -101,18 +101,6 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - Cuando ejecuta la acción de mover.
 - Entonces el enlace pasa a la colección destino, conserva su identidad y sus datos editables, queda privado y la operación solo tiene éxito si el destino pertenece al usuario y la regla de propiedad se cumple.
 - Si la colección de destino es inexistente, ajena o la operación es manipulada, el cambio se rechaza sin aplicar cambios.
-
-#### AC-LINK-04 — Cambiar visibilidad de un enlace
-
-- Fuente: [requirements.md → «Público y privado»](../context/requirements.md#público-y-privado), [domain-model.md → «Público y privado»](../context/domain-model.md#público-y-privado), [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas) y [«Errores controlados»](../context/specifications.md#errores-controlados)
-- Dado un enlace del usuario identificado y una colección de origen válida.
-- Cuando cambia su visibilidad a público o privado.
-- Entonces el estado destino se aplica solo si la colección de origen es pública o si el cambio no infringe las reglas de dominio; un enlace de una colección privada nunca puede hacerse público.
-- Dado un enlace del usuario identificado.
-- Cuando solicita cambiar su visibilidad con el estado destino ausente, repetido o inválido.
-- Entonces la acción se rechaza, no modifica el enlace y sigue el tratamiento de rechazo definido para esa ruta.
-- Si intenta hacer público un enlace de una colección privada, la acción se rechaza y no modifica el enlace.
-- Si el enlace no pertenece al usuario identificado, la acción se rechaza sin modificarlo.
 
 #### AC-LINK-05 — Eliminar enlace
 

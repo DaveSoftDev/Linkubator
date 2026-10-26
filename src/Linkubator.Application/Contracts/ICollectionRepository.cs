@@ -11,6 +11,8 @@ public interface ICollectionRepository
 
     Task<IReadOnlyCollection<Entities.Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(
         long userId,
         string? query,

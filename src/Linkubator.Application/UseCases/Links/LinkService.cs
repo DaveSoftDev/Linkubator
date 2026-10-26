@@ -16,7 +16,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
     private readonly ILinkRepository _linkRepository;
     private readonly IValidator<LinkGetRequest> _getLinkValidator;
     private readonly IValidator<LinkCreateRequest> _createLinkValidator;
-    private readonly IValidator<LinkEditRequest> _editLinkValidator;
+    private readonly IValidator<LinkUpdateRequest> _updateLinkValidator;
     private readonly IValidator<LinkMoveRequest> _moveLinkValidator;
     private readonly IValidator<LinkDeleteRequest> _deleteLinkValidator;
 
@@ -50,7 +50,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         _linkRepository = linkRepository;
         _getLinkValidator = resolvedValidators.GetLinkValidator;
         _createLinkValidator = resolvedValidators.CreateLinkValidator;
-        _editLinkValidator = resolvedValidators.EditLinkValidator;
+        _updateLinkValidator = resolvedValidators.UpdateLinkValidator;
         _moveLinkValidator = resolvedValidators.MoveLinkValidator;
         _deleteLinkValidator = resolvedValidators.DeleteLinkValidator;
     }
@@ -140,12 +140,12 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return result;
     }
 
-    public async Task<Result<LinkDto>> EditLink(LinkEditRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<LinkDto>> UpdateLink(LinkUpdateRequest request, CancellationToken cancellationToken = default)
     {
-        Result validation = _editLinkValidator.Validate(request);
+        Result validation = _updateLinkValidator.Validate(request);
         if (!validation.IsSuccess)
         {
-            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link edit validation failed for user", UserContext, request);
+            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link update validation failed for user", UserContext, request);
             return Result<LinkDto>.Failure(validation.Errors);
         }
 
@@ -158,40 +158,67 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         Result<LinkDto> result = await ExecuteInTransaction(
             request,
             cancellationToken,
-            async (editRequest, unitOfWork, token) =>
+            async (updateRequest, unitOfWork, token) =>
             {
                 ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
                 ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
-                DomainEntities.Link? link = await linkRepository.GetById(editRequest.LinkId, CurrentUser.UserId, token);
+                DomainEntities.Link? link = await linkRepository.GetById(updateRequest.LinkId, CurrentUser.UserId, token);
                 if (link is null)
                 {
-                    return Failure<LinkDto>(LinkErrors.LinkNotAccessible(), "Link edit rejected for user; link not accessible", new { LinkId = editRequest.LinkId });
+                    return Failure<LinkDto>(LinkErrors.LinkNotAccessible(), "Link update rejected for user; link not accessible", new { LinkId = updateRequest.LinkId });
                 }
 
                 DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, CurrentUser.UserId, token);
                 if (collection is null)
                 {
-                    return Failure<LinkDto>(LinkErrors.CollectionNotAccessible(), "Link edit rejected for user; collection not accessible", new { LinkId = editRequest.LinkId, CollectionId = link.CollectionId });
+                    return Failure<LinkDto>(LinkErrors.CollectionNotAccessible(), "Link update rejected for user; collection not accessible", new { LinkId = updateRequest.LinkId, CollectionId = link.CollectionId });
                 }
 
-                if (editRequest.IsPublic == true && !collection.IsPublic)
+                bool collectionChanged = updateRequest.CollectionId != link.CollectionId;
+                DomainEntities.Collection? destinationCollection = collectionChanged
+                    ? await collectionRepository.GetById(updateRequest.CollectionId, CurrentUser.UserId, token)
+                    : collection;
+                if (destinationCollection is null)
                 {
-                    return Failure<LinkDto>(LinkErrors.PublicLinkInPrivateCollection(), "Link edit rejected for user; public link in private collection", editRequest);
+                    return Failure<LinkDto>(
+                        LinkErrors.CollectionSelectionInvalid(),
+                        "Link update rejected for user; selected collection is not accessible",
+                        new { LinkId = updateRequest.LinkId, CollectionId = updateRequest.CollectionId });
                 }
 
-                link.Edit(editRequest.Title, editRequest.Description, editRequest.Image);
-                if (editRequest.IsPublic is bool requestedVisibility)
+                if (!collectionChanged && updateRequest.IsPublic == true && !destinationCollection.IsPublic)
                 {
-                    link.ChangePrivacy(requestedVisibility, collection);
+                    return Failure<LinkDto>(LinkErrors.PublicLinkInPrivateCollection(), "Link update rejected for user; public link in private collection", updateRequest);
+                }
+
+                Result metadataValidation = LinkMetadataValidator.Validate(
+                    updateRequest.Title,
+                    updateRequest.Description,
+                    updateRequest.Image,
+                    link.UrlOriginal);
+                if (!metadataValidation.IsSuccess)
+                {
+                    SafeLogger.Log(Logger, LogLevel.Warning, null, "Link update content validation failed for user", UserContext, new { LinkId = updateRequest.LinkId });
+                    return Result<LinkDto>.Failure(metadataValidation.Errors);
+                }
+
+                link.Edit(updateRequest.Title, updateRequest.Description, updateRequest.Image);
+                if (collectionChanged)
+                {
+                    link.MoveToCollection(destinationCollection);
+                }
+                else if (updateRequest.IsPublic is bool requestedVisibility)
+                {
+                    link.ChangePrivacy(requestedVisibility, destinationCollection);
                 }
 
                 await linkRepository.Update(link, token);
                 return Result<LinkDto>.Success(Map(link));
             },
-            "Link edit failed for user");
+            "Link update failed for user");
         if (result.IsSuccess)
         {
-            SafeLogger.Log(Logger, LogLevel.Information, null, "Link edited", UserContext);
+            SafeLogger.Log(Logger, LogLevel.Information, null, "Link updated", UserContext);
         }
 
         return result;
@@ -281,6 +308,34 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         }
 
         return result;
+    }
+
+    public async Task<Result<LinkPageDto>> ListLinksPage(string? query = null, long? collectionId = null, int page = 1, CancellationToken cancellationToken = default)
+    {
+        Result<IReadOnlyList<LinkDto>> links = await ListLinks(query, collectionId, page, cancellationToken);
+        if (!links.IsSuccess)
+        {
+            return Result<LinkPageDto>.Failure(links.Errors);
+        }
+
+        return await Execute(
+            new { Query = query?.Trim(), CollectionId = collectionId, Page = page },
+            cancellationToken,
+            async (request, token) =>
+            {
+                int pageCount = await _linkRepository.GetPageCountByUser(CurrentUser.UserId, request.Query, request.CollectionId, token);
+                if (request.Page > Math.Max(1, pageCount))
+                {
+                    return Failure<LinkPageDto>(CommonErrors.PageInvalid(message: CommonErrors.ListingValuesInvalidMessage), "Link listing validation failed for user; page out of range", new { Page = request.Page });
+                }
+
+                IReadOnlyList<LinkDto> items = links.Value
+                    ?? throw new InvalidOperationException("A successful link listing must contain its items.");
+                return Result<LinkPageDto>.Success(new LinkPageDto(items, request.Page, pageCount));
+            },
+            "Link page count failed for user",
+            handleDomainExceptions: false,
+            logContext: new { Page = page, CollectionId = collectionId });
     }
 
     public async Task<Result<IReadOnlyList<LinkDto>>> ListLinks(string? query = null, long? collectionId = null, int page = 1, CancellationToken cancellationToken = default)

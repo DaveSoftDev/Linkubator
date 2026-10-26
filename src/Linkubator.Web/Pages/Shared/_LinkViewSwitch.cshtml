@@ -1,0 +1,15 @@
+@model string
+@{
+    bool isListView = Context.Request.Cookies["links-view"] == "list";
+}
+
+<div class="view-switch" role="group" aria-label="Presentación de enlaces" data-link-view-switch data-cookie-path="@($"{Context.Request.PathBase}/app")" hidden>
+    <button class="view-switch__button @(!isListView ? "view-switch__button--active" : string.Empty)" type="button" aria-pressed="@(!isListView ? "true" : "false")" aria-controls="@Model" data-link-view="cards">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+        Tarjetas
+    </button>
+    <button class="view-switch__button @(isListView ? "view-switch__button--active" : string.Empty)" type="button" aria-pressed="@(isListView ? "true" : "false")" aria-controls="@Model" data-link-view="list">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1" /></svg>
+        Lista
+    </button>
+</div>

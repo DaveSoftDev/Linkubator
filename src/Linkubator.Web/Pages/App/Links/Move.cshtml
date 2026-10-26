@@ -1,0 +1,70 @@
+@page "/app/enlaces/{id}/mover"
+@model Linkubator.Web.Pages.App.Links.MoveModel
+@{
+    ViewData["Title"] = "Mover enlace";
+}
+
+<main id="main-content" class="app-main" tabindex="-1">
+    <header class="main-header">
+        <div>
+            <p class="main-eyebrow">Gestiona tus enlaces</p>
+            <h2>Mover enlace</h2>
+        </div>
+    </header>
+
+    @if (Model.ResourceUnavailable is not null)
+    {
+        @await Html.PartialAsync("~/Pages/Shared/_PrivateResourceUnavailable.cshtml", Model.ResourceUnavailable)
+    }
+    else
+    {
+        <form method="post" class="collection-form">
+            <input type="hidden" name="ru" value="@Model.ReturnRoute" />
+            <div class="collection-form__heading">
+                <span class="collection-form__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M4 12h15m-6-6 6 6-6 6" /></svg>
+                </span>
+                <h3>Elegir colección de destino</h3>
+            </div>
+            <div class="collection-form__heading">
+                @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
+                @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
+            </div>
+            @if (Model.LinkLabel.Length > 0)
+            {
+                <div class="collection-form__fields">
+                    <p class="collection-form__confirmation">Mover <strong>@Model.LinkLabel</strong> a:</p>
+                    <div class="collection-form__field">
+                        <label asp-for="Input.DestinationCollectionId" for="link-collection">Colección</label>
+                        <select asp-for="Input.DestinationCollectionId" id="link-collection" class="collection-form__collection-picker" required aria-describedby="link-collection-error">
+                            <option value="">Selecciona una colección</option>
+                            @foreach (var collection in Model.Collections)
+                            {
+                                <option value="@collection.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)">@collection.Name</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Input.DestinationCollectionId" id="link-collection-error" class="collection-form__error"></span>
+                    </div>
+                </div>
+            }
+            <div class="collection-form__actions">
+                <a class="collection-form__cancel" href="@Model.ReturnRoute">Cancelar</a>
+                @if (Model.LinkLabel.Length > 0)
+                {
+                    <button class="primary-button" type="submit">Mover enlace</button>
+                }
+            </div>
+        </form>
+    }
+</main>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const invalidField = document.querySelector('.collection-form .input-validation-error');
+            if (invalidField instanceof HTMLElement) {
+                invalidField.focus();
+            }
+        });
+    </script>
+}

@@ -7,7 +7,7 @@ namespace Linkubator.Infrastructure.Repositories;
 
 public sealed class SqlitePublicReadRepository : IPublicReadRepository
 {
-    private const int PageSize = 15;
+    private const int PageSize = 16;
     private readonly SqliteConnection _connection;
 
     public SqlitePublicReadRepository(SqliteConnection connection)

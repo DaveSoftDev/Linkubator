@@ -3,6 +3,7 @@
 @model Linkubator.Web.Pages.App.DashboardModel
 @{
     ViewData["Title"] = "Dashboard";
+    bool isListView = Request.Cookies["links-view"] == "list";
 }
 
 <main id="main-content" class="app-main" tabindex="-1">
@@ -13,17 +14,27 @@
         </div>
     </header>
 
+    @await Html.PartialAsync("~/Pages/Shared/_LinkCreationNotice.cshtml")
+
+    @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", new Linkubator.Web.Models.Presentation.PageAlertViewModel
+    {
+        Message = Model.LinkManagementError ?? string.Empty,
+        Kind = "error",
+    })
+
     <section class="main-section" aria-labelledby="main-section-title">
         <h3 id="main-section-title">Crear enlace rápido</h3>
-        <div class="main-section__form">
+        @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.QuickAddErrors)
+        @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.QuickAddAlert)
+        <form method="post" asp-page-handler="QuickAdd" class="main-section__form">
             <label for="quick-url" class="main-section__label">URL</label>
             <div class="main-section__field">
                 <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 1 0-7.07-7.07L10.5 4.5"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 1 0 7.07 7.07l2.83-2.83"></path></svg>
-                <input id="quick-url" type="url" placeholder="https://ejemplo.com" aria-label="URL del nuevo enlace" data-quick-add-input />
+                <input asp-for="QuickUrl" id="quick-url" type="text" inputmode="url" autocomplete="url" required placeholder="https://ejemplo.com" aria-label="URL del nuevo enlace" data-quick-add-input />
             </div>
 
             <div class="main-section__actions">
-                <button class="primary-button quick-add__main-trigger" type="button" data-quick-add-trigger>
+                <button class="primary-button quick-add__main-trigger" type="submit">
                     <span>Añadir</span>
                 </button>
 
@@ -33,22 +44,24 @@
                     </button>
 
                     <div class="quick-add__menu" id="quick-add-menu" hidden>
-                        <button type="button" class="quick-add__menu-item" data-quick-add-advanced>
+                        <a href="@Linkubator.Web.Constants.AppRoutes.LinkNew" class="quick-add__menu-item" data-quick-add-advanced>
                             Avanzado...
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <p class="main-section__status" aria-live="polite"></p>
+        </form>
     </section>
 
     @await Html.PartialAsync("~/Pages/Shared/_SearchForm.cshtml", Model.SearchForm)
 
     <section aria-labelledby="recent-links-title">
-        <div class="section-toolbar">
+        <div class="section-toolbar section-toolbar--links">
             <h3 id="recent-links-title">Enlaces recientes</h3>
+            @if (Model.Cards.Count > 0)
+            {
+                @await Html.PartialAsync("~/Pages/Shared/_LinkViewSwitch.cshtml", "dashboard-links")
+            }
         </div>
         <div class="main-wrapper">
         @if (Model.Cards.Count == 0)
@@ -57,7 +70,7 @@
         }
         else
         {
-            <div class="links-grid" aria-label="Lista de enlaces guardados">
+            <div id="dashboard-links" class="@(isListView ? "links-grid links-grid--list" : "links-grid")" data-link-view-container aria-label="Lista de enlaces guardados">
                 @foreach (LinkCardViewModel card in Model.Cards)
                 {
                     @await Html.PartialAsync("~/Pages/Shared/_LinkCard.cshtml", card)

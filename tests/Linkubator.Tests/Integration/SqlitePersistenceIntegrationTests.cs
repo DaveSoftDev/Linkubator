@@ -203,7 +203,7 @@ public sealed class SqlitePersistenceIntegrationTests
 
         await RunConcurrently(
             () => collectionService.UpdateCollection(new AppRequests.CollectionUpdateRequest(collectionId, "Public", null, false)),
-            () => linkService.EditLink(new AppRequests.LinkEditRequest(linkId, collectionId, "Link", null, null, true)));
+            () => linkService.UpdateLink(new AppRequests.LinkUpdateRequest(linkId, collectionId, "Link", null, null, true)));
         int collectionIsPublic = await connection.ExecuteScalarAsync<int>(
             "SELECT IsPublic FROM Collection WHERE Id = @CollectionId;",
             new { CollectionId = collectionId });

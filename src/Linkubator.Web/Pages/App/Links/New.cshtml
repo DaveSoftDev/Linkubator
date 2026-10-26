@@ -1,0 +1,109 @@
+@page "/app/enlaces/nuevo"
+@model Linkubator.Web.Pages.App.Links.NewModel
+@{
+    ViewData["Title"] = "Nuevo enlace";
+}
+
+<main id="main-content" class="app-main" tabindex="-1">
+    <header class="main-header">
+        <div>
+            <p class="main-eyebrow">Gestiona tus enlaces</p>
+            <h2>Nuevo enlace</h2>
+        </div>
+    </header>
+
+    <form method="post" id="link-form" class="collection-form">
+        <input type="hidden" name="ru" value="@Model.ReturnRoute" />
+        <div class="collection-form__heading">
+            <span class="collection-form__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 1 0-7.07-7.07L10.5 4.5" /><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 1 0 7.07 7.07l2.83-2.83" /></svg>
+            </span>
+            <h3>Detalles del enlace</h3>
+        </div>
+        <div class="collection-form__heading">
+            @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
+            @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
+        </div>
+        @if (Model.CanCreate)
+        {
+            <div class="collection-form__fields">
+                <div class="collection-form__field">
+                    <label asp-for="Input.Url" for="link-url">URL</label>
+                    <input asp-for="Input.Url" id="link-url" type="url" inputmode="url" autocomplete="url" placeholder="https://ejemplo.com" autofocus required aria-describedby="link-url-error" />
+                    <span asp-validation-for="Input.Url" id="link-url-error" class="collection-form__error"></span>
+                </div>
+                <div class="collection-form__field">
+                    <label asp-for="Input.CollectionId" for="link-collection">Colección</label>
+                    <select asp-for="Input.CollectionId" id="link-collection" class="collection-form__collection-picker" required aria-describedby="link-collection-error">
+                        <option value="">Selecciona una colección</option>
+                        @foreach (var collection in Model.Collections)
+                        {
+                            <option value="@collection.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)" data-public="@(collection.IsPublic ? "true" : "false")">@collection.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Input.CollectionId" id="link-collection-error" class="collection-form__error"></span>
+                </div>
+                <div class="collection-form__field">
+                    <label asp-for="Input.Title" for="link-title">Título <span class="collection-form__optional">Opcional</span></label>
+                    <input asp-for="Input.Title" id="link-title" aria-describedby="link-title-error" />
+                    <span asp-validation-for="Input.Title" id="link-title-error" class="collection-form__error"></span>
+                </div>
+                <div class="collection-form__field">
+                    <label asp-for="Input.Description" for="link-description">Descripción <span class="collection-form__optional">Opcional</span></label>
+                    <textarea asp-for="Input.Description" id="link-description" rows="4" aria-describedby="link-description-error"></textarea>
+                    <span asp-validation-for="Input.Description" id="link-description-error" class="collection-form__error"></span>
+                </div>
+                <div class="collection-form__field">
+                    <label asp-for="Input.Image" for="link-image">Imagen <span class="collection-form__optional">Opcional</span></label>
+                    <input asp-for="Input.Image" id="link-image" type="text" inputmode="url" aria-describedby="link-image-error" />
+                    <span asp-validation-for="Input.Image" id="link-image-error" class="collection-form__error"></span>
+                </div>
+                <div class="collection-form__privacy">
+                    <input asp-for="Input.IsPublic" id="link-public" aria-describedby="link-public-hint link-public-error" disabled="@(!Model.CanMakePublic)" />
+                    <label asp-for="Input.IsPublic" for="link-public">Hacer público</label>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18Z" /></svg>
+                </div>
+                <span id="link-public-hint" class="collection-form__optional" hidden="@Model.CanMakePublic">Selecciona una colección pública para poder hacer público el enlace.</span>
+                <span asp-validation-for="Input.IsPublic" id="link-public-error" class="collection-form__error"></span>
+            </div>
+        }
+        <div class="collection-form__actions">
+            <a class="collection-form__cancel" href="@Model.ReturnRoute">Cancelar</a>
+            @if (Model.CanCreate)
+            {
+                <button class="primary-button" type="submit">Crear enlace</button>
+            }
+        </div>
+    </form>
+</main>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const collection = document.querySelector('#link-collection');
+            const isPublic = document.querySelector('#link-public');
+            const privacyHint = document.querySelector('#link-public-hint');
+            if (collection instanceof HTMLSelectElement && isPublic instanceof HTMLInputElement) {
+                const syncPrivacy = () => {
+                    const canMakePublic = collection.selectedOptions[0]?.dataset.public === 'true';
+                    isPublic.disabled = !canMakePublic;
+                    if (!canMakePublic) {
+                        isPublic.checked = false;
+                    }
+                    if (privacyHint instanceof HTMLElement) {
+                        privacyHint.hidden = canMakePublic;
+                    }
+                };
+
+                collection.addEventListener('change', syncPrivacy);
+                window.addEventListener('pageshow', syncPrivacy);
+                syncPrivacy();
+            }
+
+            const invalidField = document.querySelector('#link-form .input-validation-error');
+            if (invalidField instanceof HTMLElement) {
+                invalidField.focus();
+            }
+        });
+    </script>
+}

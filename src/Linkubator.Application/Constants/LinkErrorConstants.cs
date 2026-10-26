@@ -14,12 +14,14 @@ public static class LinkErrors
     private const string LinkIdInvalidMessage = "El identificador del enlace no es válido.";
     private const string DestinationCollectionIdInvalidMessage = "La colección de destino no es válida.";
     private const string CollectionIdInvalidMessage = "La colección es obligatoria.";
+    private const string CollectionSelectionInvalidMessage = "La colección seleccionada no es válida.";
     private const string DeleteNotAccessibleMessage = "No se ha podido eliminar el enlace.";
     private const string UrlRequiredMessage = "La URL es obligatoria.";
 
     private const string LinkIdInvalidCode = "LINK_ID_INVALID";
     private const string DestinationCollectionIdInvalidCode = "LINK_DESTINATION_COLLECTION_ID_INVALID";
     private const string CollectionIdInvalidCode = "LINK_COLLECTION_ID_INVALID";
+    private const string CollectionSelectionInvalidCode = "LINK_COLLECTION_SELECTION_INVALID";
     private const string CollectionNotAccessibleCode = "LINK_COLLECTION_NOT_ACCESSIBLE";
     private const string LinkNotAccessibleCode = "LINK_NOT_ACCESSIBLE";
     private const string DeleteNotAccessibleCode = "LINK_DELETE_NOT_ACCESSIBLE";
@@ -38,6 +40,9 @@ public static class LinkErrors
 
     public static ApplicationError CollectionIdInvalid()
         => ApplicationError.Validation(CollectionIdInvalidCode, CommonErrors.CollectionIdField, CollectionIdInvalidMessage);
+
+    public static ApplicationError CollectionSelectionInvalid()
+        => ApplicationError.Validation(CollectionSelectionInvalidCode, CommonErrors.CollectionIdField, CollectionSelectionInvalidMessage);
 
     public static ApplicationError UrlRequired()
         => ApplicationError.Validation(UrlRequiredCode, UrlField, UrlRequiredMessage);

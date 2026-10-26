@@ -274,18 +274,18 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task EditLink_WhenRequestIsNull_ReturnsRequestRequired()
+    public async Task UpdateLink_WhenRequestIsNull_ReturnsRequestRequired()
     {
         LinkService service = CreateService(new(7), new(), new());
 
-        Result<LinkDto> result = await service.EditLink(null!);
+        Result<LinkDto> result = await service.UpdateLink(null!);
 
         Assert.False(result.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
     }
 
     [Fact]
-    public async Task EditLink_WhenUserIsUnauthenticated_ReturnsResourceNotAccessible()
+    public async Task UpdateLink_WhenUserIsUnauthenticated_ReturnsResourceNotAccessible()
     {
         CurrentUser currentUser = new(0);
         InMemoryCollectionRepository collectionRepository = new();
@@ -293,7 +293,7 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 10, "Title"));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(20, 10, "Title"));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
@@ -301,11 +301,11 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task EditLink_WhenLinkIdIsInvalid_ReturnsValidationError()
+    public async Task UpdateLink_WhenLinkIdIsInvalid_ReturnsValidationError()
     {
         LinkService service = CreateService(new(7), new(), new());
 
-        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(0, 0));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(0, 0));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
@@ -313,7 +313,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task EditLink_WhenLinkDoesNotExist_ReturnsResourceNotAccessible()
+    public async Task UpdateLink_WhenLinkDoesNotExist_ReturnsResourceNotAccessible()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -324,7 +324,7 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(99, 10, "Title"));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(99, 10, "Title"));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
@@ -332,7 +332,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task EditLink_WhenRepositoryThrowsUnexpectedException_ReThrows()
+    public async Task UpdateLink_WhenRepositoryThrowsUnexpectedException_ReThrows()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -340,11 +340,11 @@ public class LinkServiceTests
         UnexpectedUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EditLink(new LinkEditRequest(20, 10, "Title")));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateLink(new LinkUpdateRequest(20, 10, "Title")));
     }
 
     [Fact]
-    public async Task EditLink_WhenUpdateThrowsAfterAwait_ReThrows()
+    public async Task UpdateLink_WhenUpdateThrowsAfterAwait_ReThrows()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -358,11 +358,11 @@ public class LinkServiceTests
         UnexpectedUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.EditLink(new LinkEditRequest(20, 10, "Updated title")));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateLink(new LinkUpdateRequest(20, 10, "Updated title")));
     }
 
     [Fact]
-    public async Task EditLink_WhenDomainExceptionIsThrown_ReturnsDomainFailure()
+    public async Task UpdateLink_WhenDomainExceptionIsThrown_ReturnsDomainFailure()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -370,7 +370,7 @@ public class LinkServiceTests
         UnexpectedUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 10, "Title"));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(20, 10, "Title"));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
@@ -537,7 +537,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task EditLink_WhenOwnedAndValid_UpdatesFieldsWithoutChangingBaseUrl()
+    public async Task UpdateLink_WhenOwnedAndValid_UpdatesFieldsWithoutChangingBaseUrl()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -551,7 +551,7 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 7, "New title", "New desc", "https://example.com/new.png"));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(20, 10, "New title", "New desc", "https://example.com/new.png"));
 
         Assert.True(result.IsSuccess);
         Assert.Equal("https://example.com/path", result.Value!.UrlOriginal);
@@ -561,7 +561,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task EditLink_WhenPublishingInPrivateCollectionAndImageIsInvalid_LeavesLinkUnchanged()
+    public async Task UpdateLink_WhenPublishingInPrivateCollectionAndImageIsInvalid_LeavesLinkUnchanged()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -575,7 +575,7 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 7,"Changed", "Changed description", "file:///invalid.png", true));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(20, 10, "Changed", "Changed description", "file:///invalid.png", true));
 
         Assert.False(result.IsSuccess);
         Assert.Equal("LINK_PUBLIC_IN_PRIVATE_COLLECTION", result.Errors[0].Code);
@@ -586,7 +586,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task EditLink_WhenPublishingInPrivateCollectionWithOtherValidChanges_LeavesLinkUnchanged()
+    public async Task UpdateLink_WhenPublishingInPrivateCollectionWithOtherValidChanges_LeavesLinkUnchanged()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -600,7 +600,7 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 10, "Changed", "Changed description", IsPublic: true));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(20, 10, "Changed", "Changed description", IsPublic: true));
 
         Assert.False(result.IsSuccess);
         Assert.Equal("LINK_PUBLIC_IN_PRIVATE_COLLECTION", result.Errors[0].Code);
@@ -611,7 +611,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task EditLink_WhenLinkBelongsToAnotherUser_LeavesItUnchanged()
+    public async Task UpdateLink_WhenLinkBelongsToAnotherUser_LeavesItUnchanged()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -625,7 +625,7 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 10, "Changed"));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(20, 10, "Changed"));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
@@ -636,7 +636,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task EditLink_WhenImageIsInvalidInPublicCollection_LeavesLinkUnchanged()
+    public async Task UpdateLink_WhenImageIsInvalidInPublicCollection_LeavesLinkUnchanged()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -650,7 +650,7 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 10, "Changed", "Changed description", "file:///invalid.png"));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(20, 10, "Changed", "Changed description", "file:///invalid.png"));
 
         Assert.False(result.IsSuccess);
         Assert.Equal("Original", link.Title);
@@ -682,6 +682,23 @@ public class LinkServiceTests
         Assert.True(result.IsSuccess);
         Assert.Equal(2, result.Value!.Count);
         Assert.All(result.Value, item => Assert.Equal(10, item.CollectionId));
+    }
+
+    [Theory]
+    [InlineData(0, 1, "NOT_AUTHENTICATED")]
+    [InlineData(7, 0, "PAGE_INVALID")]
+    [InlineData(7, 2, "PAGE_INVALID")]
+    public async Task ListLinksPage_WithInvalidAccessOrPage_ReturnsFailure(long userId, int page, string code)
+    {
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, new CurrentUser(userId), collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkPageDto> result = await service.ListLinksPage(page: page);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(code, Assert.Single(result.Errors).Code);
     }
 
     [Fact]
@@ -1132,32 +1149,32 @@ public class LinkServiceTests
     {
         StubValidator<LinkGetRequest> getValidator = new();
         StubValidator<LinkCreateRequest> createValidator = new();
-        StubValidator<LinkEditRequest> editValidator = new();
+        StubValidator<LinkUpdateRequest> updateValidator = new();
         StubValidator<LinkMoveRequest> moveValidator = new();
         StubValidator<LinkDeleteRequest> deleteValidator = new();
 
         LinkServiceValidators configured = new(
             getValidator,
             createValidator,
-            editValidator,
+            updateValidator,
             moveValidator,
             deleteValidator);
 
         Assert.Same(getValidator, configured.GetLinkValidator);
         Assert.Same(createValidator, configured.CreateLinkValidator);
-        Assert.Same(editValidator, configured.EditLinkValidator);
+        Assert.Same(updateValidator, configured.UpdateLinkValidator);
         Assert.Same(moveValidator, configured.MoveLinkValidator);
         Assert.Same(deleteValidator, configured.DeleteLinkValidator);
 
         LinkServiceValidators defaults = new();
         Assert.NotNull(defaults.GetLinkValidator);
         Assert.NotNull(defaults.CreateLinkValidator);
-        Assert.NotNull(defaults.EditLinkValidator);
+        Assert.NotNull(defaults.UpdateLinkValidator);
         Assert.NotNull(defaults.MoveLinkValidator);
         Assert.NotNull(defaults.DeleteLinkValidator);
 
         Result createResult = defaults.CreateLinkValidator.Validate(new LinkCreateRequest(1, "https://example.com"));
-        Result editResult = defaults.EditLinkValidator.Validate(new LinkEditRequest(1, 1, "Title"));
+        Result editResult = defaults.UpdateLinkValidator.Validate(new LinkUpdateRequest(1, 1, "Title"));
         Result moveResult = defaults.MoveLinkValidator.Validate(new LinkMoveRequest(1, 1));
         Result deleteResult = defaults.DeleteLinkValidator.Validate(new LinkDeleteRequest(1));
 
@@ -1192,7 +1209,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task EditLink_WhenVisibilityIsExplicitlySetOnPublicCollection_UpdatesPrivacy()
+    public async Task UpdateLink_WhenPublicStateIsExplicitlySetOnPublicCollection_UpdatesPrivacy()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -1206,7 +1223,7 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 10, "Title", null, null, true));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(20, 10, "Title", null, null, true));
 
         Assert.True(result.IsSuccess);
         Assert.True(link.IsPublic);
@@ -1233,7 +1250,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task EditLink_WhenCollectionIsMissing_ReturnsCollectionNotAccessible()
+    public async Task UpdateLink_WhenCollectionIsMissing_ReturnsCollectionNotAccessible()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -1246,7 +1263,7 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.EditLink(new LinkEditRequest(20, 10, "Updated title"));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(20, 10, "Updated title"));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
@@ -1273,22 +1290,22 @@ public class LinkServiceTests
         LinkServiceValidators custom = new(
             new StubValidator<LinkGetRequest>(),
             new StubValidator<LinkCreateRequest>(),
-            new StubValidator<LinkEditRequest>(),
+            new StubValidator<LinkUpdateRequest>(),
             new StubValidator<LinkMoveRequest>(),
             new StubValidator<LinkDeleteRequest>());
 
         Assert.NotNull(first.GetLinkValidator);
         Assert.NotNull(first.CreateLinkValidator);
-        Assert.NotNull(first.EditLinkValidator);
+        Assert.NotNull(first.UpdateLinkValidator);
         Assert.NotNull(first.MoveLinkValidator);
         Assert.NotNull(first.DeleteLinkValidator);
         Assert.NotNull(second.CreateLinkValidator);
         Assert.Same(first.CreateLinkValidator.GetType(), second.CreateLinkValidator.GetType());
-        Assert.Same(first.EditLinkValidator.GetType(), second.EditLinkValidator.GetType());
+        Assert.Same(first.UpdateLinkValidator.GetType(), second.UpdateLinkValidator.GetType());
         Assert.Same(first.DeleteLinkValidator.GetType(), second.DeleteLinkValidator.GetType());
         Assert.Same(custom.GetLinkValidator.GetType(), typeof(StubValidator<LinkGetRequest>));
         Assert.Same(custom.CreateLinkValidator.GetType(), typeof(StubValidator<LinkCreateRequest>));
-        Assert.Same(custom.EditLinkValidator.GetType(), typeof(StubValidator<LinkEditRequest>));
+        Assert.Same(custom.UpdateLinkValidator.GetType(), typeof(StubValidator<LinkUpdateRequest>));
         Assert.Same(custom.DeleteLinkValidator.GetType(), typeof(StubValidator<LinkDeleteRequest>));
         Assert.Contains("LinkServiceValidators", first.ToString());
     }
@@ -1335,6 +1352,10 @@ public class LinkServiceTests
         Assert.Equal("LINK_COLLECTION_ID_INVALID", LinkErrors.CollectionIdInvalid().Code);
         Assert.Equal(ApplicationErrorCategory.Validation, LinkErrors.CollectionIdInvalid().Category);
         Assert.Equal("CollectionId", LinkErrors.CollectionIdInvalid().Field);
+
+        Assert.Equal("LINK_COLLECTION_SELECTION_INVALID", LinkErrors.CollectionSelectionInvalid().Code);
+        Assert.Equal(ApplicationErrorCategory.Validation, LinkErrors.CollectionSelectionInvalid().Category);
+        Assert.Equal("CollectionId", LinkErrors.CollectionSelectionInvalid().Field);
 
         Assert.Equal("URL_REQUIRED", LinkErrors.UrlRequired().Code);
         Assert.Equal(ApplicationErrorCategory.Validation, LinkErrors.UrlRequired().Category);
@@ -1393,6 +1414,9 @@ public class LinkServiceTests
 
         public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<Collection>>(new DomainExceptions.NotValidInputException());
+
+        public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
+            => Task.FromException<IReadOnlyCollection<CollectionDto>>(new DomainExceptions.NotValidInputException());
 
         public Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<CollectionDto>>(new DomainExceptions.NotValidInputException());
@@ -1543,6 +1567,9 @@ public class LinkServiceTests
         public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<Collection>>(new InvalidOperationException("boom"));
 
+        public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
+            => Task.FromException<IReadOnlyCollection<CollectionDto>>(new InvalidOperationException("boom"));
+
         public Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<CollectionDto>>(new InvalidOperationException("boom"));
 
@@ -1639,6 +1666,12 @@ public class LinkServiceTests
 
         public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<Collection>>(Items.Where(item => item.UserId == userId).ToList());
+
+        public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyCollection<CollectionDto>>(Items
+                .Where(item => item.UserId == userId)
+                .Select(item => new CollectionDto(item.Id, item.Name, item.Slug, item.Description, item.IsPublic, item.Links.Count, item.CreatedAt))
+                .ToList());
 
         public Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<CollectionDto>>(Array.Empty<CollectionDto>());

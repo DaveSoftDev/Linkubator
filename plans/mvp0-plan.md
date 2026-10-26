@@ -54,8 +54,8 @@ Este plan organiza la construcción del MVP0 en sprints de 1 semana, con la IA g
 | S5 | Persistencia I: SQLite y transacciones | L | Infrastructure | Esquema versionado, PRAGMAs, colación `es-ES`, UoW con `BEGIN IMMEDIATE`, repositorios Dapper, SQL local de desarrollo, proveedor de identidad |
 | S6 | Persistencia II: FTS5 | L | Infrastructure | Proyecciones de enlaces y de colecciones, sincronización atómica, consulta de búsqueda, comando de reconstrucción |
 | S7 | Web base, seguridad y accesibilidad | L | Web | HTTPS, cabeceras, `Host`, antiforgery, layout accesible, dashboard, parámetros de listado, errores comunes, logs sin `q` |
-| S8 | Gestión de colecciones | L | Web | Listado con búsqueda y paginación, crear, editar, eliminar y cambiar visibilidad |
-| S9 | Gestión de enlaces | L | Web | Crear, editar, mover, cambiar visibilidad y eliminar enlaces, con duplicados y rechazo de peticiones manipuladas |
+| S8 | Gestión de colecciones | L | Web | Listado con búsqueda y paginación, crear, editar nombre, descripción y estado público/privado, y eliminar |
+| S9 | Gestión de enlaces | L | Web | Crear, editar campos y estado público/privado, mover y eliminar enlaces, con duplicados y rechazo de peticiones manipuladas |
 | S10 | Listado y búsqueda de enlaces | L | Web | `/app/enlaces` con `q`, filtro `c` y paginación, relevancia, búsqueda desde el dashboard |
 | S11 | Área pública y SEO | L | Web | Landing, página de usuario, de colecciones y de colección, canonical, redirecciones, `404` |
 | S12 | Cierre y hardening | M | Transversal | Checklist completa, revisión de accesibilidad y navegadores, auditoría de seguridad, documentación sincronizada |
@@ -191,8 +191,8 @@ Ninguna tarea se talla como XL. El mayor bloque de funcionalidad, los enlaces, y
 | S4.3 | Definir el contrato del proveedor de identidad de desarrollo ([«Identidad de desarrollo»](../context/decisions.md#identidad-de-desarrollo)) | IA | S4.2 |
 | S4.4 | Redactar criterios de aceptación (dado/cuando/entonces) de cada caso de uso en el archivo previsto [Criterios de aceptación](mvp0-acceptance-criteria.md), enlazados a su regla | IA | S4.1 |
 | S4.5 | **Puerta:** revisar y aprobar los criterios de aceptación, dejando constancia por escrito | Humano | S4.4 |
-| S4.6 | Implementar los casos de uso de colecciones: crear, renombrar con regeneración de slug, cambiar visibilidad, eliminar (no la última ni con enlaces) y listar | IA | S4.5 |
-| S4.7 | Implementar los casos de uso de enlaces: crear con duplicados, editar, mover, cambiar visibilidad, eliminar y listar | IA | S4.5 |
+| S4.6 | Implementar los casos de uso de colecciones: crear, editar nombre, descripción y estado público/privado, eliminar (no la última ni con enlaces) y listar | IA | S4.5 |
+| S4.7 | Implementar los casos de uso de enlaces: crear con duplicados, editar campos y estado público/privado, mover, eliminar y listar | IA | S4.5 |
 | S4.8 | Implementar el caso de uso del dashboard y los de lectura pública | IA | S4.5 |
 | S4.9 | Escribir fakes en memoria y tests de casos de uso, uno o más por criterio aprobado, incluida la propiedad entre usuarios | IA | S4.6–S4.8 |
 | S4.10 | Registrar eventos con `ILogger`, sin datos prohibidos ([«Registro de eventos»](../context/specifications.md#registro-de-eventos)) | IA | S4.6–S4.8 |
@@ -339,28 +339,28 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 ### S9: Gestión de enlaces (L)
 
-**Objetivo:** crear, editar, mover, cambiar la visibilidad y eliminar enlaces, con rechazo de peticiones manipuladas.
+**Objetivo:** crear, editar los campos y el estado público o privado, mover y eliminar enlaces, con rechazo de peticiones manipuladas.
 
 | ID | Tarea | Resp. |
 |---|---|---|
 | S9.1 | Implementar crear enlace con casilla pública desmarcada, selector de colecciones sin paginar y duplicados con la colección donde existe | IA |
 | S9.2 | Deshabilitar la opción pública en colecciones privadas con su explicación, y rechazar con el mensaje previsto cualquier petición manipulada | IA |
-| S9.3 | Implementar editar (la URL no cambia), mover y eliminar con confirmación | IA |
-| S9.4 | Implementar cambiar de colección | IA |
-| S9.5 | Escribir tests HTTP derivados de los criterios aprobados en S4: colección ajena, inexistente o inválida; peticiones manipuladas; propiedad; atomicidad | IA |
-| S9.6 | Ejecutar la guía manual con URLs reales, duplicados y cambios de visibilidad | Humano |
-| S9.7 | Revisar la presentación de imagen, título y descripción | Humano |
+| S9.3 | Implementar editar (incluido el estado público o privado; la URL no cambia), mover y eliminar con confirmación | IA |
+| S9.4 | Escribir tests HTTP derivados de los criterios aprobados en S4: colección ajena, inexistente o inválida; peticiones manipuladas; propiedad; atomicidad | IA |
+| S9.5 | Ejecutar la guía manual con URLs reales, duplicados y los estados público/privado seleccionados en edición | Humano |
+| S9.6 | Revisar la presentación de imagen, título y descripción | Humano |
+| S9.7 | Corregir la presentación del error de esquema de URL en los formularios privados | IA |
 
 **Definition of Done**
 
-- [ ] Las operaciones de enlaces cumplen [«Páginas privadas»](../context/specifications.md#páginas-privadas) y [«Errores controlados»](../context/specifications.md#errores-controlados).
-- [ ] Un `CollectionId` manipulado se rechaza en la aplicación y por la clave foránea.
-- [ ] Una petición manipulada no puede hacer público un enlace de una colección privada.
-- [ ] Un enlace duplicado se rechaza indicando la colección donde está.
-- [ ] La proyección FTS5 se mantiene sincronizada en cada operación.
-- [ ] Al hacer privada una colección, todos sus enlaces pasan a ser privados en la misma transacción.
-- [ ] No se puede eliminar una colección que contiene enlaces.
-- [ ] El humano ha aceptado las pantallas y los mensajes.
+- [x] Las operaciones de enlaces cumplen [«Páginas privadas»](../context/specifications.md#páginas-privadas) y [«Errores controlados»](../context/specifications.md#errores-controlados). Evidencia de creación, publicación y gestión: [S9.1](../specs/s9.1-crear-enlace/tasks.md#evidencia-por-criterio), [S9.2](../specs/s9.2-publicacion-enlaces/tasks.md#evidencia-por-criterio), [S9.3](../specs/s9.3-gestionar-enlaces/tasks.md#evidencia-por-criterio) y [S9.7](../specs/s9.7-mensajes-validacion-url/tasks.md#aceptación-y-cierre).
+- [x] Un `CollectionId` manipulado se rechaza en la aplicación y por la clave foránea. Evidencia HTTP y de persistencia: [S9.4](../specs/s9.4-pruebas-integracion-http-enlaces/tasks.md#evidencia-por-criterio), [tests de persistencia SQLite](../tests/Linkubator.Tests/Integration/SqlitePersistenceIntegrationTests.cs) y [validación de claves foráneas del esquema](../tests/Linkubator.Tests/Infrastructure/SqliteMigrationServiceTests.cs).
+- [x] Una petición manipulada no puede hacer público un enlace de una colección privada. Evidencia: [S9.2](../specs/s9.2-publicacion-enlaces/tasks.md#evidencia-por-criterio) y [S9.4](../specs/s9.4-pruebas-integracion-http-enlaces/tasks.md#evidencia-por-criterio).
+- [x] Un enlace duplicado se rechaza indicando la colección donde está. Evidencia automatizada y manual: [S9.1](../specs/s9.1-crear-enlace/tasks.md#evidencia-por-criterio) y [S9.5](../specs/s9.5-revision-manual-enlaces/tasks.md#evidencia-por-criterio).
+- [x] La proyección FTS5 se mantiene sincronizada en cada operación. Evidencia de alta, edición, movimiento y borrado: [S9.1](../specs/s9.1-crear-enlace/tasks.md#evidencia-por-criterio) y [S9.3](../specs/s9.3-gestionar-enlaces/tasks.md#evidencia-por-criterio).
+- [x] Al hacer privada una colección, todos sus enlaces pasan a ser privados en la misma transacción. Evidencia manual y de concurrencia: [S9.5, CA03](../specs/s9.5-revision-manual-enlaces/tasks.md#evidencia-por-criterio), [test de persistencia](../tests/Linkubator.Tests/Integration/SqlitePersistenceIntegrationTests.cs) e [implementación transaccional](../src/Linkubator.Application/UseCases/Collections/CollectionService.cs).
+- [x] No se puede eliminar una colección que contiene enlaces. El test HTTP `PostDeleteCollection_WhenCollectionHasLinks_ShowsDomainRuleErrorAndKeepsState` pasó en la validación focalizada de esta actualización: [CollectionsListingIntegrationTests.cs](../tests/Linkubator.Tests/Integration/CollectionsListingIntegrationTests.cs).
+- [x] El humano ha aceptado las pantallas y los mensajes: [S9.5](../specs/s9.5-revision-manual-enlaces/tasks.md#aceptación-y-cierre), [S9.6](../specs/s9.6-revision-presentacion-enlaces/tasks.md#aceptación-y-cierre) y [S9.7](../specs/s9.7-mensajes-validacion-url/tasks.md#aceptación-y-cierre).
 
 ### S10: Listado y búsqueda de enlaces (L)
 
@@ -368,7 +368,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 | ID | Tarea | Resp. |
 |---|---|---|
-| S10.1 | Implementar `/app/enlaces` con `q`, `c` y `p`, orden por relevancia o por fecha, y estado vacío | IA |
+| S10.1 | Implementar `/app/enlaces` con `q`, `c` y `p`, orden por relevancia o por fecha, y estado vacío; validar que el rechazo de privacidad de [S9.2 → CA03](../specs/s9.2-publicacion-enlaces/spec.md#criterios-de-aceptación) presenta accesiblemente el aviso recibido | IA |
 | S10.2 | Aplicar la regla de `e` ignorado, filtro inexistente o ajeno ignorado y `q` por encima del máximo con error | IA |
 | S10.3 | Conservar filtros al buscar y al paginar, y descartar `p` en el formulario | IA |
 | S10.4 | Conectar el formulario de búsqueda del dashboard a `/app/enlaces` | IA |
@@ -384,19 +384,6 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 - [ ] Los enlaces de paginación y los formularios de búsqueda conservan los filtros aplicables.
 - [ ] El humano ha probado la búsqueda con los datos de ejemplo.
 
-### S10a: Web: refactor (M)
-
-**Objetivo:** refactorizar toda la Web para mejorar en rendimiento y legibilidad del código.
-
-| ID | Tarea | Resp. |
-|---|---|---|
-| S10a.1 | Refactorizar la Web | Humano |
-
-**Definition of Done**
-
-- [ ] Web sigue funcionando como hasta ahora.
-- [ ] El humano ha aprobado la nueva Web.
-
 ### S11: Área pública y SEO (L)
 
 **Objetivo:** publicar las cuatro páginas públicas, renderizadas en servidor y legibles para buscadores.
@@ -410,7 +397,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 | S11.5 | Redirigir variantes de URL (mayúsculas y barra final) y servir `404` para alias, slugs antiguos y colecciones sin enlaces públicos | IA |
 | S11.6 | Escribir tests derivados de los criterios aprobados en S4: ausencia de contenido privado, orden, `404`, redirecciones, paginación y canonical | IA |
 | S11.7 | Revisar el HTML renderizado: títulos, descripciones, canonical, encabezados, `alt` y textos finales | Humano |
-| S11.8 | Probar la navegación pública con colecciones públicas y privadas, y con enlaces cambiados de visibilidad | Humano |
+| S11.8 | Probar la navegación pública con colecciones públicas y privadas, y con enlaces cuyo estado público o privado se seleccionó en edición | Humano |
 
 **Definition of Done**
 

@@ -34,11 +34,11 @@ El comportamiento exacto de cada operación está en [specifications.md → «Cu
 El usuario podrá:
 
 - Crear y editar colecciones, con nombre y descripción.
-- La edición de una colección permite cambiar en el mismo formulario su nombre, descripción y visibilidad; no hay una acción separada que solo la renombre ni una ruta independiente para cambiar su visibilidad. La operación está en [specifications.md → «Rutas privadas»](specifications.md#rutas-privadas).
+- El formulario de edición de una colección permite actualizar conjuntamente su nombre, descripción y estado público o privado. La operación está en [specifications.md → «Rutas privadas»](specifications.md#rutas-privadas).
 - Buscar colecciones.
 - Eliminar una colección solo si no tiene enlaces y no es la última que le queda.
 
-La colección «Bandeja de entrada» es una colección normal como cualquier otra, aunque sea creada por la aplicación. El usuario puede realizar sobre ella las mismas operaciones que sobre las demás colecciones —editarla, cambiar su privacidad, eliminarla y asignarle enlaces—, sujetas a las mismas restricciones.
+La colección «Bandeja de entrada» es una colección normal como cualquier otra, aunque sea creada por la aplicación. El usuario puede realizar sobre ella las mismas operaciones que sobre las demás colecciones —editarla, eliminarla y asignarle enlaces—, sujetas a las mismas restricciones.
 
 No puede haber dos colecciones del mismo usuario cuyos nombres Linkubator considere equivalentes según [specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs). Si el nombre no es válido o equivale al de otra colección suya, se rechaza indicándole con cuál coincide, y debe elegir otro.
 
@@ -59,7 +59,7 @@ No puede haber dos etiquetas del mismo usuario cuyos nombres Linkubator consider
 El usuario podrá:
 
 - Crear un enlace a partir de una URL, asignándolo a una única colección y asignando etiquetas. La URL se ajusta y valida antes de guardarse (ver [specifications.md → «Ajuste de URL»](specifications.md#ajuste-de-url) y [specifications.md → «Validación»](specifications.md#validación)).
-- Editar su título, su descripción, su imagen, su colección, sus etiquetas y si es público o privado.
+- Editar su título, su descripción, su imagen, su colección, sus etiquetas y su estado público o privado.
 - Mover un enlace a otra colección.
 - Ejecutar el scrapeo de los metadatos.
 - Eliminar un enlace.
@@ -76,7 +76,7 @@ Las reglas exactas están en [specifications.md → «URLs de los enlaces»](spe
 
 ## Público y privado
 
-El usuario puede hacer públicas o privadas sus colecciones y sus enlaces. En las páginas públicas aparecen los enlaces que ha hecho públicos y que pertenecen a colecciones públicas. Una colección aparece en las páginas públicas cuando es pública y contiene al menos un enlace público. Las reglas completas están en [domain-model.md → «Público y privado»](domain-model.md#público-y-privado).
+El formulario de edición de cada colección y enlace permite establecer su estado público o privado. En las páginas públicas aparecen los enlaces públicos que pertenecen a colecciones públicas. Una colección aparece en las páginas públicas cuando es pública y contiene al menos un enlace público. Las reglas completas están en [domain-model.md → «Público y privado»](domain-model.md#público-y-privado).
 
 ## Búsqueda y filtros
 

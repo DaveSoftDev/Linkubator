@@ -1,5 +1,13 @@
 @using Linkubator.Web.Models.AppSidebar
 @model AppSidebarViewModel
+@{
+    bool isCollapsed = Context.Request.Cookies["sidebar-collapsed"] == "true";
+    string returnUrl = Linkubator.Web.Navigation.LinkReturnRoute.Resolve(
+        Url,
+        Context.Request.PathBase,
+        $"{Context.Request.PathBase}{Context.Request.Path}{Context.Request.QueryString}",
+        allowCollections: true);
+}
 
 <aside id="app-sidebar" class="app-sidebar" aria-label="Menú principal de navegación">
     <div class="brand-header">
@@ -14,7 +22,7 @@
             </span>
             <h1 class="brand-name"><span class="brand-accent">L</span>inkubator</h1>
         </div>
-        <button class="sidebar-collapse" type="button" aria-label="Colapsar menú lateral">
+        <button class="sidebar-collapse" type="button" aria-expanded="@(isCollapsed ? "false" : "true")" aria-label="@(isCollapsed ? "Expandir menú lateral" : "Colapsar menú lateral")">
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                 <path d="M15 18L9 12L15 6"></path>
             </svg>
@@ -22,6 +30,13 @@
     </div>
 
     <div class="sidebar-content">
+    <div class="sidebar-actions">
+        <a class="primary-button sidebar-create-link" asp-page="/App/Links/New" asp-route-ru="@returnUrl" asp-route-collectionId="@Model.Selection.CollectionId" aria-label="Crear enlace" title="Crear enlace">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 5V19M5 12H19"></path></svg>
+            <span class="sidebar-create-link__label">Crear enlace</span>
+        </a>
+    </div>
+
     <div class="sidebar-searches" aria-label="Búsquedas rápidas">
         <form class="sidebar-search" method="get" action="@Model.SidebarSearchForm.Action" role="search">
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
@@ -85,7 +100,7 @@
                 @foreach (AppSidebarCollectionItem collection in Model.Collections)
                 {
                 <li>
-                    <a href="@collection.Route" class="@(collection.IsActive ? "is-active" : string.Empty)" aria-label="@collection.Name, @collection.LinkCount elementos @(collection.IsPublic ? "(Pública)" : "(Privada)")">
+                    <a href="@collection.Route" class="@(collection.IsActive ? "is-active" : string.Empty)" aria-current="@(collection.IsActive ? "page" : null)" aria-label="@collection.Name, @collection.LinkCount elementos @(collection.IsPublic ? "(Pública)" : "(Privada)")">
                         <span class="collection-name">
                             @if (collection.IsPublic)
                             {

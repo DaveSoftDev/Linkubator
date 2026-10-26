@@ -8,7 +8,7 @@ namespace Linkubator.Infrastructure.Repositories;
 
 public sealed class SqliteLinkRepository : ILinkRepository
 {
-    private const int PageSize = 15;
+    private const int PageSize = 16;
     private const string LinkAndCollectionSelect = @"SELECT l.Id, l.UserId, l.CollectionId, l.UrlOriginal, l.UrlNormalized, l.Title, l.Description, l.Image, l.IsPublic, l.ScrapingStatus, l.CreatedAt,
                      c.Id, c.UserId, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
               FROM Link l

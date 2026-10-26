@@ -23,9 +23,9 @@ flowchart LR
         end
 
         subgraph manage["Gestión privada"]
-            collections((Gestionar colecciones<br/>crear, editar, hacer públicas o privadas y eliminar))
+            collections((Gestionar colecciones<br/>crear, editar y eliminar))
             tags((Gestionar etiquetas<br/>crear, editar y eliminar))
-            links((Gestionar enlaces<br/>crear, editar, hacer públicos o privados, mover y eliminar))
+            links((Gestionar enlaces<br/>crear, editar, mover y eliminar))
             scraping((Solicitar scraping de metadatos))
             search((Buscar y filtrar enlaces por colección y etiqueta))
             collectionSearch((Buscar colecciones por nombre))

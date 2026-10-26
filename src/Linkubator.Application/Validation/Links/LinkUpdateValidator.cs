@@ -3,9 +3,9 @@ using Linkubator.Application.Dtos.Requests;
 
 namespace Linkubator.Application.Validation.Links;
 
-public sealed class LinkEditValidator : IValidator<LinkEditRequest>
+public sealed class LinkUpdateValidator : IValidator<LinkUpdateRequest>
 {
-    public Result Validate(LinkEditRequest request)
+    public Result Validate(LinkUpdateRequest request)
     {
         if (request is null)
         {

@@ -265,8 +265,8 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
             cancellationToken,
             async (operation, token) =>
             {
-                IReadOnlyCollection<DomainEntities.Collection> items = await _collectionRepository.GetAllByUser(CurrentUser.UserId, token);
-                return Result<IReadOnlyCollection<CollectionDto>>.Success(items.Select(Map).ToList());
+                IReadOnlyCollection<CollectionDto> items = await _collectionRepository.GetAllByUserWithLinkCounts(CurrentUser.UserId, token);
+                return Result<IReadOnlyCollection<CollectionDto>>.Success(items.ToList());
             },
             "Collection listing failed");
         if (result.IsSuccess)

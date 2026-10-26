@@ -29,6 +29,7 @@ public sealed class CollectionsListingIntegrationTests
             Assert.Contains("action=\"/app/colecciones\"", html, StringComparison.Ordinal);
             Assert.Contains("role=\"status\"", html, StringComparison.Ordinal);
             Assert.Contains("No se han encontrado colecciones.", System.Net.WebUtility.HtmlDecode(html), StringComparison.Ordinal);
+            Assert.Contains("class=\"view-switch__button toolbar-tool\" href=\"/app/colecciones/nueva\"", html, StringComparison.Ordinal);
         }
         finally
         {

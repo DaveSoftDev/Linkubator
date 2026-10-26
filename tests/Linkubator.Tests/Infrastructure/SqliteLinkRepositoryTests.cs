@@ -462,12 +462,28 @@ public sealed class SqliteLinkRepositoryTests
         Assert.Equal(1, result);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("link")]
+    public async Task GetPageByUser_WhenMoreThanOnePageExists_ReturnsSixteenLinks(string? query)
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        await database.SeedLinkRange(42, collectionId, 17);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, query, collectionId, 1);
+
+        Assert.Equal(Enumerable.Range(1, 16).Reverse().Select(index => $"https://example.test/{index:D2}"), result.Select(item => item.UrlOriginal));
+    }
+
     [Fact]
     public async Task GetPageByUser_WhenPageIsSecond_ReturnsRemainingLinks()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
-        await database.SeedLinkRange(42, collectionId, 16);
+        await database.SeedLinkRange(42, collectionId, 17);
 
         await using SqliteConnection connection = database.OpenConnection();
         ILinkRepository repository = new SqliteLinkRepository(connection);
@@ -498,18 +514,24 @@ public sealed class SqliteLinkRepositoryTests
         Assert.Equal(1, result);
     }
 
-    [Fact]
-    public async Task GetPageCountByUser_WhenQueryHasTerms_CountsMatchingPages()
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 1)]
+    [InlineData(16, 1)]
+    [InlineData(17, 2)]
+    [InlineData(32, 2)]
+    [InlineData(33, 3)]
+    public async Task GetPageCountByUser_WhenQueryHasTerms_CountsMatchingPages(int count, int expectedPages)
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
-        await database.SeedLinkRange(42, collectionId, 16);
+        await database.SeedLinkRange(42, collectionId, count);
         await using SqliteConnection connection = database.OpenConnection();
         await connection.ExecuteAsync("UPDATE LinkSearch SET Title = 'needle' WHERE UserId = 42;");
         ILinkRepository repository = new SqliteLinkRepository(connection);
 
         int result = await repository.GetPageCountByUser(42, "needle", collectionId);
 
-        Assert.Equal(2, result);
+        Assert.Equal(expectedPages, result);
     }
 }

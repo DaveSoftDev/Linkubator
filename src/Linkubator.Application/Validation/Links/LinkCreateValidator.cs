@@ -1,5 +1,7 @@
 using Linkubator.Application.Constants;
 using Linkubator.Application.Dtos.Requests;
+using DomainExceptions = Linkubator.Domain.Exceptions;
+using DomainPolicies = Linkubator.Domain.Policies;
 
 namespace Linkubator.Application.Validation.Links;
 
@@ -24,6 +26,30 @@ public sealed class LinkCreateValidator : IValidator<LinkCreateRequest>
             return Result.Failure(LinkErrors.UrlRequired());
         }
 
-        return Result.Success();
+        string adjustedUrl = string.Empty;
+        Result urlResult = ValidateField(nameof(request.Url), () =>
+        {
+            adjustedUrl = DomainPolicies.LinkUrlPolicy.Adjust(request.Url);
+            DomainPolicies.UrlValidationPolicy.Validate(adjustedUrl);
+        });
+        if (!urlResult.IsSuccess)
+        {
+            return urlResult;
+        }
+
+        return LinkMetadataValidator.Validate(request.Title, request.Description, request.Image, adjustedUrl);
+    }
+
+    private static Result ValidateField(string field, Action validate)
+    {
+        try
+        {
+            validate();
+            return Result.Success();
+        }
+        catch (DomainExceptions.DomainException exception)
+        {
+            return Result.Failure(ApplicationError.FromDomainException(exception, field));
+        }
     }
 }

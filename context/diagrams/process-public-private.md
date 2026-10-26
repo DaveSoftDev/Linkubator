@@ -4,17 +4,18 @@ Diagrama derivado de las invariantes de [domain-model.md → «Público y privad
 
 ```mermaid
 flowchart TD
-    start([Acción sobre colección o enlace])
-    action{¿Qué acción realiza el usuario?}
+    start([El usuario envía un formulario])
+    form{¿Qué formulario envía?}
 
     createCollection[Crea una colección]
     collectionInitial{¿La marca pública al crearla?}
     collectionPrivate[Guardar colección privada]
     collectionPublic[Guardar colección pública]
 
-    makeCollectionPublic[Hace pública una colección existente]
+    editCollection[Edita una colección]
+    collectionPublicState{¿El estado elegido es público?}
     preserveLinks[Marcar colección pública y conservar estado de enlaces]
-    makeCollectionPrivate[Hace privada una colección]
+    makeCollectionPrivate[Guardar colección privada]
     privateAll[Marcar colección y todos sus enlaces como privados]
 
     createLink[Crea un enlace en una colección]
@@ -29,28 +30,31 @@ flowchart TD
 
     moveLink[Mueve un enlace a otra colección]
     movePrivate[Actualizar colección y dejar el enlace privado]
-    makeLinkPublic[Hace público un enlace existente]
+    editLink[Edita un enlace]
+    linkPublicState{¿El estado elegido es público?}
     keepLinkPrivate[Conservar el enlace privado]
 
-    start --> action
-    action -->|Crear colección| createCollection --> collectionInitial
+    start --> form
+    form -->|Crear colección| createCollection --> collectionInitial
     collectionInitial -->|No| collectionPrivate
     collectionInitial -->|Sí| collectionPublic
 
-    action -->|Hacer pública una colección| makeCollectionPublic --> preserveLinks
-    action -->|Hacer privada una colección| makeCollectionPrivate --> privateAll
+    form -->|Editar colección| editCollection --> collectionPublicState
+    collectionPublicState -->|Sí| preserveLinks
+    collectionPublicState -->|No| makeCollectionPrivate --> privateAll
 
-    action -->|Crear enlace| createLink --> creationCollectionPublic
+    form -->|Crear enlace| createLink --> creationCollectionPublic
     creationCollectionPublic -->|Sí| linkInitial
     creationCollectionPublic -->|No| publicOptionDisabled
     publicOptionDisabled -->|Crear privado| linkPrivate
     publicOptionDisabled -->|Petición manipulada| rejectCreationPublic
     linkInitial -->|No| linkPrivate
     linkInitial -->|Sí| checkCollection
-    action -->|Hacer público un enlace| makeLinkPublic --> checkCollection
+    form -->|Editar enlace| editLink --> linkPublicState
+    linkPublicState -->|Sí| checkCollection
+    linkPublicState -->|No| keepLinkPrivate
     checkCollection -->|Sí| linkPublic
     checkCollection -->|No| rejectPublic
 
-    action -->|Mover enlace| moveLink --> movePrivate
-    action -->|Hacer privado un enlace| keepLinkPrivate
+    form -->|Mover enlace| moveLink --> movePrivate
 ```
