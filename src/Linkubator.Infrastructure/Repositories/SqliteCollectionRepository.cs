@@ -8,7 +8,7 @@ namespace Linkubator.Infrastructure.Repositories;
 
 public sealed class SqliteCollectionRepository : ICollectionRepository
 {
-    private const int PageSize = 15;
+    private const int PageSize = 16;
     private readonly SqliteConnection _connection;
 
     public SqliteCollectionRepository(SqliteConnection connection)
@@ -43,6 +43,22 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
               FROM Collection
               WHERE UserId = @UserId
               ORDER BY Name COLLATE LINKUBATOR_ES_ES ASC, Id ASC;",
+            new { UserId = userId },
+            cancellationToken: cancellationToken));
+
+        return collections.ToList();
+    }
+
+    public async Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
+    {
+        IEnumerable<CollectionDto> collections = await _connection.QueryAsync<CollectionDto>(new CommandDefinition(
+            @"SELECT c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt,
+                       COUNT(l.Id) AS LinkCount
+                FROM Collection c
+                LEFT JOIN Link l ON l.UserId = c.UserId AND l.CollectionId = c.Id
+                WHERE c.UserId = @UserId
+                GROUP BY c.Id, c.Name, c.Slug, c.Description, c.IsPublic, c.CreatedAt
+                ORDER BY c.Name COLLATE LINKUBATOR_ES_ES ASC, c.Id ASC;",
             new { UserId = userId },
             cancellationToken: cancellationToken));
 

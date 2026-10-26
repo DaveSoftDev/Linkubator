@@ -9,10 +9,11 @@ public static class AppSidebarViewModelFactory
     public static AppSidebarViewModel CreateSidebar(
         AppSidebarSelectionKind selectionKind,
         IReadOnlyList<CollectionDto> collections,
-        AppSidebarUserViewModel? user = null)
+        AppSidebarUserViewModel? user = null,
+        long? selectedCollectionId = null)
     {
         AppSidebarUserViewModel sidebarUser = user ?? CreateFallbackUser();
-        return new AppSidebarViewModelBuilder(selectionKind, collections, sidebarUser).Build();
+        return new AppSidebarViewModelBuilder(selectionKind, collections, sidebarUser, selectedCollectionId).Build();
     }
 
     private sealed class AppSidebarViewModelBuilder
@@ -20,15 +21,18 @@ public static class AppSidebarViewModelFactory
         private readonly AppSidebarSelectionKind _selectionKind;
         private readonly IReadOnlyList<CollectionDto> _collections;
         private readonly AppSidebarUserViewModel _user;
+        private readonly long? _selectedCollectionId;
 
         public AppSidebarViewModelBuilder(
             AppSidebarSelectionKind selectionKind,
             IReadOnlyList<CollectionDto> collections,
-            AppSidebarUserViewModel user)
+            AppSidebarUserViewModel user,
+            long? selectedCollectionId)
         {
             _selectionKind = selectionKind;
             _collections = collections;
             _user = user;
+            _selectedCollectionId = selectedCollectionId;
         }
 
         public AppSidebarViewModel Build()
@@ -65,19 +69,23 @@ public static class AppSidebarViewModelFactory
             {
                 Id = collection.Slug,
                 Name = collection.Name,
-                Route = $"{AppRoutes.Collections}/{collection.Slug}",
+                Route = $"{AppRoutes.Links}?c={collection.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)}",
                 LinkCount = collection.LinkCount,
                 IsPublic = collection.IsPublic,
-                IsActive = false,
+                IsActive = collection.Id == _selectedCollectionId,
             }).ToList();
         }
 
         private AppSidebarSelection BuildSelection()
         {
+            CollectionDto? selected = _selectionKind == AppSidebarSelectionKind.Collection
+                ? _collections.FirstOrDefault(collection => collection.Id == _selectedCollectionId)
+                : null;
             return new AppSidebarSelection
             {
                 Kind = _selectionKind,
-                ItemId = null,
+                ItemId = _collections.FirstOrDefault(collection => collection.Id == _selectedCollectionId)?.Slug,
+                CollectionId = selected?.Id,
             };
         }
 
@@ -113,7 +121,7 @@ public static class AppSidebarViewModelFactory
             {
                 "home" => _selectionKind == AppSidebarSelectionKind.Home,
                 "links" => _selectionKind == AppSidebarSelectionKind.Links,
-                "collections" => _selectionKind == AppSidebarSelectionKind.Collections || _selectionKind == AppSidebarSelectionKind.Collection,
+                "collections" => _selectionKind == AppSidebarSelectionKind.Collections,
                 _ => false,
             };
         }

@@ -379,25 +379,45 @@ public sealed class SqliteCollectionRepositoryTests
         Assert.Equal(0, result);
     }
 
-    [Fact]
-    public async Task GetPageCountByUser_WhenCollectionsExist_ReturnsNumberOfPages()
+    [Theory]
+    [InlineData(15, 1)]
+    [InlineData(16, 1)]
+    [InlineData(17, 2)]
+    [InlineData(32, 2)]
+    [InlineData(33, 3)]
+    public async Task GetPageCountByUser_WhenCollectionsExist_ReturnsNumberOfPages(int count, int expectedPages)
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
-        await database.SeedCollectionRange(42, 16);
+        await database.SeedCollectionRange(42, count);
 
         await using SqliteConnection connection = database.OpenConnection();
         ICollectionRepository repository = new SqliteCollectionRepository(connection);
 
         int result = await repository.GetPageCountByUser(42, string.Empty);
 
-        Assert.Equal(2, result);
+        Assert.Equal(expectedPages, result);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("collection")]
+    public async Task GetPageByUser_WhenMoreThanOnePageExists_ReturnsSixteenCollections(string? query)
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await database.SeedCollectionRange(42, 17);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, query, 1);
+
+        Assert.Equal(Enumerable.Range(0, 16).Select(index => $"Collection {index:D2}"), result.Select(item => item.Name));
     }
 
     [Fact]
     public async Task GetPageByUser_WhenPageIsSecond_ReturnsRemainingCollections()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
-        await database.SeedCollectionRange(42, 16);
+        await database.SeedCollectionRange(42, 17);
 
         await using SqliteConnection connection = database.OpenConnection();
         ICollectionRepository repository = new SqliteCollectionRepository(connection);
@@ -405,7 +425,7 @@ public sealed class SqliteCollectionRepositoryTests
         IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "collection", 2);
 
         Assert.Single(result);
-        Assert.Equal("Collection 15", result.Single().Name);
+        Assert.Equal("Collection 16", result.Single().Name);
     }
 
     [Fact]
@@ -424,17 +444,19 @@ public sealed class SqliteCollectionRepositoryTests
         Assert.Equal(1, result);
     }
 
-    [Fact]
-    public async Task GetPageCountByUser_WhenQueryHasTerms_CountsMatchingPages()
+    [Theory]
+    [InlineData(16, 1)]
+    [InlineData(17, 2)]
+    public async Task GetPageCountByUser_WhenQueryHasTerms_CountsMatchingPages(int count, int expectedPages)
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
-        await database.SeedCollectionRange(42, 16);
+        await database.SeedCollectionRange(42, count);
         await using SqliteConnection connection = database.OpenConnection();
         await connection.ExecuteAsync("UPDATE CollectionSearch SET Name = 'needle' WHERE UserId = 42;");
         ICollectionRepository repository = new SqliteCollectionRepository(connection);
 
         int result = await repository.GetPageCountByUser(42, "needle");
 
-        Assert.Equal(2, result);
+        Assert.Equal(expectedPages, result);
     }
 }

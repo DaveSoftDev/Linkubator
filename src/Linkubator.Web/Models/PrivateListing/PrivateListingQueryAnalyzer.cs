@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
+using CommonErrors = Linkubator.Application.Constants.CommonErrors;
 
 namespace Linkubator.Web.Models.PrivateListing;
 
@@ -46,7 +47,7 @@ public static class PrivateListingQueryAnalyzer
             {
                 hasPageError = true;
                 pageNumber = DefaultPageNumber;
-                pageErrorMessage = "Los valores no son correctos.";
+                pageErrorMessage = CommonErrors.ListingValuesInvalidMessage;
             }
         }
 
@@ -65,7 +66,7 @@ public static class PrivateListingQueryAnalyzer
                 else
                 {
                     hasCollectionError = true;
-                    collectionErrorMessage = "Los valores no son correctos.";
+                    collectionErrorMessage = CommonErrors.ListingValuesInvalidMessage;
                 }
             }
         }

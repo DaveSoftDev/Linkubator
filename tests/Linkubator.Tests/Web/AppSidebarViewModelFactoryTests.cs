@@ -17,6 +17,36 @@ public sealed class AppSidebarViewModelFactoryTests
             [collection]);
 
         Assert.Equal(isPublic, Assert.Single(sidebar.Collections).IsPublic);
+        Assert.Equal("/app/enlaces?c=1", Assert.Single(sidebar.Collections).Route);
+    }
+
+    [Theory]
+    [InlineData(1, true, "collection")]
+    [InlineData(999, false, null)]
+    public void CreateSidebar_WithSelectedCollection_MarksOnlyOwnedMatchingItem(long selectedId, bool isActive, string? itemId)
+    {
+        Linkubator.Application.Dtos.Models.CollectionDto collection = new(
+            1, "Collection", "collection", null, false, 0, DateTime.UnixEpoch);
+
+        AppSidebarViewModel sidebar = AppSidebarViewModelFactory.CreateSidebar(
+            AppSidebarSelectionKind.Collection, [collection], selectedCollectionId: selectedId);
+
+        Assert.Equal(isActive, Assert.Single(sidebar.Collections).IsActive);
+        Assert.Equal(itemId, sidebar.Selection.ItemId);
+        Assert.Equal(isActive ? (long?)selectedId : null, sidebar.Selection.CollectionId);
+        Assert.DoesNotContain(sidebar.Navigation, item => item.IsActive);
+    }
+
+    [Theory]
+    [InlineData(AppSidebarSelectionKind.Home, "home")]
+    [InlineData(AppSidebarSelectionKind.Links, "links")]
+    [InlineData(AppSidebarSelectionKind.Collections, "collections")]
+    [InlineData(AppSidebarSelectionKind.Collection, null)]
+    public void CreateSidebar_WithSelection_ActivatesOnlyMatchingNavigationItem(AppSidebarSelectionKind kind, string? expectedId)
+    {
+        AppSidebarViewModel sidebar = AppSidebarViewModelFactory.CreateSidebar(kind, []);
+
+        Assert.Equal(expectedId, sidebar.Navigation.SingleOrDefault(item => item.IsActive)?.Id);
     }
 
     [Fact]

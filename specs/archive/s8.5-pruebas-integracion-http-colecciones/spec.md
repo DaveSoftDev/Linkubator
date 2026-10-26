@@ -17,7 +17,7 @@ Contar con pruebas de integración HTTP que comprueben conjuntamente los contrat
 - [specifications.md → «Rutas privadas»](../../../context/specifications.md), [«Búsqueda y filtros»](../../../context/specifications.md), [«Listados»](../../../context/specifications.md) y [«Errores controlados»](../../../context/specifications.md): rutas, métodos, parámetros y respuestas.
 - [domain-model.md → «Collection»](../../../context/domain-model.md), [«Propiedad de los datos»](../../../context/domain-model.md) y [«Público y privado»](../../../context/domain-model.md): invariantes de propiedad y visibilidad.
 - [architecture.md → «Seguridad web»](../../../context/architecture.md), [«Persistencia»](../../../context/architecture.md) y [«Web»](../../../context/architecture.md): protección de peticiones y fronteras técnicas.
-- [S8.1 — Listado de colecciones](../s8.1-listado-colecciones/spec.md), [S8.2 — Operaciones de colecciones](../../s8.2-operaciones-colecciones/spec.md), [S8.3 — Errores de formularios de colecciones](../s8.3-errores-formularios-colecciones/spec.md) y [S8.4 — Identificadores y respuestas de colecciones](../s8.4-identificadores-y-respuestas-colecciones/spec.md): límites de los trabajos funcionales y criterios que esta suite integra sin reabrir.
+- [S8.1 — Listado de colecciones](../s8.1-listado-colecciones/spec.md), [S8.2 — Operaciones de colecciones](../s8.2-operaciones-colecciones/spec.md), [S8.3 — Errores de formularios de colecciones](../s8.3-errores-formularios-colecciones/spec.md) y [S8.4 — Identificadores y respuestas de colecciones](../s8.4-identificadores-y-respuestas-colecciones/spec.md): límites de los trabajos funcionales y criterios que esta suite integra sin reabrir.
 
 ## Alcance
 

@@ -91,6 +91,14 @@ Estas reglas no se pueden romper nunca, ni en la documentación ni en el código
 
 Se permite crear los proyectos, el código, el SQL de aplicación y migraciones, las dependencias y el frontend necesarios para implementar la etapa activa del [roadmap.md](context/roadmap.md), siguiendo la pila prevista en [architecture.md → Arquitectura](context/architecture.md#arquitectura). No se amplía por ello el alcance comprometido: las funciones reservadas a etapas posteriores y las propuestas siguen sujetas a [decisions.md](context/decisions.md) y [roadmap.md](context/roadmap.md). La configuración de despliegue continúa fuera del alcance.
 
+## Referencia de diseño Web
+
+- El diseño existente de gestión de colecciones es la referencia obligatoria para los nuevos desarrollos Web: [formularios CRUD](src/Linkubator.Web/Pages/App/Collections/) y [tabla de listado](src/Linkubator.Web/Pages/App/Collections.cshtml).
+- Antes de preparar un plan técnico o implementar formularios y listados, revisar esas referencias y reutilizar sus patrones de estructura, estilos, campos, acciones, errores, búsqueda, paginación y estados vacíos, cuando sean aplicables.
+- Adaptar únicamente los campos y comportamientos propios de cada funcionalidad. La referencia es visual y de interacción: no copiar indiscriminadamente lógica, validaciones ni reglas de negocio.
+- Reutilizar los componentes y las clases CSS existentes; no duplicar estilos ni extraer nuevas abstracciones salvo que sean necesarias.
+- No proponer ni implementar un diseño alternativo, ni modificar el diseño de referencia, sin consultarlo previamente con el usuario.
+
 ## Convención de estructura del código
 
 - Cada tipo público debe vivir en su propio archivo.

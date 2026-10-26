@@ -10,6 +10,7 @@ public static class CommonErrors
     public const string RequestRequiredMessage = "La solicitud es obligatoria.";
     public const string NotAuthenticatedMessage = "La sesión del usuario no es válida.";
     public const string PageInvalidMessage = "La página debe ser mayor que cero.";
+    public const string ListingValuesInvalidMessage = "Los valores no son correctos.";
 
     public const string RequestRequiredCode = "REQUEST_REQUIRED";
     public const string NotAuthenticatedCode = "NOT_AUTHENTICATED";

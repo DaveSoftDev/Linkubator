@@ -122,11 +122,48 @@ public sealed class SqlitePublicReadRepositoryTests
     }
 
     [Fact]
+    public async Task GetCollectionPage_WhenMoreThanOnePageExists_ReturnsSixteenPublicLinks()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Public", "public", true);
+        await database.SeedLinkRange(42, collectionId, 17, isPublic: true);
+        await database.SeedLink(42, collectionId, "https://example.test/private", "https://example.test/private", "A private link", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
+
+        Linkubator.Application.Dtos.Models.PublicCollectionDto? result = await repository.GetCollectionPage("owner", "public", 1);
+
+        Assert.NotNull(result);
+        Assert.Equal(Enumerable.Range(0, 16).Select(index => $"https://example.test/{index:D2}"), result.Links.Select(item => item.UrlOriginal));
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 1)]
+    [InlineData(16, 1)]
+    [InlineData(17, 2)]
+    [InlineData(32, 2)]
+    [InlineData(33, 3)]
+    public async Task GetCollectionPageCount_WithDifferentPublicLinkCounts_UsesExactPageBoundaries(int count, int expectedPages)
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Public", "public", true);
+        await database.SeedLinkRange(42, collectionId, count, isPublic: true);
+        await database.SeedLink(42, collectionId, "https://example.test/private", "https://example.test/private", "Private link", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
+
+        int result = await repository.GetCollectionPageCount("owner", "public");
+
+        Assert.Equal(expectedPages, result);
+    }
+
+    [Fact]
     public async Task GetCollectionPage_WhenPageIsSecond_ReturnsRemainingPublicLink()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(42, "Public", "public", true);
-        await database.SeedLinkRange(42, collectionId, 16, isPublic: true);
+        await database.SeedLinkRange(42, collectionId, 17, isPublic: true);
 
         await using SqliteConnection connection = database.OpenConnection();
         IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
@@ -134,6 +171,7 @@ public sealed class SqlitePublicReadRepositoryTests
         Linkubator.Application.Dtos.Models.PublicCollectionDto? result = await repository.GetCollectionPage("owner", "public", 2);
 
         Assert.Single(result!.Links);
+        Assert.Equal("https://example.test/16", result.Links.Single().UrlOriginal);
     }
 
     [Fact]

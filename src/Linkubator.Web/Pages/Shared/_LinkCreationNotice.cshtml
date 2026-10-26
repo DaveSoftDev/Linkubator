@@ -1,0 +1,18 @@
+@using Linkubator.Web.Pages.App.Links
+@{
+    string? createdLinkUrl = TempData[nameof(NewModel.CreatedLinkUrl)] as string;
+    string? error = TempData[nameof(NewModel.LinkCreationError)] as string;
+}
+
+@if (!string.IsNullOrWhiteSpace(createdLinkUrl))
+{
+    <div class="app-alert app-alert--success" role="status" aria-live="polite">
+        <p>Enlace creado. <a class="app-alert__action" href="@createdLinkUrl" target="_blank" rel="noopener noreferrer" title="Abrir enlace en una pestaña nueva">Ver enlace</a></p>
+    </div>
+}
+
+@await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", new Linkubator.Web.Models.Presentation.PageAlertViewModel
+{
+    Message = error ?? string.Empty,
+    Kind = "error",
+})

@@ -460,6 +460,42 @@ public class CollectionServiceTests
     }
 
     [Fact]
+    public async Task ListAllCollections_WhenCollectionsHaveLinks_ReturnsAccurateLinkCounts()
+    {
+        CurrentUser currentUser = new CurrentUser(7);
+        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
+        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
+        Collection alpha = Collection.Create(7, "Alpha", null);
+        Collection beta = Collection.Create(7, "Beta", null);
+        SetId(alpha, 1);
+        SetId(beta, 2);
+        repository.Items.Add(alpha);
+        repository.Items.Add(beta);
+
+        Link first = Link.Create(7, alpha, "https://example.com/a", "One", null, null);
+        Link second = Link.Create(7, alpha, "https://example.com/b", "Two", null, null);
+        Link third = Link.Create(7, beta, "https://example.com/c", "Three", null, null);
+        SetId(first, 10);
+        SetId(second, 11);
+        SetId(third, 12);
+        linkRepository.Links.Add(first);
+        linkRepository.Links.Add(second);
+        linkRepository.Links.Add(third);
+        alpha.RehydrateLinks([first, second]);
+        beta.RehydrateLinks([third]);
+
+        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
+        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
+
+        Result<IReadOnlyCollection<CollectionDto>> result = await service.ListAllCollections();
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+        Assert.Equal(2, result.Value.Single(item => item.Name == "Alpha").LinkCount);
+        Assert.Equal(1, result.Value.Single(item => item.Name == "Beta").LinkCount);
+    }
+
+    [Fact]
     public async Task ListAllCollections_WhenUserIsUnauthenticated_ReturnsResourceNotAccessible()
     {
         CurrentUser currentUser = new CurrentUser(0);
@@ -828,6 +864,9 @@ public class CollectionServiceTests
         public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<Collection>>(new InvalidOperationException("boom"));
 
+        public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
+            => Task.FromException<IReadOnlyCollection<CollectionDto>>(new InvalidOperationException("boom"));
+
         public Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<CollectionDto>>(new InvalidOperationException("boom"));
 
@@ -914,6 +953,9 @@ public class CollectionServiceTests
         public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<Collection>>(new DomainExceptions.NotValidInputException());
 
+        public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
+            => Task.FromException<IReadOnlyCollection<CollectionDto>>(new DomainExceptions.NotValidInputException());
+
         public Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<CollectionDto>>(new DomainExceptions.NotValidInputException());
 
@@ -992,6 +1034,13 @@ public class CollectionServiceTests
 
         public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<Collection>>(Items.Where(item => item.UserId == userId).ToList());
+
+        public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyCollection<CollectionDto>>(
+                Items
+                    .Where(item => item.UserId == userId)
+                    .Select(item => new CollectionDto(item.Id, item.Name, item.Slug, item.Description, item.IsPublic, item.Links.Count, item.CreatedAt))
+                    .ToList());
 
         public Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
         {
@@ -1108,6 +1157,9 @@ public class CollectionServiceTests
 
         public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<Collection>>(Array.Empty<Collection>());
+
+        public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyCollection<CollectionDto>>(Array.Empty<CollectionDto>());
 
         public Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<CollectionDto>>(Array.Empty<CollectionDto>());

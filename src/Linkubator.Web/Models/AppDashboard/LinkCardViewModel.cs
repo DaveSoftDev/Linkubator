@@ -4,6 +4,8 @@ public sealed class LinkCardViewModel
 {
     public string Domain => Uri.TryCreate(Url, UriKind.Absolute, out Uri? uri) ? uri.Host : Url;
 
+    public long Id { get; init; }
+    public bool IsPublic { get; init; }
     public string Title { get; init; } = string.Empty;
     public string CollectionName { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;

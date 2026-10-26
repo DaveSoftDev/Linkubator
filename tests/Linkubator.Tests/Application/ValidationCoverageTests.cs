@@ -30,23 +30,23 @@ public class ValidationCoverageTests
     }
 
     [Fact]
-    public void LinkEditValidator_CoversNullInvalidAndValidCases()
+    public void LinkUpdateValidator_CoversNullInvalidAndValidCases()
     {
-        LinkEditValidator validator = new();
+        LinkUpdateValidator validator = new();
 
         Result nullResult = validator.Validate(null!);
         Assert.False(nullResult.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", nullResult.Errors[0].Code);
 
-        Result invalidLinkId = validator.Validate(new LinkEditRequest(0, 1, "Title"));
+        Result invalidLinkId = validator.Validate(new LinkUpdateRequest(0, 1, "Title"));
         Assert.False(invalidLinkId.IsSuccess);
         Assert.Equal("LINK_ID_INVALID", invalidLinkId.Errors[0].Code);
 
-        Result invalidCollectionId = validator.Validate(new LinkEditRequest(1, 0, "Title"));
+        Result invalidCollectionId = validator.Validate(new LinkUpdateRequest(1, 0, "Title"));
         Assert.False(invalidCollectionId.IsSuccess);
         Assert.Equal("LINK_COLLECTION_ID_INVALID", invalidCollectionId.Errors[0].Code);
 
-        Result valid = validator.Validate(new LinkEditRequest(1, 2, "Title"));
+        Result valid = validator.Validate(new LinkUpdateRequest(1, 2, "Title"));
         Assert.True(valid.IsSuccess);
     }
 
@@ -223,31 +223,31 @@ public class ValidationCoverageTests
         Assert.NotNull(defaults.GetLinkValidator);
         Assert.True(defaults.GetLinkValidator.Validate(new LinkGetRequest(1)).IsSuccess);
         Assert.NotNull(defaults.CreateLinkValidator);
-        Assert.NotNull(defaults.EditLinkValidator);
+        Assert.NotNull(defaults.UpdateLinkValidator);
         Assert.NotNull(defaults.MoveLinkValidator);
         Assert.NotNull(defaults.DeleteLinkValidator);
 
         Assert.True(defaults.CreateLinkValidator.Validate(new LinkCreateRequest(1, "https://example.com")).IsSuccess);
-        Assert.True(defaults.EditLinkValidator.Validate(new LinkEditRequest(1, 2, "Title")).IsSuccess);
+        Assert.True(defaults.UpdateLinkValidator.Validate(new LinkUpdateRequest(1, 2, "Title")).IsSuccess);
         Assert.True(defaults.MoveLinkValidator.Validate(new LinkMoveRequest(1, 2)).IsSuccess);
         Assert.True(defaults.DeleteLinkValidator.Validate(new LinkDeleteRequest(1)).IsSuccess);
 
         LinkGetValidator getValidator = new();
         LinkCreateValidator createValidator = new();
-        LinkEditValidator editValidator = new();
+        LinkUpdateValidator updateValidator = new();
         LinkMoveValidator moveValidator = new();
         LinkDeleteValidator deleteValidator = new();
 
         LinkServiceValidators custom = new(
             getValidator,
             createValidator,
-            editValidator,
+            updateValidator,
             moveValidator,
             deleteValidator);
 
         Assert.Same(getValidator, custom.GetLinkValidator);
         Assert.Same(createValidator, custom.CreateLinkValidator);
-        Assert.Same(editValidator, custom.EditLinkValidator);
+        Assert.Same(updateValidator, custom.UpdateLinkValidator);
         Assert.Same(moveValidator, custom.MoveLinkValidator);
         Assert.Same(deleteValidator, custom.DeleteLinkValidator);
     }

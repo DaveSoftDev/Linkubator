@@ -4,6 +4,10 @@ public static class AppRoutes
 {
     public const string Root = "/app";
     public const string Links = "/app/enlaces";
+    public const string LinkNew = "/app/enlaces/nuevo";
+    public const string LinkEdit = "/app/enlaces/{0}/editar";
+    public const string LinkMove = "/app/enlaces/{0}/mover";
+    public const string LinkDelete = "/app/enlaces/{0}/eliminar";
     public const string Collections = "/app/colecciones";
     public const string CollectionNew = "/app/colecciones/nueva";
     public const string CollectionEdit = "/app/colecciones/{0}/editar";

@@ -1,0 +1,72 @@
+@page "/app/enlaces"
+@model Linkubator.Web.Pages.App.LinksModel
+@{
+    ViewData["Title"] = Model.Heading;
+    bool isListView = Request.Cookies["links-view"] == "list";
+}
+
+<main id="main-content" class="app-main" tabindex="-1">
+    <header class="main-header">
+        <div>
+            <p class="main-eyebrow">Gestiona tus enlaces</p>
+            <h2>@Model.Heading</h2>
+        </div>
+    </header>
+
+    @await Html.PartialAsync("~/Pages/Shared/_LinkCreationNotice.cshtml")
+    @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", new Linkubator.Web.Models.Presentation.PageAlertViewModel
+    {
+        Message = Model.LinkManagementError ?? string.Empty,
+        Kind = "error",
+    })
+    @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
+    @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
+    @await Html.PartialAsync("~/Pages/Shared/_SearchForm.cshtml", Model.SearchForm)
+
+    <section aria-labelledby="links-list-title">
+        <div class="section-toolbar section-toolbar--links section-toolbar--link-list">
+            <h3 id="links-list-title">Enlaces</h3>
+            <div class="section-toolbar__actions">
+                @if (!Model.HasListingError)
+                {
+                    <a class="view-switch__button toolbar-tool toolbar-create-link" asp-page="/App/Links/New" asp-route-collectionId="@Model.Sidebar.Selection.CollectionId" asp-route-ru="@($"{Request.PathBase}{Request.Path}{Request.QueryString}")">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5V19M5 12H19" /></svg>
+                        Crear enlace
+                    </a>
+                }
+                @if (!Model.HasListingError && Model.LinkCards.Count > 0)
+                {
+                    @await Html.PartialAsync("~/Pages/Shared/_LinkViewSwitch.cshtml", "saved-links")
+                }
+            </div>
+        </div>
+        <div class="main-wrapper">
+            @if (Model.HasListingError)
+            {
+                @await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", new Linkubator.Web.Models.Presentation.EmptyStateViewModel
+                {
+                    Title = "No se ha podido cargar el listado de enlaces.",
+                    Description = "Revisa los valores e inténtalo de nuevo.",
+                })
+            }
+            else if (Model.LinkCards.Count == 0)
+            {
+                @await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", new Linkubator.Web.Models.Presentation.EmptyStateViewModel
+                {
+                    Title = "No se han encontrado enlaces.",
+                    Description = "Prueba con otra búsqueda o crea un enlace.",
+                })
+            }
+            else
+            {
+                <div id="saved-links" class="@(isListView ? "links-grid links-grid--list" : "links-grid")" data-link-view-container aria-label="Lista de enlaces guardados">
+                    @foreach (var card in Model.LinkCards)
+                    {
+                        @await Html.PartialAsync("~/Pages/Shared/_LinkCard.cshtml", card)
+                    }
+                </div>
+                @await Html.PartialAsync("~/Pages/Shared/_Pagination.cshtml", Model.Pagination)
+            }
+        </div>
+    </section>
+</main>

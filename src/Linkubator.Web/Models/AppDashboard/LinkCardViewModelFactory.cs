@@ -1,3 +1,5 @@
+using LinkDto = Linkubator.Application.Dtos.Models.LinkDto;
+
 namespace Linkubator.Web.Models.AppDashboard;
 
 public static class LinkCardViewModelFactory
@@ -7,6 +9,22 @@ public static class LinkCardViewModelFactory
     public static string ResolveAccent(string collectionName)
     {
         return ResolveAccentClass(collectionName);
+    }
+
+    public static LinkCardViewModel Create(LinkDto link)
+    {
+        string collectionName = link.CollectionName ?? string.Empty;
+        return new LinkCardViewModel
+        {
+            Id = link.Id,
+            IsPublic = link.IsPublic,
+            Title = string.IsNullOrWhiteSpace(link.Title) ? link.UrlOriginal : link.Title,
+            CollectionName = collectionName,
+            Description = link.Description ?? string.Empty,
+            ImageUrl = link.Image,
+            AccentClass = ResolveAccent(collectionName),
+            Url = link.UrlOriginal,
+        };
     }
 
     public static IReadOnlyList<LinkCardViewModel> CreateDefault()

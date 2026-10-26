@@ -13,6 +13,8 @@
         </div>
     </header>
 
+    @await Html.PartialAsync("~/Pages/Shared/_LinkCreationNotice.cshtml")
+
     @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
     @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
     @await Html.PartialAsync("~/Pages/Shared/_SearchForm.cshtml", Model.SearchForm)
@@ -20,7 +22,7 @@
     <section aria-labelledby="collections-list-title">
         <div class="section-toolbar section-toolbar--collections">
           <h3 id="collections-list-title">Colecciones</h3>
-          <a class="primary-button" href="@Linkubator.Web.Constants.AppRoutes.CollectionNew">Crear colección</a>
+          <a class="view-switch__button toolbar-tool" href="@Linkubator.Web.Constants.AppRoutes.CollectionNew">Crear colección</a>
         </div>
         <div class="main-wrapper">
         @if (Model.HasListingError)

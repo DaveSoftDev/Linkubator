@@ -16,7 +16,7 @@
 </head>
 <body class="private-shell">
     <div class="private-page">
-        <div class="app-layout">
+        <div class="@(Context.Request.Cookies["sidebar-collapsed"] == "true" ? "app-layout sidebar-collapsed" : "app-layout")">
             @{
                 AppSidebarUserViewModel currentSidebarUser = new()
                 {

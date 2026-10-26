@@ -28,6 +28,8 @@ public abstract class PrivatePageModel : PageModel
 
     public AppSidebarViewModel Sidebar { get; protected set; }
 
+    protected ApplicationResults.Result<IReadOnlyCollection<CollectionDto>>? CollectionsResult { get; private set; }
+
     protected AppSidebarUserViewModel SidebarUser => new()
     {
         Name = UserProfile.Name,
@@ -44,6 +46,7 @@ public abstract class PrivatePageModel : PageModel
     protected async Task LoadSidebarCollections(AppSidebarSelectionKind selectionKind = AppSidebarSelectionKind.Home, CancellationToken cancellationToken = default)
     {
         ApplicationResults.Result<IReadOnlyCollection<CollectionDto>> result = await _collectionService.ListAllCollections(cancellationToken: cancellationToken);
+        CollectionsResult = result;
 
         if (!result.IsSuccess || result.Value is null)
         {

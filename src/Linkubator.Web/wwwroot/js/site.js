@@ -21,6 +21,12 @@
     if (appLayout && sidebar) {
         const mobileViewport = window.matchMedia('(max-width: 900px)');
         const main = appLayout.querySelector('.app-main');
+        const rememberSidebarState = () => {
+            const isCollapsed = appLayout.classList.contains('sidebar-collapsed');
+            const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+            document.cookie = `sidebar-collapsed=${isCollapsed}; Path=/app; SameSite=Lax${secure}`;
+        };
+
         const syncSidebar = () => {
             const isOpen = mobileViewport.matches && appLayout.classList.contains('is-open');
             const isCollapsed = appLayout.classList.contains('sidebar-collapsed');
@@ -55,6 +61,7 @@
                     const isOpen = appLayout.classList.toggle('is-open');
                     if (isOpen) {
                         appLayout.classList.remove('sidebar-collapsed');
+                        rememberSidebarState();
                     }
                     mobileToggle.setAttribute('aria-expanded', String(isOpen));
                     mobileToggle.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
@@ -96,6 +103,7 @@
                 }
 
                 const nextCollapsed = appLayout.classList.contains('sidebar-collapsed');
+                rememberSidebarState();
                 sidebarCollapse.setAttribute('aria-label', nextCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral');
                 sidebarCollapse.setAttribute('aria-expanded', String(!nextCollapsed));
 
@@ -109,6 +117,13 @@
         }
 
         mobileViewport.addEventListener('change', closeMobileSidebar);
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                const isCollapsed = document.cookie.split(';').some(cookie => cookie.trim() === 'sidebar-collapsed=true');
+                appLayout.classList.toggle('sidebar-collapsed', isCollapsed);
+                closeMobileSidebar();
+            }
+        });
         window.addEventListener('resize', () => {
             if (!mobileViewport.matches) {
                 closeMobileSidebar();
@@ -137,40 +152,43 @@
         });
     }
 
+    const linkViewSwitch = document.querySelector('[data-link-view-switch]');
+    const linkViewContainer = document.querySelector('[data-link-view-container]');
+
+    if (linkViewSwitch && linkViewContainer) {
+        const viewButtons = linkViewSwitch.querySelectorAll('[data-link-view]');
+        const readListPreference = () => document.cookie.split(';').some(cookie => cookie.trim() === 'links-view=list');
+        const setListView = (isList) => {
+            linkViewContainer.classList.toggle('links-grid--list', isList);
+            viewButtons.forEach(button => {
+                const isSelected = (button.dataset.linkView === 'list') === isList;
+                button.setAttribute('aria-pressed', String(isSelected));
+                button.classList.toggle('view-switch__button--active', isSelected);
+            });
+        };
+
+        viewButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const isList = button.dataset.linkView === 'list';
+                setListView(isList);
+                const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+                document.cookie = `links-view=${isList ? 'list' : 'cards'}; Path=${linkViewSwitch.dataset.cookiePath}; SameSite=Lax${secure}`;
+            });
+        });
+
+        window.addEventListener('pageshow', event => {
+            if (event.persisted) {
+                setListView(readListPreference());
+            }
+        });
+        setListView(readListPreference());
+        linkViewSwitch.hidden = false;
+    }
+
     const quickAddInput = document.querySelector('[data-quick-add-input]');
-    const quickAddTrigger = document.querySelector('[data-quick-add-trigger]');
     const quickAddToggle = document.querySelector('[data-quick-add-toggle]');
     const quickAddMenu = document.querySelector('#quick-add-menu');
     const quickAddAdvanced = document.querySelector('[data-quick-add-advanced]');
-    const quickAddStatus = document.querySelector('.main-section__status');
-
-    if (quickAddTrigger && quickAddInput) {
-        const submitQuickAdd = () => {
-            const url = quickAddInput.value.trim();
-
-            if (!url) {
-                if (quickAddStatus) {
-                    quickAddStatus.textContent = 'Introduce una URL para continuar.';
-                }
-                quickAddInput.focus();
-                return;
-            }
-
-            if (quickAddStatus) {
-                quickAddStatus.textContent = 'Enlace preparado para guardarse.';
-            }
-            quickAddInput.value = '';
-            quickAddInput.focus();
-        };
-
-        quickAddTrigger.addEventListener('click', submitQuickAdd);
-        quickAddInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                submitQuickAdd();
-            }
-        });
-    }
 
     if (quickAddToggle && quickAddMenu) {
         const closeQuickAddMenu = () => {
@@ -240,13 +258,20 @@
         });
     }
 
-    if (quickAddAdvanced && quickAddStatus) {
-        quickAddAdvanced.addEventListener('click', () => {
-            quickAddStatus.textContent = 'Abriendo creación avanzada…';
-            if (quickAddToggle && quickAddMenu) {
-                quickAddMenu.hidden = true;
-                quickAddToggle.setAttribute('aria-expanded', 'false');
+    if (quickAddAdvanced instanceof HTMLAnchorElement && quickAddInput instanceof HTMLInputElement) {
+        const updateAdvancedLink = () => {
+            const destination = new URL(quickAddAdvanced.href);
+            if (quickAddInput.value) {
+                destination.searchParams.set('url', quickAddInput.value);
+            } else {
+                destination.searchParams.delete('url');
             }
-        });
+            quickAddAdvanced.href = destination.href;
+        };
+
+        quickAddInput.addEventListener('input', updateAdvancedLink);
+        quickAddInput.addEventListener('change', updateAdvancedLink);
+        quickAddAdvanced.addEventListener('click', updateAdvancedLink);
+        updateAdvancedLink();
     }
 });

@@ -202,8 +202,8 @@ Invariantes:
 
 - Las colecciones y los enlaces nuevos son privados por defecto. El usuario puede hacerlos públicos al crearlos si se cumplen las condiciones para publicarlos.
 - Un enlace de una colección privada no puede ser público.
-- Al hacer privada una colección, todos sus enlaces pasan a ser privados.
-- Al hacer pública una colección, sus enlaces permanecen privados; el usuario debe hacer públicos individualmente los que quiera publicar.
+- Al guardar la edición de una colección como privada, todos sus enlaces pasan a ser privados.
+- Al guardar la edición de una colección como pública, sus enlaces permanecen privados; el estado de cada enlace se conserva de forma independiente.
 - Al mover un enlace a otra colección, el enlace pasa a ser privado, con independencia de la privacidad de la colección de origen o de destino.
 - Una colección vacía puede ser pública aunque todavía no aparezca en las páginas públicas por no tener enlaces.
 
