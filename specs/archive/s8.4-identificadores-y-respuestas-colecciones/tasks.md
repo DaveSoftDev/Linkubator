@@ -8,10 +8,12 @@
   - Plan: [plan.md](plan.md), aprobado por DLG el 25-X-2026 («Siguiente»).
   - Tareas: DLG, 25-X-2026 («Vamos»).
 - Implementación:
-  - Estado: completada.
+  - Estado: completada y aceptada.
   - Inicio: 25-X-2026, DLG («Inicia la implementación»).
-  - Finalización: 25-X-2026; suite focalizada `CollectionsListingIntegrationTests` 12/12, suite completa `Linkubator.Tests` 1,203/1,203 y `git diff --check` satisfactorios.
-  - Evidencia consolidada: [evidencia por criterio](#evidencia-por-criterio); aceptación humana pendiente.
+  - Finalización técnica: 25-X-2026; suite focalizada `CollectionsListingIntegrationTests` 12/12, suite completa `Linkubator.Tests` 1,203/1,203 y `git diff --check` satisfactorios.
+  - Aceptación humana del resultado: DLG, 26-X-2026 («Completado»).
+  - Evidencia consolidada: [evidencia por criterio](#evidencia-por-criterio); aceptación humana registrada abajo.
+- Aceptación humana del resultado: DLG, 26-X-2026 («Completado»); aceptación separada de la validación técnica.
 - La preparación de tareas no inventa aprobaciones ni evidencias de implementación.
 
 ## Descomposición
@@ -25,7 +27,7 @@ T01 detecta los tests HTTP y fixtures disponibles; después se implementan valid
 | T03 | Añadir tests HTTP de POST de eliminación para ID inválido, inexistente y ajeno; comprobar validación, aviso/redirección y conservación de datos. | CA03; [plan → «Flujos internos»](plan.md#flujos-internos), V03 | T01 | Ejecutar los casos POST con antiforgery; resultados conforme a fuentes y base de datos sin cambios. | completada | Añadidas y ejecutadas pruebas POST con antiforgery, respuesta de validación, redirección/aviso y estado persistido sin cambios; suite focalizada 12/12. |
 | T04 | Añadir y ejecutar comprobación negativa de sensibilidad que detecte una respuesta discriminante o acceso no autorizado, restaurando después la expectativa correcta. | CA04; [plan → «Garantías técnicas»](plan.md#garantías-técnicas), V04 | T02, T03 | Ejecutar prueba negativa temporalmente invertida y suite focalizada restaurada; la primera falla por la respuesta observada y la última pasa. | completada | 25-X-2026: invertida temporalmente la aserción de igualdad de respuestas a `Assert.NotEqual`; `GetCollectionOperations_WhenCollectionIsMissingOrForeign_ReturnsNonDisclosingResponses` falló con “Strings are equal”. Restaurada la expectativa y suite focalizada 12/12. Comprueba sensibilidad de igualdad observable, no inyección de un defecto de autorización. |
 | T05 | Ejecutar validación integrada focalizada, revisar cobertura fuente→criterio→test y comprobar cambios documentales y diff. | CA01–CA04; [plan → «Estrategia de validación»](plan.md#estrategia-de-validación) | T04 | Ejecutar el filtro focalizado descubierto en T01 y `git diff --check`; los tests pasan, el diff es limpio y no hay cambios a reglas propietarias. | completada | 25-X-2026: suite focalizada `dotnet test tests\\Linkubator.Tests\\Linkubator.Tests.csproj --filter "FullyQualifiedName~CollectionsListingIntegrationTests" --no-restore -m:1 -p:BuildInParallel=false`: PASS 12/12. Tras corregir dos fallos existentes —expectativa de logging obsoleta y respuesta de método no permitido en ruta privada—, el filtro de esos dos tests pasó 2/2 y la suite completa `dotnet test tests\\Linkubator.Tests\\Linkubator.Tests.csproj --no-restore -m:1 -p:BuildInParallel=false` pasó 1,203/1,203, 0 fallidos, 0 omitidos. `git diff --check`: PASS. Los dos arreglos son validación global y no se atribuyen como cambios exclusivos de S8.4. Los límites de cobertura S8.4 constan en «Evidencia por criterio». |
-| T06 | Revisar evidencia y registrar aceptación humana por separado de la validación técnica. | CA01–CA04; [plan → «Orden de ejecución y cierre»](plan.md#orden-de-ejecución-y-cierre) | T05 | Presentar evidencia por criterio y registrar decisión explícita, sin cerrar trabajo por pruebas verdes. | pendiente | Sin aceptación |
+| T06 | Revisar evidencia y registrar aceptación humana por separado de la validación técnica. | CA01–CA04; [plan → «Orden de ejecución y cierre»](plan.md#orden-de-ejecución-y-cierre) | T05 | Presentar evidencia por criterio y registrar decisión explícita, sin cerrar trabajo por pruebas verdes. | completada | DLG aceptó el resultado el 26-X-2026 con la referencia «Completado»; aceptación registrada en «Aceptación y cierre». |
 
 ## Evidencia por criterio
 
@@ -38,10 +40,12 @@ T01 detecta los tests HTTP y fixtures disponibles; después se implementan valid
 
 ## Aceptación y cierre
 
-- Estado del trabajo: pendiente de aceptación humana.
-- Criterios sin evidencia satisfactoria: ninguno para el alcance probado; límites de cobertura registrados por criterio, incluyendo la ausencia de instrumentación directa de la llamada Web/Application para CA01 y la comparación de DELETE GET con tokens antiforgery.
-- Bloqueos y riesgos restantes: los primeros builds focalizados estuvieron bloqueados por ensamblados Web activos; en ejecuciones posteriores la validación focalizada y suite completa compilaron y pasaron. La prueba negativa verifica sensibilidad de la aserción de igualdad, no la detección de una vulnerabilidad de autorización. Los resultados completos no equivalen a aceptación humana del trabajo.
+- Estado del trabajo: completado y aceptado.
+- Criterios sin evidencia satisfactoria: ninguno para el alcance probado; los límites de cobertura siguen registrados por criterio, incluida la ausencia de instrumentación directa de la llamada Web/Application para CA01 y la comparación de DELETE GET con tokens antiforgery.
+- Bloqueos y riesgos restantes: ninguno pendiente para el alcance de S8.4. La suite focalizada y la suite completa pasaron; la prueba negativa demuestra sensibilidad de la aserción de igualdad y no la detección de una vulnerabilidad de autorización. Estos límites fueron aceptados por DLG.
 - Aprobación de tareas: DLG, 25-X-2026 («Vamos»).
-- Aceptación humana del resultado: pendiente; la validación técnica no constituye aceptación. Registrar responsable, fecha y referencia cuando exista.
-- Archivado: no solicitado.
-- Siguiente paso autorizado: solicitar aprobación explícita de estas tareas; después podrá iniciarse su ejecución.
+- Aceptación humana del resultado: DLG, 26-X-2026 («Completado»).
+- Archivado: completado el 26-X-2026, tras verificar destino, referencias entrantes/salientes y ausencia de colisiones.
+- Ubicación: `specs/archive/s8.4-identificadores-y-respuestas-colecciones/`.
+- Fecha efectiva de archivado: 26-X-2026; comprobación de enlaces completada y satisfactoria.
+- Verificación de enlaces: completada; los enlaces del roadmap, índice y artefactos archivados resuelven, y S8.2 permanece activo.

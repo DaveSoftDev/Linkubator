@@ -11,6 +11,7 @@ public static class SafeLogger
     {
         ArgumentNullException.ThrowIfNull(logger);
 
+        string enrichedMessage = AppendUserIdToMessage(message, userContext);
         Dictionary<string, object?> context = BuildContext(userContext, request);
         if (exception is not null)
         {
@@ -22,9 +23,31 @@ public static class SafeLogger
             }
         }
 
-        SafeLogState state = new(message, context);
+        SafeLogState state = new(enrichedMessage, context);
 
         logger.Log(level, new EventId(), state, exception, static (entry, _) => entry.Message);
+    }
+
+    private static string AppendUserIdToMessage(string message, object? userContext)
+    {
+        if (string.IsNullOrEmpty(message) || userContext is null)
+        {
+            return message;
+        }
+
+        PropertyInfo? userIdProperty = userContext.GetType().GetProperty("UserId", BindingFlags.Instance | BindingFlags.Public);
+        if (userIdProperty is null)
+        {
+            return message;
+        }
+
+        object? userIdValue = userIdProperty.GetValue(userContext);
+        if (userIdValue is null)
+        {
+            return message;
+        }
+
+        return $"{message} [UserId={userIdValue}]";
     }
 
     public static string SafePreview(string? value, int maxLength)

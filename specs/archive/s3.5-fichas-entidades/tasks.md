@@ -1,4 +1,4 @@
-﻿# Tareas: S3.5 — Fichas de entidades
+# Tareas: S3.5 — Fichas de entidades
 
 ## Referencias y autorización
 
@@ -35,7 +35,7 @@ La revisión S3.6 contra el código y la aprobación de las invariantes quedan f
 | Criterio | Tareas | Validación | Resultado real | Fecha y entorno o versión | Referencia a evidencia |
 | --- | --- | --- | --- | --- | --- |
 | CA01 | T01–T05 | V01 | Completado; las tres fichas resumen las reglas localizadas y citan archivo y línea. | 12-X-2026, revisión documental | [user.md](cards/user.md), [collection.md](cards/collection.md), [link.md](cards/link.md) |
-| CA02 | T02–T05 | V02 | Completado; archivos guardados como vistas derivadas y fuentes propietarias no modificadas. | 12-X-2026, revisión documental en carpeta S3.5 | Carpeta [S3.5](.) y archivos derivados |
+| CA02 | T02–T05 | V02 | Completado; archivos guardados como vistas derivadas y fuentes propietarias no modificadas. | 12-X-2026, revisión documental en carpeta S3.5 | Carpeta [S3.5](../s3.5-fichas-entidades) y archivos derivados |
 | CA03 | T02–T05 | V03 | Completado; observaciones documentales declaradas y referencias comprobadas. | 12-X-2026; revisión de vigencia 15-X-2026 | [user.md](cards/user.md), [collection.md](cards/collection.md#observaciones-finales), [link.md](cards/link.md#observaciones-finales) |
 
 ## Aceptación y cierre

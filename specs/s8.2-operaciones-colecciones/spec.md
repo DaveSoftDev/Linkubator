@@ -26,7 +26,7 @@ Completar en la zona privada los flujos Web para crear, editar y eliminar colecc
 
 ## Dependencias y prerrequisitos
 
-- S8.1 proporciona el listado privado de colecciones desde el que se enlazan las operaciones; su implementación y aceptación constan en [S8.1 → «Aceptación y cierre»](../s8.1-listado-colecciones/tasks.md#aceptación-y-cierre).
+- S8.1 proporciona el listado privado de colecciones desde el que se enlazan las operaciones; su implementación y aceptación constan en [S8.1 → «Aceptación y cierre»](../archive/s8.1-listado-colecciones/tasks.md#aceptación-y-cierre).
 - Los casos de uso de colecciones y sus contratos de Application existen como base para las páginas Web. La implementación deberá comprobar sus firmas y resultados antes de cerrar el diseño técnico; una incompatibilidad concreta se registrará como bloqueo técnico, sin alterar los criterios aprobados.
 - La identidad privada y las respuestas base de Web están disponibles en la infraestructura existente. Las operaciones no pueden depender de una identidad enviada por el cliente.
 - No se requiere que S8.3, S8.4, S8.5 ni etapas posteriores aporten código, tests o evidencia para cerrar esta spec.

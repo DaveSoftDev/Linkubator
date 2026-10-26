@@ -31,18 +31,18 @@
 
 ### Garantías técnicas
 
-- Los errores permanecen asociados al campo correcto y las etiquetas, descripciones y anuncios accesibles siguen vinculados al control afectado, según [requirements.md → «Accesibilidad»](../../context/requirements.md#accesibilidad).
+- Los errores permanecen asociados al campo correcto y las etiquetas, descripciones y anuncios accesibles siguen vinculados al control afectado, según [requirements.md → «Accesibilidad»](../../../context/requirements.md).
 - El foco se dirige al primer campo inválido únicamente tras un rechazo de validación, preservando el foco inicial de los formularios sin errores.
-- Los mensajes reflejan el resultado existente y no exponen detalles privados no autorizados. Las reglas y mensajes funcionales siguen siendo propiedad de [specifications.md → «Errores controlados»](../../context/specifications.md#errores-controlados).
-- El rechazo de una operación no cambia la colección ni sus enlaces; la garantía transaccional corresponde a Application/Infrastructure conforme a [architecture.md → «Persistencia»](../../context/architecture.md#persistencia).
+- Los mensajes reflejan el resultado existente y no exponen detalles privados no autorizados. Las reglas y mensajes funcionales siguen siendo propiedad de [specifications.md → «Errores controlados»](../../../context/specifications.md).
+- El rechazo de una operación no cambia la colección ni sus enlaces; la garantía transaccional corresponde a Application/Infrastructure conforme a [architecture.md → «Persistencia»](../../../context/architecture.md).
 
 ## Decisiones técnicas y riesgos
 
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
 | Mantener los modelos compartidos de resumen y alerta y completar el mapeo de resultados en las páginas Razor de colecciones. | propuesta | Código actual de Web y [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación). | Reduce duplicación; verificar las categorías y el campo que realmente proporcionan los resultados antes de codificar el mapeo final. |
-| Aplicar foco al primer campo inválido con una mejora local al formulario, sin establecer una dependencia global que afecte a otros formularios. | propuesta | [requirements.md → «Accesibilidad»](../../context/requirements.md#accesibilidad). | Evita cambios colaterales en páginas ajenas a S8.3; validar con prueba del HTML/cliente apropiada. |
-| Mantener fuera de alcance la respuesta de rutas por identificador inválido o recurso no accesible. | confirmado | [S8.3 → «Alcance»](spec.md#alcance) y S8.4 en [mvp0-plan.md → «S8: Gestión de colecciones (L)»](../../plans/mvp0-plan.md#s8-gestión-de-colecciones-l). | Evita solaparse con S8.4; comprobar que sus resultados no se reclasifican como errores de campo en esta entrega. |
+| Aplicar foco al primer campo inválido con una mejora local al formulario, sin establecer una dependencia global que afecte a otros formularios. | propuesta | [requirements.md → «Accesibilidad»](../../../context/requirements.md). | Evita cambios colaterales en páginas ajenas a S8.3; validar con prueba del HTML/cliente apropiada. |
+| Mantener fuera de alcance la respuesta de rutas por identificador inválido o recurso no accesible. | confirmado | [S8.3 → «Alcance»](spec.md#alcance) y S8.4 en [mvp0-plan.md → «S8: Gestión de colecciones (L)»](../../../plans/mvp0-plan.md). | Evita solaparse con S8.4; comprobar que sus resultados no se reclasifican como errores de campo en esta entrega. |
 
 ## Estrategia de validación
 

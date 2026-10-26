@@ -40,8 +40,8 @@
 
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
-| Reutilizar `EditModel`, `DeleteModel`, el servicio y el presentador compartido de respuestas privadas; limitar cambios al tratamiento y las pruebas de integración necesarias. | propuesta | [spec.md → «Alcance»](spec.md#alcance), [architecture.md → «Arquitectura»](../../context/architecture.md#arquitectura), implementación actual de Web. | Reutiliza el límite existente y evita reglas duplicadas; confirmar contratos/error codes al iniciar la implementación. |
-| Cubrir en tests propios los casos discriminantes de edición/eliminación, GET y POST según aplique, incluso con una prueba negativa de sensibilidad. | propuesta | [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación), [S8.5](../../plans/mvp0-plan.md#s8-gestión-de-colecciones-l). | Permite cierre independiente de S8.5; seleccionar los fixtures/servidor HTTP existente en la tarea de inspección. |
+| Reutilizar `EditModel`, `DeleteModel`, el servicio y el presentador compartido de respuestas privadas; limitar cambios al tratamiento y las pruebas de integración necesarias. | propuesta | [spec.md → «Alcance»](spec.md#alcance), [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura), implementación actual de Web. | Reutiliza el límite existente y evita reglas duplicadas; confirmar contratos/error codes al iniciar la implementación. |
+| Cubrir en tests propios los casos discriminantes de edición/eliminación, GET y POST según aplique, incluso con una prueba negativa de sensibilidad. | propuesta | [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación), [S8.5](../../../plans/mvp0-plan.md#s8-gestión-de-colecciones-l). | Permite cierre independiente de S8.5; seleccionar los fixtures/servidor HTTP existente en la tarea de inspección. |
 
 ## Estrategia de validación
 

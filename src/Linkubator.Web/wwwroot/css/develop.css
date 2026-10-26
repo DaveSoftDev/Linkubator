@@ -1174,7 +1174,7 @@ svg {
 
 .collection-form {
   max-width: 46rem;
-  margin: 1.75rem auto;
+  margin: 1.75rem auto 3.3rem;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1.25rem;

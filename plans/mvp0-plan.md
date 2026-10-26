@@ -332,12 +332,10 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [ ] Todas las operaciones de colecciones funcionan según [«Páginas privadas»](../context/specifications.md#páginas-privadas).
-- [ ] Siempre queda al menos una colección y no se elimina una colección con enlaces.
-- [ ] Hacer privada una colección vuelve privados sus enlaces en la misma transacción.
-- [ ] La búsqueda de colecciones solo devuelve colecciones del usuario, por `Name`, en orden alfabético.
-- [ ] Los tests de integración HTTP pasan.
-- [ ] Los mensajes, formularios y estados vacíos están aceptados por el humano.
+- [x] Todas las operaciones de colecciones previstas para S8 funcionan según [«Páginas privadas»](../context/specifications.md#páginas-privadas). La cobertura combina tests HTTP focalizados y revisión manual aceptada; la búsqueda/paginación manual se aceptó con el alcance y los límites registrados en [S8.6](../specs/archive/s8.6-revision-manual-colecciones/tasks.md#aceptación-y-cierre).
+- [x] La búsqueda de colecciones solo devuelve colecciones del usuario, por `Name`, en orden alfabético. Evidencia de listado/aislamiento en [S8.1](../specs/archive/s8.1-listado-colecciones/tasks.md#evidencia-por-criterio) y de integración HTTP en [S8.5](../specs/archive/s8.5-pruebas-integracion-http-colecciones/tasks.md#evidencia-por-criterio); la paginación manual de resultados filtrados conserva la limitación aceptada en S8.6.
+- [x] Los tests de integración HTTP de S8 pasan. La suite HTTP focalizada de S8.5 pasó 19/19; no equivale a ejecutar la suite completa del repositorio ([S8.5](../specs/archive/s8.5-pruebas-integracion-http-colecciones/tasks.md#aceptación-y-cierre)).
+- [x] Los mensajes, formularios y estados vacíos están aceptados por el humano. DLG aceptó S8.7 con las limitaciones documentadas ([S8.7](../specs/archive/s8.7-revision-textos-accesibilidad-formularios/tasks.md#aceptación-y-cierre)).
 
 ### S9: Gestión de enlaces (L)
 
@@ -348,7 +346,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 | S9.1 | Implementar crear enlace con casilla pública desmarcada, selector de colecciones sin paginar y duplicados con la colección donde existe | IA |
 | S9.2 | Deshabilitar la opción pública en colecciones privadas con su explicación, y rechazar con el mensaje previsto cualquier petición manipulada | IA |
 | S9.3 | Implementar editar (la URL no cambia), mover y eliminar con confirmación | IA |
-| S9.4 | Implementar el POST de visibilidad con `IsPublic` único y válido, o redirección con aviso | IA |
+| S9.4 | Implementar cambiar de colección | IA |
 | S9.5 | Escribir tests HTTP derivados de los criterios aprobados en S4: colección ajena, inexistente o inválida; peticiones manipuladas; propiedad; atomicidad | IA |
 | S9.6 | Ejecutar la guía manual con URLs reales, duplicados y cambios de visibilidad | Humano |
 | S9.7 | Revisar la presentación de imagen, título y descripción | Humano |
@@ -360,6 +358,8 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 - [ ] Una petición manipulada no puede hacer público un enlace de una colección privada.
 - [ ] Un enlace duplicado se rechaza indicando la colección donde está.
 - [ ] La proyección FTS5 se mantiene sincronizada en cada operación.
+- [ ] Al hacer privada una colección, todos sus enlaces pasan a ser privados en la misma transacción.
+- [ ] No se puede eliminar una colección que contiene enlaces.
 - [ ] El humano ha aceptado las pantallas y los mensajes.
 
 ### S10: Listado y búsqueda de enlaces (L)

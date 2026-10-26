@@ -64,7 +64,7 @@ public sealed class CollectionsModel : PrivatePageModel
         SearchForm = new SearchFormViewModel
         {
             Action = AppRoutes.Collections,
-            Label = "Buscar colecciones",
+            Label = "Buscar",
             Placeholder = "Buscar colecciones...",
             ButtonText = "Buscar",
             QueryInputId = "collections-search-query",

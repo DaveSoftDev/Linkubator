@@ -53,6 +53,7 @@
             </div>
         </form>
 
+        @section Scripts {
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const invalidField = Array.from(document.querySelectorAll('.input-validation-error, [aria-invalid="true"]'))
@@ -66,5 +67,6 @@
                 }
             });
         </script>
+        }
     }
 </main>

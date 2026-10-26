@@ -14,7 +14,10 @@
   - Finalización técnica: 25-X-2026; suite focalizada 112/112, build Web 0 advertencias/0 errores y `git diff --check` sin errores.
   - Evidencia consolidada: CA01–CA03 con tests automatizados; CA04 con revisión manual acotada en Chrome de escritorio, documentada en T04. La versión/resolución del navegador no quedó registrada y no se documentan comprobaciones manuales de paginación.
 - Aceptación humana: DLG, 25-X-2026, referencia «Completado».
-- Cierre: completado y aceptado el 25-X-2026. No se ha solicitado archivar la carpeta activa.
+- Cierre: completado y aceptado el 25-X-2026.
+- Archivado: completado el 26-X-2026.
+- Ubicación archivada: `specs/archive/s8.1-listado-colecciones/`.
+- Fecha efectiva de archivado y comprobación de enlaces: 26-X-2026; carpeta activa ausente y enlaces entrantes/salientes comprobados.
 
 ## Descomposición
 
@@ -45,4 +48,6 @@ La operación de listado original de Application aplicaba búsqueda, página y �
 - Bloqueos y riesgos restantes: ninguno que impida el cierre de S8.1. La versión y viewport de Chrome no se registraron y la revisión manual se limita a teclado/foco de búsqueda y estado vacío. Los cambios preexistentes a `ListAllCollections` y su uso en el sidebar se preservaron y no se consideran evidencia funcional de S8.1; cualquier revisión de esos cambios queda separada.
 - Aceptación humana: DLG, 25-X-2026, referencia «Completado».
 - Evidencia de cierre: T04 registra la comprobación manual; T05 registra suite focalizada 112/112, build Web 0 warnings/0 errors y `git diff --check` sin errores.
-- Archivado: no solicitado; el trabajo permanece en `specs/s8.1-listado-colecciones/`.
+- Archivado: completado el 26-X-2026.
+- Ubicación archivada: `specs/archive/s8.1-listado-colecciones/`.
+- Fecha efectiva de archivado y comprobación de enlaces: 26-X-2026; carpeta activa ausente y enlaces entrantes/salientes comprobados.

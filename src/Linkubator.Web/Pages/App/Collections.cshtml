@@ -39,11 +39,11 @@
               Colecciones existentes
             </caption>
             <colgroup>
-              <col style="width: 22%;" />     <!-- Nombre -->
-              <col />                         <!-- Descripción: espacio restante -->
-              <col style="width: 7rem;" />    <!-- ¿Pública? -->
-              <col style="width: 6rem;" />    <!-- Enlaces -->
-              <col style="width: 8.5rem;" />  <!-- Acciones -->
+              <col style="width: 22%;" />     @* Nombre *@
+              <col />                         @* Descripción: espacio restante *@
+              <col style="width: 7rem;" />    @* ¿Pública? *@
+              <col style="width: 6rem;" />    @* Enlaces *@
+              <col style="width: 8.5rem;" />  @* Acciones *@
             </colgroup>
             <thead>
               <tr>
@@ -70,10 +70,10 @@
                 <td data-label="Enlaces" class="text-center"><span class="main-table__value">@collection.LinkCount</span></td>
                 <td data-label="Acciones">
                   <div class="main-table__actions">
-                    <a class="main-table__button" href="@string.Format(System.Globalization.CultureInfo.InvariantCulture, Linkubator.Web.Constants.AppRoutes.CollectionEdit, collection.Id)" aria-label="Editar colección @collection.Name">
+                    <a class="main-table__button" href="@string.Format(System.Globalization.CultureInfo.InvariantCulture, Linkubator.Web.Constants.AppRoutes.CollectionEdit, collection.Id)" aria-label="Editar colección @collection.Name" title="Editar">
                       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></svg>
                     </a>
-                    <a class="main-table__button main-table__button--danger" href="@string.Format(System.Globalization.CultureInfo.InvariantCulture, Linkubator.Web.Constants.AppRoutes.CollectionDelete, collection.Id)" aria-label="Eliminar colección @collection.Name">
+                    <a class="main-table__button main-table__button--danger" href="@string.Format(System.Globalization.CultureInfo.InvariantCulture, Linkubator.Web.Constants.AppRoutes.CollectionDelete, collection.Id)" aria-label="Eliminar colección @collection.Name" title="Eliminar">
                       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
                     </a>
                   </div>
