@@ -15,7 +15,6 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | S7.9 — Pruebas de integración HTTP | [spec.md](s7.9-pruebas-integracion-http/spec.md) — aprobada por DLG el 24-X-2026 («Siguiente») | [plan.md](s7.9-pruebas-integracion-http/plan.md) — aprobado por DLG el 24-X-2026 («Siguiente») | [tasks.md](s7.9-pruebas-integracion-http/tasks.md#aceptación-y-cierre) — completadas y aceptadas por DLG el 24-X-2026 («Completado»); suite HTTP focalizada 17/17 |
 | S7.10 — Revisión manual del dashboard | [spec.md](s7.10-revision-manual-dashboard/spec.md) — aprobada por DLG el 24-X-2026 («Siguiente») | [plan.md](s7.10-revision-manual-dashboard/plan.md) — aprobado por DLG el 24-X-2026 («Vamos») | [tasks.md](s7.10-revision-manual-dashboard/tasks.md#aceptación-y-cierre) — completada y aceptada por DLG el 24-X-2026 («Dashboard correcto») |
 | S7.11 — Validación del estilo base | [spec.md](s7.11-validacion-estilo-base/spec.md) — aprobada por DLG el 24-X-2026 («Siguiente») | [plan.md](s7.11-validacion-estilo-base/plan.md) — aprobado por DLG el 24-X-2026 («Siguiente») | [tasks.md](s7.11-validacion-estilo-base/tasks.md#aceptación-y-cierre) — revisión aceptada y completada por DLG el 24-X-2026 («Pues por mi lo daría por finalizado a falta de pulir flecos de diseño»); flecos pendientes como seguimiento separado |
-| S8.2 — Operaciones de colecciones | [spec.md](s8.2-operaciones-colecciones/spec.md) — aprobada por DLG el 25-X-2026 («Siguiente») | [plan.md](s8.2-operaciones-colecciones/plan.md) — aprobado por DLG el 25-X-2026 («Siguiente») | [tasks.md](s8.2-operaciones-colecciones/tasks.md#aceptación-y-cierre) — aceptación humana de DLG el 25-X-2026 («Completado»); implementación realizada, cierre técnico pendiente por validación bloqueada |
 
 ## Trabajos completados
 
@@ -23,7 +22,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 | --- | --- | --- | --- |
 | S7.1 — Seguridad web básica | [spec.md](s7.1-seguridad-web/spec.md) | [plan.md](s7.1-seguridad-web/plan.md) | [tasks.md](s7.1-seguridad-web/tasks.md#aceptación-y-cierre) — completada y aceptada el 22-X-2026 |
 | S7.4 — Layout privado accesible | [spec.md](s7.4-layout-privado/spec.md) | [plan.md](s7.4-layout-privado/plan.md) | [tasks.md](s7.4-layout-privado/tasks.md#aceptación-y-cierre) — completada y aceptada el 23-X-2026 («Dashboard ready») |
-| S8.2 — Operaciones de colecciones | [spec.md](s8.2-operaciones-colecciones/spec.md) — aprobada por DLG el 25-X-2026 («Siguiente») | [plan.md](s8.2-operaciones-colecciones/plan.md) — aprobado por DLG el 25-X-2026 («Siguiente») | [tasks.md](s8.2-operaciones-colecciones/tasks.md#aceptación-y-cierre) — aceptación humana de DLG el 25-X-2026 («Completado»); cambios implementados, tarea de validación integrada bloqueada por regresión de suite completa y evidencia pendiente |
+| S8.2 — Operaciones de colecciones | [spec.md](s8.2-operaciones-colecciones/spec.md) — aprobada por DLG el 25-X-2026 («Siguiente») | [plan.md](s8.2-operaciones-colecciones/plan.md) — aprobado por DLG el 25-X-2026 («Siguiente») | [tasks.md](s8.2-operaciones-colecciones/tasks.md#aceptación-y-cierre) — aceptada por DLG el 25-X-2026 («Completado»); validación técnica completada el 26-X-2026, suite completa 1.179/1.179; no archivada |
 
 ## Trabajos archivados
 

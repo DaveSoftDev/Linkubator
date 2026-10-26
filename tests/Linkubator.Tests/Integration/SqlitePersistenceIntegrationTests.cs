@@ -216,6 +216,61 @@ public sealed class SqlitePersistenceIntegrationTests
     }
 
     [Fact]
+    public async Task UpdateCollection_WhenLinkUpdateFails_RollsBackCollectionAndSearchProjections()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(OwnerUserId, "Original name", "original-name", true, "Original description");
+        long linkId = await database.SeedLink(
+            OwnerUserId,
+            collectionId,
+            "https://example.test/rollback",
+            "https://example.test/rollback",
+            "Public link",
+            true);
+        await using SqliteConnection connection = database.OpenConnection();
+        await connection.ExecuteAsync(
+            """
+            CREATE TRIGGER FailCollectionLinkPrivacyUpdate
+            BEFORE UPDATE OF IsPublic ON Link
+            WHEN OLD.IsPublic = 1 AND NEW.IsPublic = 0
+            BEGIN
+                SELECT RAISE(ABORT, 'Injected link update failure');
+            END;
+            """);
+        InfrastructureSqlite.SqliteConnectionFactory connectionFactory = new(database.ConnectionString);
+        AppModels.CurrentUser currentUser = new(OwnerUserId);
+        AppContracts.ICollectionRepository collectionRepository = new InfrastructureRepositories.SqliteCollectionRepository(connection);
+        AppContracts.IUnitOfWorkFactory unitOfWorkFactory = new InfrastructureSqlite.SqliteUnitOfWorkFactory(connectionFactory);
+        CollectionService collectionService = new(
+            NullLogger<CollectionService>.Instance,
+            currentUser,
+            collectionRepository,
+            unitOfWorkFactory);
+
+        await Assert.ThrowsAsync<SqliteException>(
+            () => collectionService.UpdateCollection(
+                new AppRequests.CollectionUpdateRequest(collectionId, "Updated name", "Updated description", false)));
+
+        PersistedCollectionState collectionState = await connection.QuerySingleAsync<PersistedCollectionState>(
+            "SELECT Name, Slug, Description, IsPublic FROM Collection WHERE Id = @CollectionId;",
+            new { CollectionId = collectionId });
+        PersistedCollectionSearchState collectionSearchState = await connection.QuerySingleAsync<PersistedCollectionSearchState>(
+            "SELECT Name, Description FROM CollectionSearch WHERE rowid = @CollectionId AND UserId = @UserId;",
+            new { CollectionId = collectionId, UserId = OwnerUserId });
+        int linkVisibility = await connection.ExecuteScalarAsync<int>(
+            "SELECT IsPublic FROM Link WHERE Id = @LinkId;",
+            new { LinkId = linkId });
+        string? linkSearchCollectionName = await connection.ExecuteScalarAsync<string?>(
+            "SELECT CollectionName FROM LinkSearch WHERE rowid = @LinkId AND UserId = @UserId;",
+            new { LinkId = linkId, UserId = OwnerUserId });
+
+        Assert.Equal(new PersistedCollectionState("Original name", "original-name", "Original description", 1), collectionState);
+        Assert.Equal(new PersistedCollectionSearchState("Original name", "Original description"), collectionSearchState);
+        Assert.Equal(1, linkVisibility);
+        Assert.Equal("Original name", linkSearchCollectionName);
+    }
+
+    [Fact]
     public async Task CreatePublicLink_WhenCollectionBecomesPrivateBeforeUnitOfWork_RejectsCreation()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
@@ -388,4 +443,8 @@ public sealed class SqlitePersistenceIntegrationTests
             public ValueTask DisposeAsync() => inner.DisposeAsync();
         }
     }
+
+    private sealed record PersistedCollectionState(string Name, string Slug, string? Description, long IsPublic);
+
+    private sealed record PersistedCollectionSearchState(string Name, string? Description);
 }
