@@ -15,7 +15,7 @@ Revisar manualmente los textos, mensajes y accesibilidad de los formularios de c
 - [requirements.md → «Colecciones»](../../../context/requirements.md) y [«Accesibilidad»](../../../context/requirements.md): comportamiento esperado de gestión y requisitos de interacción accesible.
 - [specifications.md → «Rutas privadas»](../../../context/specifications.md) y [«Errores controlados»](../../../context/specifications.md): formularios canónicos, respuestas y presentación de errores.
 - [AC-COL-01 — Crear colección](../../../plans/mvp0-acceptance-criteria.md), [AC-COL-02 — Editar colección](../../../plans/mvp0-acceptance-criteria.md) y [AC-COL-04b — Eliminar una colección con enlaces o la última colección](../../../plans/mvp0-acceptance-criteria.md): criterios funcionales propietarios de formularios y rechazos.
-- [S8.2 — Operaciones de colecciones](../../s8.2-operaciones-colecciones/spec.md), [S8.3 — Errores de formularios de colecciones](../s8.3-errores-formularios-colecciones/spec.md) y [S8.4 — Identificadores y respuestas de colecciones](../s8.4-identificadores-y-respuestas-colecciones/spec.md): páginas, mensajes y flujos que se revisan, sin reabrir su implementación.
+- [S8.2 — Operaciones de colecciones](../s8.2-operaciones-colecciones/spec.md), [S8.3 — Errores de formularios de colecciones](../s8.3-errores-formularios-colecciones/spec.md) y [S8.4 — Identificadores y respuestas de colecciones](../s8.4-identificadores-y-respuestas-colecciones/spec.md): páginas, mensajes y flujos que se revisan, sin reabrir su implementación.
 
 ## Alcance
 

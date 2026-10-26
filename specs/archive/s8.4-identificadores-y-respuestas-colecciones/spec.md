@@ -16,7 +16,7 @@ Asegurar que las páginas de edición y eliminación de colecciones procesan ide
 - [domain-model.md → «Propiedad de los datos»](../../../context/domain-model.md#propiedad-de-los-datos): aislamiento por usuario.
 - [architecture.md → «Arquitectura»](../../../context/architecture.md#arquitectura) y [«Web»](../../../context/architecture.md#web): límites de capa y presentación de respuestas.
 - [AC-COL-04 — Eliminar colección](../../../plans/mvp0-acceptance-criteria.md#ac-col-04-eliminar-colección): criterio aprobado de eliminación y respuestas de Application para identificadores inválidos y recursos inaccesibles.
-- [S8.2 — Operaciones de colecciones](../../s8.2-operaciones-colecciones/spec.md): rutas de edición y eliminación de colección a las que se aplica este trabajo.
+- [S8.2 — Operaciones de colecciones](../s8.2-operaciones-colecciones/spec.md): rutas de edición y eliminación de colección a las que se aplica este trabajo.
 - [S7.7 — Dashboard y respuestas privadas](../../s7.7-dashboard-y-respuestas-privadas/spec.md#criterios-de-aceptación): resultado común ya implementado para presentar la respuesta GET de recurso no accesible, sin depender de esta spec.
 
 ## Alcance

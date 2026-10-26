@@ -16,7 +16,7 @@ Completar la presentación Web de los errores de validación y de las reglas del
 - [requirements.md → «Accesibilidad»](../../../context/requirements.md): asociación, percepción y foco de los errores en formularios.
 - [specifications.md → «Rutas privadas»](../../../context/specifications.md) y [«Errores controlados»](../../../context/specifications.md): comportamiento de los formularios y presentación de errores.
 - [domain-model.md → «Collection»](../../../context/domain-model.md): restricciones de colección que pueden producir errores de dominio.
-- [S8.2 — Operaciones de colecciones](../../s8.2-operaciones-colecciones/spec.md): formularios y operaciones Web a los que se aplica esta presentación.
+- [S8.2 — Operaciones de colecciones](../s8.2-operaciones-colecciones/spec.md): formularios y operaciones Web a los que se aplica esta presentación.
 
 ## Alcance
 

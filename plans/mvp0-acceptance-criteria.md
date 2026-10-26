@@ -37,7 +37,7 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - Cuando edita nombre, descripción y visibilidad desde su único formulario de edición, con un nombre válido cuyo slug no colisiona con otra colección suya y un estado destino válido.
 - Entonces se actualizan sus campos; al cambiar el nombre también se regenera el slug y, si la colección era pública, la dirección anterior deja de existir. Al hacerla privada, todos sus enlaces pasan a ser privados; al hacerla pública, sus enlaces permanecen privados. El cambio de la colección y sus enlaces es atómico.
 - Si el nombre no genera un slug válido, colisiona con otra colección suya o el estado destino falta, se repite o es inválido, se rechaza la edición y no se modifican la colección ni sus enlaces.
-- El formulario Web y su ruta canónica están definidos en [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas); la implementación técnica se desglosa en [S8.2](../specs/s8.2-operaciones-colecciones/spec.md).
+- El formulario Web y su ruta canónica están definidos en [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas); la implementación técnica se desglosa en [S8.2](../specs/archive/s8.2-operaciones-colecciones/spec.md).
 
 #### AC-COL-04 — Eliminar colección
 
