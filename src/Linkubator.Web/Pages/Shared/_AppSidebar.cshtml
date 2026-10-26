@@ -2,11 +2,7 @@
 @model AppSidebarViewModel
 @{
     bool isCollapsed = Context.Request.Cookies["sidebar-collapsed"] == "true";
-    string returnUrl = Linkubator.Web.Navigation.LinkReturnRoute.Resolve(
-        Url,
-        Context.Request.PathBase,
-        $"{Context.Request.PathBase}{Context.Request.Path}{Context.Request.QueryString}",
-        allowCollections: true);
+    string returnUrl = Linkubator.Web.Navigation.LinkReturnRoute.Resolve(Url, Context.Request.PathBase, $"{Context.Request.PathBase}{Context.Request.Path}{Context.Request.QueryString}", allowCollections: true);
 }
 
 <aside id="app-sidebar" class="app-sidebar" aria-label="Menú principal de navegación">
