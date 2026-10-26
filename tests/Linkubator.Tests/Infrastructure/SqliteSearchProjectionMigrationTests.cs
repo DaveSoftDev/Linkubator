@@ -17,7 +17,7 @@ public sealed class SqliteSearchProjectionMigrationTests
 
         Assert.Equal(new[] { "Collection", "CollectionSearch", "Link", "LinkSearch", "User" }, GetApplicationTableNames(connection));
         Assert.Equal(new[] { "UserId", "UrlOriginal", "Title", "Description", "CollectionName" }, GetProjectionColumns(connection, LinkProjectionName));
-        Assert.Equal(new[] { "UserId", "Name" }, GetProjectionColumns(connection, CollectionProjectionName));
+        Assert.Equal(new[] { "UserId", "Name", "Description" }, GetProjectionColumns(connection, CollectionProjectionName));
         Assert.Contains("unicode61 remove_diacritics 2", GetProjectionDefinition(connection, LinkProjectionName), StringComparison.OrdinalIgnoreCase);
         Assert.Contains("unicode61 remove_diacritics 2", GetProjectionDefinition(connection, CollectionProjectionName), StringComparison.OrdinalIgnoreCase);
 
@@ -79,7 +79,7 @@ public sealed class SqliteSearchProjectionMigrationTests
 
             using (SqliteConnection migratedConnection = factory.CreateOpenConnection())
             {
-                Assert.Equal(new[] { "V004", "V005" }, migratedConnection.Query<string>("SELECT version FROM schema_migrations ORDER BY version;").ToArray());
+                Assert.Equal(new[] { "V004", "V005", "V006" }, migratedConnection.Query<string>("SELECT version FROM schema_migrations ORDER BY version;").ToArray());
                 Assert.Equal("Owner", migratedConnection.QuerySingle<string>("SELECT Name FROM User WHERE Id = 42;"));
                 Assert.Equal("Inbox", migratedConnection.QuerySingle<string>("SELECT Name FROM Collection WHERE Id = 11;"));
                 Assert.Equal("https://example.test", migratedConnection.QuerySingle<string>("SELECT UrlOriginal FROM Link WHERE Id = 13;"));

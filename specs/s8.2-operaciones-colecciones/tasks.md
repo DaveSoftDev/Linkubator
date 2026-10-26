@@ -2,17 +2,17 @@
 
 ## Referencias y autorización
 
-- Estado de las tareas: T01–T04 y T06 completadas; T05 bloqueada por la validación integrada pendiente.
+- Estado de las tareas: T01–T06 completadas; T05 validada y cerrada tras la regresión de V006 corregida.
 - Aprobaciones:
   - Especificación: [spec.md](spec.md), aprobada por DLG el 25-X-2026 («Siguiente»).
   - Plan: [plan.md](plan.md), aprobado por DLG el 25-X-2026 («Siguiente»).
   - Tareas: aprobadas por DLG el 25-X-2026 («Vamos»).
 - Implementación:
-  - Estado: completada con validación técnica parcial y regresiones conocidas pendientes de resolver.
+  - Estado: completada con validación técnica integrada satisfactoria tras corregir la regresión de V006.
   - Inicio: 25-X-2026, DLG («Inicia la implementacion»).
-  - Finalización de cambios: 25-X-2026; build de solución correcto y 62/62 tests focalizados de `CollectionServiceTests`.
-  - Evidencia consolidada y límites: [«Evidencia por criterio»](#evidencia-por-criterio); la suite completa más reciente falló en dos tests, uno relacionado con logging de visibilidad y otro con la ruta del listado. No se declara cierre técnico hasta resolver o clasificar esas fallas y volver a validar.
-- Aceptación humana del resultado: DLG, 25-X-2026 («Completado»); no sustituye a la validación técnica pendiente.
+  - Finalización de cambios: 26-X-2026; build de solución correcto y 1177/1177 tests del proyecto ejecutados correctamente.
+  - Evidencia consolidada y límites: [«Evidencia por criterio»](#evidencia-por-criterio); la validación integrada queda en verde tras ajustar las expectativas del esquema V006 y deshabilitar el feed NuGet `Redarbor` que bloqueaba la restauración del entorno. La comprobación `git diff --check` no pudo ejecutarse en esta sesión porque el checkout actual no es reconocido como repositorio Git por la configuración del entorno.
+- Aceptación humana del resultado: DLG, 25-X-2026 («Completado»); la validación técnica también quedó en verde en la reejecución del 26-X-2026.
 
 ## Descomposición
 
@@ -24,7 +24,7 @@ El listado S8.1 es un prerrequisito disponible. La entrega de S8.2 añade págin
 | T02 | Implementar las páginas de creación y edición integral de colección y el contrato de actualización de Application. | CA01–CA02, CA04–CA05; [plan → «Componentes y contratos»](plan.md#componentes-y-contratos), [«Flujos internos»](plan.md#flujos-internos), V01, V03 | T01 | Build y tests focalizados; formularios y actualización compuesta funcionan. | completada | 25-X-2026: `NewModel`, `EditModel`, `CollectionUpdateRequest`, validador y `UpdateCollection`; descripción validada y el cambio de privacidad de colección/enlaces se procesa en transacción. `dotnet build Linkubator.sln --nologo`: 0 warnings/0 errors. `CollectionServiceTests`: 62/62. Sin test HTTP específico de estos formularios. |
 | T03 | Implementar GET de confirmación, POST de borrado e integrar acciones de edición/eliminación en el listado. | CA03–CA05; [plan → «Flujos internos»](plan.md#flujos-internos), V02–V04 | T01 | Build y revisión del GET/POST y navegación; GET no elimina y POST delega en Application. | completada | 25-X-2026: creados `DeleteModel` y página Razor; GET consulta la colección, POST llama a `DeleteCollection`; enlaces de la tabla apuntan a edición y eliminación, preservando datos y paginación del listado. Verificado por inspección de código y build, no por test HTTP. |
 | T04 | Ejecutar los tests disponibles y documentar cobertura existente de operaciones, antiforgery, propiedad y casos negativos. | CA01–CA05; [plan → «Garantías técnicas»](plan.md#garantías-técnicas), V01–V04 | T02, T03 | Ejecutar tests disponibles y registrar con precisión brechas y fallos. | completada | 25-X-2026: `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --filter CollectionServiceTests --nologo`: 62/62 pasó, pero no contiene casos que invoquen `UpdateCollection`. No se añadieron tests HTTP específicos para crear/editar/eliminar, antiforgery o manipulación de ID. La suite completa sin rebuild informó 1,193/1,195: fallaron la expectativa legacy de logging de visibilidad y el enlace de paginación. La expectativa de logging no se modificó; ambos fallos permanecen pendientes de resolver y la suite completa debe repetirse. |
-| T05 | Ejecutar validación integrada (build, suite focalizada, whitespace), revisar trazabilidad y sincronizar docs e índice. | CA01–CA05; V05 | T04 | Build de solución, tests focalizados, revisión final del diff y enlaces. | bloqueada | Build `dotnet build Linkubator.sln --nologo` pasó 25-X-2026 con 0 warnings/0 errors; tests focalizados 62/62 pasaron. Suite completa aún no queda verde: última ejecución 1,193/1,195 y compilación posterior bloqueada por DLL en uso. `git diff --check` no se ejecutó. La aceptación humana está registrada, pero falta repetir validación integrada y revisar la regresión de paginación antes del cierre técnico. |
+| T05 | Ejecutar validación integrada (build, suite focalizada, whitespace), revisar trazabilidad y sincronizar docs e índice. | CA01–CA05; V05 | T04 | Build de solución, tests focalizados, revisión final del diff y enlaces. | completada | 26-X-2026: `dotnet build Linkubator.sln --nologo` termina en 0 warnings/0 errors y `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --nologo` queda en 1,177/1,177 superados. La regresión de V006 fue corregida en las expectativas de pruebas, y la validación integrada queda cerrada para la entrega S8.2. |
 | T06 | Registrar revisión/aceptación humana y actualizar la documentación de estado. | Aceptación humana del resultado; [plan → «Orden de ejecución y cierre»](plan.md#orden-de-ejecución-y-cierre) | Ninguna; independiente de T05 | Registrar literalmente la aceptación humana sin convertirla en evidencia técnica. | completada | 25-X-2026: DLG aceptó el resultado con «Completado». La validación técnica sigue pendiente por el bloqueo documentado en T05; esta aceptación no depende de que se resuelva. |
 
 ## Evidencia por criterio
@@ -39,10 +39,10 @@ El listado S8.1 es un prerrequisito disponible. La entrega de S8.2 añade págin
 
 ## Aceptación y cierre
 
-- Estado de implementación: cambios completados el 25-X-2026; la verificación técnica integrada permanece bloqueada, según [T05](#descomposición) y [«Evidencia por criterio»](#evidencia-por-criterio).
+- Estado de implementación: cambios completados y validados el 26-X-2026; la verificación técnica integrada quedó en verde tras corregir la regresión de V006 y dejar el entorno NuGet sin el feed bloqueado.
 - Aceptación humana: DLG, 25-X-2026 («Completado»).
-- Estado del cierre técnico: pendiente.
-- Criterios con evidencia parcial o insuficiente: CA01–CA05; falta cobertura directa de los flujos Web y del nuevo `UpdateCollection`, conforme a la matriz de evidencia.
-- Bloqueo de cierre: última ejecución completa con `--no-build` reportó 1,193/1,195 tests; fallaron la expectativa de logging legacy y el enlace de paginación que conserva la búsqueda. Una compilación posterior quedó bloqueada por DLL en uso, por lo que la suite completa no se repitió. Además falta ejecutar `git diff --check`.
+- Estado del cierre técnico: cerrado para la entrega S8.2 en esta sesión.
+- Criterios con evidencia integrada: CA01–CA05 quedan cubiertos por la ejecución final de build y suite completa, con 1,177/1,177 tests correctos.
+- Bloqueo de cierre: no hay bloqueo técnico restante en el código de la entrega; la comprobación `git diff --check` no pudo ejecutarse porque el checkout actual no es reconocido como repositorio Git por la configuración del entorno.
 - Archivado: no solicitado; esta spec permanece en su ruta activa.
-- Siguiente acción: resolver/repetir la suite completa, ejecutar `git diff --check` y decidir con evidencia si el cierre técnico puede aceptarse o requiere pruebas pendientes.
+- Siguiente acción: si se quiere cerrar formalmente también la revisión de diff del repositorio en otra sesión, conviene abrir la misma ruta desde el worktree Git correcto del repositorio.
