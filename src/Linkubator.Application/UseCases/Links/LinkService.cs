@@ -18,7 +18,6 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
     private readonly IValidator<LinkCreateRequest> _createLinkValidator;
     private readonly IValidator<LinkEditRequest> _editLinkValidator;
     private readonly IValidator<LinkMoveRequest> _moveLinkValidator;
-    private readonly IValidator<LinkChangeVisibilityRequest> _changeLinkVisibilityValidator;
     private readonly IValidator<LinkDeleteRequest> _deleteLinkValidator;
 
     private static LinkDto Map(DomainEntities.Link link)
@@ -53,7 +52,6 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         _createLinkValidator = resolvedValidators.CreateLinkValidator;
         _editLinkValidator = resolvedValidators.EditLinkValidator;
         _moveLinkValidator = resolvedValidators.MoveLinkValidator;
-        _changeLinkVisibilityValidator = resolvedValidators.ChangeLinkVisibilityValidator;
         _deleteLinkValidator = resolvedValidators.DeleteLinkValidator;
     }
 
@@ -241,58 +239,6 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Link moved", UserContext);
-        }
-
-        return result;
-    }
-
-    public async Task<Result<LinkDto>> ChangeLinkVisibility(LinkChangeVisibilityRequest request, CancellationToken cancellationToken = default)
-    {
-        Result validation = _changeLinkVisibilityValidator.Validate(request);
-        if (!validation.IsSuccess)
-        {
-            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link visibility change validation failed for user", UserContext, request);
-            return Result<LinkDto>.Failure(validation.Errors);
-        }
-
-        Result authentication = EnsureAuthenticated();
-        if (!authentication.IsSuccess)
-        {
-            return Result<LinkDto>.Failure(authentication.Errors);
-        }
-
-        Result<LinkDto> result = await ExecuteInTransaction(
-            request,
-            cancellationToken,
-            async (visibilityRequest, unitOfWork, token) =>
-            {
-                ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
-                ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
-                DomainEntities.Link? link = await linkRepository.GetById(visibilityRequest.LinkId, CurrentUser.UserId, token);
-                if (link is null)
-                {
-                    return Failure<LinkDto>(LinkErrors.LinkNotAccessible(), "Link visibility change rejected for user; link not accessible", new { LinkId = visibilityRequest.LinkId });
-                }
-
-                DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, CurrentUser.UserId, token);
-                if (collection is null)
-                {
-                    return Failure<LinkDto>(LinkErrors.CollectionNotAccessible(), "Link visibility change rejected for user; collection not accessible", new { LinkId = visibilityRequest.LinkId, CollectionId = link.CollectionId });
-                }
-
-                if (visibilityRequest.IsPublic && !collection.IsPublic)
-                {
-                    return Failure<LinkDto>(LinkErrors.PublicLinkInPrivateCollection(), "Link visibility change rejected for user; public link in private collection", visibilityRequest);
-                }
-
-                link.ChangePrivacy(visibilityRequest.IsPublic, collection);
-                await linkRepository.Update(link, token);
-                return Result<LinkDto>.Success(Map(link));
-            },
-            "Link visibility change failed for user");
-        if (result.IsSuccess)
-        {
-            SafeLogger.Log(Logger, LogLevel.Information, null, "Link visibility changed", UserContext);
         }
 
         return result;

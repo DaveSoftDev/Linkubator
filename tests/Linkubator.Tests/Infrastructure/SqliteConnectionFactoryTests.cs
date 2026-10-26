@@ -1,3 +1,4 @@
+using System.Reflection;
 using Dapper;
 using Linkubator.Infrastructure.Sqlite;
 using Microsoft.Data.Sqlite;
@@ -120,6 +121,77 @@ public sealed class SqliteConnectionFactoryTests
         }
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Constructor_WhenConnectionStringIsMissing_ThrowsArgumentException(string? connectionString)
+    {
+        Assert.ThrowsAny<ArgumentException>(() => new SqliteConnectionFactory(connectionString!));
+    }
+
+    [Fact]
+    public void CreateOpenConnection_WhenDataSourceIsMemory_DoesNotRequirePhysicalDirectory()
+    {
+        SqliteConnectionFactory factory = new("Data Source=:memory:");
+        using SqliteConnection connection = factory.CreateOpenConnection();
+
+        Assert.Equal(1, connection.QuerySingle<int>("SELECT 1;"));
+    }
+
+    [Fact]
+    public void CreateOpenConnection_WhenDirectoryDoesNotExist_CreatesItAutomatically()
+    {
+        string rootDirectory = Path.Combine(Path.GetTempPath(), $"sqlite-factory-{Guid.NewGuid():N}");
+        string databasePath = Path.Combine(rootDirectory, "nested", "db.sqlite");
+        SqliteConnectionFactory factory = new($"Data Source={databasePath}");
+
+        try
+        {
+            using SqliteConnection connection = factory.CreateOpenConnection();
+
+            Assert.True(Directory.Exists(Path.GetDirectoryName(databasePath)!));
+            Assert.Equal(1, connection.QuerySingle<int>("SELECT 1;"));
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+            DeleteDirectoryIfExists(rootDirectory);
+        }
+    }
+
+    [Fact]
+    public void CompareSpanish_CoversNullEqualityAndOrderingBranches()
+    {
+        MethodInfo compareMethod = typeof(SqliteConnectionFactory).GetMethod("CompareSpanish", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        Assert.Equal(0, (int)compareMethod.Invoke(null, new object?[] { "Árbol", "Árbol"})!);
+        Assert.True((int)compareMethod.Invoke(null, new object?[] { null, "Árbol"})! < 0);
+        Assert.True((int)compareMethod.Invoke(null, new object?[] { "Árbol", null})! > 0);
+        Assert.True((int)compareMethod.Invoke(null, new object?[] { "Árbol", "Barranco"})! < 0);
+    }
+
+    private static void DeleteDirectoryIfExists(string directoryPath)
+    {
+        if (!Directory.Exists(directoryPath))
+        {
+            return;
+        }
+
+        for (int attempt = 0; attempt < 10; attempt++)
+        {
+            try
+            {
+                Directory.Delete(directoryPath, recursive: true);
+                return;
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(100);
+            }
+        }
+    }
+
     private static void DeleteDatabaseFiles(string databasePath)
     {
         foreach (string filePath in new[]
@@ -131,13 +203,17 @@ public sealed class SqliteConnectionFactoryTests
         {
             if (File.Exists(filePath))
             {
-                try
+                for (int attempt = 0; attempt < 10; attempt++)
                 {
-                    File.Delete(filePath);
-                }
-                catch (IOException)
-                {
-                    // SQLite can keep a WAL-backed temp file locked briefly on Windows after the connection closes.
+                    try
+                    {
+                        File.Delete(filePath);
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        Thread.Sleep(100);
+                    }
                 }
             }
         }

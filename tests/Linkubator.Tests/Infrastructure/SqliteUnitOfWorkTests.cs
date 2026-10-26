@@ -136,6 +136,96 @@ public sealed class SqliteUnitOfWorkTests
         Assert.Contains(nameof(IUnknownRepository), exception.Message);
     }
 
+    [Fact]
+    public async Task UnitOfWork_Begin_WhenAlreadyStarted_IsIdempotent()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory connectionFactory = new($"Data Source={databasePath}");
+        await new SqliteMigrationService(connectionFactory).ApplyPendingMigrations();
+        await InsertUser(databasePath, 133, "idempotent@example.com", "idempotent");
+
+        await using IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(connectionFactory).Get(UnitOfWorkContexts.Linkubator);
+
+        await unitOfWork.Begin();
+        await unitOfWork.Begin();
+        ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
+        await repository.Insert(Collection.Create(133, "Repeat", "desc", false));
+        await unitOfWork.Commit();
+
+        using SqliteConnection connection = connectionFactory.CreateOpenConnection();
+        int count = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection WHERE UserId = 133;");
+        Assert.Equal(1, count);
+
+        DeleteDatabaseFiles(databasePath);
+    }
+
+    [Fact]
+    public async Task UnitOfWork_CommitAndRollback_WhenNoTransactionActive_AreNoOps()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory connectionFactory = new($"Data Source={databasePath}");
+        await new SqliteMigrationService(connectionFactory).ApplyPendingMigrations();
+
+        await using IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(connectionFactory).Get(UnitOfWorkContexts.Linkubator);
+
+        await unitOfWork.Commit();
+        await unitOfWork.Rollback();
+
+        using SqliteConnection connection = connectionFactory.CreateOpenConnection();
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT 1;"));
+
+        DeleteDatabaseFiles(databasePath);
+    }
+
+    [Fact]
+    public async Task UnitOfWork_GetRepository_WhenDisposed_ThrowsObjectDisposedException()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory connectionFactory = new($"Data Source={databasePath}");
+        await using IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(connectionFactory).Get(UnitOfWorkContexts.Linkubator);
+
+        unitOfWork.Dispose();
+
+        Assert.Throws<ObjectDisposedException>(() => unitOfWork.GetRepository<ICollectionRepository>());
+        DeleteDatabaseFiles(databasePath);
+    }
+
+    [Fact]
+    public async Task UnitOfWork_DisposeAndDisposeAsync_WhenRepeated_AreSafe()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory connectionFactory = new($"Data Source={databasePath}");
+        await new SqliteMigrationService(connectionFactory).ApplyPendingMigrations();
+
+        IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(connectionFactory).Get(UnitOfWorkContexts.Linkubator);
+
+        await unitOfWork.Begin();
+        unitOfWork.Dispose();
+        unitOfWork.Dispose();
+
+        await unitOfWork.DisposeAsync();
+        await unitOfWork.DisposeAsync();
+
+        DeleteDatabaseFiles(databasePath);
+    }
+
+    [Fact]
+    public async Task UnitOfWork_DisposedState_ThrowsOnBeginAndCommit()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory connectionFactory = new($"Data Source={databasePath}");
+        await new SqliteMigrationService(connectionFactory).ApplyPendingMigrations();
+
+        IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(connectionFactory).Get(UnitOfWorkContexts.Linkubator);
+        unitOfWork.Dispose();
+
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => unitOfWork.Begin());
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => unitOfWork.Commit());
+        await unitOfWork.Rollback();
+
+        DeleteDatabaseFiles(databasePath);
+    }
+
     private static async Task InsertUser(string databasePath, long userId, string email, string alias)
     {
         await using SqliteConnection connection = new($"Data Source={databasePath}");

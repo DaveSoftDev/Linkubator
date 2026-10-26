@@ -67,6 +67,7 @@ public static class AppSidebarViewModelFactory
                 Name = collection.Name,
                 Route = $"{AppRoutes.Collections}/{collection.Slug}",
                 LinkCount = collection.LinkCount,
+                IsPublic = collection.IsPublic,
                 IsActive = false,
             }).ToList();
         }

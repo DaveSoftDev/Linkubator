@@ -1,0 +1,46 @@
+@page "/app/colecciones/{id}/eliminar"
+@model Linkubator.Web.Pages.App.Collections.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar colección";
+}
+
+<main id="main-content" class="app-main" tabindex="-1">
+    <header class="main-header">
+        <div>
+            <p class="main-eyebrow">Organiza tus enlaces</p>
+            <h2>Eliminar colección</h2>
+        </div>
+    </header>
+
+    @if (Model.ResourceUnavailable is not null)
+    {
+        @await Html.PartialAsync("~/Pages/Shared/_PrivateResourceUnavailable.cshtml", Model.ResourceUnavailable)
+    }
+    else
+    {
+        <form method="post" class="collection-form collection-form--danger">
+            <input type="hidden" name="id" value="@Model.RouteId" />
+            <div class="collection-form__heading">
+                <span class="collection-form__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5m4-5v5" /></svg>
+                </span>
+                <h3>Eliminar colección</h3>
+            </div>
+            <div class="collection-form__heading">
+                @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
+                @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
+            </div>
+            <div class="collection-form__fields">
+                <p class="collection-form__confirmation">¿Seguro que quieres eliminar la colección <strong>@Model.CollectionName</strong>?</p>
+                <p class="collection-form__warning">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 3 10 18H2L12 3Z" /><path d="M12 9v4m0 4h.01" /></svg>
+                    Esta acción no se puede deshacer.
+                </p>
+            </div>
+            <div class="collection-form__actions">
+                <a class="collection-form__cancel" href="@Linkubator.Web.Constants.AppRoutes.Collections" autofocus>Cancelar</a>
+                <button class="primary-button collection-form__delete" type="submit">Eliminar</button>
+            </div>
+        </form>
+    }
+</main>

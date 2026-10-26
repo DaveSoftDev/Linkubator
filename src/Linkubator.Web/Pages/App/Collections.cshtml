@@ -1,0 +1,90 @@
+@page "/app/colecciones"
+@using Linkubator.Application.Dtos.Models
+@model Linkubator.Web.Pages.App.CollectionsModel
+@{
+    ViewData["Title"] = "Mis colecciones";
+}
+
+<main id="main-content" class="app-main" tabindex="-1">
+    <header class="main-header">
+        <div>
+            <p class="main-eyebrow">Organiza tus enlaces</p>
+            <h2>Mis colecciones</h2>
+        </div>
+    </header>
+
+    @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
+    @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
+    @await Html.PartialAsync("~/Pages/Shared/_SearchForm.cshtml", Model.SearchForm)
+
+    <section aria-labelledby="collections-list-title">
+        <div class="section-toolbar section-toolbar--collections">
+          <h3 id="collections-list-title">Colecciones</h3>
+          <a class="primary-button" href="@Linkubator.Web.Constants.AppRoutes.CollectionNew">Crear colección</a>
+        </div>
+        <div class="main-wrapper">
+        @if (Model.HasListingError)
+        {
+            @await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", Model.ListingError)
+        }
+        else if (Model.Collections.Count == 0)
+        {
+            @await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", Model.EmptyState)
+        }
+        else
+        {
+        <div class="main-table__frame">
+          <table class="main-table__table main-table__table--collections">
+            <caption class="main-table__sr-only">
+              Colecciones existentes
+            </caption>
+            <colgroup>
+              <col style="width: 22%;" />     @* Nombre *@
+              <col />                         @* Descripción: espacio restante *@
+              <col style="width: 7rem;" />    @* ¿Pública? *@
+              <col style="width: 6rem;" />    @* Enlaces *@
+              <col style="width: 8.5rem;" />  @* Acciones *@
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">Nombre</th>
+                <th scope="col">Descripción</th>
+                <th scope="col">¿Pública?</th>
+                <th scope="col">Enlaces</th>
+                <th scope="col">
+                  <span class="main-table__sr-only">Acciones</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach (CollectionDto collection in Model.Collections)
+              {
+              <tr>
+                <td data-label="Nombre" class="text-left"><span class="main-table__value">@collection.Name</span></td>
+                <td data-label="Descripción" class="text-left"><span class="main-table__value">@collection.Description</span></td>
+                <td data-label="¿Pública?" class="text-center">
+                  <span class="main-table__value">
+                    <input type="checkbox" checked="@collection.IsPublic" disabled aria-label="Colección pública" />
+                  </span>
+                </td>
+                <td data-label="Enlaces" class="text-center"><span class="main-table__value">@collection.LinkCount</span></td>
+                <td data-label="Acciones">
+                  <div class="main-table__actions">
+                    <a class="main-table__button" href="@string.Format(System.Globalization.CultureInfo.InvariantCulture, Linkubator.Web.Constants.AppRoutes.CollectionEdit, collection.Id)" aria-label="Editar colección @collection.Name" title="Editar">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></svg>
+                    </a>
+                    <a class="main-table__button main-table__button--danger" href="@string.Format(System.Globalization.CultureInfo.InvariantCulture, Linkubator.Web.Constants.AppRoutes.CollectionDelete, collection.Id)" aria-label="Eliminar colección @collection.Name" title="Eliminar">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @await Html.PartialAsync("~/Pages/Shared/_Pagination.cshtml", Model.Pagination)
+        }
+      </div>
+    </section>
+</main>

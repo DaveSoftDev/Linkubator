@@ -34,10 +34,7 @@
 
                     <div class="quick-add__menu" id="quick-add-menu" hidden>
                         <button type="button" class="quick-add__menu-item" data-quick-add-advanced>
-                            Avanzado
-                        </button>
-                        <button type="button" class="quick-add__menu-item" data-quick-add-advanced>
-                            Patata
+                            Avanzado...
                         </button>
                     </div>
                 </div>
@@ -53,6 +50,7 @@
         <div class="section-toolbar">
             <h3 id="recent-links-title">Enlaces recientes</h3>
         </div>
+        <div class="main-wrapper">
         @if (Model.Cards.Count == 0)
         {
             @await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", Model.EmptyState)
@@ -66,5 +64,6 @@
                 }
             </div>
         }
+        </div>
     </section>
 </main>

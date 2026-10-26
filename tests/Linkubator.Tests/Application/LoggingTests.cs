@@ -69,7 +69,7 @@ public sealed class LoggingTests
     }
 
     [Fact]
-    public async Task CollectionService_ChangeVisibility_LogsSafeVisibilityMetadata()
+    public async Task CollectionService_UpdateCollection_LogsSafeMetadata()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -81,11 +81,11 @@ public sealed class LoggingTests
         TestLogger<CollectionService> logger = new();
         CollectionService service = new(logger, currentUser, collectionRepository, unitOfWorkFactory);
 
-        Result<CollectionDto> result = await service.ChangeCollectionVisibility(new CollectionChangeVisibilityRequest(10, false));
+        Result<CollectionDto> result = await service.UpdateCollection(new CollectionUpdateRequest(10, "My Collection", "desc", false));
 
         Assert.True(result.IsSuccess);
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
-        Assert.Contains("Collection visibility changed", entry.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Collection updated for user", entry.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Null(entry.Exception);
     }
 
@@ -133,7 +133,7 @@ public sealed class LoggingTests
         SafeLogger.Log(logger, LogLevel.Warning, exception, "Domain validation failed", new { UserId = 7L });
 
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Warning);
-        Assert.Equal("Domain validation failed", entry.Message);
+        Assert.Equal("Domain validation failed [UserId=7]", entry.Message);
         Assert.Equal("NotValidInput", entry.Values["DomainErrorCode"]);
         Assert.Equal(nameof(NotValidInputException), entry.Values["ExceptionType"]);
         Assert.False(entry.Values.ContainsKey("ExceptionMessage"));
@@ -178,7 +178,7 @@ public sealed class LoggingTests
 
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Information);
         Assert.Equal(7L, entry.Values["UserId"]);
-        Assert.Equal("Rich context", entry.Message);
+        Assert.Equal("Rich context [UserId=7]", entry.Message);
         Assert.Equal("1234567890123456789012345678901234567890", entry.Values["Query"]);
         IEnumerable<object?> tags = Assert.IsAssignableFrom<IEnumerable<object?>>(entry.Values["Tags"]);
         Assert.Contains("short", tags.Select(item => item?.ToString()), StringComparer.Ordinal);

@@ -4,6 +4,21 @@ namespace Linkubator.Tests.Web;
 
 public sealed class AppSidebarViewModelFactoryTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CreateSidebar_WithCollection_PreservesPublicState(bool isPublic)
+    {
+        Linkubator.Application.Dtos.Models.CollectionDto collection = new(
+            1, "Collection", "collection", null, isPublic, 0, DateTime.UnixEpoch);
+
+        AppSidebarViewModel sidebar = AppSidebarViewModelFactory.CreateSidebar(
+            AppSidebarSelectionKind.Collections,
+            [collection]);
+
+        Assert.Equal(isPublic, Assert.Single(sidebar.Collections).IsPublic);
+    }
+
     [Fact]
     public void CreateSidebar_WhenUserProvided_UsesDevelopmentIdentityData()
     {

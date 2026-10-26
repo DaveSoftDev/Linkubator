@@ -187,7 +187,7 @@ public sealed class SqlitePersistenceIntegrationTests
     }
 
     [Fact]
-    public async Task ChangeVisibility_WhenPrivatizingCollectionAndPublishingLinkConcurrently_KeepsLinkPrivate()
+    public async Task UpdateCollection_WhenPrivatizingCollectionAndPublishingLinkConcurrently_KeepsLinkPrivate()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(OwnerUserId, "Public", "public", true);
@@ -202,8 +202,8 @@ public sealed class SqlitePersistenceIntegrationTests
         LinkService linkService = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
         await RunConcurrently(
-            () => collectionService.ChangeCollectionVisibility(new AppRequests.CollectionChangeVisibilityRequest(collectionId, false)),
-            () => linkService.ChangeLinkVisibility(new AppRequests.LinkChangeVisibilityRequest(linkId, true)));
+            () => collectionService.UpdateCollection(new AppRequests.CollectionUpdateRequest(collectionId, "Public", null, false)),
+            () => linkService.EditLink(new AppRequests.LinkEditRequest(linkId, collectionId, "Link", null, null, true)));
         int collectionIsPublic = await connection.ExecuteScalarAsync<int>(
             "SELECT IsPublic FROM Collection WHERE Id = @CollectionId;",
             new { CollectionId = collectionId });
@@ -247,8 +247,8 @@ public sealed class SqlitePersistenceIntegrationTests
         try
         {
             await gatedUnitOfWorkFactory.WaitUntilRequested();
-            Linkubator.Application.Results.Result<Linkubator.Application.Dtos.Models.CollectionDto> privacyResult = await collectionService.ChangeCollectionVisibility(
-                new AppRequests.CollectionChangeVisibilityRequest(collectionId, false));
+            Linkubator.Application.Results.Result<Linkubator.Application.Dtos.Models.CollectionDto> privacyResult = await collectionService.UpdateCollection(
+                new AppRequests.CollectionUpdateRequest(collectionId, "Public", null, false));
             Assert.True(privacyResult.IsSuccess);
         }
         finally

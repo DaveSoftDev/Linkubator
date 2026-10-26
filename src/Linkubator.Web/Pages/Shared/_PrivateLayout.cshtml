@@ -6,21 +6,23 @@
 <html lang="es">
 <head>
     <meta charset="utf-8" />
+    <title>@ViewData["Title"] - Linkubator</title>
+    <meta name="title" content="@ViewData["Title"] - Linkubator" />
+    <meta name="description" content="Área privada de Linkubator" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="description" content="Área privada de Linkubator" />
-    <title>@ViewData["Title"] - Linkubator</title>
     <link rel="icon" type="image/x-icon" href="~/favicon.ico" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
 </head>
 <body class="private-shell">
     <div class="private-page">
-        <div class="app-layout" role="application" aria-label="Panel principal de Linkubator">
+        <div class="app-layout">
             @{
                 AppSidebarUserViewModel currentSidebarUser = new()
                 {
                     Name = CurrentUser.Name,
                     Alias = CurrentUser.Alias,
+                    Email = CurrentUser.Email,
                 };
 
                 AppSidebarViewModel sidebarModel = Model is Linkubator.Web.Pages.App.PrivatePageModel privatePageModel

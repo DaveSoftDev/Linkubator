@@ -21,6 +21,7 @@
         </button>
     </div>
 
+    <div class="sidebar-content">
     <div class="sidebar-searches" aria-label="Búsquedas rápidas">
         <form class="sidebar-search" method="get" action="@Model.SidebarSearchForm.Action" role="search">
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
@@ -75,27 +76,36 @@
         <section class="sidebar-group" aria-labelledby="collections-title">
             <div class="sidebar-group__header">
                 <h2 id="collections-title">Colecciones</h2>
-                <button type="button" class="sidebar-create-collection" aria-label="Crear nueva colección" disabled>
+                <a class="sidebar-create-collection brand-accent" href="@Linkubator.Web.Constants.AppRoutes.CollectionNew" aria-label="Crear nueva colección">
                     <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 5V19M5 12H19"></path></svg>
-                </button>
+                </a>
             </div>
 
             <ul class="collection-list">
                 @foreach (AppSidebarCollectionItem collection in Model.Collections)
                 {
-                    <li>
-                        <a href="@collection.Route" class="@(collection.IsActive ? "is-active" : string.Empty)" aria-label="@collection.Name, @collection.LinkCount elementos">
-                            <span class="collection-name">
+                <li>
+                    <a href="@collection.Route" class="@(collection.IsActive ? "is-active" : string.Empty)" aria-label="@collection.Name, @collection.LinkCount elementos @(collection.IsPublic ? "(Pública)" : "(Privada)")">
+                        <span class="collection-name">
+                            @if (collection.IsPublic)
+                            {
+                                <svg class="brand-accent" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18Z"></path></svg>
+                            }
+                            else
+                            {
                                 <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l1.5 2H18.5A2.5 2.5 0 0 1 21 9.5V16.5A2.5 2.5 0 0 1 18.5 19H5.5A2.5 2.5 0 0 1 3 16.5V7.5Z"></path></svg>
-                                @collection.Name
-                            </span>
-                            <span class="count-pill">@collection.LinkCount</span>
-                        </a>
-                    </li>
+                            }
+                            @collection.Name
+                        </span>
+                        <span class="count-pill">@collection.LinkCount</span>
+                    </a>
+                </li>
                 }
             </ul>
         </section>
     }
+
+    </div>
 
     @if (!string.IsNullOrWhiteSpace(Model.User.Name))
     {
@@ -106,7 +116,7 @@
                     <strong>@Model.User.Name</strong>
                     @if (!string.IsNullOrWhiteSpace(Model.User.Alias))
                     {
-                        <small>@Model.User.Alias</small>
+                        <small>@Model.User.Alias (@Model.User.Email)</small>
                     }
                 </span>
             </span>

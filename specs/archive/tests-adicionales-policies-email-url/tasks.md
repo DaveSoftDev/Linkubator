@@ -1,4 +1,4 @@
-﻿# Tareas: Tests adicionales de `EmailPolicy`, `ImageUrlPolicy` y `LinkUrlPolicy`
+# Tareas: Tests adicionales de `EmailPolicy`, `ImageUrlPolicy` y `LinkUrlPolicy`
 
 ## Referencias y autorización
 
@@ -50,6 +50,6 @@ Un resultado no disponible o fallido sigue pendiente o bloqueado; no registrar r
 - Bloqueos y riesgos restantes: ninguno comprobado.
 - Aceptación humana: DLG, 13-X-2026 («Aceptado»).
 - Archivado: sí, trasladado el 13-X-2026.
-- Ubicación archivada: [specs/archive/tests-adicionales-policies-email-url](.).
+- Ubicación archivada: [specs/archive/tests-adicionales-policies-email-url](../tests-adicionales-policies-email-url).
 - Fecha efectiva de archivado y comprobación de enlaces: 13-X-2026; artefactos presentes y referencias recalculadas.
 - Siguiente paso autorizado: ninguno para este trabajo; queda aceptado, cerrado y archivado.

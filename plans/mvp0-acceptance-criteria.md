@@ -30,29 +30,14 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - Cuando solicita crearla pública sin enlaces.
 - Entonces se crea pública, pero todavía no aparece en ninguna página pública mientras no tenga enlaces públicos.
 
-#### AC-COL-02 — Renombrar colección
+#### AC-COL-02 — Editar colección
 
-- Fuente: [requirements.md → «Colecciones»](../context/requirements.md#colecciones), [specifications.md → «Generación de slugs»](../context/specifications.md#generación-de-slugs), [domain-model.md → «Collection»](../context/domain-model.md#collection)
+- Fuente: [requirements.md → «Colecciones»](../context/requirements.md#colecciones), [requirements.md → «Público y privado»](../context/requirements.md#público-y-privado), [specifications.md → «Generación de slugs»](../context/specifications.md#generación-de-slugs), [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas), [domain-model.md → «Collection»](../context/domain-model.md#collection), [domain-model.md → «Público y privado»](../context/domain-model.md#público-y-privado), [architecture.md → «Persistencia»](../context/architecture.md#persistencia)
 - Dada una colección del usuario identificado.
-- Cuando la renombra con un nombre válido cuyo slug no colisiona con otra colección suya.
-- Entonces se actualizan el nombre y el slug; si era pública, la dirección anterior deja de existir.
-- Si el nuevo nombre no genera un slug válido, se rechaza el renombrado y se conservan el nombre y el slug anteriores.
-- Si el slug colisiona con otra colección suya, se rechaza el renombrado, se conservan el nombre y el slug anteriores y se indica con qué colección coincide.
-
-#### AC-COL-03 — Cambiar visibilidad de una colección
-
-- Fuente: [requirements.md → «Público y privado»](../context/requirements.md#público-y-privado), [domain-model.md → «Público y privado»](../context/domain-model.md#público-y-privado), [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas)
-- Dada una colección del usuario identificado.
-- Cuando ejecuta la acción de visibilidad con una transición válida `true` o `false`.
-- Entonces la colección pasa al estado solicitado; al hacerla privada, todos sus enlaces también quedan privados, y al hacerla pública, sus enlaces permanecen privados, pues ya lo eran por la invariante de dominio.
-- Si el estado destino está ausente, repetido o es inválido, la acción se rechaza, no modifica la colección ni sus enlaces y sigue el tratamiento de rechazo definido para esa ruta.
-
-#### AC-COL-03b — Atomicidad al hacer privada una colección
-
-- Fuente: [domain-model.md → «Público y privado»](../context/domain-model.md#público-y-privado), [architecture.md → «Persistencia»](../context/architecture.md#persistencia)
-- Dada una colección del usuario identificado con enlaces públicos y privados.
-- Cuando la hace privada.
-- Entonces la colección y todos sus enlaces quedan privados como una sola operación, sin estado parcial.
+- Cuando edita nombre, descripción y visibilidad desde su único formulario de edición, con un nombre válido cuyo slug no colisiona con otra colección suya y un estado destino válido.
+- Entonces se actualizan sus campos; al cambiar el nombre también se regenera el slug y, si la colección era pública, la dirección anterior deja de existir. Al hacerla privada, todos sus enlaces pasan a ser privados; al hacerla pública, sus enlaces permanecen privados. El cambio de la colección y sus enlaces es atómico.
+- Si el nombre no genera un slug válido, colisiona con otra colección suya o el estado destino falta, se repite o es inválido, se rechaza la edición y no se modifican la colección ni sus enlaces.
+- El formulario Web y su ruta canónica están definidos en [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas); la implementación técnica se desglosa en [S8.2](../specs/s8.2-operaciones-colecciones/spec.md).
 
 #### AC-COL-04 — Eliminar colección
 

@@ -1,0 +1,72 @@
+@page "/app/colecciones/{id}/editar"
+@model Linkubator.Web.Pages.App.Collections.EditModel
+@{
+    ViewData["Title"] = "Editar colección";
+}
+
+<main id="main-content" class="app-main" tabindex="-1">
+    <header class="main-header">
+        <div>
+            <p class="main-eyebrow">Organiza tus enlaces</p>
+            <h2>Editar colección</h2>
+        </div>
+    </header>
+
+    @if (Model.ResourceUnavailable is not null)
+    {
+        @await Html.PartialAsync("~/Pages/Shared/_PrivateResourceUnavailable.cshtml", Model.ResourceUnavailable)
+    }
+    else
+    {
+        <form method="post" class="collection-form">
+            <input type="hidden" name="id" value="@Model.RouteId" />
+            <div class="collection-form__heading">
+                <span class="collection-form__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" /></svg>
+                </span>
+                <h3>Detalles de la colección</h3>
+            </div>
+            <div class="collection-form__heading">
+                @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
+                @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
+            </div>
+            <div class="collection-form__fields">
+                <div class="collection-form__field">
+                    <label asp-for="Input.Name" for="collection-name">Nombre</label>
+                    <input asp-for="Input.Name" id="collection-name" autocomplete="off" autofocus required aria-describedby="collection-name-error" />
+                    <span asp-validation-for="Input.Name" id="collection-name-error" class="collection-form__error"></span>
+                </div>
+                <div class="collection-form__field">
+                    <label asp-for="Input.Description" for="collection-description">Descripción <span class="collection-form__optional">Opcional</span></label>
+                    <textarea asp-for="Input.Description" id="collection-description" rows="4" aria-describedby="collection-description-error"></textarea>
+                    <span asp-validation-for="Input.Description" id="collection-description-error" class="collection-form__error"></span>
+                </div>
+                <div class="collection-form__privacy">
+                    <input asp-for="Input.IsPublic" />
+                    <label asp-for="Input.IsPublic">Hacer pública</label>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18Z" /></svg>
+                </div>
+            </div>
+            <div class="collection-form__actions">
+                <a class="collection-form__cancel" href="@Linkubator.Web.Constants.AppRoutes.Collections">Cancelar</a>
+                <button class="primary-button" type="submit">Guardar cambios</button>
+            </div>
+        </form>
+
+        @section Scripts {
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const invalidField = Array.from(document.querySelectorAll('.input-validation-error, [aria-invalid="true"]'))
+                    .find((element) => ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName));
+
+                if (invalidField instanceof HTMLElement) {
+                    invalidField.focus();
+                    if (typeof invalidField.select === 'function' && invalidField.tagName === 'INPUT') {
+                        invalidField.select();
+                    }
+                }
+            });
+        </script>
+        }
+    }
+</main>

@@ -39,7 +39,7 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
     public async Task<IReadOnlyCollection<Entities.Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
     {
         IEnumerable<Entities.Collection> collections = await _connection.QueryAsync<Entities.Collection>(new CommandDefinition(
-            @"SELECT Id, UserId, Name, Slug, Description, IsPublic, CreatedAt
+            @"SELECT Id, Name, Slug, IsPublic
               FROM Collection
               WHERE UserId = @UserId
               ORDER BY Name COLLATE LINKUBATOR_ES_ES ASC, Id ASC;",
@@ -130,13 +130,14 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
         collection.SetId(id);
 
         await _connection.ExecuteAsync(new CommandDefinition(
-            @"INSERT INTO CollectionSearch (rowid, UserId, Name)
-              VALUES (@Id, @UserId, @Name);",
+            @"INSERT INTO CollectionSearch (rowid, UserId, Name, Description)
+              VALUES (@Id, @UserId, @Name, @Description);",
             new
             {
                 Id = id,
                 UserId = collection.UserId,
                 Name = Search.SearchTextNormalizer.Normalize(collection.Name),
+                Description = Search.SearchTextNormalizer.Normalize(collection.Description),
             },
             cancellationToken: cancellationToken));
     }
@@ -171,13 +172,14 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
                 cancellationToken: cancellationToken));
 
             await _connection.ExecuteAsync(new CommandDefinition(
-                @"INSERT INTO CollectionSearch (rowid, UserId, Name)
-                  VALUES (@Id, @UserId, @Name);",
+                @"INSERT INTO CollectionSearch (rowid, UserId, Name, Description)
+                  VALUES (@Id, @UserId, @Name, @Description);",
                 new
                 {
                     Id = collection.Id,
                     UserId = collection.UserId,
                     Name = Search.SearchTextNormalizer.Normalize(collection.Name),
+                    Description = Search.SearchTextNormalizer.Normalize(collection.Description),
                 },
                 cancellationToken: cancellationToken));
 

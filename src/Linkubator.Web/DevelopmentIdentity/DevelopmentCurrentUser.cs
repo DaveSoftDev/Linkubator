@@ -9,6 +9,7 @@ public sealed class DevelopmentCurrentUser : ApplicationContracts.ICurrentUser, 
     public string Name { get; private set; } = string.Empty;
 
     public string Alias { get; private set; } = string.Empty;
+    public string Email { get; private set; } = string.Empty;
 
     public bool IsAuthenticated => UserId > 0;
 
@@ -22,9 +23,10 @@ public sealed class DevelopmentCurrentUser : ApplicationContracts.ICurrentUser, 
         UserId = userId;
     }
 
-    internal void SetProfile(string name, string alias)
+    internal void SetProfile(string name, string alias, string email)
     {
         Name = name.Trim();
         Alias = alias.Trim();
+        Email = email.Trim();
     }
 }
