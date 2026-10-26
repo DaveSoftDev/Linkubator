@@ -52,4 +52,4 @@ Los casos negativos y los límites de nombres, slug, estado destino, propiedad, 
 ## Artefactos relacionados
 
 - [Plan técnico](plan.md), aprobado por DLG el 25-X-2026 («Siguiente»).
-- [Tareas, evidencia y aceptación](tasks.md#aceptación-y-cierre): aceptación humana «Completado» registrada el 25-X-2026; cierre técnico pendiente de completar la validación integrada.
+- [Tareas, evidencia y aceptación](tasks.md#aceptación-y-cierre): aceptación humana «Completado» registrada el 25-X-2026; cierre técnico completado el 26-X-2026 tras validar CA01–CA05.
