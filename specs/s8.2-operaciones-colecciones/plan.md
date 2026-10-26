@@ -6,7 +6,7 @@
 - Aprobaciones:
   - Especificación: [spec.md](spec.md), aprobada por DLG el 25-X-2026 («Siguiente»).
   - Plan: DLG, 25-X-2026 («Siguiente»).
-- Implementación aceptada por DLG el 25-X-2026 («Completado»); el cierre técnico está pendiente según [tasks.md → «Aceptación y cierre»](tasks.md#aceptación-y-cierre).
+- Implementación aceptada por DLG el 25-X-2026 («Completado»); cierre técnico completado el 26-X-2026 tras satisfacer CA02, según [tasks.md → «Aceptación y cierre»](tasks.md#aceptación-y-cierre).
 
 ## Diseño de implementación
 
@@ -24,14 +24,14 @@
 2. GET de edición valida el identificador en Web antes de invocar Application, carga mediante `GetCollection` con ámbito del usuario identificado y presenta el formulario.
 3. POST de edición recibe conjuntamente nombre, descripción y un único estado destino válido; delega en el caso de uso unificado de edición. Application actualiza colección y, cuando corresponda, privacidad de sus enlaces dentro de la transacción existente; éxito redirige al listado, mientras validación/regla de dominio conservan los datos persistidos y devuelven el formulario.
 4. GET de eliminación muestra la confirmación sin invocar eliminación. POST confirmado delega en `DeleteCollection`; éxito redirige al listado, mientras errores controlados se presentan en el flujo conforme a las rutas privadas.
-5. Las respuestas de identificador inválido, recurso válido no accesible, métodos no permitidos y antiforgery se mantienen en sus fronteras Web y no exponen detalles del recurso. Las pruebas HTTP de S8.5 pueden ampliar la cobertura, pero no reemplazan la evidencia específica pendiente para el cierre de S8.2.
+5. Las respuestas de identificador inválido, recurso válido no accesible, métodos no permitidos y antiforgery se mantienen en sus fronteras Web y no exponen detalles del recurso. Las pruebas de S8.4 y S8.5 y la evidencia directa de CA02 registrada en [tasks.md → «Evidencia por criterio»](tasks.md#evidencia-por-criterio) verifican estos comportamientos.
 
 ### Persistencia y dependencias
 
 - Application ya dispone de los casos de uso y realiza la comprobación de propiedad, las validaciones de dominio y las transacciones necesarias. La capa Web solo prepara las solicitudes y traduce sus resultados.
-- La operación de cambio a privado trata colección y enlaces dentro de una operación de Application; se verificará el resultado observable después de la llamada y ante fallo transaccional mediante las pruebas existentes o ampliadas. No se introduce SQL, esquema ni transacción en Web.
+- La operación de cambio a privado trata colección y enlaces dentro de una operación de Application. Las pruebas de persistencia comprueban el resultado y el rollback ante un fallo de actualización de enlace; no se introduce SQL, esquema ni transacción en Web.
 - La operación de borrado está sujeta a las invariantes de colección y a sus resultados de dominio. Ningún GET ejecuta la operación de escritura.
-- Prerrequisito disponible: listado implementado por S8.1. S8.5–S8.7 pueden ampliar cobertura o revisión manual, pero no son dependencias para cerrar S8.2; las evidencias faltantes de esta entrega deben resolverse dentro de S8.2.
+- Prerrequisito disponible: listado implementado por S8.1. S8.4–S8.7 aportan evidencia posterior para criterios relacionados, sin ser dependencias formales de S8.2. CA02 se completó con pruebas directas de actualización compuesta y atomicidad; sus resultados constan en [tasks.md → «Evidencia por criterio»](tasks.md#evidencia-por-criterio).
 
 ### Garantías técnicas
 
@@ -58,11 +58,15 @@
 | V03 | CA04 | Revisión técnica de identificador por ruta, ámbito de usuario y antiforgery en los formularios de escritura. | PageModels y configuración Web existente. | Revisión de los PageModels; `dotnet build Linkubator.sln --nologo`. | El ID se obtiene de la ruta/POST correspondiente, la identidad la aporta el servidor y formularios POST conservan antiforgery de Razor. | Revisión de `EditModel`, `DeleteModel`, `NewModel` y markup; build completo limpio. Sin test adversarial HTTP que pruebe alteraciones de identidad/ID. |
 | V04 | CA05 | Revisión del HTML y navegación del listado con los enlaces de edición y confirmación; build de Razor. | Página de listado y páginas enlazadas. | `dotnet build Linkubator.sln --nologo`; inspección de `Collections.cshtml`. | Navegación de acciones enlazada a las rutas canónicas; tabla mantiene nombres, descripción, privacidad, enlaces y acciones accesibles con etiquetas. | Código de `Collections.cshtml` inspeccionado; la vista enlaza editar/eliminar por colección y preserva la tabla y paginación. Sin comprobación visual/manual de accesibilidad. La suite completa reportó que no encontró el enlace de paginación que preserva la búsqueda; su causa sigue pendiente de investigación. || V05 | CA01–CA05 | Validación integrada disponible: build y tests focalizados. | Implementación actual. | `dotnet build Linkubator.sln --nologo`; `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --filter CollectionServiceTests --nologo`. | Build y tests focalizados verdes. | Build exitoso con 0 warnings/0 errors y tests focalizados 62/62 el 25-X-2026. La ejecución final de `git diff --check` y reconciliación de las regresiones encontradas en la suite completa siguen pendientes. |
 
-Las pruebas HTTP propuestas para crear, editar, eliminar y antiforgery no se ejecutaron en esta implementación; su ausencia se registra como brecha de evidencia en [tasks.md → «Evidencia por criterio»](tasks.md#evidencia-por-criterio). La comprobación negativa de identidad y la de antiforgery deberán demostrar que rechazan la manipulación y que no alteran datos, no solo inspeccionar código fuente.
+### Actualización de evidencia al 26-X-2026
+
+Los resultados de la tabla V01–V05 describen las comprobaciones de la implementación inicial. La prueba de `CollectionServiceTests` que invoca `UpdateCollection` solo comprueba el uso de un validador personalizado; no verifica el comportamiento funcional de la edición compuesta. Después, S8.4 aportó pruebas HTTP de identificadores y respuestas no discriminantes (12/12); S8.5 añadió pruebas de operaciones y antiforgery (19/19); S8.7 registró revisión manual de formularios y accesibilidad.
+
+Para completar CA02, se añadieron y ejecutaron pruebas que verifican por HTTP los valores persistidos de nombre, slug, descripción y visibilidad, el cambio a privado de un enlace público, y la conservación del estado al rechazar un nombre duplicado. Una prueba de persistencia SQLite inyecta un fallo durante la actualización del enlace y confirma el rollback de la colección y ambas proyecciones de búsqueda. El filtro combinado de pruebas de colección y rollback pasó 21/21. La validación integrada final pasó build de solución con 0 warnings/0 errores y suite completa `Linkubator.Tests` 1.179/1.179; `git diff --check` también pasó. El cierre técnico está registrado en [tasks.md → «Aceptación y cierre»](tasks.md#aceptación-y-cierre).
 
 ## Orden de ejecución y cierre
 
 - La validación integrada de S8.2 incluye revisión de referencias y de la suite; la aceptación humana no convierte una validación fallida o incompleta en evidencia satisfactoria.
 - Los cambios de código y la validación focalizada pertenecen a esta spec; no se declara cobertura HTTP que no se haya ejecutado.
-- La aceptación humana se registra separadamente del estado técnico. El cierre técnico requiere evidencia satisfactoria por CA01–CA05, incluidas las pruebas directas pendientes de `UpdateCollection` y de los flujos Web; no basta con que compile el código o con tests de operaciones anteriores.
+- La aceptación humana se registra separadamente del estado técnico. El cierre técnico de CA01–CA05 se completó el 26-X-2026 con evidencia directa de `UpdateCollection` para campos compuestos, rechazo sin cambios y atomicidad transaccional.
 - Si durante el diseño o la implementación aparece una discrepancia entre el contrato existente y las reglas funcionales, detener la tarea afectada y pedir aprobación para modificar el documento propietario antes de cambiar el comportamiento.

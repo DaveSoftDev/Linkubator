@@ -2,7 +2,6 @@ using Dapper;
 using Linkubator.Infrastructure.Sqlite;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.DependencyInjection;
 using TestHost = Microsoft.AspNetCore.Hosting;
 
 namespace Linkubator.Tests.Integration;
@@ -483,6 +482,27 @@ public sealed class CollectionsListingIntegrationTests
             using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
             await SeedCollections(databasePath, DemoEmail, ["Collection before edit"]);
             long collectionId = await GetCollectionId(databasePath, DemoEmail, "Collection before edit");
+            long userId;
+            await using (SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection())
+            {
+                userId = await connection.ExecuteScalarAsync<long>(
+                    "SELECT Id FROM User WHERE Email = @Email;",
+                    new { Email = DemoEmail });
+                await connection.ExecuteAsync(
+                    "UPDATE Collection SET IsPublic = 1 WHERE Id = @CollectionId;",
+                    new { CollectionId = collectionId });
+                await connection.ExecuteAsync(
+                    "INSERT INTO Link (UserId, CollectionId, UrlOriginal, UrlNormalized, Title, IsPublic, CreatedAt) VALUES (@UserId, @CollectionId, @Url, @Url, @Title, 1, @CreatedAt);",
+                    new
+                    {
+                        UserId = userId,
+                        CollectionId = collectionId,
+                        Url = "https://collection-edit.example",
+                        Title = "Public link before edit",
+                        CreatedAt = DateTime.UtcNow,
+                    });
+            }
+
             string token = await GetAntiforgeryToken(client, $"/app/colecciones/{collectionId}/editar");
 
             using HttpResponseMessage response = await client.PostAsync(
@@ -498,7 +518,76 @@ public sealed class CollectionsListingIntegrationTests
 
             Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
             Assert.Equal("/app/colecciones", response.Headers.Location?.OriginalString);
-            Assert.Equal("Collection after edit", await GetCollectionName(databasePath, collectionId));
+            PersistedCollectionState persistedCollection = await GetCollectionState(databasePath, collectionId);
+            int persistedLinkVisibility = await GetLinkVisibility(databasePath, userId, collectionId);
+
+            Assert.Equal("Collection after edit", persistedCollection.Name);
+            Assert.Equal("collection-after-edit", persistedCollection.Slug);
+            Assert.Equal("Edited by integration test", persistedCollection.Description);
+            Assert.Equal(0L, persistedCollection.IsPublic);
+            Assert.Equal(0, persistedLinkVisibility);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task PostEditCollection_WhenNameIsAlreadyUsed_LeavesCollectionAndLinksUnchanged()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            await SeedCollections(databasePath, DemoEmail, ["Collection before edit", "Already taken"]);
+            long collectionId = await GetCollectionId(databasePath, DemoEmail, "Collection before edit");
+            long userId;
+            await using (SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection())
+            {
+                userId = await connection.ExecuteScalarAsync<long>(
+                    "SELECT Id FROM User WHERE Email = @Email;",
+                    new { Email = DemoEmail });
+                await connection.ExecuteAsync(
+                    "UPDATE Collection SET Description = 'Original description', IsPublic = 1 WHERE Name = 'Collection before edit' AND UserId = @UserId;",
+                    new { UserId = userId });
+                await connection.ExecuteAsync(
+                    "UPDATE Collection SET Slug = 'already-taken' WHERE Name = 'Already taken' AND UserId = @UserId;",
+                    new { UserId = userId });
+                await connection.ExecuteAsync(
+                    "INSERT INTO Link (UserId, CollectionId, UrlOriginal, UrlNormalized, Title, IsPublic, CreatedAt) VALUES (@UserId, @CollectionId, @Url, @Url, @Title, 1, @CreatedAt);",
+                    new
+                    {
+                        UserId = userId,
+                        CollectionId = collectionId,
+                        Url = "https://collection-rejection.example",
+                        Title = "Public link before rejection",
+                        CreatedAt = DateTime.UtcNow,
+                    });
+            }
+
+            string token = await GetAntiforgeryToken(client, $"/app/colecciones/{collectionId}/editar");
+            PersistedCollectionState originalCollection = await GetCollectionState(databasePath, collectionId);
+            int originalLinkVisibility = await GetLinkVisibility(databasePath, userId, collectionId);
+            using HttpResponseMessage response = await client.PostAsync(
+                $"/app/colecciones/{collectionId}/editar",
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["id"] = collectionId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["Input.Name"] = "Already taken",
+                    ["Input.Description"] = "Tampered description",
+                    ["Input.IsPublic"] = "false",
+                    ["__RequestVerificationToken"] = token,
+                }));
+            string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+            PersistedCollectionState finalCollection = await GetCollectionState(databasePath, collectionId);
+            int finalLinkVisibility = await GetLinkVisibility(databasePath, userId, collectionId);
+
+            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+            Assert.Contains("Already taken", html, StringComparison.Ordinal);
+            Assert.Equal(originalCollection, finalCollection);
+            Assert.Equal(originalLinkVisibility, finalLinkVisibility);
         }
         finally
         {
@@ -677,6 +766,22 @@ public sealed class CollectionsListingIntegrationTests
             new { CollectionId = collectionId });
     }
 
+    private static async Task<PersistedCollectionState> GetCollectionState(string databasePath, long collectionId)
+    {
+        await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+        return await connection.QuerySingleAsync<PersistedCollectionState>(
+            "SELECT Name, Slug, Description, IsPublic FROM Collection WHERE Id = @CollectionId;",
+            new { CollectionId = collectionId });
+    }
+
+    private static async Task<int> GetLinkVisibility(string databasePath, long userId, long collectionId)
+    {
+        await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+        return await connection.ExecuteScalarAsync<int>(
+            "SELECT IsPublic FROM Link WHERE UserId = @UserId AND CollectionId = @CollectionId;",
+            new { UserId = userId, CollectionId = collectionId });
+    }
+
     private static async Task<string> GetAntiforgeryToken(HttpClient client, long collectionId)
     {
         using HttpResponseMessage response = await client.GetAsync($"/app/colecciones/{collectionId}/eliminar");
@@ -751,4 +856,6 @@ public sealed class CollectionsListingIntegrationTests
             builder.UseSetting("DevelopmentIdentity:PasswordHash", ValidArgon2idHash);
         }
     }
+
+    private sealed record PersistedCollectionState(string Name, string Slug, string? Description, long IsPublic);
 }
