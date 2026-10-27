@@ -11,8 +11,8 @@
 
 ### Componentes y contratos
 
-- La revisión observa en navegador el listado Web ya implementado en `/app/enlaces`; no modifica las páginas, los casos de uso, las consultas ni los datos de producto. Contrasta el resultado con los criterios de [spec.md](spec.md), [«Búsqueda y filtros»](../../context/specifications.md#búsqueda-y-filtros), [«Listados»](../../context/specifications.md#listados) y [«Rutas privadas»](../../context/specifications.md#rutas-privadas).
-- Utilizar el conjunto local preparado por [S6.8](../archive/s6.8-datos-local-busqueda/spec.md), asociado a la identidad de desarrollo. Confirmar antes de la sesión que la base local existe, es la prevista para esta revisión y conserva los datos/proyecciones requeridos; no ejecutar el seed, borrar datos ni reconstruir proyecciones como parte de S10.6.
+- La revisión observa en navegador el listado Web ya implementado en `/app/enlaces`; no modifica las páginas, los casos de uso, las consultas ni los datos de producto. Contrasta el resultado con los criterios de [spec.md](spec.md), [«Búsqueda y filtros»](../../../context/specifications.md#búsqueda-y-filtros), [«Listados»](../../../context/specifications.md#listados) y [«Rutas privadas»](../../../context/specifications.md#rutas-privadas).
+- Utilizar el conjunto local preparado por [S6.8](../s6.8-datos-local-busqueda/spec.md), asociado a la identidad de desarrollo. Confirmar antes de la sesión que la base local existe, es la prevista para esta revisión y conserva los datos/proyecciones requeridos; no ejecutar el seed, borrar datos ni reconstruir proyecciones como parte de S10.6.
 - Ejecutar manualmente las consultas del listado privado y observar los enlaces mostrados, el texto de consulta, el filtro de colección y los controles de paginación. Para cada escenario registrar la URL de la aplicación sin credenciales ni tokens, la consulta funcional no sensible, la colección, el orden/contenido observado y el resultado.
 - El registro estructurado de evidencia y sus límites constan en [tasks.md → «Evidencia por criterio»](tasks.md#evidencia-por-criterio); no incluir credenciales, cookies, identificadores de sesión ni otros secretos.
 
@@ -35,8 +35,8 @@
 ### Garantías técnicas
 
 - La revisión se limita al comportamiento observado de la búsqueda de enlaces; no afirma que haya ejecutado pruebas automatizadas, validado la implementación interna o cubierto listados de otras entidades.
-- Los escenarios se realizan bajo la identidad de desarrollo y con datos locales preparados, sin usar ni exponer recursos ajenos ([domain-model.md → «Propiedad de los datos»](../../context/domain-model.md#propiedad-de-los-datos)).
-- Las expectativas de normalización, operadores literales, filtros, orden y páginas son las fuentes de [specifications.md → «Búsqueda y filtros»](../../context/specifications.md#búsqueda-y-filtros) y [«Listados»](../../context/specifications.md#listados); no se copian ni redefinen aquí.
+- Los escenarios se realizan bajo la identidad de desarrollo y con datos locales preparados, sin usar ni exponer recursos ajenos ([domain-model.md → «Propiedad de los datos»](../../../context/domain-model.md#propiedad-de-los-datos)).
+- Las expectativas de normalización, operadores literales, filtros, orden y páginas son las fuentes de [specifications.md → «Búsqueda y filtros»](../../../context/specifications.md#búsqueda-y-filtros) y [«Listados»](../../../context/specifications.md#listados); no se copian ni redefinen aquí.
 - Una observación satisfactoria no sustituye las pruebas HTTP/de datos de S10.5 ni prueba por sí sola la ausencia de defectos no cubiertos por los escenarios manuales.
 - Ante resultados inesperados, se conserva el estado, se documenta evidencia reproducible y no se modifica producto, seed ni fuente funcional dentro de S10.6.
 
@@ -44,9 +44,9 @@
 
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
-| Usar el navegador sobre el listado privado real con la base local de ejemplo existente. | Confirmado | [spec.md → «Alcance»](spec.md#alcance), [S6.8](../archive/s6.8-datos-local-busqueda/spec.md) | Mantiene el trabajo en revisión manual y no cambia el producto. Confirmar en T01 que el entorno apunta a la base preparada. |
+| Usar el navegador sobre el listado privado real con la base local de ejemplo existente. | Confirmado | [spec.md → «Alcance»](spec.md#alcance), [S6.8](../s6.8-datos-local-busqueda/spec.md) | Mantiene el trabajo en revisión manual y no cambia el producto. Confirmar en T01 que el entorno apunta a la base preparada. |
 | Registrar solo entorno, navegador/versión, consultas y resultados necesarios para reproducir los escenarios. | Propuesta | [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación) | La evidencia no incluirá credenciales, cookies, tokens ni datos personales. Concretar el formato al crear las tareas tras aprobar el plan. |
-| La disponibilidad y consistencia de la base de S6.8 debe confirmarse antes de cada revisión; la base observada inicialmente no contenía enlaces. | Comprobada inicialmente; prerrequisito contextual | [S6.8](../archive/s6.8-datos-local-busqueda/spec.md), [tasks.md → T01](tasks.md#descomposición) | T01 registró la ausencia inicial de enlaces; se identifican resultados posteriores obtenidos con el seed cargado, pero no consta el procedimiento ni entorno de carga en la evidencia original. No interpretar ese hecho como una recarga autorizada por S10.6. |
+| La disponibilidad y consistencia de la base de S6.8 debe confirmarse antes de cada revisión; la base observada inicialmente no contenía enlaces. | Comprobada inicialmente; prerrequisito contextual | [S6.8](../s6.8-datos-local-busqueda/spec.md), [tasks.md → T01](tasks.md#descomposición) | T01 registró la ausencia inicial de enlaces; se identifican resultados posteriores obtenidos con el seed cargado, pero no consta el procedimiento ni entorno de carga en la evidencia original. No interpretar ese hecho como una recarga autorizada por S10.6. |
 | La indisponibilidad externa, de la Web local o del navegador puede impedir una comprobación manual. | Riesgo | [spec.md → «Dependencias y prerrequisitos»](spec.md#dependencias-y-prerrequisitos) | Registrar el criterio afectado como no comprobado; no simular su resultado ni cerrar con evidencia incompleta. |
 
 ## Estrategia de validación

@@ -11,10 +11,10 @@
 
 ### Componentes y contratos
 
-- [DashboardModel](../../src/Linkubator.Web/Pages/App/Dashboard.cshtml.cs) configura el `SearchFormViewModel` que consume la vista del dashboard. Mantener la búsqueda en el límite de presentación Web: el formulario navega al listado, sin invocar un caso de uso de búsqueda desde el GET del dashboard.
-- [Dashboard.cshtml](../../src/Linkubator.Web/Pages/App/Dashboard.cshtml) reutiliza el componente compartido [_SearchForm.cshtml](../../src/Linkubator.Web/Pages/Shared/_SearchForm.cshtml). Revisar el `action`, el método, el parámetro de consulta y los campos ocultos que renderiza el modelo; modificar solo lo que resulte necesario para satisfacer los criterios.
-- [LinksModel](../../src/Linkubator.Web/Pages/App/Links.cshtml.cs) ya es el consumidor del listado privado. Reutilizar su análisis y flujo de consulta sin alterar los contratos ni las reglas entregadas por S10.1–S10.3.
-- La prueba existente [WebStartupTests.cs](../../tests/Linkubator.Tests/Integration/WebStartupTests.cs) comprueba que el dashboard renderiza el destino `/app/enlaces` y un campo `q`, además de estado vacío y ausencia de contenido no pertinente. Inspeccionar si sus aserciones bastan; añadir comprobación de extremo a extremo focalizada solo si hace falta para distinguir la navegación real y la búsqueda del listado.
+- [DashboardModel](../../../src/Linkubator.Web/Pages/App/Dashboard.cshtml.cs) configura el `SearchFormViewModel` que consume la vista del dashboard. Mantener la búsqueda en el límite de presentación Web: el formulario navega al listado, sin invocar un caso de uso de búsqueda desde el GET del dashboard.
+- [Dashboard.cshtml](../../../src/Linkubator.Web/Pages/App/Dashboard.cshtml) reutiliza el componente compartido [_SearchForm.cshtml](../../../src/Linkubator.Web/Pages/Shared/_SearchForm.cshtml). Revisar el `action`, el método, el parámetro de consulta y los campos ocultos que renderiza el modelo; modificar solo lo que resulte necesario para satisfacer los criterios.
+- [LinksModel](../../../src/Linkubator.Web/Pages/App/Links.cshtml.cs) ya es el consumidor del listado privado. Reutilizar su análisis y flujo de consulta sin alterar los contratos ni las reglas entregadas por S10.1–S10.3.
+- La prueba existente [WebStartupTests.cs](../../../tests/Linkubator.Tests/Integration/WebStartupTests.cs) comprueba que el dashboard renderiza el destino `/app/enlaces` y un campo `q`, además de estado vacío y ausencia de contenido no pertinente. Inspeccionar si sus aserciones bastan; añadir comprobación de extremo a extremo focalizada solo si hace falta para distinguir la navegación real y la búsqueda del listado.
 
 ### Flujos internos
 
@@ -31,8 +31,8 @@
 
 ### Garantías técnicas
 
-- Mantener la búsqueda como GET al listado, sin aceptar identidad desde la consulta del cliente ni añadir lógica de filtrado al dashboard ([AC-DASH-01](../../plans/mvp0-acceptance-criteria.md#ac-dash-01-dashboard), [«Rutas privadas»](../../context/specifications.md#rutas-privadas)).
-- Mantener el aislamiento por usuario identificado al presentar resultados ([domain-model.md → «Propiedad de los datos»](../../context/domain-model.md#propiedad-de-los-datos)).
+- Mantener la búsqueda como GET al listado, sin aceptar identidad desde la consulta del cliente ni añadir lógica de filtrado al dashboard ([AC-DASH-01](../../../plans/mvp0-acceptance-criteria.md#ac-dash-01-dashboard), [«Rutas privadas»](../../../context/specifications.md#rutas-privadas)).
+- Mantener el aislamiento por usuario identificado al presentar resultados ([domain-model.md → «Propiedad de los datos»](../../../context/domain-model.md#propiedad-de-los-datos)).
 - Mantener la semántica del listado, sus filtros y navegación en sus componentes propietarios, sin duplicar lógica en el dashboard ([S10.1](../s10.1-listado-enlaces/spec.md), [S10.2](../s10.2-parametros-listado-enlaces/spec.md), [S10.3](../s10.3-conservar-parametros-listado-enlaces/spec.md)).
 - Reutilizar el componente y clases de presentación existentes, sin introducir variantes visuales ni estilos duplicados.
 
@@ -40,9 +40,9 @@
 
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
-| Mantener la conexión en el formulario Web compartido y su configuración en DashboardModel, sin búsqueda propia en el dashboard. | confirmado | [AC-DASH-01](../../plans/mvp0-acceptance-criteria.md#ac-dash-01-dashboard), [«Rutas privadas»](../../context/specifications.md#rutas-privadas) | Preserva la separación entre navegación desde el dashboard y listado destino. |
-| El test actual puede no comprobar el envío de la consulta ni sus resultados en el listado, pese a inspeccionar `action` y `q`. | propuesta | [WebStartupTests.cs](../../tests/Linkubator.Tests/Integration/WebStartupTests.cs); inspección del test no constituye evidencia de ejecución. | Confirmar cobertura durante T01 y añadir una prueba focalizada solo si la brecha persiste. |
-| Evitar duplicar pruebas de reglas de búsqueda o parámetros que pertenecen a S10.1–S10.3/S10.5. | confirmado | [mvp0-plan.md → «S10: Listado y búsqueda de enlaces (L)»](../../plans/mvp0-plan.md#s10-listado-y-búsqueda-de-enlaces-l) | Mantener el alcance de S10.4 cerrado y validable sin trabajos posteriores. |
+| Mantener la conexión en el formulario Web compartido y su configuración en DashboardModel, sin búsqueda propia en el dashboard. | confirmado | [AC-DASH-01](../../../plans/mvp0-acceptance-criteria.md#ac-dash-01-dashboard), [«Rutas privadas»](../../../context/specifications.md#rutas-privadas) | Preserva la separación entre navegación desde el dashboard y listado destino. |
+| El test actual puede no comprobar el envío de la consulta ni sus resultados en el listado, pese a inspeccionar `action` y `q`. | propuesta | [WebStartupTests.cs](../../../tests/Linkubator.Tests/Integration/WebStartupTests.cs); inspección del test no constituye evidencia de ejecución. | Confirmar cobertura durante T01 y añadir una prueba focalizada solo si la brecha persiste. |
+| Evitar duplicar pruebas de reglas de búsqueda o parámetros que pertenecen a S10.1–S10.3/S10.5. | confirmado | [mvp0-plan.md → «S10: Listado y búsqueda de enlaces (L)»](../../../plans/mvp0-plan.md#s10-listado-y-búsqueda-de-enlaces-l) | Mantener el alcance de S10.4 cerrado y validable sin trabajos posteriores. |
 
 ## Estrategia de validación
 

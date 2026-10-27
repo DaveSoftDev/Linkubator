@@ -11,7 +11,7 @@
   - Estado: completada.
   - Inicio: DLG, 27-X-2026 («Inicia la implementación»), instrucción explícita en esta conversación.
   - Finalización: 27-X-2026; `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --filter "FullyQualifiedName~LinkListingIntegrationTests" --nologo` pasó 40/40 y `git diff --check` no reportó errores.
-  - Evidencia consolidada: [Evidencia por criterio](#evidencia-por-criterio), T01–T04 y [LinkListingIntegrationTests.cs](../../tests/Linkubator.Tests/Integration/LinkListingIntegrationTests.cs).
+  - Evidencia consolidada: [Evidencia por criterio](#evidencia-por-criterio), T01–T04 y [LinkListingIntegrationTests.cs](../../../tests/Linkubator.Tests/Integration/LinkListingIntegrationTests.cs).
 - La preparación de tareas no inventa aprobaciones ni evidencias de implementación.
 
 ## Descomposición
@@ -30,8 +30,8 @@ T01 confirma la brecha observable del plan y la cobertura de pruebas de la pági
 | Criterio | Tareas | Validación | Resultado real | Fecha y entorno o versión | Referencia a evidencia |
 | --- | --- | --- | --- | --- | --- |
 | CA01 | T01, T02, T03 | V01, V03 en [plan técnico](plan.md#estrategia-de-validación) | Satisfactorio: el formulario de búsqueda conserva el filtro de colección aplicable y el texto enviado, y la nueva búsqueda no arrastra la página actual al analizar la URL. | 27-X-2026; Windows, .NET SDK 10.0.401, SQLite en memoria | `GetLinks_WithSearch_PaginatesFilteredResultsAndPreservesCollection`; comando ejecutado: `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --filter "FullyQualifiedName~LinkListingIntegrationTests" --nologo` (40/40). |
-| CA02 | T01, T02, T03 | V02, V03 en [plan técnico](plan.md#estrategia-de-validación) | Satisfactorio: los enlaces de paginación conservan `c` y `q`, cambian `p` según la página y el HTML resultante mantiene el mismo filtro para la siguiente vista. | 27-X-2026; Windows, .NET SDK 10.0.401, SQLite en memoria | `GetLinks_WithSearch_PaginatesFilteredResultsAndPreservesCollection`; validación focalizada 40/40 y revisión del modelo de paginación en [Links.cshtml.cs](../../src/Linkubator.Web/Pages/App/Links.cshtml.cs). |
-| CA03 | T01, T02, T03 | V01, V03 en [plan técnico](plan.md#estrategia-de-validación) | Satisfactorio: el formulario no incluye `p` y la nueva búsqueda reanuda la primera página sin perder el contexto aplicable. | 27-X-2026; Windows, .NET SDK 10.0.401, SQLite en memoria | `GetLinks_WithSearch_PaginatesFilteredResultsAndPreservesCollection` y el formulario compartido en [_SearchForm.cshtml](../../src/Linkubator.Web/Pages/Shared/_SearchForm.cshtml); validación focalizada 40/40. |
+| CA02 | T01, T02, T03 | V02, V03 en [plan técnico](plan.md#estrategia-de-validación) | Satisfactorio: los enlaces de paginación conservan `c` y `q`, cambian `p` según la página y el HTML resultante mantiene el mismo filtro para la siguiente vista. | 27-X-2026; Windows, .NET SDK 10.0.401, SQLite en memoria | `GetLinks_WithSearch_PaginatesFilteredResultsAndPreservesCollection`; validación focalizada 40/40 y revisión del modelo de paginación en [Links.cshtml.cs](../../../src/Linkubator.Web/Pages/App/Links.cshtml.cs). |
+| CA03 | T01, T02, T03 | V01, V03 en [plan técnico](plan.md#estrategia-de-validación) | Satisfactorio: el formulario no incluye `p` y la nueva búsqueda reanuda la primera página sin perder el contexto aplicable. | 27-X-2026; Windows, .NET SDK 10.0.401, SQLite en memoria | `GetLinks_WithSearch_PaginatesFilteredResultsAndPreservesCollection` y el formulario compartido en [_SearchForm.cshtml](../../../src/Linkubator.Web/Pages/Shared/_SearchForm.cshtml); validación focalizada 40/40. |
 
 La ejecución focalizada acredita el HTML resultante y la navegación generada; no cubre la integración del buscador del dashboard ni la suite transversal S10.5. La validación del trabajo queda limitada al flujo de listado de enlaces y sus criterios vigentes.
 

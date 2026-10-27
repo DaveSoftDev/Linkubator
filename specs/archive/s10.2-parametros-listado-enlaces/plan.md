@@ -11,10 +11,10 @@
 
 ### Componentes y contratos
 
-- La página [Links.cshtml.cs](../../src/Linkubator.Web/Pages/App/Links.cshtml.cs) llama a `PrivateListingQueryAnalyzer.Analyze` con la consulta HTTP y las colecciones del usuario identificado; si hay errores, construye el resumen accesible y no invoca `ILinkService.ListLinksPage`.
-- El analizador [PrivateListingQueryAnalyzer.cs](../../src/Linkubator.Web/Models/PrivateListing/PrivateListingQueryAnalyzer.cs) selecciona el primer valor de cada parámetro, interpreta `p`, `c` y `q`, descarta los filtros de colección no accesibles y produce estados de error para los valores inválidos y la búsqueda excesiva. Para S10.2 se comprobará el tratamiento de `e` como desconocido/no aplicable y la validación de la longitud de `q`, conservando lo que ya satisface CA02.
-- La vista y el componente existente de [resumen de errores](../../src/Linkubator.Web/Pages/Shared/_ErrorSummary.cshtml) son responsables de presentar errores de consulta; no se crearán controles ni estilos paralelos.
-- La prueba focal de integración existente es [LinkListingIntegrationTests.cs](../../tests/Linkubator.Tests/Integration/LinkListingIntegrationTests.cs). Los tests unitarios del analizador están en `PrivateListingQueryAnalyzerTests`; adaptar o extender esos tests solo para la cobertura directa apropiada, manteniendo una comprobación HTTP para el comportamiento de la página.
+- La página [Links.cshtml.cs](../../../src/Linkubator.Web/Pages/App/Links.cshtml.cs) llama a `PrivateListingQueryAnalyzer.Analyze` con la consulta HTTP y las colecciones del usuario identificado; si hay errores, construye el resumen accesible y no invoca `ILinkService.ListLinksPage`.
+- El analizador [PrivateListingQueryAnalyzer.cs](../../../src/Linkubator.Web/Models/PrivateListing/PrivateListingQueryAnalyzer.cs) selecciona el primer valor de cada parámetro, interpreta `p`, `c` y `q`, descarta los filtros de colección no accesibles y produce estados de error para los valores inválidos y la búsqueda excesiva. Para S10.2 se comprobará el tratamiento de `e` como desconocido/no aplicable y la validación de la longitud de `q`, conservando lo que ya satisface CA02.
+- La vista y el componente existente de [resumen de errores](../../../src/Linkubator.Web/Pages/Shared/_ErrorSummary.cshtml) son responsables de presentar errores de consulta; no se crearán controles ni estilos paralelos.
+- La prueba focal de integración existente es [LinkListingIntegrationTests.cs](../../../tests/Linkubator.Tests/Integration/LinkListingIntegrationTests.cs). Los tests unitarios del analizador están en `PrivateListingQueryAnalyzerTests`; adaptar o extender esos tests solo para la cobertura directa apropiada, manteniendo una comprobación HTTP para el comportamiento de la página.
 - No modificar el contrato de Application ni Infrastructure: el comportamiento requerido pertenece al análisis de la consulta y su integración en Web.
 
 ### Flujos internos
@@ -33,7 +33,7 @@
 
 ### Garantías técnicas
 
-- La comprobación de accesibilidad de `c` se realiza respecto de las colecciones ya cargadas para el usuario identificado; no se utiliza un identificador de usuario del cliente para autorizar recursos ([domain-model.md → «Propiedad de los datos»](../../context/domain-model.md#propiedad-de-los-datos)).
+- La comprobación de accesibilidad de `c` se realiza respecto de las colecciones ya cargadas para el usuario identificado; no se utiliza un identificador de usuario del cliente para autorizar recursos ([domain-model.md → «Propiedad de los datos»](../../../context/domain-model.md#propiedad-de-los-datos)).
 - Los valores de parámetros no aplicables no deben convertirse en búsqueda o filtro de Application. La prueba de `e` usará valores no numéricos/repetidos junto a datos que pudieran revelar un filtro aplicado, demostrando que no genera error ni modifica los resultados.
 - Una búsqueda excesiva detiene el flujo antes de invocar el servicio de listado; el test inspecciona la respuesta de la página y una comprobación del punto de invocación o del analizador, no infiere la ausencia de consulta a partir del texto del mensaje solamente.
 - No se cambian los errores o mensajes de la fuente propietaria ni se incluyen datos privados en la respuesta.
@@ -43,7 +43,7 @@
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
 | Reutilizar la página y analizador de parámetros existentes; limitar los cambios a una carencia demostrada por las pruebas de CA01–CA03. | propuesta | [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación); implementación inspeccionada para delimitar, no evidencia de cumplimiento. | Evita duplicar la interpretación de parámetros y la presentación de errores; actualizar el plan solo si los tests revelan divergencia concreta. |
-| La semántica de `e` se implementa como parámetro no aplicable, sin extender el analizador con soporte para etiquetas. | confirmado | [specifications.md → «Rutas privadas»](../../context/specifications.md#rutas-privadas), [decisions.md → «Producto y alcance»](../../context/decisions.md#producto-y-alcance). | Mantiene el alcance acordado de MVP0 sin una ruta de filtrado que dependa de gestión de etiquetas. |
+| La semántica de `e` se implementa como parámetro no aplicable, sin extender el analizador con soporte para etiquetas. | confirmado | [specifications.md → «Rutas privadas»](../../../context/specifications.md#rutas-privadas), [decisions.md → «Producto y alcance»](../../../context/decisions.md#producto-y-alcance). | Mantiene el alcance acordado de MVP0 sin una ruta de filtrado que dependa de gestión de etiquetas. |
 | La verificación de CA03 combina una prueba HTTP del resumen de error con evidencia de que el servicio no se invoca o de que el analizador entrega error sin texto utilizable para consulta. | propuesta | [spec.md → CA03](spec.md#criterios-de-aceptación). | Hace que la prueba discrimine entre mostrar un aviso y realmente impedir ejecutar la búsqueda inválida. |
 
 ## Estrategia de validación

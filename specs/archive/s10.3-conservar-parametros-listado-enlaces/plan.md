@@ -11,10 +11,10 @@
 
 ### Componentes y contratos
 
-- La página [Links.cshtml.cs](../../src/Linkubator.Web/Pages/App/Links.cshtml.cs) construye el modelo del formulario de búsqueda y genera los enlaces de paginación. Mantener la responsabilidad en la presentación Web, reutilizando `SearchFormViewModel`, `PaginationViewModelFactory` y el analizador de parámetros existente.
-- El formulario compartido [_SearchForm.cshtml](../../src/Linkubator.Web/Pages/Shared/_SearchForm.cshtml) representa `q` y los campos ocultos aplicables. Verificar que `c` acompaña al formulario, que `p` no se añade y que el valor de búsqueda actual queda precargado.
+- La página [Links.cshtml.cs](../../../src/Linkubator.Web/Pages/App/Links.cshtml.cs) construye el modelo del formulario de búsqueda y genera los enlaces de paginación. Mantener la responsabilidad en la presentación Web, reutilizando `SearchFormViewModel`, `PaginationViewModelFactory` y el analizador de parámetros existente.
+- El formulario compartido [_SearchForm.cshtml](../../../src/Linkubator.Web/Pages/Shared/_SearchForm.cshtml) representa `q` y los campos ocultos aplicables. Verificar que `c` acompaña al formulario, que `p` no se añade y que el valor de búsqueda actual queda precargado.
 - La función `BuildPageUrl` de `LinksModel` forma la navegación paginada con los filtros analizados. Mantener la codificación de consulta existente y no copiar parámetros desconocidos ni valores que el analizador haya descartado.
-- La cobertura focal se sitúa en [LinkListingIntegrationTests.cs](../../tests/Linkubator.Tests/Integration/LinkListingIntegrationTests.cs). El test `GetLinks_WithSearch_PaginatesFilteredResultsAndPreservesCollection` ya comprueba navegación paginada bajo una búsqueda, conserva el filtro `c` en los enlaces y verifica que el formulario lleva `c` y `q`, pero no `p`. A partir de esta inspección no se da por demostrado el envío real de una búsqueda desde una página posterior; añadir o adaptar pruebas para discriminar cada interacción requerida por los criterios.
+- La cobertura focal se sitúa en [LinkListingIntegrationTests.cs](../../../tests/Linkubator.Tests/Integration/LinkListingIntegrationTests.cs). El test `GetLinks_WithSearch_PaginatesFilteredResultsAndPreservesCollection` ya comprueba navegación paginada bajo una búsqueda, conserva el filtro `c` en los enlaces y verifica que el formulario lleva `c` y `q`, pero no `p`. A partir de esta inspección no se da por demostrado el envío real de una búsqueda desde una página posterior; añadir o adaptar pruebas para discriminar cada interacción requerida por los criterios.
 
 ### Flujos internos
 
@@ -31,8 +31,8 @@
 
 ### Garantías técnicas
 
-- Mantener la autorización y el aislamiento existentes: el identificador de usuario procede de la identidad fiable y el filtro `c` solo se aplica conforme al análisis para el usuario identificado ([domain-model.md → «Propiedad de los datos»](../../context/domain-model.md#propiedad-de-los-datos)).
-- No serializar ni propagar parámetros desconocidos, no aplicables o descartados al construir la navegación; el analizador existente permanece como responsable de esa decisión ([specifications.md → «Rutas privadas»](../../context/specifications.md#rutas-privadas)).
+- Mantener la autorización y el aislamiento existentes: el identificador de usuario procede de la identidad fiable y el filtro `c` solo se aplica conforme al análisis para el usuario identificado ([domain-model.md → «Propiedad de los datos»](../../../context/domain-model.md#propiedad-de-los-datos)).
+- No serializar ni propagar parámetros desconocidos, no aplicables o descartados al construir la navegación; el analizador existente permanece como responsable de esa decisión ([specifications.md → «Rutas privadas»](../../../context/specifications.md#rutas-privadas)).
 - Codificar correctamente los valores de consulta al renderizar campos/enlaces y evitar que una nueva búsqueda incluya accidentalmente `p`.
 - No cambiar la búsqueda, el orden, los límites ni las respuestas definidos por las fuentes propietarias.
 
@@ -41,8 +41,8 @@
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
 | Reutilizar los modelos y componentes actuales del formulario y paginación, y cambiar solo los puntos que no satisfagan los criterios comprobados. | propuesta | [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación); inspección de implementación para delimitar el trabajo, no evidencia de cierre. | Evita duplicar lógica de navegación; confirmar brechas con pruebas focalizadas antes de alterar código. |
-| Los destinos de paginación se construyen con los valores analizados, no con la consulta HTTP en bruto. | propuesta | [specifications.md → «Rutas privadas»](../../context/specifications.md#rutas-privadas); diseño actual de `LinksModel`. | Conserva solo filtros aplicables y evita transportar valores rechazados o desconocidos. |
-| El formulario conserva `c` y excluye `p` para que una búsqueda nueva comience en la primera página. | confirmado | [spec.md → CA01 y CA03](spec.md#criterios-de-aceptación), [mvp0-plan.md → «S10: Listado y búsqueda de enlaces (L)»](../../plans/mvp0-plan.md#s10-listado-y-búsqueda-de-enlaces-l). | Cubre el comportamiento asignado sin cambiar análisis ni reglas funcionales. |
+| Los destinos de paginación se construyen con los valores analizados, no con la consulta HTTP en bruto. | propuesta | [specifications.md → «Rutas privadas»](../../../context/specifications.md#rutas-privadas); diseño actual de `LinksModel`. | Conserva solo filtros aplicables y evita transportar valores rechazados o desconocidos. |
+| El formulario conserva `c` y excluye `p` para que una búsqueda nueva comience en la primera página. | confirmado | [spec.md → CA01 y CA03](spec.md#criterios-de-aceptación), [mvp0-plan.md → «S10: Listado y búsqueda de enlaces (L)»](../../../plans/mvp0-plan.md#s10-listado-y-búsqueda-de-enlaces-l). | Cubre el comportamiento asignado sin cambiar análisis ni reglas funcionales. |
 
 ## Estrategia de validación
 

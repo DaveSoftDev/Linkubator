@@ -377,12 +377,14 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [ ] Todos los parámetros de [«Rutas privadas»](../context/specifications.md#rutas-privadas) tienen test.
-- [ ] El texto de `q` no aparece en los logs.
-- [ ] El orden con y sin `q` cumple [«Listados»](../context/specifications.md#listados).
-- [ ] Un término que coincide con un enlace y una colección aparece solo en el listado de cada uno.
-- [ ] Los enlaces de paginación y los formularios de búsqueda conservan los filtros aplicables.
-- [ ] El humano ha probado la búsqueda con los datos de ejemplo.
+- [x] Todos los parámetros de [«Rutas privadas»](../context/specifications.md#rutas-privadas) tienen test; evidencia en [S10.1](../specs/archive/s10.1-listado-enlaces/tasks.md#evidencia-por-criterio), [S10.2](../specs/archive/s10.2-parametros-listado-enlaces/tasks.md#evidencia-por-criterio) y [S10.5](../specs/archive/s10.5-pruebas-integracion-listado-enlaces/tasks.md#evidencia-por-criterio).
+- [x] El texto de `q` no aparece en los logs; evidencia en [LoggingTests](../tests/Linkubator.Tests/Application/LoggingTests.cs).
+- [x] El orden con y sin `q` cumple [«Listados»](../context/specifications.md#listados); evidencia en [S10.1](../specs/archive/s10.1-listado-enlaces/tasks.md#evidencia-por-criterio) y [S10.5](../specs/archive/s10.5-pruebas-integracion-listado-enlaces/tasks.md#evidencia-por-criterio).
+- [x] Un término que coincide con un enlace y una colección aparece solo en el listado de cada uno; evidencia en [S10.5](../specs/archive/s10.5-pruebas-integracion-listado-enlaces/tasks.md#evidencia-por-criterio).
+- [x] Los enlaces de paginación y los formularios de búsqueda conservan los filtros aplicables; evidencia en [S10.3](../specs/archive/s10.3-conservar-parametros-listado-enlaces/tasks.md#evidencia-por-criterio) y [S10.5](../specs/archive/s10.5-pruebas-integracion-listado-enlaces/tasks.md#evidencia-por-criterio).
+- [x] El humano ha probado la búsqueda con los datos de ejemplo; S10.6 fue aceptada por DLG con la limitación de dataset/entorno registrada en [sus tareas](../specs/archive/s10.6-revision-manual-busqueda-enlaces/tasks.md#aceptación-y-cierre).
+
+La etapa S10 queda cerrada globalmente por aceptación de DLG el 27-X-2026 («Cerrada» en esta solicitud). Se conserva como limitación conocida la comprobación negativa de CA05 de S10.5, que no se ejecutó por seguridad del checkout compartido; su aceptación no la presenta como evidencia satisfactoria.
 
 ### S11: Área pública y SEO (L)
 

@@ -32,8 +32,8 @@
 
 ### Garantías técnicas
 
-- No aceptar ni propagar un `UserId` seleccionado por cliente; la consulta privada se mantiene vinculada al usuario identificado ([domain-model.md → «Propiedad de los datos»](../../context/domain-model.md#propiedad-de-los-datos)).
-- La presentación del aviso no modifica la decisión de privacidad que tomó Application ni convierte el rechazo en operación exitosa ([domain-model.md → «Público y privado»](../../context/domain-model.md#público-y-privado)).
+- No aceptar ni propagar un `UserId` seleccionado por cliente; la consulta privada se mantiene vinculada al usuario identificado ([domain-model.md → «Propiedad de los datos»](../../../context/domain-model.md#propiedad-de-los-datos)).
+- La presentación del aviso no modifica la decisión de privacidad que tomó Application ni convierte el rechazo en operación exitosa ([domain-model.md → «Público y privado»](../../../context/domain-model.md#público-y-privado)).
 - El aviso mantiene contenido textual codificado contextualmente por Razor; el test verifica el rol/semántica de anuncio accesible sin atribuir al HTML estático la prueba de funcionamiento de un lector de pantalla.
 - El estado vacío debe distinguirse visual y semánticamente de error de carga y de error de parámetros, usando componentes existentes y sin suprimir dichos errores.
 - No añadir reglas de producto ni cambiar mensajes definidos por sus fuentes.
@@ -43,8 +43,8 @@
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
 | Reutilizar la ruta, página, analizador, servicio de listado y componentes compartidos ya existentes; realizar cambios quirúrgicos solo donde CA01–CA03 no estén cubiertos. | propuesta | [spec.md → «Criterios de aceptación»](spec.md#criterios-de-aceptación); implementación disponible inspeccionada para delimitar el cambio, no considerada evidencia de cierre. | Evita duplicar el listado o abstraer lógica existente; el plan se actualizará si los tests dirigidos muestran una carencia concreta. |
-| El aviso de rechazo de privacidad se presenta mediante el mecanismo TempData ya establecido por S9.2 y el componente accesible común. | propuesta | [S9.2 → «Criterios de aceptación»](../s9.2-publicacion-enlaces/spec.md#criterios-de-aceptación), [«Errores controlados»](../../context/specifications.md#errores-controlados), [requirements.md → «Accesibilidad»](../../context/requirements.md#accesibilidad). | Comprobar el GET destino tras la redirección; una prueba que solo verifica el estado TempData no acredita su representación accesible. |
-| La integración existente muestra tarjetas, estado vacío y aviso, y el flujo completo de redirección de S9.2 ha sido comprobado con tests focalizados nuevos. | confirmado en validación focalizada de S10.1 | [LinkCreationIntegrationTests.cs](../../tests/Linkubator.Tests/Integration/LinkCreationIntegrationTests.cs); ejecución 153/153 el 27-X-2026 con .NET SDK 10.0.401. | El HTML final incluye el mensaje en región `role="status"` y `aria-live="polite"`; no se requirió cambio productivo. La evidencia no demuestra interacción real de lector de pantalla. |
+| El aviso de rechazo de privacidad se presenta mediante el mecanismo TempData ya establecido por S9.2 y el componente accesible común. | propuesta | [S9.2 → «Criterios de aceptación»](../../s9.2-publicacion-enlaces/spec.md#criterios-de-aceptación), [«Errores controlados»](../../../context/specifications.md#errores-controlados), [requirements.md → «Accesibilidad»](../../../context/requirements.md#accesibilidad). | Comprobar el GET destino tras la redirección; una prueba que solo verifica el estado TempData no acredita su representación accesible. |
+| La integración existente muestra tarjetas, estado vacío y aviso, y el flujo completo de redirección de S9.2 ha sido comprobado con tests focalizados nuevos. | confirmado en validación focalizada de S10.1 | [LinkCreationIntegrationTests.cs](../../../tests/Linkubator.Tests/Integration/LinkCreationIntegrationTests.cs); ejecución 153/153 el 27-X-2026 con .NET SDK 10.0.401. | El HTML final incluye el mensaje en región `role="status"` y `aria-live="polite"`; no se requirió cambio productivo. La evidencia no demuestra interacción real de lector de pantalla. |
 
 ## Estrategia de validación
 

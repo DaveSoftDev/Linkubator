@@ -12,10 +12,10 @@ Completar la navegación del listado privado de enlaces para que la búsqueda y 
 
 ## Fuentes
 
-- [mvp0-plan.md → «S10: Listado y búsqueda de enlaces (L)»](../../plans/mvp0-plan.md#s10-listado-y-búsqueda-de-enlaces-l): asignación de S10.3 y Definition of Done de S10.
-- [AC-LINK-06 — Listar enlaces del usuario](../../plans/mvp0-acceptance-criteria.md#ac-link-06-listar-enlaces-del-usuario): criterio aprobado propietario del listado, búsqueda, filtros y paginación.
-- [specifications.md → «Búsqueda y filtros»](../../context/specifications.md#búsqueda-y-filtros), [«Listados»](../../context/specifications.md#listados) y [«Rutas privadas»](../../context/specifications.md#rutas-privadas): semántica de los filtros, orden y paginación del listado privado.
-- [requirements.md → «Búsqueda y filtros»](../../context/requirements.md#búsqueda-y-filtros): expectativa funcional de búsqueda y filtros en los listados.
+- [mvp0-plan.md → «S10: Listado y búsqueda de enlaces (L)»](../../../plans/mvp0-plan.md#s10-listado-y-búsqueda-de-enlaces-l): asignación de S10.3 y Definition of Done de S10.
+- [AC-LINK-06 — Listar enlaces del usuario](../../../plans/mvp0-acceptance-criteria.md#ac-link-06-listar-enlaces-del-usuario): criterio aprobado propietario del listado, búsqueda, filtros y paginación.
+- [specifications.md → «Búsqueda y filtros»](../../../context/specifications.md#búsqueda-y-filtros), [«Listados»](../../../context/specifications.md#listados) y [«Rutas privadas»](../../../context/specifications.md#rutas-privadas): semántica de los filtros, orden y paginación del listado privado.
+- [requirements.md → «Búsqueda y filtros»](../../../context/requirements.md#búsqueda-y-filtros): expectativa funcional de búsqueda y filtros en los listados.
 - [S10.1 — Listado y búsqueda de enlaces](../s10.1-listado-enlaces/spec.md): listado base y comportamiento ya entregado.
 - [S10.2 — Parámetros del listado de enlaces](../s10.2-parametros-listado-enlaces/spec.md): tratamiento ya entregado de parámetros no aplicables, filtros de colección no accesibles y búsqueda excesiva.
 
@@ -35,9 +35,9 @@ Completar la navegación del listado privado de enlaces para que la búsqueda y 
 
 | ID | Fuente o criterio aprobado propietario | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA01 | [AC-LINK-06](../../plans/mvp0-acceptance-criteria.md#ac-link-06-listar-enlaces-del-usuario), [«Rutas privadas»](../../context/specifications.md#rutas-privadas) | Un listado de enlaces está abierto con un filtro de colección aplicable y una página distinta de la primera. | El usuario envía una nueva búsqueda desde el formulario del listado. | La navegación conserva el filtro de colección aplicable, usa el texto de búsqueda enviado y no arrastra la página previa. La interpretación de valores y la búsqueda siguen las fuentes propietarias. |
-| CA02 | [AC-LINK-06](../../plans/mvp0-acceptance-criteria.md#ac-link-06-listar-enlaces-del-usuario), [«Búsqueda y filtros»](../../context/specifications.md#búsqueda-y-filtros), [«Listados»](../../context/specifications.md#listados) | El listado de enlaces muestra resultados paginados con una búsqueda y, cuando corresponda, un filtro de colección aplicable. | El usuario navega a otra página del resultado. | El enlace de paginación conserva la búsqueda y el filtro de colección aplicable y solicita la página de destino; el listado resultante corresponde a esos mismos criterios. |
-| CA03 | [«Rutas privadas»](../../context/specifications.md#rutas-privadas), [«Listados»](../../context/specifications.md#listados) | El formulario de búsqueda se presenta desde una página del listado distinta de la primera. | Se inspeccionan los datos enviados al enviar una nueva búsqueda. | El formulario no envía el valor de la página actual; la búsqueda comienza en la primera página según las reglas fuente. |
+| CA01 | [AC-LINK-06](../../../plans/mvp0-acceptance-criteria.md#ac-link-06-listar-enlaces-del-usuario), [«Rutas privadas»](../../../context/specifications.md#rutas-privadas) | Un listado de enlaces está abierto con un filtro de colección aplicable y una página distinta de la primera. | El usuario envía una nueva búsqueda desde el formulario del listado. | La navegación conserva el filtro de colección aplicable, usa el texto de búsqueda enviado y no arrastra la página previa. La interpretación de valores y la búsqueda siguen las fuentes propietarias. |
+| CA02 | [AC-LINK-06](../../../plans/mvp0-acceptance-criteria.md#ac-link-06-listar-enlaces-del-usuario), [«Búsqueda y filtros»](../../../context/specifications.md#búsqueda-y-filtros), [«Listados»](../../../context/specifications.md#listados) | El listado de enlaces muestra resultados paginados con una búsqueda y, cuando corresponda, un filtro de colección aplicable. | El usuario navega a otra página del resultado. | El enlace de paginación conserva la búsqueda y el filtro de colección aplicable y solicita la página de destino; el listado resultante corresponde a esos mismos criterios. |
+| CA03 | [«Rutas privadas»](../../../context/specifications.md#rutas-privadas), [«Listados»](../../../context/specifications.md#listados) | El formulario de búsqueda se presenta desde una página del listado distinta de la primera. | Se inspeccionan los datos enviados al enviar una nueva búsqueda. | El formulario no envía el valor de la página actual; la búsqueda comienza en la primera página según las reglas fuente. |
 
 ## Bloqueos y preguntas pendientes
 

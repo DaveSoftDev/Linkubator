@@ -12,7 +12,7 @@
   - Inicio: DLG, 27-X-2026 («Inicia la implementación»), instrucción explícita en esta conversación.
   - Finalización: 27-X-2026; pruebas focalizadas 42/42 y `git diff --check` satisfactorio.
   - Aceptación humana del resultado: DLG, 27-X-2026 («Completado»), instrucción explícita en esta conversación.
-  - Evidencia consolidada: [T01–T04](#descomposición), [evidencia por criterio](#evidencia-por-criterio), [LinkListingIntegrationTests.cs](../../tests/Linkubator.Tests/Integration/LinkListingIntegrationTests.cs) y [WebStartupTests.cs](../../tests/Linkubator.Tests/Integration/WebStartupTests.cs).
+  - Evidencia consolidada: [T01–T04](#descomposición), [evidencia por criterio](#evidencia-por-criterio), [LinkListingIntegrationTests.cs](../../../tests/Linkubator.Tests/Integration/LinkListingIntegrationTests.cs) y [WebStartupTests.cs](../../../tests/Linkubator.Tests/Integration/WebStartupTests.cs).
 - La aceptación cierra S10.4, pero no cierra la etapa S10 ni autoriza el archivado.
 
 ## Descomposición
