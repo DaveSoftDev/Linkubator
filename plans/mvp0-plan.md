@@ -372,7 +372,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 | S10.2 | Aplicar la regla de `e` ignorado, filtro inexistente o ajeno ignorado y `q` por encima del máximo con error | IA |
 | S10.3 | Conservar filtros al buscar y al paginar, y descartar `p` en el formulario | IA |
 | S10.4 | Conectar el formulario de búsqueda del dashboard a `/app/enlaces` | IA |
-| S10.5 | Escribir tests HTTP y de datos derivados de los criterios aprobados en S4: combinación de `q` y `c`, ranking, 15 por página, fuera de rango, aislamiento por entidad y por usuario | IA |
+| S10.5 | Escribir tests HTTP y de datos derivados de los criterios aprobados en S4: combinación de `q` y `c`, ranking, 16 por página, fuera de rango, aislamiento por entidad y por usuario | IA |
 | S10.6 | Probar la búsqueda con los datos de ejemplo: acentos, términos, operadores literales, filtro de colección y paginación | Humano |
 
 **Definition of Done**

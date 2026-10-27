@@ -177,12 +177,31 @@ public sealed class PrivateListingQueryAnalyzerTests
         });
 
         // Act
-        PrivateListingQueryAnalysisResult result = PrivateListingQueryAnalyzer.Analyze(query, PrivateListingKind.Collections);
+        PrivateListingQueryAnalysisResult result = PrivateListingQueryAnalyzer.Analyze(query, PrivateListingKind.Links);
 
         // Assert
         Assert.True(result.HasSearchError);
+        Assert.Equal("El texto de búsqueda supera la longitud máxima permitida.", result.SearchErrorMessage);
         Assert.Equal(2, result.PageNumber);
         Assert.Null(result.SearchText);
+    }
+
+    [Fact]
+    public void Analyze_WhenSearchIsAtUnicodeCodePointLimit_AcceptsSearchText()
+    {
+        // Arrange
+        string atLimit = string.Concat(Enumerable.Repeat("😀", PrivateListingQueryAnalyzer.MaxSearchTextLength));
+        IQueryCollection query = new QueryCollection(new Dictionary<string, StringValues>
+        {
+            ["q"] = new StringValues(atLimit)
+        });
+
+        // Act
+        PrivateListingQueryAnalysisResult result = PrivateListingQueryAnalyzer.Analyze(query, PrivateListingKind.Links);
+
+        // Assert
+        Assert.False(result.HasSearchError);
+        Assert.Equal(atLimit, result.SearchText);
     }
 
     [Fact]
