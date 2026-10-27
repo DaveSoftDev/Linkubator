@@ -133,6 +133,34 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetDashboardSearch_SubmitsQueryToOwnedLinkListing()
+    {
+        await AddLinks(_userId, _collectionId, 1, "DashboardSearchMatch");
+        await AddLinks(_userId, _otherCollectionId, 1, "UnrelatedDashboardLink");
+        await AddLinks(_foreignUserId, _foreignCollectionId, 1, "DashboardSearchMatchPrivate");
+
+        using HttpResponseMessage dashboardResponse = await _client.GetAsync("/app");
+        string dashboardHtml = await dashboardResponse.Content.ReadAsStringAsync();
+        string searchForm = Regex.Match(dashboardHtml, "<form\\b[^>]*class=\\\"search-form\\\"[^>]*>.*?</form>", RegexOptions.Singleline).Value;
+        string action = Regex.Match(searchForm, "action=\\\"([^\\\"]+)\\\"").Groups[1].Value;
+
+        using HttpResponseMessage listingResponse = await _client.GetAsync($"{action}?q=DashboardSearchMatch");
+        string listingHtml = await listingResponse.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, dashboardResponse.StatusCode);
+        Assert.DoesNotContain("method=\"post\"", searchForm, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("role=\"search\"", searchForm, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Buscar enlaces\"", searchForm, StringComparison.Ordinal);
+        Assert.Contains("name=\"q\"", searchForm, StringComparison.Ordinal);
+        Assert.DoesNotContain("name=\"p\"", searchForm, StringComparison.Ordinal);
+        Assert.Equal("/app/enlaces", action);
+        Assert.Equal(HttpStatusCode.OK, listingResponse.StatusCode);
+        Assert.Equal(["DashboardSearchMatch 01"], CardTitles(listingHtml));
+        Assert.DoesNotContain("UnrelatedDashboardLink", listingHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("DashboardSearchMatchPrivate", listingHtml, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task GetDashboard_WithMoreLinks_PreservesTwelveRecentLinks()
     {
         await AddLinks(_userId, _collectionId, 17, "Lectura");
@@ -156,6 +184,47 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
         string html = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(["Lectura 01", "Lectura 03", "Lectura 02"], CardTitles(html));
+    }
+
+    [Fact]
+    public async Task GetLinks_WithSearch_RanksResultsBeforeDateAndIdTieBreakers()
+    {
+        DateTime createdAt = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        await AddLink(_userId, _collectionId, "needle", createdAt);
+        await AddLink(_userId, _collectionId, "needle needle", createdAt);
+
+        using HttpResponseMessage response = await _client.GetAsync("/app/enlaces?q=needle");
+        string html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(["needle needle", "needle"], CardTitles(html));
+    }
+
+    [Fact]
+    public async Task GetListings_WithSameQuery_ReturnsOnlyItsEntityAndOwnedData()
+    {
+        const string collectionName = "CrossEntityNeedle";
+        const string ownLinkTitle = "CrossEntityNeedleLink";
+        const string foreignLinkTitle = "CrossEntityNeedleForeign";
+        long matchingCollectionId = await AddCollection(_userId, collectionName);
+        await _keeper.ExecuteAsync(
+            "INSERT INTO CollectionSearch (rowid, UserId, Name, Description) VALUES (@Id, @UserId, @Name, '');",
+            new { Id = matchingCollectionId, UserId = _userId, Name = SearchTextNormalizer.Normalize(collectionName) });
+        await AddLink(_userId, _collectionId, ownLinkTitle, DateTime.UtcNow);
+        await AddLink(_foreignUserId, _foreignCollectionId, foreignLinkTitle, DateTime.UtcNow);
+
+        using HttpResponseMessage linksResponse = await _client.GetAsync("/app/enlaces?q=CrossEntityNeedle&userId=" + _foreignUserId);
+        string linksHtml = await linksResponse.Content.ReadAsStringAsync();
+        using HttpResponseMessage collectionsResponse = await _client.GetAsync("/app/colecciones?q=CrossEntityNeedle");
+        string collectionsHtml = WebUtility.HtmlDecode(await collectionsResponse.Content.ReadAsStringAsync());
+        string collectionsTable = Regex.Match(collectionsHtml, "<table\\b.*?</table>", RegexOptions.Singleline).Value;
+
+        Assert.Equal(HttpStatusCode.OK, linksResponse.StatusCode);
+        Assert.Equal([ownLinkTitle], CardTitles(linksHtml));
+        Assert.DoesNotContain(foreignLinkTitle, linksHtml, StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, collectionsResponse.StatusCode);
+        Assert.Contains(collectionName, collectionsTable, StringComparison.Ordinal);
+        Assert.DoesNotContain(ownLinkTitle, collectionsTable, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -292,12 +361,14 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetLinks_WithOversizedSearch_ShowsErrorWithoutResults()
+    public async Task GetLinks_WithOversizedSearch_ShowsAccessibleErrorWithoutResults()
     {
         using HttpResponseMessage response = await _client.GetAsync("/app/enlaces?q=" + new string('a', 101));
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("El texto de búsqueda supera la longitud máxima permitida.", html, StringComparison.Ordinal);
+        Assert.Contains("role=\"alert\"", html, StringComparison.Ordinal);
         Assert.Empty(CardTitles(html));
     }
 
@@ -308,7 +379,7 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
         await AddLinks(_userId, _otherCollectionId, 1, "Otra");
 
         using HttpResponseMessage response = await _client.GetAsync(
-            $"/app/enlaces?c={_collectionId}&c={_otherCollectionId}&p=1&p=invalid&q=Lectura&q=Otra&e=invalid&unknown=invalid");
+            $"/app/enlaces?c={_collectionId}&c={_otherCollectionId}&p=1&p=invalid&q=Lectura&q=Otra&e=invalid&e=999&unknown=invalid");
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -373,6 +444,20 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
         => _keeper.ExecuteScalarAsync<long>(
             "INSERT INTO Collection (UserId, Name, Slug, IsPublic) VALUES (@UserId, @Name, @Slug, 0); SELECT last_insert_rowid();",
             new { UserId = userId, Name = name, Slug = Guid.NewGuid().ToString("N") });
+
+    private async Task<long> AddLink(long userId, long collectionId, string title, DateTime createdAt)
+    {
+        string url = $"https://example.com/{collectionId}/{Guid.NewGuid():N}";
+        long id = await _keeper.ExecuteScalarAsync<long>(
+            @"INSERT INTO Link (UserId, CollectionId, UrlOriginal, UrlNormalized, Title, IsPublic, CreatedAt)
+              VALUES (@UserId, @CollectionId, @Url, @Url, @Title, 0, @CreatedAt); SELECT last_insert_rowid();",
+            new { UserId = userId, CollectionId = collectionId, Url = url, Title = title, CreatedAt = createdAt });
+        await _keeper.ExecuteAsync(
+            @"INSERT INTO LinkSearch (rowid, UserId, UrlOriginal, Title, CollectionName)
+              VALUES (@Id, @UserId, @Url, @Title, @CollectionName);",
+            new { Id = id, UserId = userId, Url = url, Title = SearchTextNormalizer.Normalize(title), CollectionName = string.Empty });
+        return id;
+    }
 
     private async Task AddLinks(long userId, long collectionId, int count, string prefix)
     {

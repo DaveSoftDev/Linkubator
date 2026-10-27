@@ -597,6 +597,40 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task PostNewLink_WithPublicRequestInPrivateCollection_ShowsAccessibleErrorOnListing()
+    {
+        Dictionary<string, string> fields = NewFields(_collectionId);
+        fields["Input.IsPublic"] = "true";
+
+        using HttpResponseMessage response = await Post(fields);
+        IEnumerable<string> setCookieHeaders = response.Headers.GetValues("Set-Cookie");
+        string tempDataCookie = setCookieHeaders.Single(header => header.StartsWith(TempDataCookieName + "=", StringComparison.Ordinal))
+            .Split(';', 2)[0];
+        using HttpRequestMessage listingRequest = new(HttpMethod.Get, response.Headers.Location);
+        listingRequest.Headers.Add("Cookie", tempDataCookie);
+
+        using HttpResponseMessage listing = await _client.SendAsync(listingRequest);
+        string html = await listing.Content.ReadAsStringAsync();
+        string decodedHtml = WebUtility.HtmlDecode(html);
+        string alert = Regex.Match(html, "<div\\b(?=[^>]*class=\\\"app-alert app-alert--error\\\")(?=[^>]*role=\\\"status\\\")(?=[^>]*aria-live=\\\"polite\\\")[^>]*>.*?</div>", RegexOptions.Singleline).Value;
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, listing.StatusCode);
+        Assert.Contains("No se puede hacer público un enlace de una colección privada", WebUtility.HtmlDecode(alert), StringComparison.Ordinal);
+        Assert.Equal(0, await LinkCount());
+    }
+
+    [Fact]
+    public async Task GetLinks_WithoutPrivacyError_DoesNotRenderPrivacyNotice()
+    {
+        using HttpResponseMessage listing = await _client.GetAsync("/app/enlaces");
+        string html = WebUtility.HtmlDecode(await listing.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, listing.StatusCode);
+        Assert.DoesNotContain("No se puede hacer público un enlace de una colección privada", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task PostNewLink_WithoutAntiforgeryToken_RejectsWithoutCreatingLink()
     {
         using HttpResponseMessage response = await _client.PostAsync(CreateRoute, new FormUrlEncodedContent(NewFields(_collectionId)));
