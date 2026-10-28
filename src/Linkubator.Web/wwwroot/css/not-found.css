@@ -1,0 +1,24 @@
+.not-found { padding-block: 64px 48px; }
+.not-found__hero { display: grid; grid-template-columns: 1.15fr 1fr; gap: 64px; align-items: center; }
+.not-found h1 { margin-block: 20px 24px; font-size: clamp(36px, 4.5vw, 60px); text-wrap: balance; }
+.not-found__copy .landing-button { margin-top: 32px; }
+.public-shell .not-found__note { margin-top: 20px; font-size: 12px; color: var(--private-light-grey); }
+.not-found__illustration { position: relative; display: grid; justify-items: center; padding: 28px 20px 32px; overflow: hidden; border: 1px solid rgba(95, 255, 166, .2); border-radius: 20px; background: radial-gradient(ellipse at 50% 40%, rgba(95, 255, 166, .12), transparent 70%), #101716; }
+.not-found__coordinate { font-size: 9px; letter-spacing: .12em; color: var(--private-light-grey); text-align: center; }
+.not-found__illustration svg { width: 100%; max-width: 360px; height: auto; }
+.not-found__orbit { fill: none; stroke: rgba(95, 255, 166, .12); stroke-width: 1; }
+.not-found__trail { fill: none; stroke: rgba(95, 255, 166, .4); stroke-width: 1; stroke-dasharray: 4 7; }
+.not-found__node { fill: var(--private-accent); }
+.not-found__chain { fill: none; stroke: var(--private-accent); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
+.not-found__chain .not-found__break { stroke: var(--private-light-grey); stroke-width: 2; }
+.not-found__code { color: var(--private-accent); font-size: 72px; line-height: 1; font-weight: 750; letter-spacing: -.06em; text-align: center; }
+.not-found__code > span { display: block; margin-top: 12px; color: var(--private-light-grey); font-size: 12px; font-weight: 400; letter-spacing: normal; }
+.not-found__reassurance { display: flex; align-items: center; gap: 18px; margin-top: 64px; padding-top: 28px; border-top: 1px solid var(--public-line); font-size: 14px; }
+.not-found__reassurance > span { font-size: 30px; }
+.not-found__reassurance p > span { color: var(--private-light-grey); font-size: 12px; }
+@media (max-width: 760px) {
+  .not-found { padding-block: 40px 32px; }
+  .not-found__hero { grid-template-columns: 1fr; gap: 36px; }
+  .not-found__illustration { width: 100%; max-width: 440px; justify-self: center; }
+  .not-found__reassurance { margin-top: 36px; }
+}

@@ -2,7 +2,7 @@ namespace Linkubator.Web.Models.AppDashboard;
 
 public sealed class LinkCardViewModel
 {
-    public string Domain => Uri.TryCreate(Url, UriKind.Absolute, out Uri? uri) ? uri.Host : Url;
+    public string Domain => Linkubator.Web.Extensions.UrlExtensions.GetDomain(Url);
 
     public long Id { get; init; }
     public bool IsPublic { get; init; }

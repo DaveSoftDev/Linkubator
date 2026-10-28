@@ -9,29 +9,22 @@ public static class RequestLoggingDiagnosticContext
     {
         string requestPath = httpContext.Request.Path.Value ?? string.Empty;
         string requestQueryString = httpContext.Request.QueryString.Value ?? string.Empty;
+        string safeRequestPath = GetSafeRequestPath(requestPath, requestQueryString);
+        bool omitQueryString = IsPrivateListQuery(requestPath, requestQueryString)
+            || !string.Equals(safeRequestPath, requestPath, StringComparison.Ordinal);
 
-        if (IsPrivateListQuery(requestPath, requestQueryString))
-        {
-            diagnosticContext.Set("RequestPath", requestPath);
-            diagnosticContext.Set("RequestQueryString", string.Empty);
-            return;
-        }
-
-        if (ContainsTokenLikeParameter(requestQueryString) || ContainsSensitivePathToken(requestPath))
-        {
-            diagnosticContext.Set("RequestPath", "[redacted-token-url]");
-            diagnosticContext.Set("RequestQueryString", string.Empty);
-            return;
-        }
-
-        diagnosticContext.Set("RequestPath", requestPath);
-        diagnosticContext.Set("RequestQueryString", requestQueryString);
+        diagnosticContext.Set("RequestPath", safeRequestPath);
+        diagnosticContext.Set("RequestQueryString", omitQueryString ? string.Empty : requestQueryString);
     }
+
+    public static string GetSafeRequestPath(string requestPath, string requestQueryString)
+        => ContainsTokenLikeParameter(requestQueryString) || ContainsSensitivePathToken(requestPath)
+            ? "[redacted-token-url]"
+            : requestPath;
 
     public static bool IsPrivateListQuery(string requestPath, string requestQueryString)
         => requestPath.StartsWith("/app", StringComparison.OrdinalIgnoreCase)
-            && !string.IsNullOrEmpty(requestQueryString)
-            && requestQueryString.Contains("q=", StringComparison.OrdinalIgnoreCase);
+            && !string.IsNullOrEmpty(requestQueryString);
 
     public static bool ContainsTokenLikeParameter(string requestQueryString)
         => !string.IsNullOrEmpty(requestQueryString)

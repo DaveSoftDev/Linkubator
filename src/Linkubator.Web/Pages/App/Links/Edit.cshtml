@@ -94,31 +94,24 @@
             const collection = document.querySelector('#link-collection');
             const isPublic = document.querySelector('#link-public');
             const privacyHint = document.querySelector('#link-public-hint');
-            if (collection instanceof HTMLSelectElement && isPublic instanceof HTMLInputElement && privacyHint instanceof HTMLElement) {
-                let requestedVisibility = isPublic.checked;
-                isPublic.addEventListener('change', () => {
-                    if (!isPublic.disabled) {
-                        requestedVisibility = isPublic.checked;
-                    }
-                });
-
+            if (collection instanceof HTMLSelectElement && isPublic instanceof HTMLInputElement) {
                 const syncPrivacy = () => {
-                    const selectedCollection = collection.selectedOptions[0];
-                    const collectionChanged = selectedCollection?.value.length > 0
-                        && selectedCollection.value !== collection.dataset.currentCollectionId;
-                    const canMakePublic = !collectionChanged && selectedCollection?.dataset.public === 'true';
+                    const canMakePublic = collection.selectedOptions[0]?.dataset.public === 'true';
                     isPublic.disabled = !canMakePublic;
-                    isPublic.checked = canMakePublic && requestedVisibility;
-
-                    privacyHint.hidden = canMakePublic;
-                    privacyHint.textContent = collectionChanged
-                        ? 'Al cambiar de colección, el enlace pasará a ser privado.'
-                        : selectedCollection?.value.length > 0 && selectedCollection.dataset.public === 'false'
-                            ? 'Este enlace pertenece a una colección privada y no se puede hacer público.'
-                            : 'Selecciona una colección pública para poder hacer público el enlace.';
+                    if (!canMakePublic) {
+                        isPublic.checked = false;
+                    }
+                    if (privacyHint instanceof HTMLElement) {
+                        privacyHint.hidden = canMakePublic;
+                    }
                 };
 
-                collection.addEventListener('change', syncPrivacy);
+                collection.addEventListener('change', (event) => { isPublic.checked = false; syncPrivacy(); });
+                window.addEventListener('pageshow', (event) => {
+                    if (event.persisted) {
+                        syncPrivacy();
+                    }
+                });
                 syncPrivacy();
             }
         });

@@ -1,0 +1,96 @@
+@page "/{alias}/colecciones/{slug}"
+@model Linkubator.Web.Pages.Public.CollectionModel
+@{
+    Layout = "_PublicLayout";
+    ViewData["PublicAlias"] = Model.Alias;
+    ViewData["PublicSection"] = "collection";
+    ViewData["PublicHasCollections"] = true;
+    string displayAlias = Linkubator.Web.Extensions.AliasExtensions.GetDisplayName(Model.Alias);
+}
+
+@section PublicCollectionNavigation {
+    <a href="@($"/{Uri.EscapeDataString(Model.Alias)}/colecciones/{Uri.EscapeDataString(Model.Slug)}")" aria-current="location">@Model.CollectionName</a>
+}
+
+@section PublicHeading {
+<header class="public-heading public-profile-heading">
+    <p class="public-eyebrow">Una colección para descubrir</p>
+    <h1>Enlaces en @Model.CollectionName de @displayAlias</h1>
+    <p class="public-intro">Una selección de enlaces compartida por <a href="@($"/{Uri.EscapeDataString(Model.Alias)}/")">@displayAlias</a>.</p>
+    <span class="public-heading__decoration" aria-hidden="true">↗</span>
+</header>
+}
+
+<section class="public-section" aria-label="Enlaces públicos de la colección">
+    <div class="public-section__heading">
+        <p class="public-eyebrow">Dentro de esta colección</p>
+        <span class="public-section__note">Los enlaces se abren en otra pestaña <span aria-hidden="true">↗</span></span>
+    </div>
+    @if (Model.Links.Count == 0)
+    {
+        <div class="empty-state public-empty">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z" /></svg>
+            <p>@displayAlias todavía no ha publicado enlaces en esta colección</p>
+        </div>
+    }
+    else
+    {
+        <ul class="public-links">
+            @foreach (Linkubator.Application.Dtos.Models.PublicLinkDto link in Model.Links)
+            {
+                string linkTitle = string.IsNullOrWhiteSpace(link.Title) ? link.UrlOriginal : link.Title;
+                <li>
+                    <article class="link-card public-link">
+                        <div class="public-link__visual">
+                            @if (!string.IsNullOrWhiteSpace(link.Image))
+                            {
+                                <img src="@link.Image" alt="@linkTitle" loading="lazy" decoding="async" />
+                            }
+                            else
+                            {
+                                <span class="brand-mark public-link__placeholder" aria-hidden="true"><partial name="_BrandMark" /></span>
+                            }
+                        </div>
+                        <div class="link-card__body">
+                            <h2><a href="@link.UrlOriginal" rel="nofollow ugc noopener noreferrer" target="_blank">@linkTitle<span class="public-link__arrow" aria-hidden="true">↗</span><span class="main-table__sr-only"> (se abre en otra pestaña)</span></a></h2>
+                            @if (!string.IsNullOrWhiteSpace(link.Description))
+                            {
+                                <p class="public-description">@link.Description</p>
+                            }
+                            <span class="public-link__url">@Linkubator.Web.Extensions.UrlExtensions.GetDomain(link.UrlOriginal)</span>
+                        </div>
+                    </article>
+                </li>
+            }
+        </ul>
+
+        @if (Model.HasPreviousPage || Model.HasNextPage)
+        {
+            <nav aria-label="Paginación de enlaces" class="pagination public-pagination">
+                @if (Model.HasPreviousPage)
+                {
+                    int previousPage = Model.PageNumber - 1;
+                    string previousUrl = previousPage <= 1
+                        ? $"/{Uri.EscapeDataString(Model.Alias)}/colecciones/{Uri.EscapeDataString(Model.Slug)}"
+                        : $"/{Uri.EscapeDataString(Model.Alias)}/colecciones/{Uri.EscapeDataString(Model.Slug)}?p={previousPage}";
+                    <a href="@previousUrl" class="pagination__item">Anterior</a>
+                }
+                else
+                {
+                    <span class="pagination__item pagination__item--disabled" aria-disabled="true">Anterior</span>
+                }
+                <span class="public-pagination__position">Página @Model.PageNumber de @Model.PageCount</span>
+                @if (Model.HasNextPage)
+                {
+                    int nextPage = Model.PageNumber + 1;
+                    string nextUrl = $"/{Uri.EscapeDataString(Model.Alias)}/colecciones/{Uri.EscapeDataString(Model.Slug)}?p={nextPage}";
+                    <a href="@nextUrl" class="pagination__item">Siguiente</a>
+                }
+                else
+                {
+                    <span class="pagination__item pagination__item--disabled" aria-disabled="true">Siguiente</span>
+                }
+            </nav>
+        }
+    }
+</section>

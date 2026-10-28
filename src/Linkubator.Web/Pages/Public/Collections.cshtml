@@ -1,0 +1,51 @@
+@page "/{alias}/colecciones/"
+@model Linkubator.Web.Pages.Public.CollectionsModel
+@{
+    Layout = "_PublicLayout";
+    ViewData["PublicAlias"] = Model.Alias;
+    ViewData["PublicSection"] = "collections";
+    ViewData["PublicHasCollections"] = Model.PublicCollections.Count > 0;
+    string displayAlias = Linkubator.Web.Extensions.AliasExtensions.GetDisplayName(Model.Alias);
+}
+
+@section PublicHeading {
+<header class="public-heading public-profile-heading">
+    <p class="public-eyebrow">Una biblioteca con criterio propio</p>
+    <h1>Colecciones de @displayAlias</h1>
+    <p class="public-intro">Explora sus colecciones públicas. Un punto de partida para tu próximo descubrimiento.</p>
+    <span class="public-heading__decoration" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7V4h6l3 3h9v13H3z" /></svg></span>
+</header>
+}
+
+<section class="public-section" aria-label="Colecciones públicas">
+    <div class="public-section__heading">
+        <p class="public-eyebrow">Explora por colección</p>
+        <span class="public-section__note">Solo contenido que @displayAlias ha hecho público</span>
+    </div>
+    @if (Model.PublicCollections.Count == 0)
+    {
+        <div class="empty-state public-empty">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V4h6l3 3h9v13H3z" /></svg>
+            <p>@displayAlias todavía no ha creado colecciones</p>
+        </div>
+    }
+    else
+    {
+        <ul class="public-collections">
+            @foreach (Linkubator.Application.Dtos.Models.PublicCollectionSummaryDto collection in Model.PublicCollections)
+            {
+                string collectionUrl = $"/{Uri.EscapeDataString(Model.Alias)}/colecciones/{Uri.EscapeDataString(collection.Slug)}";
+                <li>
+                    <article class="public-collection">
+                        <div class="public-collection__symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7V4h6l3 3h9v13H3z" /></svg><span>↗</span></div>
+                        <h2><a href="@collectionUrl">@collection.Name</a></h2>
+                        @if (!string.IsNullOrWhiteSpace(collection.Description))
+                        {
+                            <p class="public-description">@collection.Description</p>
+                        }
+                    </article>
+                </li>
+            }
+        </ul>
+    }
+</section>

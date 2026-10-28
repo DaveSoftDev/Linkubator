@@ -31,11 +31,11 @@ public sealed class PresentationDemoModel : PageModel
     {
         Pages =
         [
-            new PaginationPageLinkViewModel { Label = "Anterior", Url = "/app/presentacion?page=1", IsCurrent = false, IsDisabled = false },
-            new PaginationPageLinkViewModel { Label = "1", Url = "/app/presentacion?page=1", IsCurrent = false, IsDisabled = false },
-            new PaginationPageLinkViewModel { Label = "2", Url = "/app/presentacion?page=2", IsCurrent = true, IsDisabled = false },
-            new PaginationPageLinkViewModel { Label = "3", Url = "/app/presentacion?page=3", IsCurrent = false, IsDisabled = false },
-            new PaginationPageLinkViewModel { Label = "Siguiente", Url = "/app/presentacion?page=3", IsCurrent = false, IsDisabled = false }
+            new PaginationPageLinkViewModel { Label = "Anterior", Url = "/app/presentacion?q=diseno&status=all&page=1", IsCurrent = false, IsDisabled = false },
+            new PaginationPageLinkViewModel { Label = "1", Url = "/app/presentacion?q=diseno&status=all&page=1", IsCurrent = false, IsDisabled = false },
+            new PaginationPageLinkViewModel { Label = "2", Url = "/app/presentacion?q=diseno&status=all&page=2", IsCurrent = true, IsDisabled = false },
+            new PaginationPageLinkViewModel { Label = "3", Url = "/app/presentacion?q=diseno&status=all&page=3", IsCurrent = false, IsDisabled = false },
+            new PaginationPageLinkViewModel { Label = "Siguiente", Url = "/app/presentacion?q=diseno&status=all&page=3", IsCurrent = false, IsDisabled = false }
         ]
     };
 

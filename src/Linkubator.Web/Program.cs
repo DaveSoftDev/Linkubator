@@ -1,6 +1,7 @@
 using Linkubator.Infrastructure;
 using Microsoft.AspNetCore.HostFiltering;
 using Serilog;
+using Serilog.Events;
 using ApplicationContracts = Linkubator.Application.Contracts;
 using CollectionService = Linkubator.Application.UseCases.Collections.CollectionService;
 using DashboardService = Linkubator.Application.UseCases.Dashboard.DashboardService;
@@ -9,6 +10,7 @@ using InfrastructureContracts = Linkubator.Infrastructure.Contracts;
 using InfrastructureDevelopmentIdentity = Linkubator.Infrastructure.DevelopmentIdentity;
 using WebDevelopmentIdentity = Linkubator.Web.DevelopmentIdentity;
 using WebLogging = Linkubator.Web.Logging;
+using WebOptions = Linkubator.Web.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,8 @@ string[] allowedHosts = builder.Configuration.GetValue<string>("AllowedHosts")?
     ?? ["localhost", "127.0.0.1", "[::1]"];
 
 builder.Services.Configure<HostFilteringOptions>(options => options.AllowedHosts = allowedHosts);
+builder.Services.Configure<WebOptions.PublicOriginOptions>(options =>
+    options.Origin = builder.Configuration[WebOptions.PublicOriginOptions.ConfigurationKey] ?? string.Empty);
 
 builder.Host.UseSerilog((context, services, loggerConfiguration) =>
     loggerConfiguration
@@ -28,6 +32,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<ApplicationContracts.ICollectionService, CollectionService>();
 builder.Services.AddScoped<ApplicationContracts.IDashboardService, DashboardService>();
 builder.Services.AddScoped<ApplicationContracts.ILinkService, LinkService>();
+builder.Services.AddScoped<ApplicationContracts.IPublicReadService, Linkubator.Application.UseCases.PublicReads.PublicReadService>();
 builder.Services.AddScoped<WebDevelopmentIdentity.DevelopmentCurrentUser>();
 builder.Services.AddScoped<WebDevelopmentIdentity.IWebUserProfile>(serviceProvider =>
     serviceProvider.GetRequiredService<WebDevelopmentIdentity.DevelopmentCurrentUser>());
@@ -101,6 +106,15 @@ app.UseStatusCodePages(async ctx =>
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging(options =>
 {
+    Func<HttpContext, string, double, int, IEnumerable<LogEventProperty>> getMessageTemplateProperties =
+        options.GetMessageTemplateProperties;
+    options.GetMessageTemplateProperties = (httpContext, requestPath, elapsedMilliseconds, statusCode) =>
+    {
+        string safeRequestPath = WebLogging.RequestLoggingDiagnosticContext.GetSafeRequestPath(
+            requestPath,
+            httpContext.Request.QueryString.Value ?? string.Empty);
+        return getMessageTemplateProperties(httpContext, safeRequestPath, elapsedMilliseconds, statusCode);
+    };
     options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
         WebLogging.RequestLoggingDiagnosticContext.Enrich(diagnosticContext, httpContext);

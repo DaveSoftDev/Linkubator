@@ -35,7 +35,8 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
                     WHERE l.UserId = c.UserId
                       AND l.CollectionId = c.Id
                       AND l.IsPublic = 1)
-              ORDER BY c.Name COLLATE LINKUBATOR_ES_ES ASC, c.Id ASC;",
+              ORDER BY c.CreatedAt DESC, c.Id DESC
+              LIMIT 5;",
             new { UserId = user.Id },
             cancellationToken: cancellationToken)))
             .Select(row => new PublicCollectionSummaryDto(row.Name, row.Slug, row.Description))
@@ -49,7 +50,7 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
                 AND l.IsPublic = 1
                 AND c.IsPublic = 1
               ORDER BY l.CreatedAt DESC, l.Id DESC
-              LIMIT 5;",
+              LIMIT 6;",
             new { UserId = user.Id },
             cancellationToken: cancellationToken))).ToList();
 

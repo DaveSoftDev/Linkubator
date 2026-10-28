@@ -1,0 +1,48 @@
+.privacy-content { padding-block: 36px 64px; }
+.privacy-heading { padding: 48px; }
+.privacy-heading h1 { font-size: clamp(36px, 4.5vw, 58px); margin-block: 18px 22px; }
+.privacy-emblem { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 28px; border: 1px solid var(--private-accent-o2); border-radius: 14px; background: rgba(95, 255, 166, .06); color: var(--private-accent); }
+.privacy-emblem svg { width: 26px; height: 26px; stroke-width: 1.4; }
+.privacy-home { color: var(--private-light-grey); font-size: 12px; }
+.privacy-notice { display: flex; align-items: start; gap: 16px; margin-top: 24px; padding: 22px 26px; border: 1px solid rgba(95, 255, 166, .18); border-radius: 10px; background: rgba(95, 255, 166, .035); }
+.privacy-notice__icon { display: grid; place-items: center; flex-shrink: 0; width: 24px; height: 24px; border: 1px solid var(--private-accent-o7); border-radius: 50%; color: var(--private-accent); font: italic 16px Georgia, serif; }
+.privacy-notice h2 { font-size: 15px; letter-spacing: -.01em; }
+.privacy-notice p { margin-top: 8px; color: var(--private-light-grey); font-size: 12px; line-height: 1.8; }
+.privacy-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); align-items: start; gap: 64px; margin-top: 54px; }
+.privacy-index { position: sticky; top: 28px; padding: 24px; border: 1px solid var(--public-line); border-radius: 12px; background: #101413; }
+.privacy-index > .public-eyebrow { margin-bottom: 20px; }
+.privacy-index > a { display: flex; align-items: baseline; gap: 12px; padding-block: 10px; font-size: 12px; line-height: 1.5; }
+.privacy-index > a > span { color: var(--private-accent); font-size: 10px; }
+.privacy-index .privacy-index__note { border-top: 1px solid var(--public-line); margin-top: 20px; padding-top: 20px; font-size: 11px; color: var(--private-light-grey); }
+.privacy-article { min-width: 0; max-width: 760px; }
+.privacy-article section { position: relative; scroll-margin-top: 28px; padding-block: 0 36px; margin-bottom: 36px; border-bottom: 1px solid var(--public-line); overflow-wrap: anywhere; }
+.privacy-article section:last-child { margin-bottom: 0; border-bottom: 0; padding-bottom: 0; }
+.privacy-section-number { display: block; margin-bottom: 10px; color: var(--private-accent); font-size: 11px; letter-spacing: .1em; }
+.privacy-article h2 { margin-bottom: 20px; font-size: 26px; }
+.privacy-article p { margin-top: 16px; font-size: 15px; line-height: 1.9; color: var(--private-light-grey); }
+.privacy-contact { padding: 20px 24px; border-left: 2px solid var(--private-accent-o7); margin-top: 24px; background: #111b15; border-radius: 0 8px 8px 0; }
+.privacy-contact strong { color: var(--private-text); font-size: 13px; font-weight: 600; }
+.privacy-contact p { font-size: 12px; }
+.privacy-closing { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin-top: 58px; padding: 32px 36px; border: 1px solid var(--public-line); border-radius: 12px; background: linear-gradient(120deg, #16251c, #101413); }
+.privacy-closing h2 { margin-block: 10px; font-size: 28px; }
+.privacy-closing div > p:last-child { color: var(--private-light-grey); font-size: 13px; }
+.privacy-closing .primary-button { display: inline-flex; gap: 16px; color: var(--main-bg); flex-shrink: 0; }
+
+@media (max-width: 900px) {
+  .privacy-layout { grid-template-columns: 210px minmax(0, 1fr); gap: 32px; }
+  .privacy-index { padding: 20px; }
+}
+
+@media (max-width: 640px) {
+  .privacy-content { padding-block: 24px 40px; }
+  .privacy-heading { padding: 30px 24px; }
+  .privacy-heading h1 { font-size: 36px; }
+  .privacy-home { display: none; }
+  .privacy-notice { padding: 20px; gap: 12px; }
+  .privacy-layout { grid-template-columns: minmax(0, 1fr); gap: 36px; margin-top: 32px; }
+  .privacy-index { position: static; }
+  .privacy-index__note { display: none; }
+  .privacy-article h2 { font-size: 24px; }
+  .privacy-article p { font-size: 14px; }
+  .privacy-closing { align-items: start; flex-direction: column; padding: 26px; margin-top: 36px; }
+}

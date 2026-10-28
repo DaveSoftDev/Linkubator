@@ -308,13 +308,13 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [x] Los tests de HTTPS, cabeceras, `Host` y antiforgery pasan; evidencia: [S7.9 → tareas y cierre](../specs/s7.9-pruebas-integracion-http/tasks.md#aceptación-y-cierre) (suite HTTP combinada 17/17; incluye estos controles).
-- [x] El `UserId` solo procede de la identidad inyectada; evidencia: [S7.3 → tareas y evidencia](../specs/s7.3-identidad-desarrollo-app/tasks.md#evidencia-por-criterio) y [S7.7 → tareas](../specs/s7.7-dashboard-y-respuestas-privadas/tasks.md#evidencia-por-criterio).
-- [ ] La base técnica de análisis de `p`, `c` y `q` está implementada; la integración de rutas y la comprobación de propiedad de `c` se completan según el cierre de [S7.6](../specs/s7.6-analisis-parametros-listados/tasks.md#aceptación-y-cierre) y las reglas de «Rutas privadas». La base técnica existe; siguen pendientes la integración con rutas consumidoras y la verificación de propiedad de `c` mediante Application.
-- [x] El dashboard cumple «Páginas privadas», sin resultados, edición ni eliminación; evidencia: [S7.7 → tareas y evidencia](../specs/s7.7-dashboard-y-respuestas-privadas/tasks.md#evidencia-por-criterio), aceptadas por DLG.
+- [x] Los tests de HTTPS, cabeceras, `Host` y antiforgery pasan; evidencia: [S7.9 → tareas y cierre](../specs/archive/s7.9-pruebas-integracion-http/tasks.md#aceptación-y-cierre) (suite HTTP combinada 17/17; incluye estos controles).
+- [x] El `UserId` solo procede de la identidad inyectada; evidencia: [S7.3 → tareas y evidencia](../specs/archive/s7.3-identidad-desarrollo-app/tasks.md#evidencia-por-criterio) y [S7.7 → tareas](../specs/archive/s7.7-dashboard-y-respuestas-privadas/tasks.md#evidencia-por-criterio).
+- [x] La base técnica de análisis de `p`, `c` y `q`, su integración en los listados y la comprobación de propiedad de `c` están implementadas, validadas y aceptadas; evidencia en [S7.6 → tareas y cierre](../specs/archive/s7.6-analisis-parametros-listados/tasks.md#aceptación-y-cierre).
+- [x] El dashboard cumple «Páginas privadas», sin resultados, edición ni eliminación; evidencia: [S7.7 → tareas y evidencia](../specs/archive/s7.7-dashboard-y-respuestas-privadas/tasks.md#evidencia-por-criterio), aceptadas por DLG.
 - [ ] Los logs no incluyen `q`. Sigue pendiente demostrar en un evento real del middleware que la query privada no se registra; véase [S7.8 → evidencia y bloqueos](../specs/s7.8-registro-peticiones-web/tasks.md#evidencia-por-criterio).
-- [x] La revisión manual del dashboard (teclado/foco, contraste y encabezados) está aceptada por DLG; consultar [S7.10 → tareas y cierre](../specs/s7.10-revision-manual-dashboard/tasks.md#aceptación-y-cierre).
-- [ ] El estilo base está aceptado por el humano. S7.11 se aceptó como revisión finalizada con flecos de diseño pendientes; esto no equivale a aceptar globalmente el estilo base. Véase [S7.11 → tareas y cierre](../specs/s7.11-validacion-estilo-base/tasks.md#aceptación-y-cierre).
+- [x] La revisión manual del dashboard (teclado/foco, contraste y encabezados) está aceptada por DLG; consultar [S7.10 → tareas y cierre](../specs/archive/s7.10-revision-manual-dashboard/tasks.md#aceptación-y-cierre).
+- [ ] El estilo base está aceptado por el humano. S7.11 se aceptó como revisión finalizada con flecos de diseño pendientes; esto no equivale a aceptar globalmente el estilo base. Véase [S7.11 → tareas y cierre](../specs/archive/s7.11-validacion-estilo-base/tasks.md#aceptación-y-cierre).
 
 ### S8: Gestión de colecciones (L)
 
@@ -353,14 +353,14 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [x] Las operaciones de enlaces cumplen [«Páginas privadas»](../context/specifications.md#páginas-privadas) y [«Errores controlados»](../context/specifications.md#errores-controlados). Evidencia de creación, publicación y gestión: [S9.1](../specs/s9.1-crear-enlace/tasks.md#evidencia-por-criterio), [S9.2](../specs/s9.2-publicacion-enlaces/tasks.md#evidencia-por-criterio), [S9.3](../specs/s9.3-gestionar-enlaces/tasks.md#evidencia-por-criterio) y [S9.7](../specs/s9.7-mensajes-validacion-url/tasks.md#aceptación-y-cierre).
-- [x] Un `CollectionId` manipulado se rechaza en la aplicación y por la clave foránea. Evidencia HTTP y de persistencia: [S9.4](../specs/s9.4-pruebas-integracion-http-enlaces/tasks.md#evidencia-por-criterio), [tests de persistencia SQLite](../tests/Linkubator.Tests/Integration/SqlitePersistenceIntegrationTests.cs) y [validación de claves foráneas del esquema](../tests/Linkubator.Tests/Infrastructure/SqliteMigrationServiceTests.cs).
-- [x] Una petición manipulada no puede hacer público un enlace de una colección privada. Evidencia: [S9.2](../specs/s9.2-publicacion-enlaces/tasks.md#evidencia-por-criterio) y [S9.4](../specs/s9.4-pruebas-integracion-http-enlaces/tasks.md#evidencia-por-criterio).
-- [x] Un enlace duplicado se rechaza indicando la colección donde está. Evidencia automatizada y manual: [S9.1](../specs/s9.1-crear-enlace/tasks.md#evidencia-por-criterio) y [S9.5](../specs/s9.5-revision-manual-enlaces/tasks.md#evidencia-por-criterio).
-- [x] La proyección FTS5 se mantiene sincronizada en cada operación. Evidencia de alta, edición, movimiento y borrado: [S9.1](../specs/s9.1-crear-enlace/tasks.md#evidencia-por-criterio) y [S9.3](../specs/s9.3-gestionar-enlaces/tasks.md#evidencia-por-criterio).
-- [x] Al hacer privada una colección, todos sus enlaces pasan a ser privados en la misma transacción. Evidencia manual y de concurrencia: [S9.5, CA03](../specs/s9.5-revision-manual-enlaces/tasks.md#evidencia-por-criterio), [test de persistencia](../tests/Linkubator.Tests/Integration/SqlitePersistenceIntegrationTests.cs) e [implementación transaccional](../src/Linkubator.Application/UseCases/Collections/CollectionService.cs).
+- [x] Las operaciones de enlaces cumplen [«Páginas privadas»](../context/specifications.md#páginas-privadas) y [«Errores controlados»](../context/specifications.md#errores-controlados). Evidencia de creación, publicación y gestión: [S9.1](../specs/archive/s9.1-crear-enlace/tasks.md#evidencia-por-criterio), [S9.2](../specs/archive/s9.2-publicacion-enlaces/tasks.md#evidencia-por-criterio), [S9.3](../specs/archive/s9.3-gestionar-enlaces/tasks.md#evidencia-por-criterio) y [S9.7](../specs/archive/s9.7-mensajes-validacion-url/tasks.md#aceptación-y-cierre).
+- [x] Un `CollectionId` manipulado se rechaza en la aplicación y por la clave foránea. Evidencia HTTP y de persistencia: [S9.4](../specs/archive/s9.4-pruebas-integracion-http-enlaces/tasks.md#evidencia-por-criterio), [tests de persistencia SQLite](../tests/Linkubator.Tests/Integration/SqlitePersistenceIntegrationTests.cs) y [validación de claves foráneas del esquema](../tests/Linkubator.Tests/Infrastructure/SqliteMigrationServiceTests.cs).
+- [x] Una petición manipulada no puede hacer público un enlace de una colección privada. Evidencia: [S9.2](../specs/archive/s9.2-publicacion-enlaces/tasks.md#evidencia-por-criterio) y [S9.4](../specs/archive/s9.4-pruebas-integracion-http-enlaces/tasks.md#evidencia-por-criterio).
+- [x] Un enlace duplicado se rechaza indicando la colección donde está. Evidencia automatizada y manual: [S9.1](../specs/archive/s9.1-crear-enlace/tasks.md#evidencia-por-criterio) y [S9.5](../specs/archive/s9.5-revision-manual-enlaces/tasks.md#evidencia-por-criterio).
+- [x] La proyección FTS5 se mantiene sincronizada en cada operación. Evidencia de alta, edición, movimiento y borrado: [S9.1](../specs/archive/s9.1-crear-enlace/tasks.md#evidencia-por-criterio) y [S9.3](../specs/archive/s9.3-gestionar-enlaces/tasks.md#evidencia-por-criterio).
+- [x] Al hacer privada una colección, todos sus enlaces pasan a ser privados en la misma transacción. Evidencia manual y de concurrencia: [S9.5, CA03](../specs/archive/s9.5-revision-manual-enlaces/tasks.md#evidencia-por-criterio), [test de persistencia](../tests/Linkubator.Tests/Integration/SqlitePersistenceIntegrationTests.cs) e [implementación transaccional](../src/Linkubator.Application/UseCases/Collections/CollectionService.cs).
 - [x] No se puede eliminar una colección que contiene enlaces. El test HTTP `PostDeleteCollection_WhenCollectionHasLinks_ShowsDomainRuleErrorAndKeepsState` pasó en la validación focalizada de esta actualización: [CollectionsListingIntegrationTests.cs](../tests/Linkubator.Tests/Integration/CollectionsListingIntegrationTests.cs).
-- [x] El humano ha aceptado las pantallas y los mensajes: [S9.5](../specs/s9.5-revision-manual-enlaces/tasks.md#aceptación-y-cierre), [S9.6](../specs/s9.6-revision-presentacion-enlaces/tasks.md#aceptación-y-cierre) y [S9.7](../specs/s9.7-mensajes-validacion-url/tasks.md#aceptación-y-cierre).
+- [x] El humano ha aceptado las pantallas y los mensajes: [S9.5](../specs/archive/s9.5-revision-manual-enlaces/tasks.md#aceptación-y-cierre), [S9.6](../specs/archive/s9.6-revision-presentacion-enlaces/tasks.md#aceptación-y-cierre) y [S9.7](../specs/archive/s9.7-mensajes-validacion-url/tasks.md#aceptación-y-cierre).
 
 ### S10: Listado y búsqueda de enlaces (L)
 
@@ -368,11 +368,11 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 | ID | Tarea | Resp. |
 |---|---|---|
-| S10.1 | Implementar `/app/enlaces` con `q`, `c` y `p`, orden por relevancia o por fecha, y estado vacío; validar que el rechazo de privacidad de [S9.2 → CA03](../specs/s9.2-publicacion-enlaces/spec.md#criterios-de-aceptación) presenta accesiblemente el aviso recibido | IA |
+| S10.1 | Implementar `/app/enlaces` con `q`, `c` y `p`, orden por relevancia o por fecha, y estado vacío; validar que el rechazo de privacidad de [S9.2 → CA03](../specs/archive/s9.2-publicacion-enlaces/spec.md#criterios-de-aceptación) presenta accesiblemente el aviso recibido | IA |
 | S10.2 | Aplicar la regla de `e` ignorado, filtro inexistente o ajeno ignorado y `q` por encima del máximo con error | IA |
 | S10.3 | Conservar filtros al buscar y al paginar, y descartar `p` en el formulario | IA |
 | S10.4 | Conectar el formulario de búsqueda del dashboard a `/app/enlaces` | IA |
-| S10.5 | Escribir tests HTTP y de datos derivados de los criterios aprobados en S4: combinación de `q` y `c`, ranking, 16 por página, fuera de rango, aislamiento por entidad y por usuario | IA |
+| S10.5 | Escribir tests HTTP y de datos derivados de los criterios aprobados en S4: combinación de `q` y `c`, ranking, 15 por página, fuera de rango, aislamiento por entidad y por usuario | IA |
 | S10.6 | Probar la búsqueda con los datos de ejemplo: acentos, términos, operadores literales, filtro de colección y paginación | Humano |
 
 **Definition of Done**
@@ -394,7 +394,7 @@ La etapa S10 queda cerrada globalmente por aceptación de DLG el 27-X-2026 («Ce
 |---|---|---|
 | S11.1 | Implementar la landing con textos, `meta`, `h1`, canonical y botones de login (a `/app`) y de registro (`href="#"`) | IA |
 | S11.2 | Implementar la página de usuario: últimos 5 enlaces, últimas 5 colecciones, textos de vacío, enlace a colecciones y `404` | IA |
-| S11.3 | Implementar la página de colecciones y la de colección, con paginación `p` y canonical normalizada | IA |
+| S11.3 | Implementar la página de colecciones y la de colección, con paginación `p` y canonical normalizada. Completada y aceptada por DLG el 27-X-2026 («Completado»); evidencia en [S11.3 → tareas y cierre](../specs/s11.3-paginas-publicas-colecciones/tasks.md#aceptación-y-cierre) | IA |
 | S11.4 | Aplicar `rel`, `target`, `alt` seguro, un solo `h1` e idioma `es` | IA |
 | S11.5 | Redirigir variantes de URL (mayúsculas y barra final) y servir `404` para alias, slugs antiguos y colecciones sin enlaces públicos | IA |
 | S11.6 | Escribir tests derivados de los criterios aprobados en S4: ausencia de contenido privado, orden, `404`, redirecciones, paginación y canonical | IA |

@@ -1,0 +1,22 @@
+:root { scrollbar-gutter: stable; }
+.public-header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 24px; min-height: 100px; padding-block: 20px; }
+.public-header > nav { grid-column: 2; grid-row: 1; justify-self: end; }
+.public-header > :is(.landing-nav__auth, .public-topbar__actions) { grid-column: 3; grid-row: 1; justify-self: end; }
+.landing-nav__auth { display: flex; align-items: center; flex-shrink: 0; gap: 10px; }
+:is(.landing, .public-shell) .landing-button { display: inline-flex; justify-content: center; align-items: center; gap: 24px; background: var(--private-accent); color: var(--main-bg); padding: 14px 22px; border: 1px solid var(--private-accent); border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; transition: background .2s, box-shadow .2s; }
+:is(.landing, .public-shell) .landing-button:hover { background: #a0ffcb; color: var(--main-bg); box-shadow: 0 0 26px var(--private-accent-o2); }
+:is(.landing, .public-shell) .landing-button--small { padding: 9px 18px; }
+@media (max-width: 1050px) {
+  .public-header .public-topbar__actions > span { display: none; }
+}
+@media (max-width: 760px) {
+  :is(.landing-container, .public-container).public-header { width: calc(100% - 40px); grid-template-columns: minmax(0, 1fr) auto; align-content: start; min-height: 82px; gap: 12px; padding-block: 16px; }
+  .public-header > :is(.landing-brand, .public-brand) { font-size: 23px; }
+  .public-header > :is(.landing-nav__auth, .public-topbar__actions) { grid-column: 2; }
+  .public-header > nav { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+}
+@media (max-width: 480px) {
+  :is(.landing-container, .public-container).public-header { grid-template-columns: minmax(0, 1fr); }
+  .public-header > :is(.landing-nav__auth, .public-topbar__actions) { grid-column: 1; grid-row: 2; justify-self: start; }
+  .public-header > nav { grid-row: 3; }
+}

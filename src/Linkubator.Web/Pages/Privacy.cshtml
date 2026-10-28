@@ -1,8 +1,116 @@
-﻿@page
+@page
 @model PrivacyModel
 @{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Privacidad";
+    ViewData["MetaDescription"] = "Información general sobre privacidad, datos personales y uso de Linkubator. Texto orientativo pendiente de revisión.";
+    ViewData["Robots"] = "noindex, follow";
+    ViewData["MainClass"] = "public-shell";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/public.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/privacy.css" asp-append-version="true" />
+}
+
+<a class="public-skip" href="#privacy-content">Saltar al contenido</a>
+<header class="public-topbar public-container public-header">
+    <a class="public-brand" href="/" aria-label="Linkubator, inicio">
+        <span class="brand-mark" aria-hidden="true"><partial name="_BrandMark" /></span>
+        <span>linkubator<span class="public-accent">.</span></span>
+    </a>
+    <div class="public-topbar__actions">
+        <partial name="_PublicAuthLinks" />
+    </div>
+</header>
+
+<div id="privacy-content" class="public-container privacy-content" tabindex="-1">
+    <header class="public-heading privacy-heading">
+        <span class="privacy-emblem" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z" /><path d="m8 12 3 3 5-6" /></svg></span>
+        <p class="public-eyebrow">Privacidad · Información general</p>
+        <h1>Tu privacidad merece<br /><span class="public-accent">las cosas claras.</span></h1>
+        <p class="public-intro">Un espacio para tus enlaces. Una explicación sencilla sobre tus datos, lo que compartes y lo que conviene tener en cuenta.</p>
+        <span class="public-heading__decoration" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z" /></svg></span>
+    </header>
+
+    <aside class="privacy-notice" aria-labelledby="privacy-draft-title">
+        <span class="privacy-notice__icon" aria-hidden="true">i</span>
+        <div>
+            <h2 id="privacy-draft-title">Texto orientativo, pendiente de revisión</h2>
+            <p>Esta página contiene un texto genérico, no una política de privacidad definitiva. Antes de publicar el servicio debe completarse con los datos del responsable, el contacto, los proveedores, las bases jurídicas y los plazos aplicables, y someterse a revisión legal.</p>
+        </div>
+    </aside>
+
+    <div class="privacy-layout">
+        <nav class="privacy-index" aria-label="Contenido de privacidad">
+            <p class="public-eyebrow">En esta página</p>
+            <a href="#datos"><span>01</span> Datos que compartes</a>
+            <a href="#uso"><span>02</span> Para qué se utilizan</a>
+            <a href="#contenido"><span>03</span> Lo que haces público</a>
+            <a href="#cookies"><span>04</span> Navegador y terceros</a>
+            <a href="#conservacion"><span>05</span> Conservación y seguridad</a>
+            <a href="#derechos"><span>06</span> Derechos y contacto</a>
+            <p class="privacy-index__note">Información a mano.<br />Sin perder el hilo.</p>
+        </nav>
+
+        <article class="privacy-article" aria-label="Información sobre privacidad">
+            <section id="datos" aria-labelledby="datos-title">
+                <span class="privacy-section-number" aria-hidden="true">01</span>
+                <h2 id="datos-title">Datos que compartes</h2>
+                <p>Al utilizar un servicio de gestión de enlaces puedes facilitar datos de cuenta y contenidos como enlaces, nombres de colecciones, descripciones o etiquetas. El tratamiento concreto depende de las funciones habilitadas y debe detallarse en la política definitiva.</p>
+                <p>Evita incluir datos personales sensibles o información de otras personas en los títulos, descripciones y contenidos que compartas.</p>
+            </section>
+            <section id="uso" aria-labelledby="uso-title">
+                <span class="privacy-section-number" aria-hidden="true">02</span>
+                <h2 id="uso-title">Para qué se utilizan</h2>
+                <p>De forma general, los datos de un servicio como Linkubator se utilizan para prestar sus funciones, organizar contenidos, gestionar la cuenta y atender cuestiones de funcionamiento y seguridad.</p>
+                <p>La versión definitiva de esta información deberá identificar las finalidades concretas y la base jurídica de cada tratamiento, sin dar por supuesto un consentimiento para usos distintos.</p>
+            </section>
+            <section id="contenido" aria-labelledby="contenido-title">
+                <span class="privacy-section-number" aria-hidden="true">03</span>
+                <h2 id="contenido-title">Lo que haces público</h2>
+                <p>Las páginas públicas de Linkubator muestran tu alias y los contenidos que decides hacer públicos, no tu nombre ni tu email. Los enlaces privados y los de colecciones privadas no forman parte de esas páginas.</p>
+                <p>Antes de hacer público un contenido, revisa su título, descripción y destino. Ten en cuenta que otras personas pueden consultar y compartir una página pública.</p>
+            </section>
+            <section id="cookies" aria-labelledby="cookies-title">
+                <span class="privacy-section-number" aria-hidden="true">04</span>
+                <h2 id="cookies-title">Tu navegador y los servicios de terceros</h2>
+                <p>Algunas preferencias de la interfaz, como el estado del menú lateral, pueden almacenarse en el navegador. La información definitiva debe identificar las cookies y tecnologías utilizadas y explicar su duración y finalidad.</p>
+                <p>Los enlaces e imágenes de otros sitios pueden conectar tu navegador con servicios de terceros. Esos sitios tienen sus propias condiciones y políticas de privacidad, que conviene consultar.</p>
+            </section>
+            <section id="conservacion" aria-labelledby="conservacion-title">
+                <span class="privacy-section-number" aria-hidden="true">05</span>
+                <h2 id="conservacion-title">Conservación y seguridad</h2>
+                <p>La política definitiva deberá indicar durante cuánto tiempo se conservan los datos, qué criterios se aplican para eliminarlos y qué proveedores intervienen en su tratamiento.</p>
+                <p>La protección de la información requiere medidas técnicas y organizativas adecuadas. Este texto genérico no certifica medidas concretas ni garantiza la ausencia de riesgos.</p>
+            </section>
+            <section id="derechos" aria-labelledby="derechos-title">
+                <span class="privacy-section-number" aria-hidden="true">06</span>
+                <h2 id="derechos-title">Tus derechos y cómo contactar</h2>
+                <p>Según la normativa aplicable, puedes tener derecho a solicitar el acceso, la rectificación o la supresión de tus datos, así como su portabilidad, la limitación del tratamiento o la oposición a determinados usos. También puedes acudir a la autoridad de protección de datos competente.</p>
+                <div class="privacy-contact">
+                    <strong>Contacto del responsable: pendiente de definir</strong>
+                    <p>Esta versión todavía no publica un canal para ejercer estos derechos. La identidad del responsable y un medio de contacto válido deben incorporarse antes de publicar la política definitiva.</p>
+                </div>
+            </section>
+        </article>
+    </div>
+
+    <aside class="privacy-closing">
+        <div><p class="public-eyebrow">Menos enlaces perdidos. Más ideas conectadas.</p><h2>Vuelve a lo que te inspira.</h2><p>Revisa tus colecciones y el contenido que compartes.</p></div>
+        <a class="landing-button" href="/app">Login <span aria-hidden="true">↗</span></a>
+    </aside>
+</div>
+
+<footer class="public-footer public-container">
+    <a class="public-brand" href="/" aria-label="Linkubator, inicio">
+        <span class="brand-mark" aria-hidden="true"><partial name="_BrandMark" /></span>
+        <span>linkubator<span class="public-accent">.</span></span>
+    </a>
+    <div class="footer-caption">
+        <p>Menos enlaces perdidos. Más ideas conectadas.</p>
+        <span>Copyright 2026. <a class="footer-link" asp-page="/Privacy" aria-current="page">Privacidad</a></span>
+    </div>
+    <nav class="footer-links" aria-label="Enlaces del pie de página">
+        <a href="#privacy-content">Volver arriba <span aria-hidden="true">↑</span></a>
+    </nav>
+</footer>
