@@ -102,6 +102,8 @@ Cualquier visitante podrá consultar sin iniciar sesión:
 
 Solo estas páginas son indexables. Las páginas públicas no muestran el nombre ni el email del usuario, y una colección o un enlace privados nunca aparecen en ellas.
 
+Además, cualquier visitante puede consultar una página informativa de privacidad desde los pies de página del sitio y del área privada, conforme a [specifications.md → «Información de privacidad»](specifications.md#información-de-privacidad).
+
 El contenido de cada página, sus rutas y sus respuestas están en [specifications.md → «Páginas públicas»](specifications.md#páginas-públicas).
 
 ## Páginas privadas
@@ -109,6 +111,7 @@ El contenido de cada página, sus rutas y sus respuestas están en [specificatio
 Cualquier usuario registrado e identificado tendrá acceso a la zona privada y podrá:
 
 - Acceder a su dashboard; sus rutas se definen en [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas).
+- Abrir su página pública desde el alias que aparece en el menú lateral.
 - Gestionar sus enlaces, colecciones, etiquetas y su usuario.
 - Las páginas privadas siguen una ruta común; sus detalles se definen en [specifications.md → «Rutas privadas»](specifications.md#rutas-privadas).
 

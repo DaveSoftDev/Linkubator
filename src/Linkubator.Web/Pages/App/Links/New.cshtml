@@ -12,7 +12,7 @@
         </div>
     </header>
 
-    <form method="post" id="link-form" class="collection-form">
+    <form method="post" id="link-new-form" class="collection-form">
         <input type="hidden" name="ru" value="@Model.ReturnRoute" />
         <div class="collection-form__heading">
             <span class="collection-form__icon" aria-hidden="true">
@@ -80,6 +80,14 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const invalidField = document.querySelector('#link-new-form .input-validation-error');
+            if (invalidField instanceof HTMLElement) {
+                invalidField.focus();
+                if (typeof invalidField.select === 'function' && invalidField.tagName === 'INPUT') {
+                    invalidField.select();
+                }
+            }
+
             const collection = document.querySelector('#link-collection');
             const isPublic = document.querySelector('#link-public');
             const privacyHint = document.querySelector('#link-public-hint');
@@ -95,14 +103,13 @@
                     }
                 };
 
-                collection.addEventListener('change', syncPrivacy);
-                window.addEventListener('pageshow', syncPrivacy);
+                collection.addEventListener('change', (event) => { isPublic.checked = false; syncPrivacy(); });
+                window.addEventListener('pageshow', (event) => {
+                    if (event.persisted) {
+                        syncPrivacy();
+                    }
+                });
                 syncPrivacy();
-            }
-
-            const invalidField = document.querySelector('#link-form .input-validation-error');
-            if (invalidField instanceof HTMLElement) {
-                invalidField.focus();
             }
         });
     </script>

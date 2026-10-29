@@ -81,21 +81,22 @@ public sealed class CollectionsModel : PrivatePageModel
             Description = "Prueba de nuevo con otra búsqueda o crea una colección.",
         };
 
-        if (analysis.HasSearchError)
+        if (analysis.HasAnyError)
         {
-            List<PageErrorSummaryItemViewModel> errors = [];
-            if (analysis.SearchErrorMessage is not null)
+            ErrorSummary = new PageErrorSummaryViewModel
             {
-                errors.Add(new PageErrorSummaryItemViewModel { Message = analysis.SearchErrorMessage });
-            }
-            ErrorSummary = new PageErrorSummaryViewModel { Items = errors };
+                Items = new[] { analysis.PageErrorMessage, analysis.SearchErrorMessage }
+                    .OfType<string>()
+                    .Select(message => new PageErrorSummaryItemViewModel { Message = message })
+                    .ToArray(),
+            };
             HasListingError = true;
             return Page();
         }
 
         ApplicationResults.Result<CollectionPageDto> result = await _collectionService.ListCollectionsPage(
             analysis.SearchText,
-            analysis.HasPageError ? 1 : analysis.PageNumber,
+            analysis.PageNumber,
             cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {

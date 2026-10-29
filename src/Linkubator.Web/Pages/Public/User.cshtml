@@ -1,0 +1,99 @@
+@page "/{alias}/"
+@model Linkubator.Web.Pages.Public.UserModel
+@{
+    Layout = "_PublicLayout";
+    ViewData["PublicAlias"] = Model.PublicUser.Alias;
+    ViewData["PublicSection"] = "profile";
+    ViewData["PublicHasCollections"] = Model.PublicUser.PublicCollections.Count > 0;
+    string displayAlias = Linkubator.Web.Extensions.AliasExtensions.GetDisplayName(Model.PublicUser.Alias);
+}
+
+@section PublicHeading {
+<header class="public-heading public-profile-heading">
+    <p class="public-eyebrow">Una mirada personal a la web</p>
+    <h1>Enlaces favoritos de @displayAlias</h1>
+    <p class="public-intro">Descubrimientos, recursos e ideas que merecen tener un lugar al que volver.</p>
+    <span class="public-heading__decoration" aria-hidden="true">↗</span>
+</header>
+}
+
+<section aria-labelledby="latest-links-title" class="public-section">
+    <div class="public-section__heading">
+        <div><p class="public-eyebrow">Lo más reciente</p><h2 id="latest-links-title">Los últimos enlaces de @displayAlias</h2></div>
+        <span class="public-section__note">Una selección de sus últimos descubrimientos</span>
+    </div>
+    @if (Model.PublicUser.RecentLinks.Count == 0)
+    {
+        <div class="empty-state public-empty">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z" /></svg>
+            <p>@displayAlias todavía no ha creado enlaces</p>
+        </div>
+    }
+    else
+    {
+        <ul class="public-links">
+            @foreach (Linkubator.Application.Dtos.Models.PublicLinkDto link in Model.PublicUser.RecentLinks)
+            {
+                string linkTitle = string.IsNullOrWhiteSpace(link.Title) ? link.UrlOriginal : link.Title;
+                <li>
+                    <article class="link-card public-link">
+                        <div class="public-link__visual">
+                            @if (!string.IsNullOrWhiteSpace(link.Image))
+                            {
+                                <img src="@link.Image" alt="@linkTitle" loading="lazy" decoding="async" />
+                            }
+                            else
+                            {
+                                <span class="brand-mark public-link__placeholder" aria-hidden="true"><partial name="_BrandMark" /></span>
+                            }
+                        </div>
+                        <div class="link-card__body">
+                            <h3><a href="@link.UrlOriginal" rel="nofollow ugc noopener noreferrer" target="_blank">@linkTitle<span class="public-link__arrow" aria-hidden="true">↗</span><span class="main-table__sr-only"> (se abre en otra pestaña)</span></a></h3>
+                            @if (!string.IsNullOrWhiteSpace(link.Description))
+                            {
+                                <p class="public-description">@link.Description</p>
+                            }
+                            <span class="public-link__url">@Linkubator.Web.Extensions.UrlExtensions.GetDomain(link.UrlOriginal)</span>
+                        </div>
+                    </article>
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+<section aria-labelledby="latest-collections-title" class="public-section">
+    <div class="public-section__heading">
+        <div><p class="public-eyebrow">Cada idea en su sitio</p><h2 id="latest-collections-title">Las últimas colecciones de @displayAlias</h2></div>
+        @if (Model.PublicUser.PublicCollections.Count > 0)
+        {
+            <a href="@($"/{Uri.EscapeDataString(Model.PublicUser.Alias)}/colecciones/")" class="view-switch__button">Ver todas las colecciones <span aria-hidden="true">↗</span></a>
+        }
+    </div>
+    @if (Model.PublicUser.PublicCollections.Count == 0)
+    {
+        <div class="empty-state public-empty">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V4h6l3 3h9v13H3z" /></svg>
+            <p>@displayAlias todavía no ha creado colecciones</p>
+        </div>
+    }
+    else
+    {
+        <ul class="public-collections">
+            @foreach (Linkubator.Application.Dtos.Models.PublicCollectionSummaryDto collection in Model.PublicUser.PublicCollections)
+            {
+                string collectionUrl = $"/{Uri.EscapeDataString(Model.PublicUser.Alias)}/colecciones/{Uri.EscapeDataString(collection.Slug)}";
+                <li>
+                    <article class="public-collection">
+                        <div class="public-collection__symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 7V4h6l3 3h9v13H3z" /></svg><span>↗</span></div>
+                        <h3><a href="@collectionUrl">@collection.Name</a></h3>
+                        @if (!string.IsNullOrWhiteSpace(collection.Description))
+                        {
+                            <p class="public-description">@collection.Description</p>
+                        }
+                    </article>
+                </li>
+            }
+        </ul>
+    }
+</section>

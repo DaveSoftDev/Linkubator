@@ -30,12 +30,18 @@ internal sealed class SqliteRepositoryTestDatabase : IAsyncDisposable
     public SqliteConnection OpenConnection()
         => _connectionFactory.CreateOpenConnection();
 
-    public async Task<long> SeedCollection(long userId, string name, string slug, bool isPublic, string? description = null)
+    public async Task<long> SeedCollection(
+        long userId,
+        string name,
+        string slug,
+        bool isPublic,
+        string? description = null,
+        DateTime? createdAt = null)
     {
         await using SqliteConnection connection = OpenConnection();
         long collectionId = await connection.ExecuteScalarAsync<long>(@"
-            INSERT INTO Collection (UserId, Name, Slug, Description, IsPublic)
-            VALUES (@UserId, @Name, @Slug, @Description, @IsPublic);
+            INSERT INTO Collection (UserId, Name, Slug, Description, IsPublic, CreatedAt)
+            VALUES (@UserId, @Name, @Slug, @Description, @IsPublic, @CreatedAt);
             SELECT last_insert_rowid();
         ", new
         {
@@ -44,6 +50,7 @@ internal sealed class SqliteRepositoryTestDatabase : IAsyncDisposable
             Slug = slug,
             Description = description,
             IsPublic = isPublic ? 1 : 0,
+            CreatedAt = createdAt ?? DateTime.UtcNow,
         });
         await connection.ExecuteAsync(
             "INSERT INTO CollectionSearch (rowid, UserId, Name, Description) VALUES (@Id, @UserId, @Name, @Description);",

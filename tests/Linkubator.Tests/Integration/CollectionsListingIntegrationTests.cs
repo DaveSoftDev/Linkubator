@@ -12,6 +12,43 @@ public sealed class CollectionsListingIntegrationTests
     private const string DemoEmail = "user@linkubator.test";
     private const string ValidArgon2idHash = "$argon2id$v=19$m=65536,t=3,p=1$42xS9y5nNCo8mABa9Y0KQw$w2hDMTrLZgBZ0Iqk7Q1m5J0C2U0xHgpiA62b0mXkVQ4";
 
+    [Theory]
+    [InlineData(false, "Privada")]
+    [InlineData(true, "Pública")]
+    public async Task GetCollections_WithCollection_RendersCompactListWithDetailsAndManagementActions(bool isPublic, string status)
+    {
+        string databasePath = NewDatabasePath();
+        const string collectionName = "Ideas <favoritas>";
+        const string description = "Recursos <importantes>";
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient();
+            await SeedCollections(databasePath, DemoEmail, [collectionName]);
+            await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+            long collectionId = await connection.QuerySingleAsync<long>(
+                "UPDATE Collection SET Description = @Description, IsPublic = @IsPublic WHERE Name = @Name RETURNING Id;",
+                new { Description = description, IsPublic = isPublic, Name = collectionName });
+
+            string html = await client.GetStringAsync("/app/colecciones");
+            string listingHtml = GetCollectionListHtml(html);
+
+            Assert.Contains("links-grid links-grid--list collections-list", listingHtml, StringComparison.Ordinal);
+            Assert.Contains("Ideas &lt;favoritas&gt;", listingHtml, StringComparison.Ordinal);
+            Assert.Contains("Recursos &lt;importantes&gt;", listingHtml, StringComparison.Ordinal);
+            Assert.Contains(status, System.Net.WebUtility.HtmlDecode(listingHtml), StringComparison.Ordinal);
+            Assert.Contains("0 enlaces", listingHtml, StringComparison.Ordinal);
+            Assert.Contains($"href=\"/app/colecciones/{collectionId}/editar\"", listingHtml, StringComparison.Ordinal);
+            Assert.Contains($"href=\"/app/colecciones/{collectionId}/eliminar\"", listingHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("<table", html, StringComparison.Ordinal);
+            Assert.Matches("href=\"/css/collection-list(?:\\.[a-z0-9]+)?\\.css", html);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
     [Fact]
     public async Task GetCollections_WhenNoCollectionsExist_RendersAccessibleEmptyState()
     {
@@ -28,7 +65,7 @@ public sealed class CollectionsListingIntegrationTests
             Assert.Contains("action=\"/app/colecciones\"", html, StringComparison.Ordinal);
             Assert.Contains("role=\"status\"", html, StringComparison.Ordinal);
             Assert.Contains("No se han encontrado colecciones.", System.Net.WebUtility.HtmlDecode(html), StringComparison.Ordinal);
-            Assert.Contains("class=\"view-switch__button toolbar-tool\" href=\"/app/colecciones/nueva\"", html, StringComparison.Ordinal);
+            Assert.Matches("<a class=\"view-switch__button toolbar-tool\" href=\"/app/colecciones/nueva\">\\s*<svg[^>]*aria-hidden=\"true\"[^>]*><path d=\"M12 5V19M5 12H19\"></path></svg>\\s*Crear colección\\s*</a>", System.Net.WebUtility.HtmlDecode(html));
         }
         finally
         {
@@ -112,7 +149,7 @@ public sealed class CollectionsListingIntegrationTests
     }
 
     [Fact]
-    public async Task GetCollections_WhenPageIsInvalid_ShowsFirstPageWithoutError()
+    public async Task GetCollections_WhenPageIsInvalid_ShowsAccessibleErrorWithoutResults()
     {
         string databasePath = NewDatabasePath();
         try
@@ -121,13 +158,15 @@ public sealed class CollectionsListingIntegrationTests
             using HttpClient client = factory.CreateClient();
             await SeedCollections(databasePath, DemoEmail, ["First page collection"]);
 
-            using HttpResponseMessage response = await client.GetAsync("/app/colecciones?p=0");
+            using HttpResponseMessage response = await client.GetAsync("/app/colecciones?p=0&q=First");
             string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
             string listingHtml = GetCollectionListHtml(html);
 
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-            Assert.Contains("First page collection", listingHtml, StringComparison.Ordinal);
-            Assert.DoesNotContain("Los valores no son correctos.", html, StringComparison.Ordinal);
+            Assert.Contains("role=\"alert\"", html, StringComparison.Ordinal);
+            Assert.Contains("Los valores no son correctos.", html, StringComparison.Ordinal);
+            Assert.Contains("value=\"First\"", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("First page collection", listingHtml, StringComparison.Ordinal);
         }
         finally
         {
@@ -680,14 +719,14 @@ public sealed class CollectionsListingIntegrationTests
 
     private static string GetCollectionListHtml(string html)
     {
-        int start = html.IndexOf("<table", StringComparison.Ordinal);
+        int start = html.IndexOf("<ul id=\"saved-collections\"", StringComparison.Ordinal);
         if (start < 0)
         {
             return string.Empty;
         }
 
-        int end = html.IndexOf("</table>", start, StringComparison.Ordinal);
-        return end < 0 ? string.Empty : html[start..(end + "</table>".Length)];
+        int end = html.IndexOf("</ul>", start, StringComparison.Ordinal);
+        return end < 0 ? string.Empty : html[start..(end + "</ul>".Length)];
     }
 
     private static async Task<long> SeedOtherUsersCollection(string databasePath)

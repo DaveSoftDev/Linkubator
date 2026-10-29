@@ -1615,6 +1615,10 @@ svg {
   display: none;
 }
 
+.view-switch:not([hidden]) {
+  display: inline-flex;
+}
+
 .view-switch__button {
   display: inline-flex;
   align-items: center;

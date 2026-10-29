@@ -9,14 +9,9 @@
     <div class="brand-header">
         <div class="brand-header__left">
             <span class="brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                    <rect x="3" y="3" width="7" height="7" rx="1"></rect>
-                    <rect x="14" y="3" width="7" height="7" rx="1"></rect>
-                    <rect x="14" y="14" width="7" height="7" rx="1"></rect>
-                    <rect x="3" y="14" width="7" height="7" rx="1"></rect>
-                </svg>
+                <partial name="_BrandMark" />
             </span>
-            <h1 class="brand-name"><span class="brand-accent">L</span>inkubator</h1>
+            <h1 class="brand-name">linkubator<span class="brand-accent">.</span></h1>
         </div>
         <button class="sidebar-collapse" type="button" aria-expanded="@(isCollapsed ? "false" : "true")" aria-label="@(isCollapsed ? "Expandir menú lateral" : "Colapsar menú lateral")">
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
@@ -127,7 +122,7 @@
                     <strong>@Model.User.Name</strong>
                     @if (!string.IsNullOrWhiteSpace(Model.User.Alias))
                     {
-                        <small>@Model.User.Alias (@Model.User.Email)</small>
+                        <small><a class="profile-public-link" href="@($"{Context.Request.PathBase}/{Uri.EscapeDataString(Model.User.Alias)}/")" title="Ver mi página pública">@Linkubator.Web.Extensions.AliasExtensions.GetDisplayName(Model.User.Alias)<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7H17V16"></path></svg></a> (@Model.User.Email)</small>
                     }
                 </span>
             </span>

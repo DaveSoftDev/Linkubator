@@ -38,6 +38,66 @@ public sealed class SqlitePublicReadRepositoryTests
     }
 
     [Fact]
+    public async Task GetUserPage_WhenUserHasMoreThanFivePublicCollections_ReturnsFiveMostRecentInOrder()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        DateTime baseDate = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        long oldestId = await database.SeedCollection(42, "Oldest", "oldest", true, createdAt: baseDate);
+        long oldestIncludedId = await database.SeedCollection(42, "Oldest included", "oldest-included", true, createdAt: baseDate.AddDays(1));
+        long firstTieId = await database.SeedCollection(42, "First tie", "first-tie", true, createdAt: baseDate.AddDays(2));
+        long secondTieId = await database.SeedCollection(42, "Second tie", "second-tie", true, createdAt: baseDate.AddDays(2));
+        long newerId = await database.SeedCollection(42, "Newer", "newer", true, createdAt: baseDate.AddDays(3));
+        long newestId = await database.SeedCollection(42, "Newest", "newest", true, createdAt: baseDate.AddDays(4));
+        await database.SeedLink(42, oldestId, "https://example.test/oldest", "https://example.test/oldest", "Oldest", true);
+        await database.SeedLink(42, oldestIncludedId, "https://example.test/oldest-included", "https://example.test/oldest-included", "Oldest included", true);
+        await database.SeedLink(42, firstTieId, "https://example.test/first-tie", "https://example.test/first-tie", "First tie", true);
+        await database.SeedLink(42, secondTieId, "https://example.test/second-tie", "https://example.test/second-tie", "Second tie", true);
+        await database.SeedLink(42, newerId, "https://example.test/newer", "https://example.test/newer", "Newer", true);
+        await database.SeedLink(42, newestId, "https://example.test/newest", "https://example.test/newest", "Newest", true);
+        await using SqliteConnection connection = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
+
+        Linkubator.Application.Dtos.Models.PublicUserDto? result = await repository.GetUserPage("owner");
+
+        Assert.NotNull(result);
+        Assert.Equal(
+            new[] { "newest", "newer", "second-tie", "first-tie", "oldest-included" },
+            result.PublicCollections.Select(collection => collection.Slug));
+    }
+
+    [Fact]
+    public async Task GetUserPage_WhenUserHasMoreThanSixPublicLinks_ReturnsSixMostRecentInOrder()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Public", "public", true);
+        DateTime baseDate = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        await database.SeedLink(42, collectionId, "https://example.test/excluded", "https://example.test/excluded", "Excluded", true, new SqliteTestLinkOptions(CreatedAt: baseDate.AddDays(-1)));
+        await database.SeedLink(42, collectionId, "https://example.test/oldest", "https://example.test/oldest", "Oldest", true, new SqliteTestLinkOptions(CreatedAt: baseDate));
+        await database.SeedLink(42, collectionId, "https://example.test/oldest-included", "https://example.test/oldest-included", "Oldest included", true, new SqliteTestLinkOptions(CreatedAt: baseDate.AddDays(1)));
+        await database.SeedLink(42, collectionId, "https://example.test/first-tie", "https://example.test/first-tie", "First tie", true, new SqliteTestLinkOptions(CreatedAt: baseDate.AddDays(2)));
+        await database.SeedLink(42, collectionId, "https://example.test/second-tie", "https://example.test/second-tie", "Second tie", true, new SqliteTestLinkOptions(CreatedAt: baseDate.AddDays(2)));
+        await database.SeedLink(42, collectionId, "https://example.test/newer", "https://example.test/newer", "Newer", true, new SqliteTestLinkOptions(CreatedAt: baseDate.AddDays(3)));
+        await database.SeedLink(42, collectionId, "https://example.test/newest", "https://example.test/newest", "Newest", true, new SqliteTestLinkOptions(CreatedAt: baseDate.AddDays(4)));
+        await using SqliteConnection connection = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
+
+        Linkubator.Application.Dtos.Models.PublicUserDto? result = await repository.GetUserPage("owner");
+
+        Assert.NotNull(result);
+        Assert.Equal(
+            new[]
+            {
+                "https://example.test/newest",
+                "https://example.test/newer",
+                "https://example.test/second-tie",
+                "https://example.test/first-tie",
+                "https://example.test/oldest-included",
+                "https://example.test/oldest",
+            },
+            result.RecentLinks.Select(link => link.UrlOriginal));
+    }
+
+    [Fact]
     public async Task GetUserPage_WhenAliasDoesNotExist_ReturnsNull()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();

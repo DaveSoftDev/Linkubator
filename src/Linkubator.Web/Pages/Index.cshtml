@@ -1,26 +1,140 @@
-﻿@page
+@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Inicio";
+    ViewData["Title"] = "Linkubator, donde gestionar tus enlaces favoritos";
+    ViewData["MetaTitle"] = "Linkubator, donde gestionar tus enlaces favoritos";
+    ViewData["MetaDescription"] = "Linkubator es un servicio web que te permite gestionar tus enlaces favoritos en colecciones y etiquetas. Para que nunca más pierdas los enlaces importantes";
+    ViewData["MainClass"] = "landing";
 }
 
-<div class="min-h-screen bg-slate-950 text-slate-100">
-    <div class="mx-auto flex min-h-screen max-w-5xl items-center px-6 py-20">
-        <div class="w-full rounded-2xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl shadow-slate-950/50 sm:p-12">
-            <p class="mb-4 inline-flex rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
-                Fundaciones
-            </p>
-            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                Linkubator
-            </h1>
-            <p class="mt-6 max-w-2xl text-lg text-slate-300">
-                Base técnica del MVP0 preparada para arrancar la aplicación web, compilar estilos con Tailwind y dejar el entorno listo para el siguiente sprint.
-            </p>
-            <div class="mt-8 flex flex-wrap gap-4 text-sm text-slate-200">
-                <span class="rounded-full border border-slate-700 bg-slate-800 px-3 py-2">Razor Pages</span>
-                <span class="rounded-full border border-slate-700 bg-slate-800 px-3 py-2">HTTPS local</span>
-                <span class="rounded-full border border-slate-700 bg-slate-800 px-3 py-2">Tailwind integrado</span>
-            </div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/landing.css" asp-append-version="true" />
+}
+
+<a class="landing-skip" href="#inicio">Saltar al contenido</a>
+<header class="landing-nav landing-container public-header">
+    <a class="landing-brand" href="/" aria-label="Linkubator, inicio">
+        <span class="brand-mark" aria-hidden="true"><partial name="_BrandMark" /></span>
+        <span>linkubator<span class="landing-accent">.</span></span>
+    </a>
+    <nav aria-label="Navegación principal">
+        <a href="#caracteristicas">La herramienta</a>
+        <a href="#comunidad">La comunidad</a>
+    </nav>
+    <partial name="_PublicAuthLinks" />
+</header>
+
+<section id="inicio" class="landing-hero landing-container" aria-labelledby="hero-title" tabindex="-1">
+    <div class="landing-hero__copy">
+        <p class="landing-eyebrow"><span class="landing-status" aria-hidden="true"></span> Un lugar para tus grandes descubrimientos</p>
+        <h1 id="hero-title">Linkubator, para gestionar tus enlaces favoritos y no perderlos</h1>
+        <p class="landing-lead">Internet está lleno de buenas ideas.<br />Dales un lugar al que volver.</p>
+        <p class="landing-muted">Guarda lo que te inspira, organízalo en colecciones y etiquetas, y comparte solo lo que tú decidas. Menos caos. Más conexiones.</p>
+        <div class="landing-actions">
+            <a class="landing-button" href="/app">Login <span aria-hidden="true">↗</span></a>
+            <a class="landing-text-link" href="#caracteristicas">Descubre cómo funciona <span aria-hidden="true">↓</span></a>
         </div>
+        <p class="landing-hero__note">Tu próxima gran idea empieza con un enlace.</p>
     </div>
-</div>
+    <figure class="landing-preview" aria-labelledby="preview-caption">
+        <div class="landing-preview__bar"><span class="landing-window-dots" aria-hidden="true">● ● ●</span><span>Tu espacio de ideas</span><span aria-hidden="true">↗</span></div>
+        <a class="landing-preview__capture" href="~/brand/dashboard-preview.webp" aria-label="Ampliar la captura del dashboard de Linkubator">
+            <img src="~/brand/dashboard-preview.webp" asp-append-version="true" width="1440" height="1000" alt="Dashboard real de Linkubator: menú de colecciones, creación rápida, búsqueda y tarjetas de enlaces públicos y privados con datos de ejemplo." decoding="async" fetchpriority="high" />
+        </a>
+        <figcaption id="preview-caption">Captura real del producto · datos de ejemplo · pulsa para ampliar</figcaption>
+        <div class="landing-preview__badge" aria-hidden="true"><span>✓</span> Un enlace menos perdido.</div>
+    </figure>
+</section>
+
+<section class="landing-partners landing-container" aria-labelledby="partners-title">
+    <p id="partners-title" class="landing-eyebrow">Las buenas ideas no nacen solas</p>
+    <div class="landing-partner-logos" aria-label="Marcas ficticias de ejemplo">
+        <span>◈ forma<span class="landing-accent">®</span></span><span>orbit<span class="landing-accent">/</span>studio</span><span>↗ NÓMADA</span><span class="landing-partner-serif">lumina.</span><span>＋ nexo</span>
+    </div>
+    <p class="landing-disclaimer">Espacio para empresas colaboradoras · marcas ficticias de muestra, sin relación comercial.</p>
+</section>
+
+<section id="caracteristicas" class="landing-section landing-container" aria-labelledby="features-title">
+    <div class="landing-section-heading"><div><p class="landing-eyebrow">Del «lo guardo» al «lo tengo»</p><h2 id="features-title">Todo lo que te interesa.<br /><span class="landing-muted">Nada perdido por el camino.</span></h2></div><p>Una herramienta sencilla para conectar lo que descubres con lo que quieres hacer.</p></div>
+    <div class="landing-feature-grid">
+        <article class="landing-feature landing-feature--highlight">
+            <span class="landing-feature__number">01 / GUARDAR</span>
+            <svg class="landing-feature__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z" /></svg>
+            <h3>Un buen enlace merece<br />más que una pestaña.</h3>
+            <p>Reúne tus favoritos en un mismo lugar. Artículos, recursos e inspiración: vuelve a lo que importa.</p>
+            <div class="landing-feature__chips" aria-hidden="true"><span>↗ Ese artículo</span><span>↗ Esa idea</span><span>↗ Ese recurso</span></div>
+        </article>
+        <article class="landing-feature">
+            <span class="landing-feature__number">02 / ORGANIZAR</span>
+            <svg class="landing-feature__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V4h6l3 3h9v13H3z" /></svg>
+            <h3>Tu mundo.<br />Con tu propio orden.</h3>
+            <p>Crea colecciones y añade etiquetas. Pon cada descubrimiento en su sitio y encuéntralo a tu manera.</p>
+            <div class="landing-feature__chips" aria-hidden="true"><span># diseño</span><span># aprender</span><span># ideas</span></div>
+        </article>
+        <article class="landing-feature landing-feature--highlight">
+            <span class="landing-feature__number">03 / COMPARTIR</span>
+            <svg class="landing-feature__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m9 10 6-4M9 14l6 4" /></svg>
+            <h3>Lo bueno,<br />si tú quieres, se comparte.</h3>
+            <p>Tú eliges qué hacer público y qué mantener privado. Comparte tus descubrimientos sin compartirlo todo.</p>
+            <div class="landing-feature__chips"><span>Tu criterio. Tu control.</span></div>
+        </article>
+        <article class="landing-feature">
+            <span class="landing-feature__number">04 / ENCONTRAR</span>
+            <svg class="landing-feature__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6" /><path d="m15 15 6 6" /></svg>
+            <h3>Ese enlace.<br />Justo cuando lo necesitas.</h3>
+            <p>Busca entre tus enlaces y filtra por colección. Menos tiempo rebuscando, más tiempo aprovechando tus ideas.</p>
+            <div class="landing-feature__chips" aria-hidden="true"><span>Buscar</span><span>Filtrar</span><span>Encontrar</span></div>
+        </article>
+        <article class="landing-feature landing-feature--highlight">
+            <span class="landing-feature__number">05 / PERSONALIZAR</span>
+            <svg class="landing-feature__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21h9M16 3l5 5L9 20H4v-5zM14 5l5 5" /></svg>
+            <h3>Más que una URL.<br />Tu forma de recordarla.</h3>
+            <p>Edita el título y la descripción de tus enlaces para reconocerlos de un vistazo y recordar por qué los guardaste.</p>
+            <div class="landing-feature__chips" aria-hidden="true"><span>Tu título</span><span>Tu descripción</span></div>
+        </article>
+        <article class="landing-feature">
+            <span class="landing-feature__number">06 / REDESCUBRIR</span>
+            <svg class="landing-feature__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.6 7M3 4v7h7M12 7v5l3 2" /></svg>
+            <h3>Tus últimos hallazgos.<br />A un paso de volver.</h3>
+            <p>Reencuéntrate con tus enlaces recientes desde el dashboard y sigue explorando tu biblioteca a tu ritmo.</p>
+            <div class="landing-feature__chips" aria-hidden="true"><span>Últimos enlaces</span><span>Nuevas ideas</span></div>
+        </article>
+    </div>
+</section>
+
+<section class="landing-numbers landing-container" aria-labelledby="numbers-title">
+    <div><p class="landing-eyebrow">Pequeños enlaces. Grandes conexiones.</p><h2 id="numbers-title">Imagina todo lo<br />que puedes conectar.</h2><p class="landing-disclaimer">Cifras ilustrativas de una biblioteca de ejemplo.<br />No son métricas reales de usuarios ni del servicio.</p></div>
+    <dl><div><dt>Enlaces por redescubrir</dt><dd>1.280<span>↗</span></dd></div><div><dt>Colecciones con sentido</dt><dd>24<span>↗</span></dd></div><div><dt>Etiquetas que conectan</dt><dd>86<span>↗</span></dd></div></dl>
+</section>
+
+<section id="comunidad" class="landing-section landing-container" aria-labelledby="community-title">
+    <div class="landing-section-heading"><div><p class="landing-eyebrow">Diferentes personas. La misma curiosidad.</p><h2 id="community-title">Para quienes siempre<br />encuentran algo interesante.</h2></div><p>Diseño, desarrollo o aprendizaje: cada persona tiene su propia forma de conectar ideas.</p></div>
+    <p class="landing-disclaimer">Testimonios ilustrativos · personas y opiniones ficticias, no reseñas verificadas.</p>
+    <div class="landing-quotes">
+        <figure><span class="landing-quote-mark" aria-hidden="true">“</span><blockquote>Mi inspiración ya no vive en veinte pestañas abiertas. Ahora tiene un sitio al que sé volver.</blockquote><figcaption><span class="landing-person" aria-hidden="true">AL</span><span><strong>Alex L.</strong><span>Diseño de producto · perfil de ejemplo</span></span></figcaption></figure>
+        <figure><span class="landing-quote-mark" aria-hidden="true">“</span><blockquote>Documentación, artículos, referencias… Todo ordenado por proyectos, sin perder el hilo.</blockquote><figcaption><span class="landing-person landing-person--violet" aria-hidden="true">MR</span><span><strong>Mar R.</strong><span>Desarrollo web · perfil de ejemplo</span></span></figcaption></figure>
+        <figure><span class="landing-quote-mark" aria-hidden="true">“</span><blockquote>Me gusta poder compartir una colección de recursos y dejar el resto de mis ideas para mí.</blockquote><figcaption><span class="landing-person landing-person--peach" aria-hidden="true">DS</span><span><strong>Dani S.</strong><span>Aprendizaje continuo · perfil de ejemplo</span></span></figcaption></figure>
+    </div>
+</section>
+
+<section class="landing-cta landing-container" aria-labelledby="cta-title">
+    <p class="landing-eyebrow">Haz sitio a lo que viene</p>
+    <h2 id="cta-title">Tu próximo descubrimiento<br />merece quedarse<span>.</span></h2>
+    <p>Empieza a darle un hogar a tus enlaces favoritos.</p>
+    <div class="landing-actions"><a class="landing-button" href="/app">Login <span aria-hidden="true">↗</span></a><a class="landing-text-link" href="#" title="Registro no disponible" aria-describedby="registration-note">Registro <span aria-hidden="true">↗</span></a></div>
+    <p id="registration-note" class="landing-disclaimer">El registro todavía no está disponible.</p>
+</section>
+
+<footer class="landing-footer landing-container">
+    <a class="landing-brand" href="/" aria-label="Linkubator, inicio">
+        <span class="brand-mark" aria-hidden="true"><partial name="_BrandMark" /></span>
+        <span>linkubator<span class="landing-accent">.</span></span>
+    </a>
+    <div class="footer-caption">
+        <p>Menos enlaces perdidos. Más ideas conectadas.</p>
+        <span>Copyright 2026. <a class="footer-link" asp-page="/Privacy">Privacidad</a></span>
+    </div>
+    <nav class="footer-links" aria-label="Enlaces del pie de página">
+        <a href="#inicio">Volver arriba <span aria-hidden="true">↑</span></a>
+    </nav>
+</footer>

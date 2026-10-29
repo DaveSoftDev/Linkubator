@@ -1,0 +1,8 @@
+.brand-mark { flex-shrink: 0; }
+.brand-mark .brand-icon { display: block; width: 100%; height: 100%; }
+.link-card__brand-placeholder { position: absolute; inset: 0; display: grid; place-items: center; padding-bottom: 2.5rem; }
+.link-card__brand-placeholder .brand-mark { width: 56px; height: 56px; }
+.app-sidebar .profile-copy .profile-public-link { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; color: var(--private-accent); }
+.profile-public-link svg { width: 14px; height: 14px; flex-shrink: 0; margin-left:-7px;}
+.app-sidebar .profile-public-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.profile-public-link:focus-visible { outline: 2px solid var(--private-focus-ring); outline-offset: 3px; border-radius: 3px; }

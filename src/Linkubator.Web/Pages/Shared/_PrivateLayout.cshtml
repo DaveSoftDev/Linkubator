@@ -11,8 +11,12 @@
     <meta name="description" content="Área privada de Linkubator" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
-    <link rel="icon" type="image/x-icon" href="~/favicon.ico" asp-append-version="true" />
+    <partial name="_Favicons" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/brand.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/private.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/footer.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="private-shell">
     <div class="private-page">
@@ -42,7 +46,7 @@
         </div>
 
         <footer class="private-footer">
-            <p>Área privada Linkubator · 2026</p>
+            <p><span>Área privada Linkubator</span><span>Copyright 2026. <a class="footer-link" asp-page="/Privacy">Privacidad</a></span></p>
         </footer>
     </div>
 

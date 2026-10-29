@@ -156,8 +156,16 @@
     const linkViewContainer = document.querySelector('[data-link-view-container]');
 
     if (linkViewSwitch && linkViewContainer) {
+        const cookiePath = linkViewSwitch.dataset.viewPreferencePath || '/';
         const viewButtons = linkViewSwitch.querySelectorAll('[data-link-view]');
         const readListPreference = () => document.cookie.split(';').some(cookie => cookie.trim() === 'links-view=list');
+        const ensureDefaultLinkViewCookie = () => {
+            const hasPreference = document.cookie.split(';').some(cookie => cookie.trim().startsWith('links-view='));
+            if (!hasPreference) {
+                const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+                document.cookie = `links-view=cards; Path=${cookiePath}; SameSite=Lax${secure}`;
+            }
+        };
         const setListView = (isList) => {
             linkViewContainer.classList.toggle('links-grid--list', isList);
             viewButtons.forEach(button => {
@@ -172,15 +180,17 @@
                 const isList = button.dataset.linkView === 'list';
                 setListView(isList);
                 const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-                document.cookie = `links-view=${isList ? 'list' : 'cards'}; Path=${linkViewSwitch.dataset.cookiePath}; SameSite=Lax${secure}`;
+                document.cookie = `links-view=${isList ? 'list' : 'cards'}; Path=${cookiePath}; SameSite=Lax${secure}`;
             });
         });
 
         window.addEventListener('pageshow', event => {
             if (event.persisted) {
+                ensureDefaultLinkViewCookie();
                 setListView(readListPreference());
             }
         });
+        ensureDefaultLinkViewCookie();
         setListView(readListPreference());
         linkViewSwitch.hidden = false;
     }

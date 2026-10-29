@@ -1,0 +1,58 @@
+@{
+    Layout = "_Layout";
+    ViewData["MainClass"] = "public-shell";
+    string alias = ViewData["PublicAlias"] as string
+        ?? throw new InvalidOperationException("The public layout requires a public alias.");
+    string profileUrl = $"/{Uri.EscapeDataString(alias)}/";
+    string displayAlias = Linkubator.Web.Extensions.AliasExtensions.GetDisplayName(alias);
+    bool hasCollections = ViewData["PublicHasCollections"] is true;
+    bool isProfile = ViewData["PublicSection"] as string == "profile";
+    bool isCollections = ViewData["PublicSection"] as string == "collections";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/public.css" asp-append-version="true" />
+}
+
+<a class="public-skip" href="#public-content">Saltar al contenido</a>
+<header class="public-topbar public-container public-header">
+    <a class="public-brand" href="/" aria-label="Linkubator, inicio">
+        <span class="brand-mark" aria-hidden="true"><partial name="_BrandMark" /></span>
+        <span>linkubator<span class="public-accent">.</span></span>
+    </a>
+    <div class="public-topbar__actions">
+        <span>Ideas que merece la pena guardar.</span>
+        <partial name="_PublicAuthLinks" />
+    </div>
+</header>
+
+<div class="public-container">
+    <div id="public-content" class="public-content" tabindex="-1">
+        @await RenderSectionAsync("PublicHeading", required: true)
+        <nav class="public-navigation" aria-label="Navegación del perfil">
+            <div class="public-navigation__tabs">
+                <a href="@profileUrl" aria-current="@(isProfile ? "page" : null)">Perfil</a>
+                @if (hasCollections)
+                {
+                    <a href="@(profileUrl + "colecciones/")" aria-current="@(isCollections ? "page" : null)">Colecciones</a>
+                }
+                @await RenderSectionAsync("PublicCollectionNavigation", required: false)
+            </div>
+        </nav>
+        @RenderBody()
+    </div>
+</div>
+
+<footer class="public-footer public-container">
+    <a class="public-brand" href="/" aria-label="Linkubator, inicio">
+        <span class="brand-mark" aria-hidden="true"><partial name="_BrandMark" /></span>
+        <span>linkubator<span class="public-accent">.</span></span>
+    </a>
+    <div class="footer-caption">
+        <p>Enlaces con sentido. Compartidos por <a href="@profileUrl">@displayAlias</a>.</p>
+        <span>Copyright 2026. <a class="footer-link" asp-page="/Privacy">Privacidad</a></span>
+    </div>
+    <nav class="footer-links" aria-label="Enlaces del pie de página">
+        <a href="#public-content">Volver arriba <span aria-hidden="true">↑</span></a>
+    </nav>
+</footer>

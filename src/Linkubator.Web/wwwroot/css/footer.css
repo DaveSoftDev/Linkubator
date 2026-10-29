@@ -1,0 +1,9 @@
+.footer-links { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; color: var(--private-light-grey); font-size: 12px; }
+:is(.landing, .public-shell, .private-shell) :is(.footer-links a, .footer-caption a, .footer-link) { color: var(--private-light-grey); }
+.footer-links a { text-decoration: none; }
+:is(.landing, .public-shell, .private-shell) :is(.footer-links a, .footer-caption a, .footer-link):hover { color: var(--private-accent); }
+.footer-links a:focus-visible, .footer-link:focus-visible { outline: 2px solid var(--private-focus-ring); outline-offset: 5px; border-radius: 3px; }
+.footer-links a[aria-current="page"], .footer-link { text-decoration: underline; text-underline-offset: 4px; }
+.footer-caption { display: grid; justify-items: center; gap: 8px; text-align: center; }
+.private-footer p { flex-direction: column; gap: 4px; min-height: 4.3rem; padding-block: .65rem; line-height: 1.5; }
+.private-footer .footer-link { letter-spacing: .04em; }

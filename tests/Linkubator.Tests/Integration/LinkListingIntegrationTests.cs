@@ -50,6 +50,89 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetLinks_WithListPreference_KeepsListPresentationAndActions()
+    {
+        await AddLinks(_userId, _collectionId, 1, "Lectura");
+        using HttpRequestMessage request = new(HttpMethod.Get, "/app/enlaces");
+        request.Headers.Add("Cookie", "links-view=list");
+
+        using HttpResponseMessage response = await _client.SendAsync(request);
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        Assert.Contains("links-grid links-grid--list", html, StringComparison.Ordinal);
+        Assert.Equal(["Lectura 01"], CardTitles(html));
+        Assert.Contains("Editar enlace Lectura 01", html, StringComparison.Ordinal);
+        Assert.Contains("Mover enlace Lectura 01", html, StringComparison.Ordinal);
+        Assert.Contains("Eliminar enlace Lectura 01", html, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/app", "cards", false, "private", "Privado", "Este enlace es privado")]
+    [InlineData("/app", "list", false, "private", "Privado", "Este enlace es privado")]
+    [InlineData("/app/enlaces", "cards", false, "private", "Privado", "Este enlace es privado")]
+    [InlineData("/app/enlaces", "list", false, "private", "Privado", "Este enlace es privado")]
+    [InlineData("/app/enlaces?c={0}", "cards", false, "private", "Privado", "Este enlace es privado")]
+    [InlineData("/app/enlaces?c={0}", "list", false, "private", "Privado", "Este enlace es privado")]
+    [InlineData("/app", "cards", true, "public", "Público", "Este enlace es público")]
+    [InlineData("/app", "list", true, "public", "Público", "Este enlace es público")]
+    [InlineData("/app/enlaces", "cards", true, "public", "Público", "Este enlace es público")]
+    [InlineData("/app/enlaces", "list", true, "public", "Público", "Este enlace es público")]
+    [InlineData("/app/enlaces?c={0}", "cards", true, "public", "Público", "Este enlace es público")]
+    [InlineData("/app/enlaces?c={0}", "list", true, "public", "Público", "Este enlace es público")]
+    public async Task GetPrivateLinks_RendersOwnPrivacyStatusRegardlessOfCollection(
+        string path, string view, bool isPublic, string badgeClass, string label, string tooltip)
+    {
+        await AddLinks(_userId, _collectionId, 1, "Lectura");
+        await _keeper.ExecuteAsync(
+            @"UPDATE Collection SET IsPublic = @CollectionIsPublic WHERE Id = @CollectionId AND UserId = @UserId;
+              UPDATE Link SET IsPublic = @IsPublic WHERE CollectionId = @CollectionId AND UserId = @UserId;",
+            new { UserId = _userId, CollectionId = _collectionId, IsPublic = isPublic, CollectionIsPublic = !isPublic });
+        using HttpRequestMessage request = new(HttpMethod.Get,
+            string.Format(System.Globalization.CultureInfo.InvariantCulture, path, _collectionId));
+        request.Headers.Add("Cookie", $"links-view={view}");
+
+        using HttpResponseMessage response = await _client.SendAsync(request);
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string card = Regex.Match(html, "<article\\b[^>]*aria-label=\"Enlace: Lectura 01\".*?</article>", RegexOptions.Singleline).Value;
+
+        Assert.Single(Regex.Matches(card, "class=\"link-card__(?:public|private)\""));
+        Assert.Matches($"(?s)<span class=\"link-card__{badgeClass}\" title=\"{tooltip}\">\\s*<svg[^>]*aria-hidden=\"true\"[^>]*>.*?</svg>\\s*{label}\\s*</span>", card);
+    }
+
+    [Theory]
+    [InlineData("/app")]
+    [InlineData("/app/enlaces")]
+    [InlineData("/app/enlaces?c={0}")]
+    public async Task GetPrivateCards_WithoutImage_UsesDecorativeBrandSymbol(string path)
+    {
+        await AddLinks(_userId, _collectionId, 1, "Lectura");
+
+        string html = await _client.GetStringAsync(string.Format(System.Globalization.CultureInfo.InvariantCulture, path, _collectionId));
+
+        Assert.Matches("(?s)<div class=\"link-card__brand-placeholder\" aria-hidden=\"true\">\\s*<span class=\"brand-mark\">\\s*<img class=\"brand-icon\"[^>]*src=\"/brand/symbol(?:\\.[a-z0-9]+)?\\.svg[^>]*alt=\"\"[^>]*>\\s*</span>\\s*</div>", html);
+        Assert.DoesNotContain("link-card__thumb-fake-overlay", html, StringComparison.Ordinal);
+        Assert.Contains("<h4>Lectura 01</h4>", html, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/app")]
+    [InlineData("/app/enlaces")]
+    [InlineData("/app/enlaces?c={0}")]
+    public async Task GetPrivateCards_WithImage_PreservesRealImageInsteadOfBrandPlaceholder(string path)
+    {
+        const string imageUrl = "https://images.example.test/cover.jpg";
+        await AddLinks(_userId, _collectionId, 1, "Lectura");
+        await _keeper.ExecuteAsync(
+            "UPDATE Link SET Image = @Image WHERE UserId = @UserId;",
+            new { Image = imageUrl, UserId = _userId });
+
+        string html = await _client.GetStringAsync(string.Format(System.Globalization.CultureInfo.InvariantCulture, path, _collectionId));
+
+        Assert.Contains($"<img src=\"{imageUrl}\" alt=\"Lectura 01\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("link-card__brand-placeholder", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task GetSidebarCollection_WithLinks_ShowsOnlyOwnedCollectionCardsAcrossPages()
     {
         await AddLinks(_userId, _collectionId, 17, "Lectura");
@@ -217,14 +300,15 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
         string linksHtml = await linksResponse.Content.ReadAsStringAsync();
         using HttpResponseMessage collectionsResponse = await _client.GetAsync("/app/colecciones?q=CrossEntityNeedle");
         string collectionsHtml = WebUtility.HtmlDecode(await collectionsResponse.Content.ReadAsStringAsync());
-        string collectionsTable = Regex.Match(collectionsHtml, "<table\\b.*?</table>", RegexOptions.Singleline).Value;
+        string collectionsList = Regex.Match(collectionsHtml, "<ul\\b[^>]*id=\"saved-collections\"[^>]*>.*?</ul>", RegexOptions.Singleline).Value;
 
         Assert.Equal(HttpStatusCode.OK, linksResponse.StatusCode);
         Assert.Equal([ownLinkTitle], CardTitles(linksHtml));
         Assert.DoesNotContain(foreignLinkTitle, linksHtml, StringComparison.Ordinal);
         Assert.Equal(HttpStatusCode.OK, collectionsResponse.StatusCode);
-        Assert.Contains(collectionName, collectionsTable, StringComparison.Ordinal);
-        Assert.DoesNotContain(ownLinkTitle, collectionsTable, StringComparison.Ordinal);
+        Assert.NotEmpty(collectionsList);
+        Assert.Contains(collectionName, collectionsList, StringComparison.Ordinal);
+        Assert.DoesNotContain(ownLinkTitle, collectionsList, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -373,13 +457,23 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetLinks_WithOversizedSearch_ShowsErrorWithoutResults()
+    {
+        using HttpResponseMessage response = await _client.GetAsync("/app/enlaces?q=" + new string('a', 101));
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        Assert.Contains("El texto de búsqueda supera la longitud máxima permitida.", html, StringComparison.Ordinal);
+        Assert.Empty(CardTitles(html));
+    }
+
+    [Fact]
     public async Task GetLinks_WithRepeatedAndUnsupportedParameters_UsesOnlyFirstApplicableValues()
     {
         await AddLinks(_userId, _collectionId, 1, "Lectura");
         await AddLinks(_userId, _otherCollectionId, 1, "Otra");
 
         using HttpResponseMessage response = await _client.GetAsync(
-            $"/app/enlaces?c={_collectionId}&c={_otherCollectionId}&p=1&p=invalid&q=Lectura&q=Otra&e=invalid&e=999&unknown=invalid");
+            $"/app/enlaces?c={_collectionId}&c={_otherCollectionId}&p=1&p=invalid&q=Lectura&q=Otra&e=invalid&unknown=invalid");
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
