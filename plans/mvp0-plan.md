@@ -312,7 +312,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 - [x] El `UserId` solo procede de la identidad inyectada; evidencia: [S7.3 → tareas y evidencia](../specs/archive/s7.3-identidad-desarrollo-app/tasks.md#evidencia-por-criterio) y [S7.7 → tareas](../specs/archive/s7.7-dashboard-y-respuestas-privadas/tasks.md#evidencia-por-criterio).
 - [x] La base técnica de análisis de `p`, `c` y `q`, su integración en los listados y la comprobación de propiedad de `c` están implementadas, validadas y aceptadas; evidencia en [S7.6 → tareas y cierre](../specs/archive/s7.6-analisis-parametros-listados/tasks.md#aceptación-y-cierre).
 - [x] El dashboard cumple «Páginas privadas», sin resultados, edición ni eliminación; evidencia: [S7.7 → tareas y evidencia](../specs/archive/s7.7-dashboard-y-respuestas-privadas/tasks.md#evidencia-por-criterio), aceptadas por DLG.
-- [ ] Los logs no incluyen `q`. Sigue pendiente demostrar en un evento real del middleware que la query privada no se registra; véase [S7.8 → evidencia y bloqueos](../specs/s7.8-registro-peticiones-web/tasks.md#evidencia-por-criterio).
+- [x] Registro de peticiones validado y aceptado según [S7.8 → «Revalidación de cierre»](../specs/archive/s7.8-registro-peticiones-web/tasks.md#revalidación-de-cierre).
 - [x] La revisión manual del dashboard (teclado/foco, contraste y encabezados) está aceptada por DLG; consultar [S7.10 → tareas y cierre](../specs/archive/s7.10-revision-manual-dashboard/tasks.md#aceptación-y-cierre).
 - [ ] El estilo base está aceptado por el humano. S7.11 se aceptó como revisión finalizada con flecos de diseño pendientes; esto no equivale a aceptar globalmente el estilo base. Véase [S7.11 → tareas y cierre](../specs/archive/s7.11-validacion-estilo-base/tasks.md#aceptación-y-cierre).
 
@@ -394,7 +394,7 @@ La etapa S10 queda cerrada globalmente por aceptación de DLG el 27-X-2026 («Ce
 |---|---|---|
 | S11.1 | Implementar la landing con textos, `meta`, `h1`, canonical y botones de login (a `/app`) y de registro (`href="#"`) | IA |
 | S11.2 | Implementar la página de usuario: últimos 5 enlaces, últimas 5 colecciones, textos de vacío, enlace a colecciones y `404` | IA |
-| S11.3 | Implementar la página de colecciones y la de colección, con paginación `p` y canonical normalizada. Completada y aceptada por DLG el 27-X-2026 («Completado»); evidencia en [S11.3 → tareas y cierre](../specs/s11.3-paginas-publicas-colecciones/tasks.md#aceptación-y-cierre) | IA |
+| S11.3 | Implementar la página de colecciones y la de colección, con paginación `p` y canonical normalizada. Completada y aceptada por DLG el 27-X-2026 («Completado»); evidencia en [S11.3 → tareas y cierre](../specs/archive/s11.3-paginas-publicas-colecciones/tasks.md#aceptación-y-cierre) | IA |
 | S11.4 | Aplicar `rel`, `target`, `alt` seguro, un solo `h1` e idioma `es` | IA |
 | S11.5 | Redirigir variantes de URL (mayúsculas y barra final) y servir `404` para alias, slugs antiguos y colecciones sin enlaces públicos | IA |
 | S11.6 | Escribir tests derivados de los criterios aprobados en S4: ausencia de contenido privado, orden, `404`, redirecciones, paginación y canonical | IA |
@@ -403,13 +403,13 @@ La etapa S10 queda cerrada globalmente por aceptación de DLG el 27-X-2026 («Ce
 
 **Definition of Done**
 
-- [ ] Los textos y metadatos de [«Páginas públicas»](../context/specifications.md#páginas-públicas) coinciden exactamente.
-- [ ] Nada privado aparece en ninguna página pública.
-- [ ] Las colecciones públicas sin enlaces públicos no aparecen.
-- [ ] Cada página tiene un único `h1` y declara el idioma castellano.
-- [ ] No quedan textos pendientes.
-- [ ] El HTML se sirve renderizado en servidor.
-- [ ] La revisión humana del HTML público está aceptada.
+- [x] Los textos y metadatos de [«Páginas públicas»](../context/specifications.md#páginas-públicas) coinciden exactamente.
+- [x] Nada privado aparece en ninguna página pública.
+- [x] Las colecciones públicas sin enlaces públicos no aparecen.
+- [x] Cada página tiene un único `h1` y declara el idioma castellano.
+- [x] No quedan textos pendientes.
+- [x] El HTML se sirve renderizado en servidor.
+- [x] La revisión humana del HTML público está aceptada.
 
 ### S11a: Área pública: refactor (M)
 

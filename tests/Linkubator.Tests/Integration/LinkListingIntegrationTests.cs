@@ -300,14 +300,15 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
         string linksHtml = await linksResponse.Content.ReadAsStringAsync();
         using HttpResponseMessage collectionsResponse = await _client.GetAsync("/app/colecciones?q=CrossEntityNeedle");
         string collectionsHtml = WebUtility.HtmlDecode(await collectionsResponse.Content.ReadAsStringAsync());
-        string collectionsTable = Regex.Match(collectionsHtml, "<table\\b.*?</table>", RegexOptions.Singleline).Value;
+        string collectionsList = Regex.Match(collectionsHtml, "<ul\\b[^>]*id=\"saved-collections\"[^>]*>.*?</ul>", RegexOptions.Singleline).Value;
 
         Assert.Equal(HttpStatusCode.OK, linksResponse.StatusCode);
         Assert.Equal([ownLinkTitle], CardTitles(linksHtml));
         Assert.DoesNotContain(foreignLinkTitle, linksHtml, StringComparison.Ordinal);
         Assert.Equal(HttpStatusCode.OK, collectionsResponse.StatusCode);
-        Assert.Contains(collectionName, collectionsTable, StringComparison.Ordinal);
-        Assert.DoesNotContain(ownLinkTitle, collectionsTable, StringComparison.Ordinal);
+        Assert.NotEmpty(collectionsList);
+        Assert.Contains(collectionName, collectionsList, StringComparison.Ordinal);
+        Assert.DoesNotContain(ownLinkTitle, collectionsList, StringComparison.Ordinal);
     }
 
     [Theory]

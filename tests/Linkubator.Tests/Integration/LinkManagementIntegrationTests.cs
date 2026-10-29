@@ -126,7 +126,7 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
     [InlineData("/app/enlaces", false, false)]
     [InlineData("/app/enlaces", true, false)]
     [InlineData("/app/enlaces", true, true)]
-    public async Task GetLinkCards_WithPrivacy_ShowsPublicBadgeOnlyForPublicLink(string route, bool publicCollection, bool publicLink)
+    public async Task GetLinkCards_WithPrivacy_ShowsBadgeMatchingLinkVisibility(string route, bool publicCollection, bool publicLink)
     {
         long collectionId = await AddCollection(_userId, "Estado", publicCollection);
         await AddLink(collectionId, "Estado del enlace", null, null, publicLink);
@@ -141,7 +141,9 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         Assert.Equal(publicLink, badge.Contains("Público", StringComparison.Ordinal));
         Assert.Equal(publicLink, badge.Contains("title=\"Este enlace es público\"", StringComparison.Ordinal));
         Assert.Equal(publicLink, badge.Contains("aria-hidden=\"true\"", StringComparison.Ordinal));
-        Assert.DoesNotContain("Privado", card, StringComparison.Ordinal);
+        Assert.Equal(!publicLink, card.Contains("class=\"link-card__private\"", StringComparison.Ordinal));
+        Assert.Equal(!publicLink, card.Contains("title=\"Este enlace es privado\"", StringComparison.Ordinal));
+        Assert.Equal(!publicLink, card.Contains("Privado", StringComparison.Ordinal));
     }
 
     [Theory]
