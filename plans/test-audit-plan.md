@@ -1,0 +1,221 @@
+# Plan de revisión de tests
+
+## Propósito y alcance
+
+Revisar todos los tests existentes por funcionalidad, cruzando Domain, Application, Infrastructure, Web e integración HTTP. La fuente para decidir el comportamiento esperado son las reglas enlazadas desde la [checklist de calidad](../context/roadmap.md#checklist-de-calidad-del-mvp0); la matriz checklist → test y la cobertura de sus huecos forman parte de [S12](mvp0-plan.md#s12-cierre-y-hardening-m). Este plan organiza el trabajo antes de ese cierre; no da por auditado un grupo solo porque sus tests pasen.
+
+El inventario inicial contiene 63 archivos de tests fuente en `tests/Linkubator.Tests/` (sin `bin/` ni `obj/`). El descubrimiento del runner identificó 1.626 casos ejecutables el 2026-10-29; se repetirá cuando cambien los tests, porque los `[Theory]` pueden generar varios casos y contar atributos en el código no basta.
+
+## Sistema de trabajo
+
+Cada test descubierto tendrá un grupo principal, aunque su archivo contenga tests de otros grupos. Por ejemplo, `WebStartupTests.cs` se repartirá por métodos, no se asignará entero al área pública. Una misma regla puede estar comprobada en varias capas; no se eliminan tests por parecer repetidos sin comparar qué fallo detecta cada uno.
+
+Para cada grupo:
+
+1. **Inventario y diagnóstico, sin cambios:** enumerar sus tests y fuentes, relacionarlos con las reglas vigentes y la checklist; registrar precondiciones no demostradas, aserciones débiles, expectativas obsoletas, duplicados reales y casos que faltan. Comparar escenarios normales, vacíos, límites, entradas inválidas, transiciones y aislamiento cuando apliquen.
+2. **Punto de revisión con el usuario:** presentar hallazgos concretos y las correcciones propuestas. Si la regla y el código discrepan, confirmar qué fuente debe cambiar antes de actuar cuando no esté ya resuelto por la documentación aceptada. El usuario decide el siguiente lote o ajusta el alcance.
+3. **Corrección acotada:** conservar tests válidos; reforzar o sustituir los débiles; eliminar solo los obsoletos o duplicados demostrados; añadir pruebas de huecos confirmados. Corregir producción únicamente cuando un test revele una desviación de la regla vigente, indicando el cambio de comportamiento.
+4. **Verificación y cierre:** ejecutar los tests afectados y los vecinos pertinentes; registrar comando, resultado y evidencia de cada hallazgo resuelto. El grupo queda «revisado» solo cuando todos sus casos descubiertos están clasificados, sus huecos documentados o cubiertos y no hay discrepancias sin decidir. La suite completa y las revisiones manuales previstas en la checklist se reservan para el cierre de S12.
+
+Clasificación por caso: **vigente**, **a reforzar**, **obsoleto**, **duplicado demostrado**, **bloqueado por decisión**. Los escenarios sin test se registran como **hueco**. «No revisado» no equivale a «vigente». Cada informe de lote indicará los casos revisados, hallazgos, cambios y lo que sigue pendiente; no se atribuirá cobertura a un test por su nombre.
+
+## Grupos
+
+Los archivos indicados son puntos de entrada, no una asignación exclusiva. El inventario por métodos y casos determinará el alcance exacto; cualquier test que no encaje en estos grupos deberá asignarse explícitamente antes de cerrar la revisión.
+
+| Grupo | Funcionalidad y puntos de entrada | Estado |
+|---|---|---|
+| 1. Área pública y SEO | Lecturas públicas, perfiles, colecciones públicas, paginación, canonical y redirecciones. `PublicReadServiceTests`, `SqlitePublicReadRepositoryTests` y tests públicos de `WebStartupTests`. | **En curso**: cinco hallazgos iniciales resueltos; clasificación exhaustiva pendiente. |
+| 2. Propiedad, privacidad e invariantes de entidades | `User`, `Collection`, `Link`, propiedad entre usuarios, transiciones públicas/privadas y restricciones entre entidades; tests de Domain, casos de uso, SQLite y HTTP correspondientes. | **En curso**: tres hallazgos adicionales resueltos; 122/122 casos focalizados y 1.654/1.654 de la suite global superados; clasificación exhaustiva pendiente. |
+| 3. Gestión privada de colecciones | Crear, editar, eliminar, listado, formularios, errores y acceso a recursos; `CollectionServiceTests`, `SqliteCollectionRepositoryTests` y `CollectionsListingIntegrationTests` por caso. | **En curso:** cuatro hallazgos iniciales resueltos; 92/92 tests focalizados y 1.656/1.656 globales superados; clasificación exhaustiva pendiente. |
+| 4. Gestión privada de enlaces | Crear, editar, mover, eliminar, validación, formularios y errores; `LinkServiceTests`, `SqliteLinkRepositoryTests`, `LinkCreationIntegrationTests` y `LinkManagementIntegrationTests` por caso. | **Primera ronda resuelta:** cuatro hallazgos corregidos; 189/189 focalizados y 1.659/1.659 globales superados. Revisión individual pendiente. |
+| 5. Búsqueda, filtros y listados | Normalización de búsqueda, FTS5, proyecciones, orden, filtros y paginación privada; tests de `Search*`, `SqliteFts5IntegratedSearchTests`, `SqliteSearchProjection*Tests`, `LinkListingIntegrationTests` y los casos de búsqueda de colecciones. | **Primera ronda resuelta:** cuatro hallazgos corregidos; 5/5 focalizados y 1.660/1.660 globales superados. Revisión individual pendiente. |
+| 6. Reglas de entrada | Textos, alias, slug, email, URL, imagen y normalización de duplicados; tests de `Domain/Policies/`, `ValidationCoverageTests`, `LinkCreateValidatorTests` y validación Web relacionada. | **Primera ronda resuelta:** tres hallazgos corregidos; 42/42 focalizados y 1.663/1.663 globales superados. Revisión individual pendiente. |
+| 7. Identidad de desarrollo y seguridad Web | Aprovisionamiento, identidad inyectada, cabeceras, HTTPS, antiforgery y acceso HTTP; tests de `DevelopmentIdentity*`, `WebSecurityIntegrationTests` y los casos correspondientes de `WebStartupTests`. | **Primera ronda resuelta:** tres hallazgos corregidos; 13/13 focalizados y 1.669/1.669 globales superados. Revisión individual pendiente. |
+| 8. Persistencia y transacciones | Migraciones, conexiones, unidad de trabajo, claves foráneas, atomicidad y carreras; `SqliteMigrationServiceTests`, `SqliteConnectionFactoryTests`, `SqliteUnitOfWorkTests` y `SqlitePersistenceIntegrationTests` por caso. | **Primera ronda resuelta:** cuatro hallazgos corregidos; 32/32 focalizados y 1.669/1.669 globales superados en Debug. Revisión individual pendiente. |
+| 9. Base de aplicación, presentación y observabilidad | Resultados, errores, dashboard, componentes Web, logs y límites de arquitectura; `ResultTests`, `DashboardServiceTests`, `SqliteDashboardRepositoryTests`, `LoggingTests`, tests de `Web/`, `Architecture/` y `Structure/`, y los casos restantes de integración. | **Primera ronda resuelta:** cuatro hallazgos adicionales corregidos; 43/43 focalizados y 1.670/1.670 globales en Debug. Logging intermitente resuelto previamente; revisión individual pendiente. |
+
+Orden acordado: completar primero la ronda de diagnóstico inicial de los nueve grupos y resolver sus hallazgos aprobados; después volver al grupo 1 y recorrerlos para la revisión individual exhaustiva. Resolver una tabla inicial no cierra el grupo. Los tests transversales se asignarán a un único grupo principal en el inventario, pero se podrán ejecutar en varios lotes como regresión.
+
+## Hallazgos por grupo
+
+Cada grupo mantiene la misma tabla. «Pendiente de diagnóstico» no indica ausencia de problemas. Tras la revisión con el usuario, actualizar la acción y el estado del grupo en la tabla anterior; no marcar un hallazgo como resuelto sin su verificación.
+
+### Grupo 1. Área pública y SEO
+
+Diagnóstico inicial del 2026-10-29: 99 casos focalizados, distribuidos entre aplicación (25), repositorio público (19), integración HTTP (53) y ordenación en persistencia (2). Resultado: 99/99 pasan en Release. Comando utilizado:
+
+```powershell
+dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~PublicReadServiceTests|FullyQualifiedName~SqlitePublicReadRepositoryTests|FullyQualifiedName~WebStartupTests.Public|FullyQualifiedName~WebStartupTests.UserPage|FullyQualifiedName~WebStartupTests.HomePage_|FullyQualifiedName~WebStartupTests.HomePageReturnsSuccess|FullyQualifiedName~SqlitePersistenceIntegrationTests.GetPublic' -v minimal
+```
+
+Las correcciones puntuales previas de navegación y paginación no cierran el grupo. No se ha identificado todavía un test demostrablemente obsoleto; los casos focalizados no están clasificados uno por uno.
+
+| Prioridad | Hallazgo | Acción propuesta |
+|---|---|---|
+| Alta | [GetCollectionsPage_WhenPrivateCollectionContainsPublicLink_ExcludesIt](../tests/Linkubator.Tests/Infrastructure/SqlitePublicReadRepositoryTests.cs) antes preparaba una colección privada sin enlace público y podía pasar aunque se dejase de filtrar por la privacidad de la colección. Referencia: [domain-model.md → «Público y privado»](../context/domain-model.md#público-y-privado). | **Resuelto:** el test distingue ambos filtros mediante datos persistidos inconsistentes y comprueba que la colección privada no se devuelve. |
+| Alta | Los tests de lecturas públicas de [SqlitePublicReadRepositoryTests.cs](../tests/Linkubator.Tests/Infrastructure/SqlitePublicReadRepositoryTests.cs) no ejercitaban el aislamiento entre dos usuarios con contenido público. Referencia: [domain-model.md → «Propiedad de los datos»](../context/domain-model.md#propiedad-de-los-datos). | **Resuelto:** añadidos casos de perfil, listado y página de colección con contenido público de ambos usuarios y slug compartido donde corresponde. |
+| Media | [GetUserPage_WhenUserHasPublicAndPrivateData_ExposesOnlyPublishedRows](../tests/Linkubator.Tests/Infrastructure/SqlitePublicReadRepositoryTests.cs) antes situaba el enlace privado solo en una colección privada; no aislaba el filtro de privacidad del enlace dentro de una colección pública. | **Resuelto:** ampliado el caso con un enlace privado en colección pública y un enlace marcado público en colección privada, sin duplicar la prueba HTTP. |
+| Media | [UserPage_ReturnsNotFoundForUnknownAndFormerAliases](../tests/Linkubator.Tests/Integration/WebStartupTests.cs) comprobaba el alias antiguo en el perfil, pero no en el listado ni en la página de colección. Referencia: [specifications.md → «Página de colecciones»](../context/specifications.md#página-de-colecciones). | **Resuelto:** [PublicCollectionPages_WhenAliasChanges_ReturnNotFoundAtFormerAlias](../tests/Linkubator.Tests/Integration/WebStartupTests.cs) verifica ambas rutas accesibles antes del cambio y su `404` sin redirección después. |
+| Baja | [PublicCollectionPage_NormalizesPageParameterAndCanonical](../tests/Linkubator.Tests/Integration/WebStartupTests.cs) probaba `?p=2&p=1`, pero no el orden inverso; no demostraba por completo el uso del primer valor. Referencia: [specifications.md → «Paginación de las páginas públicas»](../context/specifications.md#paginación-de-las-páginas-públicas). | **Resuelto:** añadido `?p=1&p=2` con comprobación de contenido, número de tarjetas y canonical de la primera página. |
+
+Tras las correcciones de los cinco hallazgos, se repitió el comando focalizado indicado arriba: **105/105 casos superados** en Release. La línea base de 99 casos anterior a estas correcciones sigue registrada arriba; la clasificación exhaustiva y el cierre del grupo siguen pendientes.
+
+### Grupo 2. Propiedad, privacidad e invariantes de entidades
+
+| Prioridad | Hallazgo | Acción propuesta |
+|---|---|---|
+| Media | [Collection.RehydrateLinks](../src/Linkubator.Domain/Entities/Collection.cs) vaciaba las asociaciones antes de enumerar y validar la entrada; una fuente basada en sus propios enlaces se perdía y un error posterior podía dejar asociaciones parciales, incluso en otra instancia. | **Resuelto:** materializar y validar toda la entrada antes de modificar asociaciones. Los tests de [CollectionTests.cs](../tests/Linkubator.Tests/Domain/Entities/CollectionTests.cs) cubren fuentes propias y diferidas, entradas inválidas con estado previo, errores de enumeración, duplicados y reasignación entre instancias. La revisión completa del grupo sigue pendiente. |
+
+Verificación puntual del 2026-10-29: antes de la corrección, **7/9** casos de rehidratación fallaron al reforzar las precondiciones y añadir regresiones. Tras corregirla y completar los casos válidos, **185/185** pruebas de entidades y consumidores superadas en Debug:
+
+```powershell
+dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --no-restore --filter 'FullyQualifiedName~Linkubator.Tests.Domain.Entities.CollectionTests|FullyQualifiedName~Linkubator.Tests.Domain.Entities.LinkTests|FullyQualifiedName~CollectionServiceTests|FullyQualifiedName~SqliteCollectionRepositoryTests' --verbosity minimal
+```
+
+Diagnóstico adicional del 2026-10-29, sin cambios en tests ni producción: casos de propiedad y privacidad en Domain y Application, contrastados con edición HTTP y persistencia. No equivale a clasificar todos los casos del grupo ni a cerrar el grupo 1.
+
+| Prioridad | Hallazgo | Acción propuesta |
+|---|---|---|
+| Alta | [ListCollectionsPage_UsesUserScopeAndPaging](../tests/Linkubator.Tests/Application/CollectionServiceTests.cs) aplica `Assert.All` pero compara siempre `currentUser.UserId` con `7`: el elemento de la iteración no participa. Una fila ajena que sustituyera una propia sin cambiar la cantidad no haría fallar esa aserción. Referencia: [domain-model.md → «Propiedad de los datos»](../context/domain-model.md#propiedad-de-los-datos). | **Resuelto:** comparación de identificadores exactos devueltos y comprobación del usuario y la página enviados al repositorio. |
+| Media | [UpdateCollection_WhenLinksExist_DoesNotLoadLinksAndReturnsTheirCount](../tests/Linkubator.Tests/Application/CollectionServiceTests.cs) empieza siempre con colección pública y un único enlace público. Sus dos variantes no ejercitan privada → pública, privada → privada ni la conservación de una mezcla de enlaces públicos y privados. El caso HTTP de edición válida también parte de una colección pública con un enlace público; la persistencia examinada cubre privatización con mezcla, no toda la matriz. Referencia: [domain-model.md → «Público y privado»](../context/domain-model.md#público-y-privado). | **Resuelto:** las cuatro combinaciones inicial/final incluyen un enlace privado adicional; se comprueban el estado final de colección y enlaces, el recuento y que solo pública → privada actualice la privacidad persistida. Se conserva el ajuste previo de [CollectionService](../src/Linkubator.Application/UseCases/Collections/CollectionService.cs), según [architecture.md → «Persistencia»](../context/architecture.md#persistencia). |
+| Media | [MoveLink_WhenLinkDoesNotBelongToUser_ReturnsResourceNotAccessible](../tests/Linkubator.Tests/Application/LinkServiceTests.cs) comprueba el rechazo, pero no que el enlace ajeno conserve su colección, privacidad y pertenencia ni que no se invoque la actualización. Una mutación anterior al rechazo podría pasar inadvertida en este test. | **Resuelto:** el enlace ajeno comienza público y se comprueban propietario, colección original, referencias de pertenencia, privacidad y ausencia de actualizaciones después del rechazo. |
+
+Línea base relacionada: **474/474 casos superados** en Release con el siguiente comando. Incluye clases completas y casos de otros grupos; no es un recuento de casos ya auditados del grupo 2.
+
+```powershell
+dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~Domain.Entities.CollectionTests|FullyQualifiedName~Domain.Entities.LinkTests|FullyQualifiedName~Application.CollectionServiceTests|FullyQualifiedName~Application.LinkServiceTests|FullyQualifiedName~SqlitePersistenceIntegrationTests|FullyQualifiedName~CollectionsListingIntegrationTests|FullyQualifiedName~LinkCreationIntegrationTests|FullyQualifiedName~LinkManagementIntegrationTests' -v minimal
+```
+
+Verificación puntual de la transición de privacidad del 2026-10-29: privada → privada reprodujo una llamada innecesaria al repositorio antes de la corrección (1 caso fallido de 4). Tras corregirla, **113/113** pruebas superadas en Debug:
+
+```powershell
+dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --no-restore --filter 'FullyQualifiedName~CollectionServiceTests|FullyQualifiedName~SqlitePersistenceIntegrationTests|FullyQualifiedName~CollectionsListingIntegrationTests' --verbosity minimal
+```
+
+Pendiente: aprobar las acciones restantes, clasificar el inventario individual y ampliar la revisión de invariantes de `User` aplicables al estado de desarrollo. Las invariantes de cuenta previstas para etapas posteriores no se consideran huecos del alcance actual.
+
+Verificación de las tres correcciones adicionales: **122/122** casos de `CollectionServiceTests` y `LinkServiceTests` en Release. Después se ejecutó la suite global con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-build --no-restore -v minimal`: **1.654/1.654 superados**, sin omitidos. En este lote solo se modificaron tests y este registro; no se modificó producción.
+
+### Grupo 3. Gestión privada de colecciones
+
+Diagnóstico inicial del 2026-10-29, sin cambios en tests ni producción. Línea base: **137/137** casos en Release con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~CollectionServiceTests|FullyQualifiedName~SqliteCollectionRepositoryTests|FullyQualifiedName~CollectionsListingIntegrationTests' -v minimal`. El filtro incluye pruebas de privacidad ya tratadas en el grupo 2 y de búsqueda correspondientes al grupo 5; no representa 137 casos clasificados individualmente para este grupo.
+
+| Prioridad | Hallazgo | Acción propuesta |
+|---|---|---|
+| Media | [Update_WhenCollectionBelongsToAnotherUser_DoesNotChangeIt](../tests/Linkubator.Tests/Infrastructure/SqliteCollectionRepositoryTests.cs) carga la entidad con su propietario real, la actualiza y afirma que su nombre cambia. No existe un usuario solicitante distinto en esa operación; el nombre del test promete un rechazo que no prueba. | **Resuelto:** renombrado el caso y añadido otro con identificador persistido y propietario incorrecto en la entidad de entrada; verifica nombre, slug y proyección original, sin crear proyección para el propietario incorrecto. No se introduce identidad implícita en el repositorio. |
+| Media | [PostDeleteCollection_WhenAntiforgeryTokenIsValid_DeletesCollectionAndRedirectsToListing](../tests/Linkubator.Tests/Integration/CollectionsListingIntegrationTests.cs) solo verifica que disminuye el recuento. El borrado de una colección distinta produciría el mismo resultado. | **Resuelto:** se comparan exactamente los identificadores restantes y se verifica la eliminación de la proyección, cuya existencia previa se comprueba. |
+| Media | Los tests HTTP de [CollectionsListingIntegrationTests.cs](../tests/Linkubator.Tests/Integration/CollectionsListingIntegrationTests.cs) cubren el rechazo al borrar una colección con enlaces, pero no el rechazo al borrar la última colección vacía. El caso de aplicación y la carrera SQLite no sustituyen la comprobación del mensaje y del estado tras el POST. Referencia: [domain-model.md → «Collection»](../context/domain-model.md#collection). | **Resuelto:** añadido el POST con token válido y una sola colección propia vacía; comprueba el mensaje, la conservación del estado de la colección y de su proyección. |
+| Baja | [PostEditCollection_WhenNameIsAlreadyUsed_LeavesCollectionAndLinksUnchanged](../tests/Linkubator.Tests/Integration/CollectionsListingIntegrationTests.cs) busca `Already taken` en todo el HTML; ese texto es también el valor enviado al formulario y aparecería sin un mensaje de error. La conservación de datos sí está comprobada. | **Resuelto:** se exige el mensaje completo dentro del contenedor de validación del nombre, conservando las comprobaciones de estado persistido. |
+
+Las cuatro acciones aprobadas están resueltas. Verificación: **92/92** casos de repositorio y HTTP superados en Release; después, suite global mediante `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-build --no-restore -v minimal`: **1.656/1.656**, sin omitidos. Solo se modificaron tests y este registro. La clasificación exhaustiva del grupo sigue pendiente.
+
+### Grupo 4. Gestión privada de enlaces
+
+Diagnóstico inicial del 2026-10-29, sin modificar tests ni producción. Línea base relacionada: **299/299** casos en Release mediante `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~Application.LinkServiceTests|FullyQualifiedName~SqliteLinkRepositoryTests|FullyQualifiedName~LinkCreationIntegrationTests|FullyQualifiedName~LinkManagementIntegrationTests' -v minimal`. El filtro incluye clases completas con casos de otros grupos; no representa una clasificación individual terminada.
+
+| Prioridad | Hallazgo | Acción propuesta |
+|---|---|---|
+| Media | [Update_WhenLinkBelongsToAnotherUser_DoesNotChangeIt](../tests/Linkubator.Tests/Infrastructure/SqliteLinkRepositoryTests.cs) carga el enlace con su propietario real, lo actualiza y comprueba que cambia el título. El nombre promete un rechazo que no se ejercita, igual que el caso de colecciones corregido en el grupo 3. | **Resuelto:** renombrado el caso de propietario real y añadido el de propietario de entrada incorrecto, con conservación del enlace y la proyección original. |
+| Media | [PostWithoutAntiforgeryTokenDoesNotChangeLink](../tests/Linkubator.Tests/Integration/LinkManagementIntegrationTests.cs) solo envía el POST de edición. No se han localizado equivalentes para movimiento y eliminación dentro de esta clase; el atributo global no sustituye la regresión sobre esas rutas. Referencia: [architecture.md → «Seguridad web»](../context/architecture.md#seguridad-web). | **Resuelto:** teoría para edición, movimiento y eliminación sin token, con destino propio válido, rechazo HTTP y comparación del estado original y su proyección. |
+| Media | [PostEditLink_UpdatesEditableFieldsAndKeepsOriginalUrl](../tests/Linkubator.Tests/Integration/LinkManagementIntegrationTests.cs) comprueba la URL original tras editar, pero no envía una URL manipulada. No detectaría que se empezara a aceptar ese campo adicional. Referencia: [domain-model.md → «Link»](../context/domain-model.md#link). | **Resuelto:** se envían campos de URL manipulados y se comprueba que URL original, clave normalizada y URL indexada permanecen intactas mientras los campos editables sí cambian. |
+| Baja | [DeleteLink_WhenRepositoryThrowsAfterLookup_RollsBackAndReThrows](../tests/Linkubator.Tests/Application/LinkServiceTests.cs) solo exige que se propague una excepción; no observa rollback ni el estado final. Su nombre atribuye cobertura transaccional no demostrada por sus aserciones. | **Resuelto:** renombrado a `DeleteLink_WhenRepositoryThrowsAfterLookup_DisposesWithoutCommitAndReThrows`; comprueba inicio, liberación asíncrona, ausencia de commit y conservación del enlace. La aplicación revierte mediante la liberación de la unidad de trabajo, no una llamada explícita a `Rollback`; el fake no demuestra por sí solo una reversión física. |
+
+Las cuatro acciones iniciales están resueltas. Validación Release: **189/189** casos de `LinkServiceTests`, `SqliteLinkRepositoryTests` y `LinkManagementIntegrationTests`; suite global con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-build --no-restore -v minimal`: **1.659/1.659**, sin omitidos. Solo se modificaron tests y este registro. La revisión individual se realizará en la segunda ronda acordada.
+
+### Grupo 5. Búsqueda, filtros y listados
+
+Diagnóstico inicial del 2026-10-29, sin cambios en tests ni producción. Línea base relacionada: **245/245** casos superados en Release. Se incluyeron clases completas con casos de otros grupos, sin atribuirles clasificación individual terminada.
+
+```powershell
+dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~SearchQueryBuilderTests|FullyQualifiedName~SearchTextNormalizerTests|FullyQualifiedName~SqliteFts5IntegratedSearchTests|FullyQualifiedName~SqliteSearchProjection|FullyQualifiedName~SqliteLinkRepositoryTests|FullyQualifiedName~SqliteCollectionRepositoryTests|FullyQualifiedName~LinkListingIntegrationTests|FullyQualifiedName~CollectionsListingIntegrationTests|FullyQualifiedName~PrivateListingQueryAnalyzerTests' -v minimal
+```
+
+| Prioridad | Hallazgo | Acción propuesta |
+|---|---|---|
+| Media | [GetLinks_WithRepeatedAndUnsupportedParameters_UsesOnlyFirstApplicableValues](../tests/Linkubator.Tests/Integration/LinkListingIntegrationTests.cs) usa `p=1&p=invalid` con un único resultado. Elegir el primer valor o el segundo inválido devuelve la primera página en ambos casos: esa variante no demuestra la precedencia de `p`, aunque sí discrimina los valores de `c` y `q`. | **Resuelto:** 17 coincidencias filtradas y `p=2&p=1`; se exige el título exacto de la segunda página y se conservan los parámetros repetidos y no aplicables. |
+| Media | [GetLinks_WithSearch_PaginatesFilteredResultsAndPreservesCollection](../tests/Linkubator.Tests/Integration/LinkListingIntegrationTests.cs) comprueba los 16 elementos de la primera página solo por cantidad, mientras comprueba la segunda por título exacto. Una sustitución o un orden incorrecto dentro de la primera página puede pasar inadvertido. | **Resuelto:** se compara la secuencia completa de los 16 títulos esperados, además de la segunda página y la navegación. |
+| Media | [GetPageByUser_WhenRankAndCreatedAtAreEqual_UsesIdAsFinalTieBreaker](../tests/Linkubator.Tests/Infrastructure/SqliteLinkRepositoryTests.cs) cubre el desempate por identificador; el test de relevancia cubre el criterio principal. No se ha localizado un caso aislado que haga discrepar fecha e identificador con la misma relevancia para demostrar el desempate por fecha. Referencia: [specifications.md → «Listados»](../context/specifications.md#listados). | **Resuelto:** añadido `GetPageByUser_WhenRankIsEqual_OrdersByDateBeforeIdentifier` con igual relevancia y fechas opuestas al orden por identificador. |
+| Baja | [GetCollections_WhenSearchAndPageAreProvided_RendersFilteredPagedResults](../tests/Linkubator.Tests/Integration/CollectionsListingIntegrationTests.cs) busca una única coincidencia con `p=1`; `aria-current="page"` en todo el HTML puede pertenecer al menú lateral. No demuestra paginación de resultados aunque su nombre lo sugiera. | **Resuelto:** renombrado a `GetCollections_WhenSearchIsProvided_FiltersResultsAndPreservesSearchText` y retirada la aserción ambigua de página activa; no se le atribuye cobertura de paginación. |
+
+Las cuatro acciones iniciales están resueltas. Verificación Release: **5/5** casos directamente afectados y suite global con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-build --no-restore -v minimal`: **1.660/1.660**, sin omitidos. Solo se modificaron tests y este registro; no se eliminaron pruebas ni se cambiaron reglas de búsqueda. La revisión individual corresponde a la segunda ronda.
+
+### Grupo 6. Reglas de entrada
+
+Diagnóstico inicial del 2026-10-29, sin modificar tests ni producción. Línea base relacionada: **611/611** casos en Release mediante `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~Domain.Policies|FullyQualifiedName~LinkCreateValidatorTests|FullyQualifiedName~ValidationCoverageTests' -v minimal`. Incluye políticas de email y alias, cuya disponibilidad funcional depende de su etapa; el diagnóstico no exige implementar funciones de cuenta futuras.
+
+| Prioridad | Hallazgo | Acción propuesta |
+|---|---|---|
+| Media | [SlugExamplesMatchTheSourceAndEquivalentNamesProduceTheSameSlug](../tests/Linkubator.Tests/Domain/Policies/GenerationExamplesTests.cs) compara `Generate("Node.js")` consigo mismo: siempre pasa para cualquier implementación determinista, sin demostrar equivalencia entre entradas distintas. | **Resuelto:** `Node.js` y `NODE JS` se contrastan con el slug esperado `node-js`. |
+| Media | [LinkCreateValidatorTests](../tests/Linkubator.Tests/Application/LinkCreateValidatorTests.cs) comprueba excesos de título y descripción con caracteres ASCII, pero no los máximos exactos ni el cruce del límite con caracteres fuera del BMP. El contador Unicode tiene tests propios; eso no demuestra que esta ruta de validación lo aplique correctamente. Referencia: [specifications.md → «Textos introducidos por el usuario»](../context/specifications.md#textos-introducidos-por-el-usuario). | **Resuelto:** aceptación de título y descripción en su máximo con caracteres fuera del BMP y espacios exteriores; rechazo independiente de máximo + 1 con campo y código exactos, conservando los casos ASCII. |
+| Baja | [GenerateAcceptsAliasesThatOnlyContainAReservedWord](../tests/Linkubator.Tests/Domain/Policies/AliasPolicyTests.cs) solo exige resultado no nulo. Un alias truncado o transformado incorrectamente que no lance excepción pasaría este caso. | **Resuelto:** ambos casos exigen el alias completo esperado, sin truncados ni transformaciones adicionales. |
+
+Las tres acciones iniciales están resueltas. Validación Release: **42/42** casos de `LinkCreateValidatorTests`, `AliasPolicyTests` y `GenerationExamplesTests`; suite global con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-build --no-restore -v minimal`: **1.663/1.663**, sin omitidos. Solo se modificaron tests y este registro. No se proponen eliminaciones por semejanza entre tablas de ejemplos y tests de políticas; esa comparación corresponde a la revisión individual de la segunda ronda.
+
+Corrección puntual adicional del 2026-10-29: [UrlNormalizationPolicy](../src/Linkubator.Domain/Policies/UrlNormalizationPolicy.cs) separaba parejas UTF-16 al escapar rutas y descartaba letras suplementarias y categorías numéricas admitidas por [specifications.md → «Normalización para duplicados»](../context/specifications.md#normalización-para-duplicados). **Resuelto:** escapado por puntos de código completos y filtrado mediante `Rune`, conservando todas las categorías Letter y Number. [UrlNormalizationPolicyTests](../tests/Linkubator.Tests/Domain/Policies/UrlNormalizationPolicyTests.cs) cubre formas literales y codificadas, minúsculas suplementarias, números no decimales, falsos duplicados y exclusión de símbolos. Antes del cambio fallaban 8 de los 10 casos nuevos; después, **174/174** pruebas de normalización y consumidores superadas en Release:
+
+```powershell
+dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~UrlNormalization|FullyQualifiedName~Domain.Entities.LinkTests|FullyQualifiedName~LinkServiceTests|FullyQualifiedName~LinkCreateValidatorTests' --verbosity minimal
+```
+
+El usuario declaró prescindible la base local: se eliminaron la base de desarrollo y sus archivos auxiliares, tras comprobar que no estaban en uso, para que el siguiente arranque la cree sin claves antiguas. No se añadió una migración de datos ni se declara cerrada la revisión individual del grupo.
+
+### Grupo 7. Identidad de desarrollo y seguridad Web
+
+Diagnóstico inicial del 2026-10-29, sin modificar tests ni producción. Línea base relacionada: **50/50** casos superados en Release mediante `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~DevelopmentIdentity|FullyQualifiedName~WebSecurityIntegrationTests|FullyQualifiedName~HomePage_IncludesSecurityHeaders|FullyQualifiedName~AnonymousPages_DoNotResolvePrivateIdentity|FullyQualifiedName~AppDashboard_UsesResolvedIdentity|FullyQualifiedName~WebStartupTests.Startup_' -v minimal`. Es una revisión de cobertura de tests, no una auditoría de vulnerabilidades ni una validación de funciones de autenticación aún no implementadas.
+
+| Prioridad | Hallazgo | Acción propuesta |
+|---|---|---|
+| Media | [Antiforgery_RejectsPostWithoutTokenAndAllowsIssuedToken](../tests/Linkubator.Tests/Integration/WebSecurityIntegrationTests.cs) distingue ausencia de token y pareja válida, pero no token inválido o emitido a otro cliente. Una validación que solo exigiera la presencia del token podría superar los casos actuales. | **Resuelto:** ambos escenarios se comprueban con clientes y cookies independientes, respuesta `400` y contador de ejecución del POST a cero. |
+| Media | [HomePage_IncludesSecurityHeaders](../tests/Linkubator.Tests/Integration/WebStartupTests.cs) solo verifica las cabeceras en la landing. No se ha localizado una prueba parametrizada que cubra también una respuesta privada y una respuesta de error HTTP. Referencia: [architecture.md → «Seguridad web»](../context/architecture.md#seguridad-web). | **Resuelto:** sustituido por `Pages_WithSuccessOrNotFound_IncludeSecurityHeaders`, con landing, `/app` y ruta inexistente, estados y valores exactos. |
+| Media | [DevelopmentIdentityMiddlewareTests](../tests/Linkubator.Tests/Integration/DevelopmentIdentityMiddlewareTests.cs) comprueba `/app/dashboard` y `/`, pero no el límite de segmento: no diferencia `/app` de prefijos públicos como `/application`. Sustituir `StartsWithSegments` por una comparación de prefijo podría pasar inadvertido. | **Resuelto:** casos privados `/app` y `/app/dashboard`, públicos `/`, `/application` y `/app-public`; se verifica identidad, número de llamadas y continuación del pipeline. |
+
+Las tres acciones iniciales están resueltas. Verificación Release: **13/13** casos directamente relacionados y suite global con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-build --no-restore -v minimal`: **1.669/1.669**, sin omitidos. Solo se modificaron tests y este registro. La clasificación individual y el cierre quedan para la segunda ronda.
+
+### Grupo 8. Persistencia y transacciones
+
+Diagnóstico inicial del 2026-10-29, sin cambios en tests ni producción. Línea base relacionada **43/43** superados en Debug: `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Debug --no-restore --filter 'FullyQualifiedName~SqliteUnitOfWorkTests|FullyQualifiedName~SqliteMigrationServiceTests|FullyQualifiedName~SqliteConnectionFactoryTests|FullyQualifiedName~SqlitePersistenceIntegrationTests' -v minimal`. El intento Release quedó bloqueado al compilar por DLL en uso por otro `testhost`; no fue un fallo de tests y no se detuvo ese proceso.
+
+| Prioridad | Hallazgo | Acción propuesta |
+|---|---|---|
+| Media | [ApplyPendingMigrations_WhenScriptsArePending_ExecutesInVersionOrder](../tests/Linkubator.Tests/Infrastructure/SqliteMigrationServiceTests.cs) recibe los scripts ya ordenados y con versiones de igual longitud. Una implementación que no ordenase, o que ordenase lexicográficamente, podría superar el caso. | **Resuelto:** entrada `V10`, `V2`, `V1` y escrituras dependientes; el valor final demuestra el orden numérico. |
+| Media | [ApplyPendingMigrations_WhenAScriptFails_DoesNotRecordFailedVersionOrContinue](../tests/Linkubator.Tests/Infrastructure/SqliteMigrationServiceTests.cs) falla en la primera instrucción de la migración. No demuestra que se reviertan escrituras anteriores de esa misma migración, aunque sí comprueba historia y ausencia de ejecución posterior. | **Resuelto:** el script fallido inserta antes del error; se exige que solo permanezca el dato de la migración anterior, sin registrar ni continuar la fallida. |
+| Media | [UpdateCollection_WhenPrivatizingCollectionAndPublishingLinkConcurrently_KeepsLinkPrivate](../tests/Linkubator.Tests/Integration/SqlitePersistenceIntegrationTests.cs) descarta ambos resultados y solo verifica los estados finales. Un rechazo indebido de publicación por una causa ajena a la carrera podría pasar inadvertido. | **Resuelto:** se exige éxito de privatización y publicación exitosa o un único error `LINK_PUBLIC_IN_PRIVATE_COLLECTION`, conservando las comprobaciones finales. |
+| Baja | [UnitOfWork_Rollback_LeavesPreviousStateUnchanged](../tests/Linkubator.Tests/Infrastructure/SqliteUnitOfWorkTests.cs) y [UnitOfWork_DisposeAsync_WhenTransactionIsActive_RollsBackWrites](../tests/Linkubator.Tests/Infrastructure/SqliteUnitOfWorkTests.cs) comprueban la ausencia de la colección, pero no la ausencia de su proyección escrita en la misma transacción. | **Resuelto:** ambas pruebas verifican también que no queda la proyección correspondiente al identificador insertado. |
+
+Las cuatro acciones iniciales están resueltas. Verificación Debug: **32/32** casos de migraciones, unidad de trabajo y persistencia; suite global con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Debug --no-build --no-restore -v minimal`: **1.669/1.669**, sin omitidos. Solo se modificaron tests y este registro. La revisión individual queda para la segunda ronda; sigue el grupo 9 antes de terminar la primera.
+
+### Grupo 9. Base de aplicación, presentación y observabilidad
+
+Diagnóstico inicial adicional del 2026-10-29, sin cambios en tests ni producción. Línea base relacionada **70/70** en Debug: `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Debug --no-restore --filter 'FullyQualifiedName~DashboardServiceTests|FullyQualifiedName~SqliteDashboardRepositoryTests|FullyQualifiedName~ResultTests|FullyQualifiedName~ApplicationServiceBaseTests|FullyQualifiedName~LoggingTests|FullyQualifiedName~AppSidebarViewModelFactoryTests|FullyQualifiedName~LayerDependencyTests|FullyQualifiedName~ProjectReferenceMatrixTests' -v minimal`. No incluye todos los casos mixtos de presentación y logs de integración, ni acredita clasificación individual completa.
+
+| Prioridad | Hallazgo | Acción propuesta |
+|---|---|---|
+| Media | [GetByUser_WhenUserHasMoreThanTwelveLinks_ReturnsTwelveMostRecent](../tests/Linkubator.Tests/Infrastructure/SqliteDashboardRepositoryTests.cs) solo comprueba cantidad y primer enlace. Un orden incorrecto o sustitución de los once restantes pasaría inadvertido. Referencia: [specifications.md → «Listados»](../context/specifications.md#listados). | **Resuelto:** secuencia exacta de doce enlaces, tanto con fechas distintas como con todas las fechas iguales para comprobar el desempate por identificador. |
+| Media | [GenericResultFailureOverloads_FilterNullsAndRetainErrors](../tests/Linkubator.Tests/Application/ResultTests.cs) no suministra ningún error nulo ni usa una colección con errores para el supuesto caso enumerable; repite llamadas con un único error. Su nombre atribuye cobertura de filtrado y sobrecargas que no ejercita. | **Resuelto:** se ejercitan las sobrecargas enumerable y params con entradas nulas; se verifica conservación y orden exacto de los códigos válidos según el filtrado existente de `Result`. |
+| Baja | [CreateSidebar_WithSelectedCollection_MarksOnlyOwnedMatchingItem](../tests/Linkubator.Tests/Web/AppSidebarViewModelFactoryTests.cs) prepara una sola colección; no demuestra que otra colección permanezca inactiva cuando hay selección. | **Resuelto:** dos colecciones y comprobación del conjunto exacto de rutas activas, con selección propia y selección inexistente. |
+| Baja | [SafeLogger_Log_WhenContextContainsEnumerableAndCustomValues_SanitizesThem](../tests/Linkubator.Tests/Application/LoggingTests.cs) solo exige que el enumerable conserve `short`; perder la cadena larga o el número pasaría inadvertido. El nombre y el texto de los datos también sugieren truncado que no se verifica ni debe asumirse. | **Resuelto:** renombrado a `SafeLogger_Log_WithEnumerable_PreservesAllItemsAndEscapesControls`, con comparación completa de cadena larga, controles escapados, cadena corta y número. |
+
+Verificación de las cuatro correcciones: **43/43** casos de dashboard SQLite, resultados, menú lateral y logging en Debug; suite global con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Debug --no-build --no-restore -v minimal`: **1.670/1.670**, sin omitidos. Solo se modificaron tests y este registro. Termina la primera ronda de diagnóstico y correcciones de los nueve grupos; ninguno se declara auditado exhaustivamente. La siguiente ronda empieza por el inventario y clasificación individual del grupo 1.
+
+Corrección puntual adicional del 2026-10-29: [LinkCardViewModelFactory](../src/Linkubator.Web/Models/AppDashboard/LinkCardViewModelFactory.cs) lanzaba `OverflowException` al calcular el color cuando el hash era `int.MinValue`, por ejemplo con `DAEFIDY`. **Resuelto:** convertir el hash a `long` antes de `Math.Abs`, manteniendo el acumulador y los colores anteriores. [LinkCardViewModelFactoryTests](../tests/Linkubator.Tests/Web/LinkCardViewModelFactoryTests.cs) reproduce el extremo, sus variantes y la creación de tarjetas, y fija colores previos de hashes positivos y negativos. Antes de corregir, fallaban 5 de los 12 casos; después, **52/52** pruebas Web superadas en Release con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~Linkubator.Tests.Web' --verbosity minimal`. Esta ejecución no sustituye la revisión individual pendiente.
+
+Hallazgo intermitente ya resuelto durante grupos anteriores:
+
+| Prioridad | Hallazgo | Acción propuesta |
+|---|---|---|
+| Resuelto | [RequestLoggingMiddleware_IncludesSearchButOmitsOtherQueryParameters](../tests/Linkubator.Tests/Integration/WebStartupTests.cs) y [RequestLoggingMiddleware_PreservesPublicPathAndQueryWithoutTokenHeuristics](../tests/Linkubator.Tests/Integration/WebStartupTests.cs) perdían `RequestQueryString` en presencia de otros hosts de prueba. El contexto diagnóstico de Serilog podía usar el logger global, sustituido por otros hosts concurrentes, mientras los eventos se capturaban con un logger local. | La factoría de pruebas vincula el contexto diagnóstico al mismo logger local que captura los eventos. Reproducción focalizada y dos ejecuciones globales completas en verde; no se ha cambiado el logging de producción. |
+
+## Ejecuciones globales
+
+- 2026-10-29, Release, `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore -v minimal`: **1.644/1.646** superados; fallaron ambos tests de logging indicados en el grupo 9.
+- Repetición con `--no-build --no-restore`: **1.645/1.646** superados; falló solo `RequestLoggingMiddleware_IncludesSearchButOmitsOtherQueryParameters`.
+- Ejecución focalizada de ambos tests con `--no-build --no-restore`: **2/2** superados. Estos resultados no acreditan una suite global verde.
+- Tras aislar el logger de la factoría de pruebas: conjunto concurrente que reproducía el fallo **7/7** superados, seguido de dos ejecuciones globales con `--no-build --no-restore`: **1.652/1.652** y **1.652/1.652** superados. Estas ejecuciones no sustituyen la clasificación pendiente del grupo 9.
+
+## Control de completitud
+
+- Antes de cerrar un grupo, obtener el listado de tests descubiertos en el proyecto y asignar cada identificador de caso a un grupo; comprobar que no quedan identificadores sin clasificar. Repetir el inventario si cambian los tests durante la revisión.
+- Confrontar **regla → tests** y **test → regla**. El primer sentido descubre huecos; el segundo, expectativas obsoletas o pruebas sin propósito vigente.
+- Mantener en este documento el estado y la evidencia resumida de cada grupo. No volcar aquí las reglas del producto ni copiar la checklist: enlazar sus fuentes.
+- En S12, completar la matriz de trazabilidad y la [Definition of Done](mvp0-plan.md#s12-cierre-y-hardening-m), incluidas las comprobaciones manuales que los tests automatizados no sustituyen.

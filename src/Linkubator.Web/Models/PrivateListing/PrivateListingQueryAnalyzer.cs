@@ -22,10 +22,8 @@ public static class PrivateListingQueryAnalyzer
         int pageNumber = DefaultPageNumber;
         long? collectionId = null;
         string? searchText = null;
-        bool hasPageError = false;
         bool hasCollectionError = false;
         bool hasSearchError = false;
-        string? pageErrorMessage = null;
         string? collectionErrorMessage = null;
         string? searchErrorMessage = null;
 
@@ -37,18 +35,9 @@ public static class PrivateListingQueryAnalyzer
         }
 
         string? pageValue = GetFirstValue(query, "p");
-        if (!string.IsNullOrEmpty(pageValue))
+        if (!string.IsNullOrEmpty(pageValue) && TryParsePage(pageValue, out int parsedPage))
         {
-            if (IsPositiveAsciiInteger(pageValue, int.MaxValue, out long parsedPage))
-            {
-                pageNumber = (int)parsedPage;
-            }
-            else
-            {
-                hasPageError = true;
-                pageNumber = DefaultPageNumber;
-                pageErrorMessage = CommonErrors.ListingValuesInvalidMessage;
-            }
+            pageNumber = parsedPage;
         }
 
         if (supportsCollection)
@@ -94,12 +83,27 @@ public static class PrivateListingQueryAnalyzer
             pageNumber,
             collectionId,
             searchText,
-            hasPageError,
             hasCollectionError,
             hasSearchError,
-            pageErrorMessage,
             collectionErrorMessage,
             searchErrorMessage);
+    }
+
+    private static bool TryParsePage(string value, out int page)
+    {
+        page = 0;
+        foreach (char character in value)
+        {
+            if (character is < '0' or > '9')
+            {
+                return false;
+            }
+
+            int digit = character - '0';
+            page = page > (int.MaxValue - digit) / 10 ? int.MaxValue : (page * 10) + digit;
+        }
+
+        return page > 0;
     }
 
     private static bool IsPositiveAsciiInteger(string value, long maximum, out long parsed)

@@ -124,7 +124,7 @@ public static class SafeLogger
         return propertyValue switch
         {
             null => null,
-            string stringValue => SafePreview(stringValue, 64),
+            string stringValue => EscapeControls(stringValue),
             bool or byte or short or int or long or float or double or decimal or Guid or DateTime or DateTimeOffset => propertyValue,
             Enum => propertyValue,
             IEnumerable enumerableValue => SanitizeEnumerable(enumerableValue),
@@ -138,11 +138,14 @@ public static class SafeLogger
 
         foreach (object? item in enumerableValue)
         {
-            sanitizedItems.Add(item is string itemAsString ? SafePreview(itemAsString, 32) : item);
+            sanitizedItems.Add(item is string itemAsString ? EscapeControls(itemAsString) : item);
         }
 
         return sanitizedItems;
     }
+
+    private static string EscapeControls(string value)
+        => value.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t");
 
     private readonly record struct SafeLogState(string Message, IReadOnlyDictionary<string, object?> Values)
         : IReadOnlyCollection<KeyValuePair<string, object?>>

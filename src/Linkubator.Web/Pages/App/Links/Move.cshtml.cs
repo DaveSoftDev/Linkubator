@@ -88,6 +88,11 @@ public sealed class MoveModel : LinkManagementPageModel
             cancellationToken);
         if (!currentResult.IsSuccess || currentResult.Value is null)
         {
+            if (currentResult.Errors.Any(error => error.Category == Linkubator.Application.Enums.ApplicationErrorCategory.ResourceNotAccessible))
+            {
+                return RedirectUnavailableLink();
+            }
+
             ApplyErrors(currentResult.Errors);
             return Page();
         }
@@ -105,6 +110,22 @@ public sealed class MoveModel : LinkManagementPageModel
         if (result.IsSuccess)
         {
             return LocalRedirect(ReturnRoute);
+        }
+
+        if (result.Errors.Any(error => error.Code == ApplicationConstants.LinkErrors.LinkNotAccessible().Code))
+        {
+            return RedirectUnavailableLink();
+        }
+
+        if (result.Errors.Any(error =>
+            error.Code == ApplicationConstants.LinkErrors.DestinationCollectionIdInvalid().Code
+            || error.Code == ApplicationConstants.LinkErrors.CollectionNotAccessible().Code))
+        {
+            await LoadSidebarCollections(SidebarSelectionKind, cancellationToken);
+            if (!LoadCollections())
+            {
+                return Page();
+            }
         }
 
         ApplyErrors(result.Errors);
@@ -171,11 +192,17 @@ public sealed class MoveModel : LinkManagementPageModel
         List<Presentation.PageErrorSummaryItemViewModel> items = [];
         foreach (ApplicationResults.ApplicationError error in errors)
         {
-            if (error.Category == Linkubator.Application.Enums.ApplicationErrorCategory.ResourceNotAccessible)
+            if (error.Code == ApplicationConstants.LinkErrors.CollectionNotAccessible().Code)
+            {
+                string message = ApplicationConstants.LinkErrors.DestinationCollectionIdInvalid().Message ?? string.Empty;
+                ModelState.AddModelError("Input.DestinationCollectionId", message);
+                items.Add(new Presentation.PageErrorSummaryItemViewModel { Message = message, FieldId = "link-collection" });
+            }
+            else if (error.Category == Linkubator.Application.Enums.ApplicationErrorCategory.ResourceNotAccessible)
             {
                 ResourceUnavailable = Presentation.PrivateResourceUnavailablePresenter.Create(error, LinkListRoute);
             }
-            else if (error.Field == "DestinationCollectionId")
+            else if (error.Field == nameof(LinkMoveInput.DestinationCollectionId))
             {
                 string message = error.Message ?? error.Code;
                 ModelState.AddModelError("Input.DestinationCollectionId", message);

@@ -4,10 +4,8 @@ public sealed record PrivateListingQueryAnalysisResult(
     int PageNumber,
     long? CollectionId,
     string? SearchText,
-    bool HasPageError,
     bool HasCollectionError,
     bool HasSearchError,
-    string? PageErrorMessage,
     string? CollectionErrorMessage,
     string? SearchErrorMessage)
 {
@@ -17,10 +15,8 @@ public sealed record PrivateListingQueryAnalysisResult(
         null,
         false,
         false,
-        false,
-        null,
         null,
         null);
 
-    public bool HasAnyError => HasPageError || HasCollectionError || HasSearchError;
+    public bool HasAnyError => HasCollectionError || HasSearchError;
 }

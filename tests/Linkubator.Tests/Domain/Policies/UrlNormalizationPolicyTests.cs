@@ -121,6 +121,48 @@ public class UrlNormalizationPolicyTests
         Assert.Equal(expected, UrlNormalizationPolicy.Normalize(unicodePath));
     }
 
+    [Theory]
+    [InlineData("²", "²")]
+    [InlineData("Ⅷ", "ⅷ")]
+    [InlineData("\U00020000", "\U00020000")]
+    [InlineData("\U00010400", "\U00010428")]
+    [InlineData("\U0001D7D8", "\U0001D7D8")]
+    [InlineData("\U00010107", "\U00010107")]
+    public void Normalize_WhenUnicodeIsLetterOrNumber_PreservesLiteralAndEncodedForms(string value, string normalizedValue)
+    {
+        string encoded = Uri.EscapeDataString(value);
+        string expectedPath = $"examplecom{normalizedValue}";
+        string expectedQuery = $"examplecomq{normalizedValue}";
+
+        Assert.Equal(expectedPath, UrlNormalizationPolicy.Normalize($"https://example.com/{value}"));
+        Assert.Equal(expectedPath, UrlNormalizationPolicy.Normalize($"https://example.com/{encoded}"));
+        Assert.Equal(expectedQuery, UrlNormalizationPolicy.Normalize($"https://example.com/?q={value}"));
+        Assert.Equal(expectedQuery, UrlNormalizationPolicy.Normalize($"https://example.com/?q={encoded}"));
+    }
+
+    [Theory]
+    [InlineData("²")]
+    [InlineData("\U00020000")]
+    public void Normalize_WhenUrlsDifferByUnicodeLetterOrNumber_DoesNotCollapseTheirKeys(string value)
+    {
+        string withCharacter = UrlNormalizationPolicy.Normalize($"https://example.com/?q=x{value}");
+        string withoutCharacter = UrlNormalizationPolicy.Normalize("https://example.com/?q=x");
+
+        Assert.NotEqual(withoutCharacter, withCharacter);
+    }
+
+    [Theory]
+    [InlineData("\U0001F600")]
+    [InlineData("€")]
+    public void Normalize_WhenUnicodeIsSymbol_RemovesLiteralAndEncodedForms(string symbol)
+    {
+        const string expected = "examplecomabqxy";
+        string encoded = Uri.EscapeDataString(symbol);
+
+        Assert.Equal(expected, UrlNormalizationPolicy.Normalize($"https://example.com/a{symbol}b?q=x{symbol}y"));
+        Assert.Equal(expected, UrlNormalizationPolicy.Normalize($"https://example.com/a{encoded}b?q=x{encoded}y"));
+    }
+
     [Trait("Category", "Validation")]
     [Fact]
     public void NormalizeDoesNotRevalidateAnAlreadyAdjustedUrl()

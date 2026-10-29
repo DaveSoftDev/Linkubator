@@ -7,7 +7,7 @@ namespace Linkubator.Application.Validation.Links;
 
 public sealed class LinkCreateValidator : IValidator<LinkCreateRequest>
 {
-    public Result Validate(LinkCreateRequest request)
+    public Result Validate(LinkCreateRequest? request)
     {
         if (request is null)
         {
@@ -37,7 +37,11 @@ public sealed class LinkCreateValidator : IValidator<LinkCreateRequest>
             return urlResult;
         }
 
-        return LinkMetadataValidator.Validate(request.Title, request.Description, request.Image, adjustedUrl);
+        return LinkMetadataValidator.Validate(new LinkMetadataValidationRequest(
+            request.Title,
+            request.Description,
+            request.Image,
+            adjustedUrl));
     }
 
     private static Result ValidateField(string field, Action validate)

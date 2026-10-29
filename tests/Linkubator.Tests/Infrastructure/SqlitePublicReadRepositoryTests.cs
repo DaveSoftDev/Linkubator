@@ -13,7 +13,9 @@ public sealed class SqlitePublicReadRepositoryTests
         long publicCollectionId = await database.SeedCollection(42, "Public", "public", true, "Public description");
         long privateCollectionId = await database.SeedCollection(42, "Private", "private", false);
         await database.SeedLink(42, publicCollectionId, "https://example.test/public", "https://example.test/public", "Public link", true);
+        await database.SeedLink(42, publicCollectionId, "https://example.test/unpublished", "https://example.test/unpublished", "Unpublished link", false);
         await database.SeedLink(42, privateCollectionId, "https://example.test/private", "https://example.test/private", "Private link", false);
+        await database.SeedLink(42, privateCollectionId, "https://example.test/private-collection", "https://example.test/private-collection", "Hidden link", true);
         await using SqliteConnection connection = database.OpenConnection();
         IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
 
@@ -110,16 +112,53 @@ public sealed class SqlitePublicReadRepositoryTests
     }
 
     [Fact]
-    public async Task GetCollectionsPage_WhenCollectionIsPrivate_ExcludesIt()
+    public async Task GetUserPage_WhenOtherUserHasPublicContent_ReturnsOnlyRequestedUsersData()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
-        await database.SeedCollection(42, "Private", "private", false);
+        long ownerCollectionId = await database.SeedCollection(42, "Owner", "owner-public", true);
+        long otherCollectionId = await database.SeedCollection(99, "Other", "other-public", true);
+        await database.SeedLink(42, ownerCollectionId, "https://example.test/owner", "https://example.test/owner", "Owner link", true);
+        await database.SeedLink(99, otherCollectionId, "https://example.test/other", "https://example.test/other", "Other link", true);
+        await using SqliteConnection connection = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
+
+        Linkubator.Application.Dtos.Models.PublicUserDto? result = await repository.GetUserPage("owner");
+
+        Assert.NotNull(result);
+        Assert.Equal("owner", result.Alias);
+        Assert.Equal(new[] { "owner-public" }, result.PublicCollections.Select(collection => collection.Slug));
+        Assert.Equal(new[] { "https://example.test/owner" }, result.RecentLinks.Select(link => link.UrlOriginal));
+    }
+
+    [Fact]
+    public async Task GetCollectionsPage_WhenPrivateCollectionContainsPublicLink_ExcludesIt()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Private", "private", false);
+        await database.SeedLink(42, collectionId, "https://example.test/hidden", "https://example.test/hidden", "Hidden link", true);
         await using SqliteConnection connection = database.OpenConnection();
         IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
 
         IReadOnlyCollection<Linkubator.Application.Dtos.Models.PublicCollectionSummaryDto>? result = await repository.GetCollectionsPage("owner");
 
         Assert.Empty(result!);
+    }
+
+    [Fact]
+    public async Task GetCollectionsPage_WhenOtherUserHasPublicContent_ReturnsOnlyRequestedUsersCollections()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long ownerCollectionId = await database.SeedCollection(42, "Owner", "owner-public", true);
+        long otherCollectionId = await database.SeedCollection(99, "Other", "other-public", true);
+        await database.SeedLink(42, ownerCollectionId, "https://example.test/owner", "https://example.test/owner", "Owner link", true);
+        await database.SeedLink(99, otherCollectionId, "https://example.test/other", "https://example.test/other", "Other link", true);
+        await using SqliteConnection connection = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.PublicCollectionSummaryDto>? result = await repository.GetCollectionsPage("owner");
+
+        Assert.NotNull(result);
+        Assert.Equal(new[] { "owner-public" }, result.Select(collection => collection.Slug));
     }
 
     [Fact]
@@ -147,6 +186,24 @@ public sealed class SqlitePublicReadRepositoryTests
         Linkubator.Application.Dtos.Models.PublicCollectionDto? result = await repository.GetCollectionPage("owner", "private", 1);
 
         Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetCollectionPage_WhenOtherUserHasSamePublicSlug_ReturnsOnlyRequestedUsersLinks()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long ownerCollectionId = await database.SeedCollection(42, "Owner", "shared", true);
+        long otherCollectionId = await database.SeedCollection(99, "Other", "shared", true);
+        await database.SeedLink(42, ownerCollectionId, "https://example.test/owner", "https://example.test/owner", "Owner link", true);
+        await database.SeedLink(99, otherCollectionId, "https://example.test/other", "https://example.test/other", "Other link", true);
+        await using SqliteConnection connection = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
+
+        Linkubator.Application.Dtos.Models.PublicCollectionDto? result = await repository.GetCollectionPage("owner", "shared", 1);
+
+        Assert.NotNull(result);
+        Assert.Equal("Owner", result.CollectionName);
+        Assert.Equal(new[] { "https://example.test/owner" }, result.Links.Select(link => link.UrlOriginal));
     }
 
     [Fact]

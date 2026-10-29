@@ -6,6 +6,8 @@ La multiplicidad User–Collection contempla todos los estados de la cuenta; la 
 
 La propiedad de las asociaciones entre `Link`, `Collection` y `Tag` se define en [domain-model.md → «Propiedad de los datos»](../domain-model.md#propiedad-de-los-datos); su garantía técnica se describe en [architecture.md → «Persistencia»](../architecture.md#persistencia).
 
+Los campos de cada entidad utilizados en las búsquedas se definen en [specifications.md → «Búsqueda y filtros»](../specifications.md#búsqueda-y-filtros).
+
 ```mermaid
 erDiagram
     User {
@@ -18,8 +20,8 @@ erDiagram
         TEXT SecurityStamp
         INTEGER FailedLoginAttempts
         DATETIME LockoutEnd "NULL si no hay bloqueo activo"
-        DATETIME LastEmailSentAt "NULL si aun no se ha enviado un correo con token"
-        DATETIME LastExistingAccountNoticeAt "NULL si aun no se ha enviado el aviso"
+        DATETIME LastEmailSentAt "Marca de aceptación de solicitud con token; nullable"
+        DATETIME LastExistingAccountNoticeAt "Marca de aceptación de solicitud de aviso; nullable"
         DATETIME CreatedAt
     }
 

@@ -63,6 +63,41 @@ public class CollectionServiceTests
         Assert.Equal("CUSTOM_COLLECTION_UPDATE_VALIDATOR", result.Errors[0].Code);
     }
 
+    [Theory]
+    [InlineData(true, false, false, 1)]
+    [InlineData(false, false, false, 0)]
+    [InlineData(false, true, false, 0)]
+    [InlineData(true, true, true, 0)]
+    public async Task UpdateCollection_WhenLinksExist_DoesNotLoadLinksAndReturnsTheirCount(
+        bool wasPublic, bool isPublic, bool expectedLinkIsPublic, int expectedPrivacyUpdates)
+    {
+        InMemoryCollectionRepository repository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(7, "Collection", null, wasPublic);
+        Collection linkCollection = Collection.Create(7, "Collection", null, wasPublic);
+        SetId(collection, 12);
+        SetId(linkCollection, 12);
+        repository.Items.Add(collection);
+        Link link = Link.Create(7, linkCollection, "https://example.test/one", null, null, null, wasPublic);
+        Link privateLink = Link.Create(7, linkCollection, "https://example.test/private", null, null, null, false);
+        linkRepository.Links.Add(link);
+        linkRepository.Links.Add(privateLink);
+        CollectionService service = new(NullLogger<CollectionService>.Instance, new CurrentUser(7), repository, new FakeUnitOfWorkFactory(repository, linkRepository));
+
+        Result<CollectionDto> result = await service.UpdateCollection(new CollectionUpdateRequest(12, "Collection", "Updated", isPublic));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value!.LinkCount);
+        Assert.Equal(isPublic, result.Value.IsPublic);
+        Assert.Equal(isPublic, collection.IsPublic);
+        Assert.Equal("Updated", result.Value.Description);
+        Assert.Equal(expectedLinkIsPublic, link.IsPublic);
+        Assert.False(privateLink.IsPublic);
+        Assert.Equal(0, linkRepository.GetAllByCollectionCalls);
+        Assert.Equal(0, linkRepository.UpdateCalls);
+        Assert.Equal(expectedPrivacyUpdates, linkRepository.UpdatePrivateByCollectionCalls);
+    }
+
     [Fact]
     public void DomainEntities_WhenCreated_SetCreatedAtToCurrentUtcTime()
     {
@@ -77,6 +112,53 @@ public class CollectionServiceTests
 
         Assert.InRange(collection.CreatedAt, before, after);
         Assert.InRange(link.CreatedAt, before, after);
+    }
+
+    [Fact]
+    public async Task UpdateCollection_WhenRequestIsNull_ReturnsRequestRequired()
+    {
+        CollectionService service = new(
+            NullLogger<CollectionService>.Instance,
+            new CurrentUser(7),
+            new InMemoryCollectionRepository(),
+            new FakeUnitOfWorkFactory(new InMemoryCollectionRepository(), new InMemoryLinkRepository()));
+
+        Result<CollectionDto> result = await service.UpdateCollection(null);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(result.Errors).Code);
+    }
+
+    [Fact]
+    public async Task DeleteCollection_WhenRequestIsNull_ReturnsRequestRequired()
+    {
+        InMemoryCollectionRepository repository = new();
+        CollectionService service = new(
+            NullLogger<CollectionService>.Instance,
+            new CurrentUser(7),
+            repository,
+            new FakeUnitOfWorkFactory(repository, new InMemoryLinkRepository()));
+
+        Result result = await service.DeleteCollection(null);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(result.Errors).Code);
+        Assert.Empty(repository.Items);
+    }
+
+    [Fact]
+    public async Task GetCollection_WhenRequestIsNull_ReturnsRequestRequired()
+    {
+        CollectionService service = new(
+            NullLogger<CollectionService>.Instance,
+            new CurrentUser(7),
+            new InMemoryCollectionRepository(),
+            new FakeUnitOfWorkFactory(new InMemoryCollectionRepository(), new InMemoryLinkRepository()));
+
+        Result<CollectionDto> result = await service.GetCollection(null);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(result.Errors).Code);
     }
 
     [Fact]
@@ -117,11 +199,16 @@ public class CollectionServiceTests
         Collection collection = Collection.Create(currentUser.UserId, "My Collection", "Description", true);
         SetId(collection, 21);
         repository.Items.Add(collection);
+        InMemoryLinkRepository linkRepository = new();
+        Collection detachedLinkCollection = Collection.Create(currentUser.UserId, "My Collection", "Description", true);
+        SetId(detachedLinkCollection, collection.Id);
+        linkRepository.Links.Add(Link.Create(currentUser.UserId, detachedLinkCollection, "https://example.test/one", null, null, null, true));
+        linkRepository.Links.Add(Link.Create(currentUser.UserId, detachedLinkCollection, "https://example.test/two", null, null, null, true));
         CollectionService service = new CollectionService(
             NullLogger<CollectionService>.Instance,
             currentUser,
             repository,
-            new FakeUnitOfWorkFactory(repository, new InMemoryLinkRepository()));
+            new FakeUnitOfWorkFactory(repository, linkRepository));
 
         Result<CollectionDto> result = await service.GetCollection(new CollectionGetRequest(collection.Id));
 
@@ -129,7 +216,7 @@ public class CollectionServiceTests
         Assert.Equal(collection.Id, result.Value!.Id);
         Assert.Equal(collection.Name, result.Value.Name);
         Assert.Empty(collection.Links);
-        Assert.Equal(0, result.Value.LinkCount);
+        Assert.Equal(2, result.Value.LinkCount);
         Assert.Equal(collection.Description, result.Value.Description);
         Assert.True(result.Value.IsPublic);
     }
@@ -248,7 +335,7 @@ public class CollectionServiceTests
     }
 
     [Fact]
-    public async Task CreateCollection_WhenRequestIsNull_ReturnsValidationError()
+    public async Task CreateCollection_WhenRequestIsNull_ReturnsRequestRequiredError()
     {
         CurrentUser currentUser = new CurrentUser(7);
         InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
@@ -256,7 +343,7 @@ public class CollectionServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
         CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
 
-        Result<CollectionDto> result = await service.CreateCollection(null!);
+        Result<CollectionDto> result = await service.CreateCollection(null);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
@@ -428,8 +515,9 @@ public class CollectionServiceTests
         Assert.True(result.IsSuccess);
         Assert.Equal(1, result.Value!.Page);
         Assert.Equal(1, result.Value.PageCount);
-        Assert.Equal(2, result.Value.Items.Count);
-        Assert.All(result.Value.Items, item => Assert.Equal(7, currentUser.UserId));
+        Assert.Equal(new[] { alpha.Id, beta.Id }, result.Value.Items.Select(item => item.Id));
+        Assert.Equal(currentUser.UserId, repository.LastUserId);
+        Assert.Equal(1, repository.LastPage);
     }
 
     [Fact]
@@ -923,22 +1011,22 @@ public class CollectionServiceTests
 
     private sealed class AcceptAllGetCollectionValidator : IValidator<CollectionGetRequest>
     {
-        public Result Validate(CollectionGetRequest request) => Result.Success();
+        public Result Validate(CollectionGetRequest? request) => Result.Success();
     }
 
     private sealed class AcceptAllCreateCollectionValidator : IValidator<CollectionCreateRequest>
     {
-        public Result Validate(CollectionCreateRequest request) => Result.Success();
+        public Result Validate(CollectionCreateRequest? request) => Result.Success();
     }
 
     private sealed class AcceptAllDeleteCollectionValidator : IValidator<CollectionDeleteRequest>
     {
-        public Result Validate(CollectionDeleteRequest request) => Result.Success();
+        public Result Validate(CollectionDeleteRequest? request) => Result.Success();
     }
 
     private sealed class CustomFailingUpdateCollectionValidator : IValidator<CollectionUpdateRequest>
     {
-        public Result Validate(CollectionUpdateRequest request)
+        public Result Validate(CollectionUpdateRequest? request)
             => Result.Failure(ApplicationError.Validation("CUSTOM_COLLECTION_UPDATE_VALIDATOR"));
     }
 
@@ -1103,6 +1191,8 @@ public class CollectionServiceTests
         public List<Link> Links { get; } = [];
         public List<Link> UpdatedLinks { get; } = [];
         public int UpdateCalls { get; private set; }
+        public int GetAllByCollectionCalls { get; private set; }
+        public int UpdatePrivateByCollectionCalls { get; private set; }
 
         public Task<Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<Link?>(null);
@@ -1114,10 +1204,16 @@ public class CollectionServiceTests
             => Task.FromResult<IReadOnlyCollection<Link>>(Array.Empty<Link>());
 
         public Task<IReadOnlyCollection<Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyCollection<Link>>(
+        {
+            GetAllByCollectionCalls++;
+            return Task.FromResult<IReadOnlyCollection<Link>>(
                 Links
                     .Where(item => item.UserId == userId && item.CollectionId == collectionId)
                     .ToList());
+        }
+
+        public Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => Task.FromResult(Links.Count(item => item.UserId == userId && item.CollectionId == collectionId));
 
         public Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<LinkDto>>(Array.Empty<LinkDto>());
@@ -1135,6 +1231,17 @@ public class CollectionServiceTests
         {
             UpdateCalls++;
             UpdatedLinks.Add(link);
+            return Task.CompletedTask;
+        }
+
+        public Task UpdatePrivateByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+        {
+            UpdatePrivateByCollectionCalls++;
+            foreach (Link link in Links.Where(item => item.UserId == userId && item.CollectionId == collectionId && item.IsPublic))
+            {
+                link.ChangePrivacy(false, link.Collection);
+            }
+
             return Task.CompletedTask;
         }
 

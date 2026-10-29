@@ -1,46 +1,45 @@
 using Dapper;
 using Microsoft.Data.Sqlite;
 using ApplicationContracts = Linkubator.Application.Contracts;
+using ApplicationModels = Linkubator.Application.Models;
+using InfrastructureConstants = Linkubator.Infrastructure.Constants;
 using InfrastructureContracts = Linkubator.Infrastructure.Contracts;
-using InfrastructureOptions = Linkubator.Infrastructure.Options;
 
 namespace Linkubator.Infrastructure.DevelopmentIdentity;
 
 public sealed class DevelopmentIdentityProvider : ApplicationContracts.IDevelopmentIdentityProvider
 {
-    private const string GetUserIdSql = """
-        SELECT Id
+    private const string GetProfileSql = """
+        SELECT User.Id AS UserId, User.Name, User.Alias, User.Email
         FROM User
-        WHERE Email = @Email
-          AND Name IS NOT NULL
-          AND Alias IS NOT NULL
-          AND Password IS NOT NULL
-          AND EmailConfirmedAt IS NOT NULL;
+        WHERE User.Email = @Email
+          AND User.Name IS NOT NULL
+          AND User.Alias IS NOT NULL
+          AND User.Password IS NOT NULL
+          AND User.EmailConfirmedAt IS NOT NULL;
         """;
 
     private readonly InfrastructureContracts.ISqliteConnectionFactory _connectionFactory;
-    private readonly InfrastructureOptions.DevelopmentIdentityOptions _options;
 
-    public DevelopmentIdentityProvider(
-        InfrastructureContracts.ISqliteConnectionFactory connectionFactory,
-        InfrastructureOptions.DevelopmentIdentityOptions options)
+    public DevelopmentIdentityProvider(InfrastructureContracts.ISqliteConnectionFactory connectionFactory)
     {
         ArgumentNullException.ThrowIfNull(connectionFactory);
-        ArgumentNullException.ThrowIfNull(options);
 
         _connectionFactory = connectionFactory;
-        _options = options;
     }
 
-    public async Task<long> GetUserId(CancellationToken cancellationToken = default)
+    public async Task<ApplicationModels.DevelopmentIdentityProfile> GetProfile(CancellationToken cancellationToken = default)
     {
         using SqliteConnection connection = _connectionFactory.CreateOpenConnection();
         CommandDefinition command = new(
-            GetUserIdSql,
-            new { _options.Email },
+            GetProfileSql,
+            new { Email = InfrastructureConstants.DevelopmentIdentityDefaults.Email },
             cancellationToken: cancellationToken);
-        long? userId = await connection.QuerySingleOrDefaultAsync<long?>(command);
+        ApplicationModels.DevelopmentIdentityProfile? profile =
+            await connection.QuerySingleOrDefaultAsync<ApplicationModels.DevelopmentIdentityProfile>(command);
 
-        return userId ?? throw new InvalidOperationException("The configured development identity is missing or incomplete.");
+        return profile is { IsValid: true }
+            ? profile
+            : throw new InvalidOperationException("The development identity is missing or incomplete.");
     }
 }

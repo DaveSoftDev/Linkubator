@@ -43,8 +43,7 @@ La visibilidad de la colección se modela con `IsPublic` y se describe en [domai
 - Una colección aparece en páginas públicas solo si es pública y tiene al menos un enlace público.
 - Una colección privada, o una pública sin enlaces públicos, no aparece en ninguna página pública.
 - Una colección vacía puede ser pública pero no aparecerá en páginas públicas hasta que tenga enlaces públicos.
-- Cuando una colección se vuelve privada, todos sus enlaces pasan a ser privados.
-- Cuando una colección se vuelve pública, sus enlaces permanecen privados hasta que el usuario los marca de forma individual.
+- Las transiciones pública → privada y privada → pública, y las ediciones sin cambio de estado, se rigen por [domain-model.md → «Público y privado»](../../../../context/domain-model.md#público-y-privado); las escrituras necesarias se describen en [architecture.md → «Persistencia»](../../../../context/architecture.md#persistencia).
 
 La documentación de producto recoge estas posibilidades en [requirements.md → «Colecciones»](../../../../context/requirements.md#colecciones) y [requirements.md → «Público y privado»](../../../../context/requirements.md#público-y-privado).
 

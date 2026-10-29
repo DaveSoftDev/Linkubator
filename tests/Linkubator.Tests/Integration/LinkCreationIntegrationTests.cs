@@ -895,9 +895,6 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         protected override void ConfigureWebHost(TestHost.IWebHostBuilder builder)
         {
             builder.UseSetting("ConnectionStrings:Linkubator", connectionString);
-            builder.UseSetting("DevelopmentIdentity:Email", DemoEmail);
-            builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
-            builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");
             builder.UseSetting("DevelopmentIdentity:PasswordHash", ValidArgon2idHash);
         }
     }

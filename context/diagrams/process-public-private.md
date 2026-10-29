@@ -1,6 +1,6 @@
 # Proceso de transiciones público y privado
 
-Diagrama derivado de las invariantes de [domain-model.md → «Público y privado»](../domain-model.md#público-y-privado) y su garantía transaccional descrita en [architecture.md → «Persistencia»](../architecture.md#persistencia).
+Diagrama derivado de las invariantes de [domain-model.md → «Público y privado»](../domain-model.md#público-y-privado), los formularios de [specifications.md → «Rutas privadas»](../specifications.md#rutas-privadas) y su garantía transaccional descrita en [architecture.md → «Persistencia»](../architecture.md#persistencia).
 
 ```mermaid
 flowchart TD
@@ -14,9 +14,10 @@ flowchart TD
 
     editCollection[Edita una colección]
     collectionPublicState{¿El estado elegido es público?}
-    preserveLinks[Marcar colección pública y conservar estado de enlaces]
-    makeCollectionPrivate[Guardar colección privada]
-    privateAll[Marcar colección y todos sus enlaces como privados]
+    collectionWasPublic{¿La colección ya era pública?}
+    preserveLinks[Guardar colección pública sin modificar enlaces]
+    keepCollectionPrivate[Guardar colección privada sin modificar enlaces]
+    privateAll[Guardar colección y todos sus enlaces como privados]
 
     createLink[Crea un enlace en una colección]
     creationCollectionPublic{¿La colección está pública?}
@@ -31,8 +32,8 @@ flowchart TD
     moveLink[Mueve un enlace a otra colección]
     movePrivate[Actualizar colección y dejar el enlace privado]
     editLink[Edita un enlace]
+    collectionChanged{¿Cambia la colección del enlace?}
     linkPublicState{¿El estado elegido es público?}
-    keepLinkPrivate[Conservar el enlace privado]
 
     start --> form
     form -->|Crear colección| createCollection --> collectionInitial
@@ -41,7 +42,9 @@ flowchart TD
 
     form -->|Editar colección| editCollection --> collectionPublicState
     collectionPublicState -->|Sí| preserveLinks
-    collectionPublicState -->|No| makeCollectionPrivate --> privateAll
+    collectionPublicState -->|No| collectionWasPublic
+    collectionWasPublic -->|Sí| privateAll
+    collectionWasPublic -->|No| keepCollectionPrivate
 
     form -->|Crear enlace| createLink --> creationCollectionPublic
     creationCollectionPublic -->|Sí| linkInitial
@@ -50,9 +53,11 @@ flowchart TD
     publicOptionDisabled -->|Petición manipulada| rejectCreationPublic
     linkInitial -->|No| linkPrivate
     linkInitial -->|Sí| checkCollection
-    form -->|Editar enlace| editLink --> linkPublicState
+    form -->|Editar enlace| editLink --> collectionChanged
+    collectionChanged -->|Sí: con independencia del estado solicitado| movePrivate
+    collectionChanged -->|No| linkPublicState
     linkPublicState -->|Sí| checkCollection
-    linkPublicState -->|No| keepLinkPrivate
+    linkPublicState -->|No| linkPrivate
     checkCollection -->|Sí| linkPublic
     checkCollection -->|No| rejectPublic
 

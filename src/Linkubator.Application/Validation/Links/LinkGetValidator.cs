@@ -5,7 +5,7 @@ namespace Linkubator.Application.Validation.Links;
 
 public sealed class LinkGetValidator : IValidator<LinkGetRequest>
 {
-    public Result Validate(LinkGetRequest request)
+    public Result Validate(LinkGetRequest? request)
     {
         if (request is null)
         {

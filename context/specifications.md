@@ -41,9 +41,9 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 
 - Hasta que LoginV0 incorpore autenticación real, cada arranque de la aplicación prepara la identidad de desarrollo en todos los entornos, después de aplicar las migraciones y antes de atender peticiones privadas.
 - La identidad de desarrollo comparte el acceso privado entre todas las personas con acceso a la aplicación hasta LoginV0; el riesgo aceptado por DLG consta en [decisions.md → «Identidad de desarrollo»](decisions.md#identidad-de-desarrollo).
-- El email de desarrollo se obtiene de configuración. Su valor inicial es `user@linkubator.test`; el nombre inicial es `Demo User` y el alias inicial es `my-demo-user`.
-- Si no existe una cuenta con el email configurado, se crea completa con el perfil inicial, `EmailConfirmedAt` informado y un hash Argon2id inicial de una contraseña aleatoria descartada.
-- Si existe una cuenta sin completar, se completa con el perfil inicial configurado, se informa `EmailConfirmedAt` y se establece el hash inicial. Si ya está completada, sus datos no se modifican.
+- El perfil inicial de desarrollo tiene el email `user@linkubator.test`, el nombre `Demo User` y el alias `my-demo-user`. El perfil mostrado corresponde a los datos actuales de la cuenta.
+- Si no existe una cuenta con el email inicial, se crea completa con el perfil inicial, `EmailConfirmedAt` informado y un hash Argon2id inicial de una contraseña aleatoria descartada.
+- Si la cuenta con el email inicial está sin completar, se completa con el perfil inicial, se informa `EmailConfirmedAt` y se establece el hash inicial. Si ya está completada, sus datos no se modifican.
 - Si la cuenta no tiene colecciones, se crea la colección privada «Bandeja de entrada». Si ya tiene una o más colecciones, se conservan sin cambios, independientemente de su nombre o privacidad.
 - La creación o compleción de la cuenta y, cuando corresponda, la creación de su colección inicial se aplican como una única operación atómica.
 - Repetir el aprovisionamiento no duplica ni reinicia la cuenta o sus colecciones existentes.
@@ -63,7 +63,7 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 - El alias se muestra con su vista previa (ver [«Generación del alias»](#generación-del-alias)) y la contraseña sigue las reglas de [«Contraseñas»](#contraseñas).
 - Si el alias está ocupado o algún dato no es válido, se indica junto al campo y el token sigue siendo válido hasta que se complete o caduque.
 - Al mostrarse el formulario no se consume el token. El cambio se aplica al pulsar el botón (POST con antiforgery), tras volver a validar el token. Si la validación falla, se muestra la respuesta común de [«Tokens»](#tokens).
-- Al completarse, en una sola operación: se fijan el nombre, el alias, la contraseña y `EmailConfirmedAt`, se crea la colección privada «Bandeja de entrada» para que el usuario ya pueda crear enlaces y asignarlos a colecciones. Además se consume el token (ver [architecture.md → «Persistencia»](architecture.md#persistencia)).
+- Al completarse, en una sola operación: se fijan el nombre, el alias, la contraseña y `EmailConfirmedAt` con la fecha UTC actual, se crea la colección privada «Bandeja de entrada» para que el usuario ya pueda crear enlaces y asignarlos a colecciones. Además se consume el token (ver [architecture.md → «Persistencia»](architecture.md#persistencia)).
 - Después el usuario puede iniciar sesión con normalidad.
 
 > Diagrama de la secuencia: [Registro de usuario](diagrams/account-onboarding-sequence.md).
@@ -73,7 +73,7 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
 - El login pide email y contraseña, y ofrece la opción «Recordarme» (ver [«Sesión»](#sesión)).
 - Un registro sin completar responde igual que un email inexistente y no acumula intentos fallidos (ver [«Respuestas que no revelan si una cuenta existe»](#respuestas-que-no-revelan-si-una-cuenta-existe)).
 - Cuando un usuario sin sesión iniciada solicita una página privada, se conserva su destino en el parámetro de URL (`ru`) al mostrar el login. Tras iniciar sesión correctamente, `ru` solo se acepta como ruta local absoluta cuya ruta, después de decodificar una sola vez los escapes válidos y normalizar los segmentos `.` y `..`, sea `/app` o comience por `/app/`; la comparación del segmento `app` no distingue mayúsculas. Se conserva la cadena de consulta si existe.
-- Se rechaza `ru` si falta, no es una ruta local absoluta, contiene un esquema o autoridad (incluidas las referencias que comienzan por `//`), contiene barras invertidas o caracteres de control, tiene escapes inválidos o su ruta normalizada queda fuera de `/app`. No se vuelve a decodificar el valor. En todos esos casos, tras iniciar sesión correctamente se redirige a `/app/dashboard`.
+- Se rechaza `ru` si falta, no es una ruta local absoluta, contiene un esquema o autoridad (incluidas las referencias que comienzan por `//`), contiene barras invertidas o caracteres de control, tiene escapes inválidos o su ruta normalizada queda fuera de `/app`. No se vuelve a decodificar el valor. En todos esos casos, tras iniciar sesión correctamente se redirige al dashboard en `/app`.
 
 ### Verificación concurrente de contraseña
 
@@ -102,6 +102,7 @@ Todos los límites de longitud de este documento se cuentan en puntos de código
   - Si el nuevo email ya lo tiene otra cuenta, no se emite ningún token y se envía a esa dirección el aviso de cuenta existente.
 - Al abrir el enlace de verificación se muestra una página con el nuevo email y un botón para confirmar el cambio; abrir el enlace no modifica nada. El cambio se aplica al pulsar el botón (POST con antiforgery), tras volver a validar el token. Si la validación falla, se muestra la respuesta común de [«Tokens»](#tokens).
 - Al confirmar, si entretanto otra cuenta ha ocupado el nuevo email, se muestra la respuesta común de [«Tokens»](#tokens).
+- En la confirmación correcta se sustituye `User.Email` y se asigna la fecha UTC actual a `User.EmailConfirmedAt` en la misma operación atómica, conforme a [domain-model.md → «User»](domain-model.md#user). Solicitar el cambio o abrir su enlace no modifica ninguno de esos valores; si la confirmación se rechaza o la operación se revierte, ambos conservan sus valores anteriores.
 - El nuevo email solo sustituye al anterior tras verificarlo; entonces se actualiza `SecurityStamp`, se invalidan los tokens pendientes según [«Tokens»](#tokens), se cierran las demás sesiones (la sesión desde la que se confirma sigue abierta solo si pertenece al dueño del token, el `UserId ` del usuario autenticado es el mismo `UserId` del email que se actualiza; si no hay sesión o es de otra cuenta, no se crea ni se modifica ninguna; ver [«Sesión»](#sesión)) y se envía el aviso de email cambiado a la dirección anterior.
 
 > Diagrama de la secuencia: [Cambio de email](diagrams/account-email-change-sequence.md).
@@ -192,7 +193,7 @@ Reglas de los slugs:
 - La equivalencia de nombres para las restricciones de unicidad se determina exclusivamente comparando los slugs generados por esta transformación: dos nombres son equivalentes si y solo si generan el mismo slug. No se aplica una comparación adicional de los nombres originales. Por ejemplo, «Papá» y «papa» generan el mismo slug y colisionan; los símbolos solo causan una colisión si, tras aplicar la transformación, ambos nombres generan exactamente el mismo slug.
 - La colección por defecto «Bandeja de entrada» tiene el slug `bandeja-de-entrada`.
 - Si el resultado queda vacío, o fuera del rango de longitud de «Longitudes máximas», la operación se rechaza. Nunca se trunca.
-- Si el slug generado colisiona con el de otra colección o etiqueta del mismo usuario, al crear o al modificar, la operación se rechaza indicando el nombre del elemento con el que colisiona. No se añaden sufijos ni prefijos para resolver colisiones.
+- Si el slug generado colisiona con el de otro elemento del mismo tipo y del mismo usuario, al crear o al modificar, la operación se rechaza indicando el nombre del elemento con el que colisiona. Las colecciones se comparan únicamente con otras colecciones y las etiquetas únicamente con otras etiquetas: una colección y una etiqueta del mismo usuario pueden compartir slug. No se añaden sufijos ni prefijos para resolver colisiones.
 - Excepción: al crear una etiqueta desde el formulario de un enlace, si su slug coincide con el de una existente, se asocia esa y se indica al usuario cuál se ha asociado.
 
 ### Tabla de conversión de símbolos
@@ -327,7 +328,7 @@ Argon2id con la configuración mínima de OWASP (Password Storage Cheat Sheet):
 - Hash de 32 bytes.
 - `User.Password` se guarda en formato PHC, con el algoritmo y los parámetros incluidos: `$argon2id$v=19$m=19456,t=2,p=1$<sal>$<hash>`.
 - La comparación del hash calculado con el guardado se hace en tiempo constante.
-- Si los parámetros cambian en el futuro, el hash se recalcula con los nuevos en el siguiente login correcto, y los hashes antiguos se siguen verificando con los parámetros que llevan dentro.
+- Como caso excepcional de mantenimiento criptográfico, si los parámetros de hashing cambian en el futuro, en el siguiente login correcto se verifica la contraseña introducida con los parámetros del hash almacenado y se calcula un nuevo hash de esa misma contraseña, con una nueva sal aleatoria y los nuevos parámetros, que sustituye al anterior en `User.Password`. Los hashes antiguos se siguen verificando con los parámetros que llevan dentro hasta su renovación. Esta operación actualiza únicamente la representación criptográfica almacenada: no cambia la contraseña del usuario ni constituye una vía adicional para establecerla o restablecerla durante el ciclo de vida de la cuenta.
 
 ## Tokens
 
@@ -362,9 +363,9 @@ Argon2id con la configuración mínima de OWASP (Password Storage Cheat Sheet):
 | Aviso de contraseña cambiada | Email de la cuenta | Al cambiar o restablecer la contraseña | No |
 | Aviso de cuenta eliminada | Email de la cuenta | Tras confirmar y eliminar la cuenta | No |
 
-- Se envía como máximo 1 correo por minuto y cuenta en cada uno de los dos límites. Son independientes entre sí: el de los correos con token, el del aviso de cuenta existente. Las peticiones que superen ese límite reciben la misma respuesta genérica sin enviar nada, y tampoco emiten ningún token: el token anterior, si lo hay, sigue vigente y el enlace que el usuario ya tiene en su buzón sigue funcionando.
+- Se acepta como máximo 1 solicitud de correo por minuto y cuenta en cada uno de los dos límites. Son independientes entre sí: el de los correos con token, el del aviso de cuenta existente. Las peticiones que superen ese límite reciben la misma respuesta genérica sin enviar nada, y tampoco emiten ningún token: el token anterior, si lo hay, sigue vigente y el enlace que el usuario ya tiene en su buzón sigue funcionando.
 - El aviso de cuenta existente se limita por la cuenta que ya tiene ese email, no por la que registra o pide el cambio.
-- El momento del último correo con token se guarda en `User.LastEmailSentAt` y el del último aviso de cuenta existente en `User.LastExistingAccountNoticeAt`.
+- Al aceptar una solicitud que respeta su límite, se asigna la fecha UTC actual a `User.LastEmailSentAt` o `User.LastExistingAccountNoticeAt`, según corresponda, y se guarda junto con los cambios de la operación. El límite queda consumido al confirmar esa operación en base de datos, antes de encolar o enviar el correo; no espera al envío SMTP ni a la entrega. Si la operación se revierte, la marca también se revierte. Tras confirmarla, un fallo de encolado o envío no revierte ni modifica la marca ni libera el límite; una nueva solicitud debe esperar a que venza el intervalo. Una petición descartada por el límite no actualiza la marca.
 - Los avisos de seguridad (los correos sin límite) se envían siempre y no consultan ni actualizan ninguno de los dos.
 - Cómo y cuándo se envían los correos está en [architecture.md → «Correo»](architecture.md#correo).
 
@@ -531,19 +532,19 @@ Fase 2, sobre la cadena resultante, sin volver a decodificar nada:
 
 > Diagrama del proceso: [Normalización de URL para detectar duplicados](diagrams/process-url-normalization.md).
 
-Cada componente se decodifica exactamente una vez, con la regla que le corresponde. Como el fragmento y los parámetros se separan sobre la URL codificada y después nada se reinterpreta, un `%23` o un `%26` codificados nunca cortan la URL ni separan parámetros: se convierten en texto y desaparecen al aplanar. Un texto codificado dos veces (`%2520`) se decodifica una sola vez y conserva su `%20` como texto, que también desaparece al aplanar.
+Cada componente se decodifica exactamente una vez, con la regla que le corresponde. Como el fragmento y los parámetros se separan sobre la URL codificada y después nada se reinterpreta, un `%23` o un `%26` codificados nunca cortan la URL ni separan parámetros: se convierten en texto y desaparecen al aplanar. Un texto codificado dos veces (`%2520`) se decodifica una sola vez y conserva `%20` como texto: al aplanar se elimina el signo `%`, pero se conservan los dígitos `20`; no se vuelve a interpretar como un espacio.
 
 Parámetros de marketing eliminados, sin distinguir mayúsculas: `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `gclsrc`, `gclid`, `wbraid`, `gbraid`, `fbclid`, `msclkid`, `ttclid`, `epik`, `gad_source`, `gad_campaignid`, `srsltid`, `gcs`, `gcd`, `at_medium`, `at_campaign`, `at_platform`, `at_creation` y `at_term`.
 
 Ejemplos:
 
 ```text
-HTTPS://Example.COM/Generación de datos/?utm_source=google&id=10
+HTTPS://Example.COM/Generación%20de%20datos/?utm_source=google&id=10
 -> examplecomgeneracion-de-datosid10
 ```
 
 ```text
-http://example.com:4587/Artículo número 2?b=2&a=1
+http://example.com:4587/Artículo%20número%202?b=2&a=1
 -> examplecom4587articulo-numero-2a1b2
 ```
 
@@ -565,7 +566,7 @@ https://example.com/c++/tutorial?q=c++
 -> examplecomctutorialqc
 ```
 
-En la ruta, `+` es literal y se elimina al aplanar; en la consulta, `+` es un espacio y se convierte en guión. Como el guión final se elimina, la clave resulta igual, pero `?q=c++ 2` produce `qc-2` y `/c++2` produce `c2`.
+En la ruta, `+` es literal y se elimina al aplanar; en la consulta, `+` es un espacio y se convierte en guión. Como el guión final se elimina, la clave resulta igual, pero `?q=c++%202` produce `qc-2` y `/c++2` produce `c2`.
 
 ```text
 https://example.com/a%2520b
@@ -620,17 +621,17 @@ Flujo previsto para el scraping, sujeto a los pendientes de [decisions.md → «
   - Timeout, error de red o respuesta `5xx`: se considera `Failed`. El usuario podrá lanzarlo manualmente.
   - Respuesta `4xx`, contenido que no es HTML, respuesta que supera el tamaño máximo o destino bloqueado por la protección SSRF. El enlace queda `Failed`. El usuario podrá lanzarlo manualmente.
 - El enlace se conserva siempre, con los metadatos que se hayan podido obtener.
-- El usuario podrá lanzar el scraping de nuevo, si previamente elimina el contenido de los campos que intervienen.
+- El usuario puede volver a lanzar el scraping sin borrar previamente los metadatos existentes. Cada nuevo intento solo rellena los campos vacíos y conserva los ya informados. Para volver a obtener el contenido de un campo concreto, el usuario debe vaciar ese campo antes de lanzar el scraping; no necesita vaciar los demás. Si todos los campos están informados, el nuevo intento no modifica sus valores.
 
 ## Estados del scraping
 
 `ScrapingStatus` de `Link` toma uno de estos valores:
 
 - `NotRequested`: no se ha solicitado scraping.
-- `Pending`: el scraping está solicitado y aún no se ha ejecutado ningún intento.
+- `Pending`: hay una solicitud de scraping pendiente de ejecución.
 - `Processing`: hay un intento en curso.
 - `Completed`: se descargó la página y se extrajeron los metadatos que tenía, fueran los que fueran.
-- `Failed`: no se pudo descargar la página por algún tipo error.
+- `Failed`: el intento de scraping no pudo completarse por un error o por incumplir las condiciones de descarga o procesamiento.
 
 ## Búsqueda y filtros
 
@@ -639,20 +640,19 @@ La búsqueda es el parámetro `q` de cada listado privado: un listado con `q` si
 | Listado | Resultado | Campos que cubre `q` | Otros filtros |
 |---|---|---|---|
 | Enlaces | Solo enlaces del usuario identificado | URL original, título, descripción, nombre de la colección y nombres de sus etiquetas | Colección y etiqueta |
-| Colecciones | Solo colecciones del usuario identificado | Solo `Collection.Name` | Ninguno |
+| Colecciones | Solo colecciones del usuario identificado | `Collection.Name` y `Collection.Description` | Ninguno |
 | Etiquetas | Solo etiquetas del usuario identificado | Solo `Tag.Name` | Ninguno |
 
 Cada listado devuelve solo su propia entidad y nunca mezcla tipos de resultado. El orden y la paginación están en [«Listados»](#listados).
 
 Reglas de `q`, iguales en todos los listados:
 
-- No distingue acentos: «canción» encuentra «cancion».
+- La búsqueda sin distinguir acentos y otras marcas diacríticas se garantiza para los caracteres latinos cubiertos por el tokenizador definido en [architecture.md → «FTS5»](architecture.md#fts5): «canción» encuentra «cancion». Se admiten términos de cualquier alfabeto, pero no se garantiza la equivalencia con y sin diacríticos fuera de esa cobertura; por ejemplo, no se exige que el griego `καφές` coincida con `καφες`.
 - Antes de separar el texto en términos, se normaliza a Unicode NFC. El mismo preprocesamiento se aplica al texto de los campos al incorporarlo a las proyecciones FTS5; solo afecta a la búsqueda y no modifica los valores originales. Así, `canción` y `cancio\u0301n` se buscan como la misma palabra.
-- Busca por palabras completas.
-- No distingue de mayúsculas y minúsculas. Tampoco distingue acentos.
+- No distingue mayúsculas y minúsculas dentro de la cobertura Unicode del tokenizador definido en [architecture.md → «FTS5»](architecture.md#fts5); no se garantiza esa equivalencia para caracteres fuera de su cobertura.
 - El texto se separa en secuencias de letras o números, de cualquier alfabeto. Cada secuencia es un término; los demás caracteres (espacios, comillas, `*`, guiones y cualquier otro símbolo) solo separan términos y nunca actúan como operadores. `AND`, `OR`, `NOT` y `NEAR` son términos como cualquier otro.
 - Todos los términos son obligatorios: un elemento solo aparece si los contiene todos. Se pasan escapados a la búsqueda de texto.
-- Cada término se busca como palabra completa: «canc» no encuentra «canción».
+- Cada término coincide con el comienzo de una palabra, incluida la palabra completa: «canc» encuentra «canción», pero «cion» no encuentra «canción».
 - Un `q` vacío, formado solo por espacios o que no deja ningún término equivale a no buscar por texto: el listado se muestra sin filtrar por texto y solo se aplican sus otros filtros, si los tiene.
 
 Reglas de los filtros del listado de enlaces:
@@ -660,12 +660,13 @@ Reglas de los filtros del listado de enlaces:
 - El filtro de colección devuelve solo los enlaces de esa colección. 
 - El filtro de etiqueta devuelve solo los enlaces que tienen esa etiqueta.
 - `q` y los filtros disponibles se combinan y se aplican todos a la vez.
-- Los listados de colecciones y de etiquetas no tienen más filtro que `q`, que filtra por `Name`.
+- Los listados de colecciones y de etiquetas no tienen más filtro que `q`.
 
 ## Listados
 
 | Listado | Orden | Paginado |
 |---|---|---|
+| Enlaces recientes del dashboard | `Link.CreatedAt` descendente e `Link.Id` descendente como desempate | No; muestra hasta 12 enlaces |
 | Enlaces privados (zona privada), con o sin `q` | Con texto de búsqueda: relevancia, después `Link.CreatedAt` descendente y `Link.Id` descendente como desempates. Sin texto de búsqueda: `Link.CreatedAt` descendente y `Link.Id` descendente como desempate | Sí |
 | Colecciones del usuario (privado), con o sin `q` | `Name` ascendente e `Id` ascendente como desempate | Sí |
 | Etiquetas del usuario (privado), con o sin `q` | `Name` ascendente e `Id` ascendente como desempate | Sí |
@@ -676,7 +677,7 @@ Reglas de los filtros del listado de enlaces:
 
 - Los órdenes alfabéticos de `Name` y del texto mostrado se comparan según el orden lingüístico del castellano, sin distinguir mayúsculas ni marcas diacríticas. No se exige que la `ñ` conserve un peso alfabético propio: la colación puede tratarla como equivalente a la `n`. Si dos valores son equivalentes con esa comparación, se aplica el desempate por `Id` indicado en la tabla.
 - `q` y los demás filtros solo reducen el conjunto: la relevancia solo ordena el listado de enlaces cuando hay texto de búsqueda, y los listados de colecciones y de etiquetas conservan su orden alfabético con o sin `q`.
-- Los listados paginados muestran 16 elementos por página. Los demás muestran todos sus elementos.
+- Los listados paginados muestran 16 elementos por página. Los bloques de enlaces recientes del dashboard y de la página de usuario y el de colecciones recientes de la página de usuario muestran como máximo la cantidad indicada en sus reglas; los demás listados no paginados muestran todos sus elementos.
 - La paginación se aplica sobre el resultado ya filtrado y ordenado: la página 1 es la primera de ese resultado y el número de páginas depende de él.
 - El tratamiento de páginas fuera de rango se define en [«Rutas privadas»](#rutas-privadas) y [«Paginación de las páginas públicas»](#paginación-de-las-páginas-públicas).
 
@@ -686,8 +687,7 @@ Reglas de los filtros del listado de enlaces:
 
 | Página o acción | Ruta | Método |
 |---|---|---|
-| Entrada del área privada | `/app` | GET, redirige a `/app/dashboard` |
-| Dashboard | `/app/dashboard` | GET y POST |
+| Entrada del área privada y dashboard | `/app` | GET y POST; GET muestra el dashboard y POST procesa la creación rápida |
 | Listado y búsqueda de enlaces | `/app/enlaces` | GET |
 | Listado y búsqueda de colecciones | `/app/colecciones` | GET |
 | Listado y búsqueda de etiquetas | `/app/etiquetas` | GET |
@@ -702,7 +702,10 @@ Reglas de los filtros del listado de enlaces:
 | Editar etiqueta | `/app/etiquetas/{id}/editar` | GET y POST |
 | Eliminar etiqueta | `/app/etiquetas/{id}/eliminar` | GET y POST |
 
-- El dashboard muestra las acciones para crear un enlace, una colección o una etiqueta y permite acceder a todos los listados. Su formulario de búsqueda envía por GET a `/app/enlaces` con `q`; no muestra resultados ni permite editar o eliminar elementos directamente.
+- El dashboard se sirve directamente en `/app` y muestra el formulario «Crear enlace rápido», el buscador de enlaces y el bloque «Enlaces recientes». Este bloque contiene los enlaces más recientes del usuario identificado, públicos y privados y de todas sus colecciones, con la cantidad y el orden definidos en [«Listados»](#listados), sin búsqueda, filtros ni paginación propios. El buscador envía por GET a `/app/enlaces` con `q`: sus resultados se muestran en ese listado, no en el dashboard.
+- Desde cada enlace reciente se puede abrir la URL original en una pestaña nueva o acceder a los formularios canónicos de edición, movimiento y eliminación. No se editan ni eliminan enlaces mediante el GET del dashboard; las operaciones se ejecutan en sus formularios y conservan el origen según las reglas de `ru` de esta sección. El bloque reutiliza la presentación «Tarjetas / Lista» y los distintivos de privacidad de los listados privados.
+- Si no hay enlaces, el bloque muestra «Todavía no tienes enlaces guardados.» y «Añade un enlace para empezar a organizar tus recursos.», sin selector de presentación. La creación rápida y el buscador siguen disponibles. El menú lateral mantiene el acceso a la creación completa de enlaces y a la gestión de colecciones.
+- La opción «Avanzado...» del menú de creación rápida abre `/app/enlaces/nuevo`, trasladando al campo URL el texto introducido mediante el parámetro `url`, sin crear todavía el enlace. La creación completa requiere elegir una colección propia y aplica sus reglas habituales.
 - El menú lateral del área privada ofrece «+ Crear enlace» debajo de la cabecera y antes del buscador, separado de este mediante espacio y una línea divisoria sutil; abre el formulario de creación de enlace. El buscador queda seguido de la navegación. Cuando el menú está contraído, muestra solo el icono «+», con tooltip y nombre accesible «Crear enlace».
 - El estado contraído o expandido del menú lateral se conserva al navegar entre páginas del área privada. La apertura temporal del menú móvil no se restaura en la siguiente página.
 - «Crear colección» en «Mis colecciones» se presenta como una herramienta neutra, con texto sin negrita, junto al título «Colecciones».
@@ -716,7 +719,8 @@ Reglas de los filtros del listado de enlaces:
 - «Añadir» en el formulario de creación rápida del dashboard crea un enlace con la URL introducida, privado y sin título, descripción ni imagen. Se asigna a la colección propia cuyo slug sea el de [«Generación de slugs»](#generación-de-slugs) para «Bandeja de entrada»; si no existe, se usa la primera colección propia en el orden de [«Listados»](#listados). Si no hay colecciones disponibles, no se crea el enlace y se muestra «No tienes colecciones disponibles. Crea una colección para añadir enlaces.». La creación aplica las mismas reglas de URL y duplicados que el formulario completo. Tras crear, se vuelve al dashboard; ante un error se conserva la URL y se muestra el error de forma accesible.
 - El identificador de ruta `id` y los parámetros de listado `p`, `c` y `e` son enteros positivos escritos solo con dígitos. Los ceros iniciales se aceptan: `003` se interpreta como `3`.
 - En los listados, cada filtro `c` o `e` vacío se ignora independientemente de los demás filtros; `p` ausente o vacío indica la primera página. Se conservan los demás filtros válidos.
-- Un valor de `p`, `c` o `e` inválido o fuera de rango muestra un mensaje accesible indicando que los valores no son correctos. En el listado privado de colecciones, un `p` inválido o fuera de rango se ignora y se muestra la primera página, sin error (ver [«Paginación de las páginas públicas»](#paginación-de-las-páginas-públicas) para la regla de las páginas públicas).
+- Un valor de `p` inválido se ignora y se muestra la primera página sin error. Si es válido pero supera la última página del resultado filtrado, se muestra la última página sin error; si no hay resultados, se muestra el estado vacío de la primera página. Se conservan la búsqueda y los filtros válidos. La regla de las páginas públicas está en [«Paginación de las páginas públicas»](#paginación-de-las-páginas-públicas).
+- Un valor de `c` o `e` inválido o fuera de rango muestra un mensaje accesible indicando que los valores no son correctos.
 - Un filtro `c` o `e` que identifica una colección o etiqueta inexistente o ajena al usuario se ignora; se conservan los demás filtros válidos.
 - En las rutas que identifican un recurso mediante `id`, un valor que no cumpla el formato de identificador válido produce un error de validación y no consulta ni modifica un recurso. Si el identificador tiene formato válido pero el recurso no existe o pertenece a otro usuario, ambos casos reciben el mismo resultado de recurso no accesible; no se muestran datos ni se revela cuál de esas causas ocurrió. En GET se muestra el mensaje genérico «No se ha podido acceder al elemento solicitado.» con un enlace al listado correspondiente; en POST se redirige a ese listado con el mismo aviso accesible.
 - El GET de edición de un enlace o colección carga sus datos desde su caso de uso de aplicación mediante el `id` de ruta; la consulta se limita al usuario identificado. Si no existe o pertenece a otro usuario, aplica la respuesta GET de recurso no accesible indicada arriba.
@@ -730,12 +734,15 @@ Reglas de los filtros del listado de enlaces:
 - Un parámetro repetido hace que se aplique el primer valor y se desprecien los valores sucesivos.
 - Un parámetro desconocido, no aplicable a ese listado o de una capacidad todavía no disponible se ignora por completo: no se valida ni se consulta, y no provoca ningún error.
 - Los listados privados usan `p`; sus enlaces a la primera página no llevan el parámetro. `?p=1` se sirve con el mismo contenido. La página 1 de un listado sin resultados muestra el estado vacío. Los enlaces de paginación conservan `q` y los filtros aplicables de ese listado.
-- Cada listado con búsqueda ofrece un formulario que envía por GET a su propia ruta con `q`, conserva los filtros aplicables de ese listado y descarta `p`, de modo que la búsqueda empieza en la primera página. El texto de `q` no se registra (ver [«Registro de eventos»](#registro-de-eventos)).
-- Los selectores de colección o la asignación etiquetas para crear, editar o mover un enlace y el filtro `c` y `e` incluyen todas las colecciones o etiquetas del usuario, ordenadas según [«Listados»](#listados) y sin paginar. En edición se selecciona inicialmente la colección actual.
-- Al crear o editar un enlace, la opción para hacerlo público aparece inicialmente desmarcada, incluso al editar un enlace guardado como público. Solo se habilita al seleccionar una colección pública; con una colección privada o sin selección, queda deshabilitada y desmarcada, y explica el motivo. Al guardar, marcada establece el estado público y desmarcada el privado; por tanto, para conservar público un enlace que se está editando hay que volver a marcarla. Cambiar a una colección privada o quitar la selección desmarca la opción. Una petición manipulada que intente hacerlo público en una colección privada se rechaza según [«Errores controlados»](#errores-controlados).
-- Si se cambia la colección desde el formulario de edición, se aplica la regla de movimiento de [domain-model.md → «Público y privado»](domain-model.md#público-y-privado): el enlace pasa a ser privado aunque se envíe una petición manipulada para hacerlo público. Mientras el destino sea distinto de la colección actual, el control «Hacer público» queda deshabilitado y desmarcado y muestra «Al cambiar de colección, el enlace pasará a ser privado». La página independiente para mover enlaces se conserva.
-- El formulario de edición de una colección permite actualizar conjuntamente su nombre, descripción y estado público o privado. Si queda privada, la colección y sus enlaces pasan a privados atómicamente; si queda pública, sus enlaces permanecen privados. El formulario envía un único estado destino explícito. La ruta y método de edición se indican en la tabla anterior.
+- Cada listado con búsqueda ofrece un formulario que envía por GET a su propia ruta con `q`, conserva los filtros aplicables de ese listado y descarta `p`, de modo que la búsqueda empieza en la primera página.
+- Los selectores de colección de los formularios de creación, edición y movimiento de enlaces y el filtro `c` incluyen todas las colecciones del usuario, ordenadas según [«Listados»](#listados) y sin paginar. En edición se selecciona inicialmente la colección actual. La selección de etiquetas de los formularios de creación y edición y el filtro `e` incluyen todas las etiquetas del usuario con el mismo criterio de orden y sin paginar; el formulario independiente de movimiento no permite cambiar las etiquetas.
+- En los formularios de creación y edición de un enlace, la asignación de etiquetas permite seleccionar etiquetas existentes del usuario o crear una desde el propio formulario, conforme a [«Generación de slugs»](#generación-de-slugs). En edición se muestran inicialmente las etiquetas ya asignadas; al guardar, las seleccionadas determinan el conjunto final de asociaciones: se conservan las que siguen seleccionadas, se añaden las nuevas y se eliminan las retiradas. Una selección vacía deja el enlace sin etiquetas. Una etiqueta resuelta por varios caminos, incluida la coincidencia de slug con una existente, se asocia una sola vez. Los efectos de quitar una asociación se definen en [domain-model.md → «LinkTag»](domain-model.md#linktag).
+- Los cambios de asociaciones se confirman junto con el resto de la creación o edición del enlace, las etiquetas nuevas que corresponda crear y las proyecciones de búsqueda afectadas, según [architecture.md → «Persistencia»](architecture.md#persistencia). Si se rechaza la operación, no se aplican cambios parciales ni quedan etiquetas creadas por ese envío. Cancelar o abrir el formulario no modifica etiquetas ni asociaciones. El formulario independiente de movimiento conserva las asociaciones existentes.
+- Al crear o editar un enlace, la opción para hacerlo público aparece inicialmente desmarcada, incluso al editar un enlace guardado como público. Solo se habilita al seleccionar una colección pública; con una colección privada o sin selección, queda deshabilitada y desmarcada, y explica el motivo. Al guardar, marcada establece el estado público y desmarcada el privado; por tanto, para conservar público un enlace que se está editando hay que volver a marcarla. Cambiar a una colección privada o quitar la selección desmarca la opción. Una petición manipulada que intente hacerlo público al crearlo en una colección privada o al editarlo sin cambiar su colección privada se rechaza según [«Errores controlados»](#errores-controlados). Si cambia la colección, prevalece la regla de movimiento indicada a continuación.
+- Si se cambia la colección desde el formulario de edición, se aplica la regla de movimiento de [domain-model.md → «Público y privado»](domain-model.md#público-y-privado): el enlace pasa a ser privado, tanto si el destino es público como privado, aunque se envíe una petición manipulada para hacerlo público. La solicitud simultánea de publicación se ignora y no provoca rechazo por privacidad; esto no omite las demás validaciones de la edición. Para hacerlo público en la nueva colección se requiere una edición posterior y explícita, y que esa colección sea pública. Mientras el destino sea distinto de la colección actual, el control «Hacer público» queda deshabilitado y desmarcado y muestra «Al cambiar de colección, el enlace pasará a ser privado». La página independiente para mover enlaces se conserva.
+- El formulario de edición de una colección permite actualizar conjuntamente su nombre, descripción y estado público o privado. El efecto de la transición sobre sus enlaces se rige por [domain-model.md → «Público y privado»](domain-model.md#público-y-privado), y su persistencia por [architecture.md → «Persistencia»](architecture.md#persistencia). El formulario envía un único estado destino explícito. La ruta y método de edición se indican en la tabla anterior.
 - El formulario de edición de un enlace permite actualizar el estado público o privado junto con los demás campos editables. Si el valor recibido en el checkbox no se puede interpretar como booleano, se rechaza la edición completa, no se modifica ningún campo y se vuelve a mostrar el formulario con el error de validación correspondiente.
+- En los formularios de creación y edición de colecciones, si el valor recibido en el checkbox no se puede interpretar como booleano, se rechaza la operación completa, no se crea la colección ni se modifica ningún campo de la colección o sus enlaces, y se vuelve a mostrar el formulario conservando el nombre y la descripción enviados. El error asociado al checkbox es «El estado público o privado no es válido.».
 - Por defecto, una acción POST realizada correctamente redirige a la lista correspondiente: los enlaces a `/app/enlaces`, las colecciones a `/app/colecciones` y las etiquetas a `/app/etiquetas`, sin conservar filtros ni página. Los formularios de editar, mover y eliminar enlaces conservan su origen mediante `ru`: aceptan como destino el dashboard o el listado de enlaces de la propia aplicación, con su búsqueda, filtros y página. Al completar la acción o cancelar, vuelven a ese destino. Un origen ausente, externo o distinto de esas páginas usa el listado de enlaces como destino. Un error de validación vuelve a mostrar su formulario y conserva el origen; un rechazo de privacidad redirige con un aviso accesible, respetando el origen en los formularios que lo admiten.
 - «+ Crear enlace» del menú lateral transmite el origen al formulario mediante `ru`. La creación admite como origen el dashboard, el listado de enlaces o el listado de colecciones de la propia aplicación, con su búsqueda, filtros y página. Crear o cancelar vuelve al origen; el acceso directo, un destino externo o una página no admitida vuelve al listado de enlaces. Los errores de validación conservan el origen y los valores del formulario; un rechazo de privacidad vuelve al origen con el aviso accesible correspondiente. Tras crear se muestra una confirmación accesible «Enlace creado.» y la acción «Ver enlace», que abre la URL guardada en una pestaña nueva. La confirmación se muestra una sola vez.
 - Las rutas GET de crear, editar, mover y eliminar son las páginas canónicas de sus formularios. La página de eliminar pide confirmación antes de enviar su POST. La interfaz puede presentar esos mismos formularios en diálogos, sin cambiar las rutas, los métodos ni el comportamiento. Los errores de validación y de reglas del dominio se muestran junto al formulario correspondiente; los errores de validación siguen asociados a sus campos.
@@ -778,7 +785,7 @@ Las páginas públicas no muestran el nombre ni el email del usuario.
 
 - Solo se pagina la página de colección (ver [«Listados»](#listados)).
 - La página se indica con el parámetro de consulta `p`: `/{alias}/colecciones/{slug}?p=2`.
-- `p` acepta un entero positivo escrito solo con dígitos; los ceros iniciales se aceptan. Si falta, está vacío o su valor no es válido o está fuera de rango, se muestra la primera página, sin error. Los parámetros desconocidos se ignoran. Si `p` aparece varias veces, se usa el primer valor. Esta regla aplica a la paginación de la página pública de colección.
+- `p` acepta un entero positivo escrito solo con dígitos; los ceros iniciales se aceptan. Si falta, está vacío o su valor no es válido, se muestra la primera página sin error. Si su valor es válido pero supera la última página, se muestra la última página sin error. Los parámetros desconocidos se ignoran. Si `p` aparece varias veces, se usa el primer valor. Esta regla aplica a la paginación de la página pública de colección.
 - La primera página es la URL sin parámetro. `?p=1`, cualquier otra representación de 1 con ceros iniciales y cualquier valor inválido de `p` se sirven con el mismo contenido; su canonical apunta a la URL sin parámetro.
 - Las páginas 2 y siguientes tienen como canonical la URL con el número de página en decimal y sin ceros iniciales. Por ejemplo, `?p=02` sirve la página 2 y su canonical apunta a `?p=2`.
 
@@ -821,7 +828,7 @@ Las páginas públicas no muestran el nombre ni el email del usuario.
 - Muestra solo los enlaces públicos. Cada uno muestra su título (o la URL si no tiene), su descripción y su imagen si las tiene, y enlaza a `UrlOriginal` con `rel="nofollow ugc noopener noreferrer"` y `target="_blank"`.
 - El orden de presentación de los enlaces está definido en [«Listados»](#listados).
 - Si la colección es pública pero no tiene enlaces públicos, no se muestra en público y responde `404` (ver [decisions.md → «Producto y alcance»](decisions.md#producto-y-alcance)).
-- Una colección privada, una inexistente y un slug antiguo tras renombrarla responden igual: `404`.
+- Una colección privada, una inexistente y una petición con el slug anterior cuando el renombrado ha generado uno distinto responden igual: `404`. Si el nuevo nombre genera el mismo slug, la URL se conserva y el renombrado no cambia su disponibilidad pública. Por ejemplo, renombrar «Café» como «Cafe» conserva el slug `cafe` y la misma dirección.
 - El `meta title` es `Los enlaces de {alias} para {Collection.Name} en Linkubator`.
 - La `meta description` es `Los enlaces favoritos de {alias} en Linkubator, para gestionarlos y no perderlos nunca. Regístrate en Linkubator para tener tu página`.
 - El `h1` es `Enlaces en {Collection.Name} de {alias}`.
@@ -839,14 +846,16 @@ Las páginas públicas no muestran el nombre ni el email del usuario.
 
 - Un error de validación vuelve a mostrar el mismo formulario, con los datos introducidos (salvo las contraseñas) y el mensaje junto a cada campo afectado (ver [requirements.md → «Accesibilidad»](requirements.md#accesibilidad)).
 - Si la URL de un enlace o su imagen tiene un esquema no permitido, se muestra «Introduce una dirección que empiece por https:// o http://.» en el resumen de errores y junto al campo afectado; el identificador técnico no se muestra al usuario.
-- Si se intenta hacer público un enlace de una colección privada al crearlo o editarlo, no se modifica el enlace y se muestra el mensaje «No se puede hacer público un enlace de una colección privada».
+- Si se intenta hacer público un enlace al crearlo en una colección privada o al editarlo sin cambiar su colección privada, se rechaza la operación completa, no se crea ni modifica el enlace y se muestra el mensaje «No se puede hacer público un enlace de una colección privada». Si la edición cambia la colección, se aplica la regla de movimiento de [«Rutas privadas»](#rutas-privadas), sin rechazo por la solicitud simultánea de publicación.
 - Una operación rechazada por una regla del dominio (por ejemplo, borrar una colección con enlaces) vuelve a mostrar la página con un mensaje que explica el motivo.
 - En `/app`, las respuestas que ocultan la existencia y propiedad de recursos se definen en [«Páginas privadas»](#páginas-privadas).
 
 ## Registro de eventos
 
-- Se registran las operaciones relevantes, errores de persistencia, validaciones y cambios entre público y privado.
+- Se registran las operaciones relevantes y errores de persistencia, validaciones.
 - Los registros de inicio de sesión, tanto exitosos como fallidos, incluidos los bloqueos producidos durante el login, se identifican exclusivamente mediante HMAC-SHA-256 del email introducido, normalizado según [«Email»](#email). No incluyen `UserId` ni el email en claro, exista o no una cuenta asociada.
 - Los demás eventos de autenticación (bloqueos de otras operaciones, restablecimientos de contraseña, cambios de email y eliminaciones de cuenta) y los del scraper (fallos, reintentos y bloqueos por SSRF) se identifican por `UserId`.
-- Nunca se registran secretos, contraseñas, tokens, hashes innecesarios, credenciales contenidas en URLs ni el texto de las búsquedas. Por eso el registro de peticiones tampoco incluye la cadena de consulta de los listados privados, que puede llevar `q`.
-- Los tokens viajan en la URL de los enlaces de los correos, así que tampoco se registra la URL completa de esas peticiones.
+- Nunca se registran en claro las contraseñas de las cuentas de Linkubator, incluidas las introducidas para verificarlas, establecerlas, cambiarlas o confirmarlas, ni los tokens que Linkubator emite para sus operaciones de cuenta. Tampoco se registran los secretos y credenciales que utiliza Linkubator para operar, ni hashes innecesarios.
+- Esta exclusión se aplica también a los mensajes, propiedades estructuradas, excepciones y registros de peticiones. Las peticiones que transportan un token de las operaciones de cuenta de Linkubator no registran el token ni su URL completa, tanto si el token aparece en la ruta como en la consulta.
+- Los contenidos introducidos por el usuario para gestionar enlaces, colecciones y etiquetas, y los textos de búsqueda, pueden incluirse en los eventos cuando aporten información para el diagnóstico. Esto incluye nombres, descripciones, títulos y URLs de enlace o imagen, aunque su texto contenga credenciales o tokens de servicios externos, o se parezca a un secreto. La clasificación depende del uso del campo, no de la apariencia de su valor; no se exige detectar secretos en ese contenido. Esta autorización no obliga a registrar todos los campos ni todas las búsquedas.
+- La autorización para registrar una URL introducida no modifica las reglas de ajuste y validación de [«Ajuste de URL»](#ajuste-de-url), [«Ajuste de `Image`»](#ajuste-de-image) y [«Validación»](#validación).

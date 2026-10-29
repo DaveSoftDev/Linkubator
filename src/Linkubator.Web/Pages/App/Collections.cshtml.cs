@@ -51,13 +51,13 @@ public sealed class CollectionsModel : PrivatePageModel
     public bool HasListingError { get; private set; }
 
     [TempData]
-    public string? CollectionDeleteError { get; set; }
+    public string? CollectionManagementError { get; set; }
 
     public async Task<IActionResult> OnGet(CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(CollectionDeleteError))
+        if (!string.IsNullOrWhiteSpace(CollectionManagementError))
         {
-            Alert = new PageAlertViewModel { Message = CollectionDeleteError, Kind = "error" };
+            Alert = new PageAlertViewModel { Message = CollectionManagementError, Kind = "error" };
         }
 
         Models.PrivateListing.PrivateListingQueryAnalysisResult analysis = PrivateListingQueryAnalyzer.Analyze(Request.Query, PrivateListingKind.Collections);
@@ -85,7 +85,7 @@ public sealed class CollectionsModel : PrivatePageModel
         {
             ErrorSummary = new PageErrorSummaryViewModel
             {
-                Items = new[] { analysis.PageErrorMessage, analysis.SearchErrorMessage }
+                Items = new[] { analysis.SearchErrorMessage }
                     .OfType<string>()
                     .Select(message => new PageErrorSummaryItemViewModel { Message = message })
                     .ToArray(),

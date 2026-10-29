@@ -28,6 +28,18 @@ public static class CollectionValidations
         return Result.Success();
     }
 
+    public static Result ValidateNameLength(string? value)
+    {
+        string trimmedValue = NormalizeName(value);
+
+        if (!Linkubator.Domain.Policies.UserTextPolicy.IsWithinMaximumLength(trimmedValue, Linkubator.Domain.Constants.LengthLimitsConstants.CollectionName))
+        {
+            return Result.Failure(CollectionErrors.NameTooLong());
+        }
+
+        return Result.Success();
+    }
+
     public static Result ValidateDescription(string? value)
     {
         return value is not null && !Linkubator.Domain.Policies.UserTextPolicy.IsWithinMaximumLength(value.Trim(), Linkubator.Domain.Constants.LengthLimitsConstants.CollectionDescription)

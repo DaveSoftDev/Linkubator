@@ -5,6 +5,7 @@ using ApplicationRequestDtos = Linkubator.Application.Dtos.Requests;
 using ApplicationResults = Linkubator.Application.Results;
 using AppRoutes = Linkubator.Web.Constants.AppRoutes;
 using AppSidebarSelectionKind = Linkubator.Web.Models.AppSidebar.AppSidebarSelectionKind;
+using CollectionsModel = Linkubator.Web.Pages.App.CollectionsModel;
 using PrivateResourceUnavailablePresenter = Linkubator.Web.Models.Presentation.PrivateResourceUnavailablePresenter;
 using PrivateResourceUnavailableViewModel = Linkubator.Web.Models.Presentation.PrivateResourceUnavailableViewModel;
 using PageAlertViewModel = Linkubator.Web.Models.Presentation.PageAlertViewModel;
@@ -79,15 +80,61 @@ public sealed class EditModel : PrivatePageModel
             return Page();
         }
 
+        ApplicationResults.Result<ApplicationModelDtos.CollectionDto> currentResult = await _collectionService.GetCollection(
+            new ApplicationRequestDtos.CollectionGetRequest(collectionId),
+            cancellationToken);
+        if (!currentResult.IsSuccess || currentResult.Value is null)
+        {
+            if (currentResult.Errors.Any(error => error.Category == ApplicationEnums.ApplicationErrorCategory.ResourceNotAccessible))
+            {
+                return RedirectUnavailable();
+            }
+
+            ApplyErrors(currentResult.Errors);
+            return Page();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            string privacyField = $"{nameof(Input)}.{nameof(CollectionInput.IsPublic)}";
+            if (ModelState.GetFieldValidationState(privacyField) == Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Invalid)
+            {
+                ModelState[privacyField]!.Errors.Clear();
+                ModelState.AddModelError(privacyField, Linkubator.Web.Constants.CollectionErrorMessages.InvalidPrivacy);
+                ModelState.SetModelValue(privacyField, false, bool.FalseString);
+            }
+
+            ErrorSummary = new PageErrorSummaryViewModel
+            {
+                Items = ModelState.SelectMany(entry => entry.Value!.Errors.Select(error => new PageErrorSummaryItemViewModel
+                {
+                    Message = error.ErrorMessage,
+                    FieldId = GetFieldId(entry.Key.StartsWith("Input.", StringComparison.Ordinal) ? entry.Key["Input.".Length..] : entry.Key),
+                })).ToArray(),
+            };
+            return Page();
+        }
+
         ApplicationResults.Result<ApplicationModelDtos.CollectionDto> result = await _collectionService.UpdateCollection(
             new ApplicationRequestDtos.CollectionUpdateRequest(collectionId, Input.Name, Input.Description, Input.IsPublic),
             cancellationToken);
         if (!result.IsSuccess)
         {
+            if (result.Errors.Any(error => error.Category == ApplicationEnums.ApplicationErrorCategory.ResourceNotAccessible))
+            {
+                return RedirectUnavailable();
+            }
+
             ApplyErrors(result.Errors);
             return Page();
         }
 
+        return Redirect(CollectionListRoute);
+    }
+
+    private IActionResult RedirectUnavailable()
+    {
+        TempData[nameof(CollectionsModel.CollectionManagementError)] = PrivateResourceUnavailablePresenter.GenericMessage;
         return Redirect(CollectionListRoute);
     }
 
@@ -172,6 +219,7 @@ public sealed class EditModel : PrivatePageModel
         {
             NameField => NameInputId,
             DescriptionField => DescriptionInputId,
+            nameof(CollectionInput.IsPublic) => "collection-public",
             _ => null,
         };
 }

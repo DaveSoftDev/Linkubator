@@ -207,9 +207,6 @@ public sealed class DevelopmentIdentityProvisionerTests
         InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
             new DevelopmentIdentityProvisioner(new SqliteConnectionFactory("Data Source=:memory:"), new DevelopmentIdentityOptions
             {
-                Email = DemoEmail,
-                Name = DemoName,
-                Alias = DemoAlias,
                 PasswordHash = "not-a-hash",
             }));
 
@@ -221,9 +218,6 @@ public sealed class DevelopmentIdentityProvisionerTests
     {
         DevelopmentIdentityProvisioner provisioner = new(new SqliteConnectionFactory("Data Source=:memory:"), new DevelopmentIdentityOptions
         {
-            Email = DemoEmail,
-            Name = DemoName,
-            Alias = DemoAlias,
             PasswordHash = ValidArgon2idHash,
         });
 
@@ -237,7 +231,7 @@ public sealed class DevelopmentIdentityProvisionerTests
         string[] migrationVersions = SqliteMigrationCatalog.Load().Select(script => script.Version).ToArray();
 
         Assert.Contains("Linkubator.Infrastructure.DevelopmentIdentity.Sql.ProvisionDevelopmentIdentity.sql", resources);
-        Assert.Equal(new[] { "V004", "V005", "V006" }, migrationVersions);
+        Assert.Equal(new[] { "V004", "V005", "V006", "V007" }, migrationVersions);
     }
 
     private sealed class DevelopmentIdentityTestDatabase : IAsyncDisposable
@@ -265,9 +259,6 @@ public sealed class DevelopmentIdentityProvisionerTests
         public DevelopmentIdentityProvisioner CreateProvisioner()
             => new(_connectionFactory, new DevelopmentIdentityOptions
             {
-                Email = DemoEmail,
-                Name = DemoName,
-                Alias = DemoAlias,
                 PasswordHash = ValidArgon2idHash,
             });
 

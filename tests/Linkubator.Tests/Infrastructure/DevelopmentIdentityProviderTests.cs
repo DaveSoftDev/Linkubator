@@ -12,24 +12,38 @@ public sealed class DevelopmentIdentityProviderTests
     private const string ValidArgon2idHash = "$argon2id$v=19$m=65536,t=3,p=1$42xS9y5nNCo8mABa9Y0KQw$w2hDMTrLZgBZ0Iqk7Q1m5J0C2U0xHgpiA62b0mXkVQ4";
 
     [Fact]
-    public async Task GetUserId_WhenConfiguredAccountIsComplete_ReturnsItsId()
+    public async Task GetProfile_WhenOtherUserExistsFirst_SelectsAccountWithInitialEmail()
+    {
+        await using DevelopmentIdentityTestDatabase database = await DevelopmentIdentityTestDatabase.Create();
+        await database.SeedOtherUser();
+        await database.Provision();
+
+        Linkubator.Application.Models.DevelopmentIdentityProfile profile = await database.CreateProvider().GetProfile();
+
+        Assert.Equal(DemoEmail, profile.Email);
+        Assert.Equal(await database.GetUserId(), profile.UserId);
+    }
+
+    [Fact]
+    public async Task GetProfile_WhenAccountIsComplete_ReturnsItsPersistedProfile()
     {
         await using DevelopmentIdentityTestDatabase database = await DevelopmentIdentityTestDatabase.Create();
         await database.Provision();
         DevelopmentIdentityProvider provider = database.CreateProvider();
         UserProfile before = await database.GetUserProfile();
 
-        long userId = await provider.GetUserId();
+        Linkubator.Application.Models.DevelopmentIdentityProfile profile = await provider.GetProfile();
         UserProfile after = await database.GetUserProfile();
 
-        Assert.Equal(await database.GetUserId(), userId);
+        Assert.Equal(await database.GetUserId(), profile.UserId);
+        Assert.Equal((before.Name, before.Alias, before.Email), (profile.Name, profile.Alias, profile.Email));
         Assert.Equal(before, after);
     }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task GetUserId_WhenAccountIsMissingOrIncomplete_Throws(bool seedIncompleteAccount)
+    public async Task GetProfile_WhenAccountIsMissingOrIncomplete_Throws(bool seedIncompleteAccount)
     {
         await using DevelopmentIdentityTestDatabase database = await DevelopmentIdentityTestDatabase.Create();
         if (seedIncompleteAccount)
@@ -38,7 +52,7 @@ public sealed class DevelopmentIdentityProviderTests
         }
         DevelopmentIdentityProvider provider = database.CreateProvider();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => provider.GetUserId());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => provider.GetProfile());
     }
 
     private sealed class DevelopmentIdentityTestDatabase : IAsyncDisposable
@@ -61,15 +75,12 @@ public sealed class DevelopmentIdentityProviderTests
         }
 
         public DevelopmentIdentityProvider CreateProvider()
-            => new(_connectionFactory, new DevelopmentIdentityOptions { Email = DemoEmail });
+            => new(_connectionFactory);
 
         public async Task Provision()
         {
             DevelopmentIdentityOptions options = new()
             {
-                Email = DemoEmail,
-                Name = "Demo User",
-                Alias = "my-demo-user",
                 PasswordHash = ValidArgon2idHash,
             };
             await new DevelopmentIdentityProvisioner(_connectionFactory, options).Provision();
@@ -81,6 +92,14 @@ public sealed class DevelopmentIdentityProviderTests
             await connection.ExecuteAsync(
                 "INSERT INTO User (Email, SecurityStamp) VALUES (@Email, @SecurityStamp);",
                 new { Email = DemoEmail, SecurityStamp = Guid.NewGuid().ToString("N") });
+        }
+
+        public async Task SeedOtherUser()
+        {
+            using SqliteConnection connection = _connectionFactory.CreateOpenConnection();
+            await connection.ExecuteAsync(
+                "INSERT INTO User (Email, Name, Alias, Password, EmailConfirmedAt, SecurityStamp) VALUES (@Email, @Name, @Alias, @Password, @Confirmed, @Stamp);",
+                new { Email = "other@example.test", Name = "Other User", Alias = "other-user", Password = ValidArgon2idHash, Confirmed = DateTime.UtcNow, Stamp = Guid.NewGuid().ToString("N") });
         }
 
         public async Task<long> GetUserId()

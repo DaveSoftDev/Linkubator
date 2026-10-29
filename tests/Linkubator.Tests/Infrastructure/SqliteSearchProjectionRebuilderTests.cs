@@ -1,5 +1,6 @@
 using Dapper;
 using Linkubator.Infrastructure.Contracts;
+using Linkubator.Infrastructure.Repositories;
 using Linkubator.Infrastructure.Sqlite;
 using Microsoft.Data.Sqlite;
 
@@ -9,6 +10,22 @@ public sealed class SqliteSearchProjectionRebuilderTests
 {
     private const long OwnerUserId = 42;
     private const long OtherUserId = 99;
+
+    [Fact]
+    public async Task Rebuild_WhenCollectionDescriptionIsDecomposed_RestoresSearchResults()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(OwnerUserId, "Recipes", "recipes", false, "\u1100\u1161");
+        await using SqliteConnection connection = database.OpenConnection();
+        await connection.ExecuteAsync("UPDATE CollectionSearch SET Description = 'corrupted' WHERE rowid = @Id;", new { Id = collectionId });
+        ISqliteSearchProjectionRebuilder rebuilder = new SqliteSearchProjectionRebuilder(new SqliteConnectionFactory(database.ConnectionString));
+        SqliteCollectionRepository repository = new(connection);
+
+        await rebuilder.Rebuild();
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(OwnerUserId, "\uAC00", 1);
+
+        Assert.Equal(new[] { collectionId }, result.Select(item => item.Id));
+    }
 
     [Fact]
     public async Task Rebuild_WhenProjectionsAreAltered_RestoresThemFromEntities()

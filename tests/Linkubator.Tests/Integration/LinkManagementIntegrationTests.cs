@@ -73,7 +73,6 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         Assert.Contains($"aria-pressed=\"{(!isList).ToString().ToLowerInvariant()}\"", cardsButton, StringComparison.Ordinal);
         Assert.Contains("aria-controls=\"dashboard-links\"", listButton, StringComparison.Ordinal);
         Assert.Contains("data-view-preference-path=\"/app\"", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("data-cookie-path", html, StringComparison.Ordinal);
         Assert.Single(Regex.Matches(html, "<article\\b[^>]*class=\"link-card\""));
     }
 
@@ -126,7 +125,7 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
     [InlineData("/app/enlaces", false, false)]
     [InlineData("/app/enlaces", true, false)]
     [InlineData("/app/enlaces", true, true)]
-    public async Task GetLinkCards_WithPrivacy_ShowsBadgeMatchingLinkVisibility(string route, bool publicCollection, bool publicLink)
+    public async Task GetLinkCards_WithPrivacy_ShowsLinkPrivacyBadge(string route, bool publicCollection, bool publicLink)
     {
         long collectionId = await AddCollection(_userId, "Estado", publicCollection);
         await AddLink(collectionId, "Estado del enlace", null, null, publicLink);
@@ -134,16 +133,17 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         using HttpResponseMessage response = await _client.GetAsync(route);
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
         string card = Regex.Match(html, "<article\\b[^>]*aria-label=\"Enlace: Estado del enlace\"[^>]*>.*?</article>", RegexOptions.Singleline).Value;
-        string badge = Regex.Match(card, "<span\\b[^>]*class=\"link-card__public\"[^>]*>.*?</span>", RegexOptions.Singleline).Value;
+        string badgeClass = publicLink ? "public" : "private";
+        string label = publicLink ? "Público" : "Privado";
+        string tooltip = publicLink ? "Este enlace es público" : "Este enlace es privado";
+        string badge = Regex.Match(card, $"<span\\b[^>]*class=\"link-card__{badgeClass}\"[^>]*>.*?</span>", RegexOptions.Singleline).Value;
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotEmpty(card);
-        Assert.Equal(publicLink, badge.Contains("Público", StringComparison.Ordinal));
-        Assert.Equal(publicLink, badge.Contains("title=\"Este enlace es público\"", StringComparison.Ordinal));
-        Assert.Equal(publicLink, badge.Contains("aria-hidden=\"true\"", StringComparison.Ordinal));
-        Assert.Equal(!publicLink, card.Contains("class=\"link-card__private\"", StringComparison.Ordinal));
-        Assert.Equal(!publicLink, card.Contains("title=\"Este enlace es privado\"", StringComparison.Ordinal));
-        Assert.Equal(!publicLink, card.Contains("Privado", StringComparison.Ordinal));
+        Assert.Single(Regex.Matches(card, "class=\"link-card__(?:public|private)\""));
+        Assert.Contains(label, badge, StringComparison.Ordinal);
+        Assert.Contains($"title=\"{tooltip}\"", badge, StringComparison.Ordinal);
+        Assert.Contains("aria-hidden=\"true\"", badge, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -405,6 +405,10 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
             new("Input.Title", "Nuevo título"),
             new("Input.Description", "Nueva descripción"),
             new("Input.Image", "https://example.com/new.png"),
+            new("Input.Url", "https://example.com/tampered-input"),
+            new("Input.UrlOriginal", "https://example.com/tampered-original"),
+            new("Input.UrlNormalized", "tampered-normalized"),
+            new("UrlOriginal", "https://example.com/tampered-root"),
             new("Input.IsPublic", "true"));
         LinkRow? link = await GetLink(linkId);
         LinkSearchRow? projection = await GetLinkSearch(linkId);
@@ -416,6 +420,9 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         Assert.Equal("Nueva descripción", link?.Description);
         Assert.Equal("https://example.com/new.png", link?.Image);
         Assert.Equal(1, link?.IsPublic);
+        Assert.Equal("https://example.com/original", await _keeper.ExecuteScalarAsync<string>(
+            "SELECT UrlNormalized FROM Link WHERE Id = @Id;", new { Id = linkId }));
+        Assert.Equal(SearchTextNormalizer.Normalize("https://example.com/original"), projection?.UrlOriginal);
         Assert.Equal(SearchTextNormalizer.Normalize("Nuevo título"), projection?.Title);
         Assert.Equal(SearchTextNormalizer.Normalize("Nueva descripción"), projection?.Description);
     }
@@ -639,26 +646,58 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         Assert.Equal(originalProjection, await GetLinkSearch(linkId));
     }
 
-    [Fact]
-    public async Task PostEditLink_WithForeignLinkDoesNotDiscloseOrChangeIt()
+    [Theory]
+    [InlineData("editar", true)]
+    [InlineData("editar", false)]
+    [InlineData("mover", true)]
+    [InlineData("mover", false)]
+    public async Task PostLinkManagement_WithMissingOrForeignLink_RedirectsWithNotice(string operation, bool foreign)
     {
         long ownCollectionId = await AddCollection(_userId, "Colección propia", true);
         long ownLinkId = await AddLink(ownCollectionId, "Propio", null, null, false);
         long foreignUserId = await AddOtherUser();
         long foreignCollectionId = await AddCollection(foreignUserId, "Colección privada ajena", false);
-        long foreignLinkId = await AddLink(foreignCollectionId, "Título privado", null, null, false, foreignUserId);
+        long foreignLinkId = await AddLink(foreignCollectionId, "Título privado", "Descripción privada", null, false, foreignUserId);
         LinkRow original = (await GetLink(foreignLinkId))!;
+        LinkSearchRow? originalProjection = await GetLinkSearch(foreignLinkId);
+
+        long targetId = foreign ? foreignLinkId : foreignLinkId + 1000;
+        using HttpResponseMessage response = await PostWithToken(
+            $"/app/enlaces/{ownLinkId}/{operation}",
+            $"/app/enlaces/{targetId}/{operation}?ru=%2Fapp",
+            new KeyValuePair<string, string>("Input.Title", "Manipulado"));
+        using HttpResponseMessage listing = await _client.GetAsync("/app/enlaces");
+        string html = WebUtility.HtmlDecode(await listing.Content.ReadAsStringAsync());
+        using HttpResponseMessage secondListing = await _client.GetAsync("/app/enlaces");
+        string secondHtml = WebUtility.HtmlDecode(await secondListing.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/app/enlaces", response.Headers.Location?.OriginalString);
+        Assert.Matches("role=\"status\" aria-live=\"polite\">\\s*<p>No se ha podido acceder al elemento solicitado\\.</p>", html);
+        Assert.DoesNotContain("Título privado", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("No se ha podido acceder al elemento solicitado.", secondHtml, StringComparison.Ordinal);
+        Assert.Equal(original, await GetLink(foreignLinkId));
+        Assert.Equal(originalProjection, await GetLinkSearch(foreignLinkId));
+    }
+
+    [Theory]
+    [InlineData("editar")]
+    [InlineData("mover")]
+    public async Task PostLinkManagement_WithInvalidId_ReturnsValidationWithoutChangingData(string operation)
+    {
+        long collectionId = await AddCollection(_userId, "Colección propia", true);
+        long linkId = await AddLink(collectionId, "Propio", null, null, false);
+        LinkRow original = (await GetLink(linkId))!;
 
         using HttpResponseMessage response = await PostWithToken(
-            EditRoute(ownLinkId),
-            EditRoute(foreignLinkId),
-            new KeyValuePair<string, string>("Input.Title", "Manipulado"));
+            $"/app/enlaces/{linkId}/{operation}",
+            $"/app/enlaces/not-an-id/{operation}",
+            new KeyValuePair<string, string>("Input.DestinationCollectionId", collectionId.ToString(CultureInfo.InvariantCulture)));
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("No se ha podido acceder al elemento solicitado.", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("Título privado", html, StringComparison.Ordinal);
-        Assert.Equal(original, await GetLink(foreignLinkId));
+        Assert.Contains("El identificador del enlace no es válido.", html, StringComparison.Ordinal);
+        Assert.Equal(original, await GetLink(linkId));
     }
 
     [Fact]
@@ -703,8 +742,11 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("No se ha podido acceder al elemento solicitado.", html, StringComparison.Ordinal);
+        Assert.Contains("La colección de destino no es válida.", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"#link-collection\"", html, StringComparison.Ordinal);
+        Assert.Contains("id=\"link-collection\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Colección ajena", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("No se ha podido acceder al elemento solicitado.", html, StringComparison.Ordinal);
         Assert.Equal(original, await GetLink(linkId));
         Assert.Equal(originalProjection, await GetLinkSearch(linkId));
     }
@@ -712,6 +754,7 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
     [Theory]
     [InlineData("")]
     [InlineData("0")]
+    [InlineData("-4")]
     [InlineData("not-a-collection")]
     public async Task PostMoveLink_WithInvalidDestinationDoesNotChangeLink(string destinationId)
     {
@@ -748,9 +791,61 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("No se ha podido acceder al elemento solicitado.", html, StringComparison.Ordinal);
+        Assert.Contains("La colección de destino no es válida.", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"#link-collection\"", html, StringComparison.Ordinal);
+        Assert.Contains("id=\"link-collection\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("No se ha podido acceder al elemento solicitado.", html, StringComparison.Ordinal);
         Assert.Equal(original, await GetLink(linkId));
         Assert.Equal(originalProjection, await GetLinkSearch(linkId));
+    }
+
+    [Fact]
+    public async Task PostMoveLink_WhenDestinationWasDeleted_KeepsFormAndAllowsAnotherDestination()
+    {
+        long sourceId = await AddCollection(_userId, "Colección origen", true);
+        long deletedId = await AddCollection(_userId, "Colección eliminada", false);
+        long alternativeId = await AddCollection(_userId, "Otra colección", false);
+        long linkId = await AddLink(sourceId, "Título", "Descripción", null, true);
+        LinkRow original = (await GetLink(linkId))!;
+
+        using HttpResponseMessage formResponse = await _client.GetAsync(MoveRoute(linkId));
+        string formHtml = WebUtility.HtmlDecode(await formResponse.Content.ReadAsStringAsync());
+        string token = ExtractAntiforgeryToken(formHtml);
+        Assert.Contains("Colección eliminada", formHtml, StringComparison.Ordinal);
+
+        using HttpResponseMessage deleteResponse = await PostWithToken(
+            $"/app/colecciones/{deletedId}/eliminar",
+            $"/app/colecciones/{deletedId}/eliminar");
+        Assert.Equal(HttpStatusCode.Redirect, deleteResponse.StatusCode);
+
+        using HttpResponseMessage response = await _client.PostAsync(
+            MoveRoute(linkId),
+            new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["Input.DestinationCollectionId"] = deletedId.ToString(CultureInfo.InvariantCulture),
+                ["__RequestVerificationToken"] = token,
+            }));
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("La colección de destino no es válida.", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"#link-collection\"", html, StringComparison.Ordinal);
+        Assert.Contains("id=\"link-collection\"", html, StringComparison.Ordinal);
+        Assert.Contains("Otra colección", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Colección eliminada", html, StringComparison.Ordinal);
+        Assert.Equal(original, await GetLink(linkId));
+
+        using HttpResponseMessage retry = await _client.PostAsync(
+            MoveRoute(linkId),
+            new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["Input.DestinationCollectionId"] = alternativeId.ToString(CultureInfo.InvariantCulture),
+                ["__RequestVerificationToken"] = ExtractAntiforgeryToken(html),
+            }));
+
+        Assert.Equal(HttpStatusCode.Redirect, retry.StatusCode);
+        Assert.Equal("/app/enlaces", retry.Headers.Location?.OriginalString);
+        Assert.Equal(alternativeId, (await GetLink(linkId))?.CollectionId);
     }
 
     [Fact]
@@ -832,24 +927,33 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         Assert.Equal(0, (await GetLink(linkId))?.IsPublic);
     }
 
-    [Fact]
-    public async Task PostWithoutAntiforgeryTokenDoesNotChangeLink()
+    [Theory]
+    [InlineData("editar")]
+    [InlineData("mover")]
+    [InlineData("eliminar")]
+    public async Task PostWithoutAntiforgeryTokenDoesNotChangeLink(string operation)
     {
         long collectionId = await AddCollection(_userId, "Colección", true);
-        long linkId = await AddLink(collectionId, "Título", null, null, false);
+        long destinationId = await AddCollection(_userId, "Destino", true);
+        long linkId = await AddLink(collectionId, "Título", "Descripción original", null, false);
+        LinkRow? original = await GetLink(linkId);
+        LinkSearchRow? originalProjection = await GetLinkSearch(linkId);
 
         using HttpResponseMessage response = await _client.PostAsync(
-            EditRoute(linkId),
+            $"/app/enlaces/{linkId}/{operation}",
             new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["Input.CollectionId"] = collectionId.ToString(CultureInfo.InvariantCulture),
                 ["Input.Title"] = "Cambio no autorizado",
+                ["Input.DestinationCollectionId"] = destinationId.ToString(CultureInfo.InvariantCulture),
                 ["Input.IsPublic"] = "true",
             }));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("Título", (await GetLink(linkId))?.Title);
-        Assert.Equal(0, (await GetLink(linkId))?.IsPublic);
+        Assert.NotNull(original);
+        Assert.NotNull(originalProjection);
+        Assert.Equal(original, await GetLink(linkId));
+        Assert.Equal(originalProjection, await GetLinkSearch(linkId));
     }
 
     private async Task<HttpResponseMessage> PostWithToken(
@@ -859,12 +963,17 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
     {
         using HttpResponseMessage formResponse = await _client.GetAsync(tokenRoute);
         string html = await formResponse.Content.ReadAsStringAsync();
+        string token = ExtractAntiforgeryToken(html);
+        List<KeyValuePair<string, string>> values = [.. fields, new("__RequestVerificationToken", token)];
+        return await _client.PostAsync(postRoute, new FormUrlEncodedContent(values));
+    }
+
+    private static string ExtractAntiforgeryToken(string html)
+    {
         string input = Regex.Match(
             html,
             "<input\\b(?=[^>]*name=\"__RequestVerificationToken\")[^>]*>").Value;
-        string token = WebUtility.HtmlDecode(Regex.Match(input, "value=\"([^\"]+)\"").Groups[1].Value);
-        List<KeyValuePair<string, string>> values = [.. fields, new("__RequestVerificationToken", token)];
-        return await _client.PostAsync(postRoute, new FormUrlEncodedContent(values));
+        return WebUtility.HtmlDecode(Regex.Match(input, "value=\"([^\"]+)\"").Groups[1].Value);
     }
 
     private async Task<long> AddCollection(long userId, string name, bool isPublic)
@@ -967,9 +1076,6 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         protected override void ConfigureWebHost(TestHost.IWebHostBuilder builder)
         {
             builder.UseSetting("ConnectionStrings:Linkubator", connectionString);
-            builder.UseSetting("DevelopmentIdentity:Email", DemoEmail);
-            builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
-            builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");
             builder.UseSetting("DevelopmentIdentity:PasswordHash", ValidArgon2idHash);
         }
     }

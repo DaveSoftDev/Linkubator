@@ -5,6 +5,7 @@ using Linkubator.Application.Dtos.Requests;
 using Linkubator.Application.Logging;
 using Linkubator.Application.Models;
 using Linkubator.Application.Results;
+using Linkubator.Application.Services;
 using Linkubator.Application.UseCases.Collections;
 using Linkubator.Application.UseCases.Dashboard;
 using Linkubator.Application.UseCases.Links;
@@ -46,9 +47,9 @@ public sealed class LoggingTests
     }
 
     [Fact]
-    public async Task LinkService_ListLinks_LogsRepositoryFailureWithoutQueryOrException()
+    public async Task LinkService_ListLinks_LogsRepositoryFailureWithSearchContext()
     {
-        const string searchSentinel = "private-search-sentinel";
+        const string searchSentinel = "  private-search-sentinel  ";
         InvalidOperationException repositoryFailure = new($"Failure containing {searchSentinel}");
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -65,7 +66,31 @@ public sealed class LoggingTests
         Assert.Contains("Link listing failed", entry.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Same(repositoryFailure, entry.Exception);
         Assert.DoesNotContain(searchSentinel, entry.Message, StringComparison.Ordinal);
-        Assert.DoesNotContain(searchSentinel, string.Join(" ", entry.Values.Values), StringComparison.Ordinal);
+        Assert.Equal(searchSentinel, entry.Values["Query"]);
+        Assert.Equal(7L, entry.Values["UserId"]);
+        Assert.Equal(1, entry.Values["Page"]);
+    }
+
+    [Fact]
+    public async Task CollectionService_ListCollections_LogsRepositoryFailureWithSearchContext()
+    {
+        const string query = "  collection-search-sentinel  ";
+        InvalidOperationException failure = new("Repository failed");
+        InMemoryCollectionRepository collectionRepository = new() { PageFailure = failure };
+        InMemoryLinkRepository linkRepository = new();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        TestLogger<CollectionService> logger = new();
+        CollectionService service = new(logger, new CurrentUser(7), collectionRepository, unitOfWorkFactory);
+
+        InvalidOperationException thrown = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.ListCollectionsPage(query, page: 2));
+
+        Assert.Same(failure, thrown);
+        LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Error);
+        Assert.Equal(query, entry.Values["Query"]);
+        Assert.Equal(2, entry.Values["Page"]);
+        Assert.Equal(7L, entry.Values["UserId"]);
+        Assert.Same(failure, entry.Exception);
     }
 
     [Fact]
@@ -90,7 +115,7 @@ public sealed class LoggingTests
     }
 
     [Fact]
-    public async Task LinkService_ListLinks_LogsValidationWithoutSearchText()
+    public async Task LinkService_ListLinks_LogsValidationWithSearchText()
     {
         const string searchSentinel = "private-search-sentinel";
         CurrentUser currentUser = new(7);
@@ -106,7 +131,7 @@ public sealed class LoggingTests
         LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Warning);
         Assert.Contains("validation failed", entry.Message, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(searchSentinel, entry.Message, StringComparison.Ordinal);
-        Assert.DoesNotContain(searchSentinel, string.Join(" ", entry.Values.Values), StringComparison.Ordinal);
+        Assert.Equal(searchSentinel, entry.Values["Query"]);
         Assert.Null(entry.Exception);
     }
 
@@ -151,6 +176,135 @@ public sealed class LoggingTests
     }
 
     [Fact]
+    public void SafeLogger_Log_PreservesLongUserContent()
+    {
+        string value = new string('x', 100) + "-end";
+        TestLogger<LinkService> logger = new();
+
+        SafeLogger.Log(logger, LogLevel.Warning, null, "Validation failed", new { UserId = 7L }, new { Url = value });
+
+        LogEntry entry = Assert.Single(logger.Entries);
+        Assert.Equal(value, entry.Values["Url"]);
+    }
+
+    [Fact]
+    public async Task CollectionService_CreateCollection_LogsNameForSlugFailure()
+    {
+        const string name = "日本語";
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        TestLogger<CollectionService> logger = new();
+        CollectionService service = new(logger, currentUser, collectionRepository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.CreateCollection(new CollectionCreateRequest(name));
+
+        Assert.False(result.IsSuccess);
+        LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Warning);
+        Assert.Equal(name, entry.Values["Name"]);
+        Assert.Equal("TextContainsUnsupportedCharacters", entry.Values["DomainErrorCode"]);
+    }
+
+    [Fact]
+    public async Task LinkService_CreateLink_LogsRejectedUrlWithExternalCredentials()
+    {
+        const string url = "https://user:external-password@example.com/path";
+        CurrentUser currentUser = new(7);
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        TestLogger<LinkService> logger = new();
+        LinkService service = new(logger, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, url));
+
+        Assert.False(result.IsSuccess);
+        LogEntry entry = Assert.Single(logger.Entries, item => item.Level == LogLevel.Warning);
+        Assert.Equal(url, entry.Values["Url"]);
+    }
+
+    [Fact]
+    public async Task ApplicationServiceBase_WhenRequestContainsAccountSecrets_DoesNotLogRequestAutomatically()
+    {
+        const string password = "account-password-sentinel";
+        const string token = "account-token-sentinel";
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        CapturingSerilogSink sink = new();
+        using Serilog.Core.Logger serilog = new Serilog.LoggerConfiguration().WriteTo.Sink(sink).CreateLogger();
+        using Serilog.Extensions.Logging.SerilogLoggerFactory factory = new(serilog);
+        ProtectedRequestService service = new(factory.CreateLogger<ProtectedRequestService>(), unitOfWorkFactory);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.Run(new ProtectedRequest(password, token)));
+
+        Serilog.Events.LogEvent entry = Assert.Single(sink.Events);
+        string completeEvent = $"{entry.RenderMessage()} {string.Join(" ", entry.Properties.Values)} {entry.Exception}";
+        Assert.Equal(Serilog.Events.LogEventLevel.Error, entry.Level);
+        Assert.NotNull(entry.Exception);
+        Assert.DoesNotContain(password, completeEvent, StringComparison.Ordinal);
+        Assert.DoesNotContain(token, completeEvent, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SafeLogger_Log_EmitsFullUserContextToSerilog()
+    {
+        string url = "https://example.com/" + new string('a', 100) + "?token=external-token";
+        CapturingSerilogSink sink = new();
+        using Serilog.Core.Logger serilog = new Serilog.LoggerConfiguration().WriteTo.Sink(sink).CreateLogger();
+        using Serilog.Extensions.Logging.SerilogLoggerFactory factory = new(serilog);
+        ILogger logger = factory.CreateLogger("LinkService");
+
+        SafeLogger.Log(logger, LogLevel.Warning, null, "Link rejected", new { UserId = 7L }, new { Url = url });
+
+        Serilog.Events.LogEvent entry = Assert.Single(sink.Events);
+        Assert.Equal(url, Assert.IsType<Serilog.Events.ScalarValue>(entry.Properties["Url"]).Value);
+    }
+
+    [Fact]
+    public async Task CollectionService_CreateCollection_EmitsNameAndDomainExceptionToSerilog()
+    {
+        const string name = "日本語";
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        CapturingSerilogSink sink = new();
+        using Serilog.Core.Logger serilog = new Serilog.LoggerConfiguration().WriteTo.Sink(sink).CreateLogger();
+        using Serilog.Extensions.Logging.SerilogLoggerFactory factory = new(serilog);
+        CollectionService service = new(factory.CreateLogger<CollectionService>(), new CurrentUser(7), collectionRepository, unitOfWorkFactory);
+
+        Result<CollectionDto> result = await service.CreateCollection(new CollectionCreateRequest(name));
+
+        Assert.False(result.IsSuccess);
+        Serilog.Events.LogEvent entry = Assert.Single(sink.Events);
+        Assert.Equal(name, Assert.IsType<Serilog.Events.ScalarValue>(entry.Properties["Name"]).Value);
+        Assert.Equal(7L, Assert.IsType<Serilog.Events.ScalarValue>(entry.Properties["UserId"]).Value);
+        Assert.NotNull(entry.Exception);
+        Assert.Equal("TextContainsUnsupportedCharacters", Assert.IsType<Serilog.Events.ScalarValue>(entry.Properties["DomainErrorCode"]).Value);
+    }
+
+    [Fact]
+    public async Task LinkService_CreateLink_EmitsRejectedExternalUrlToSerilog()
+    {
+        string url = "https://user:external-password@example.com/" + new string('a', 100) + "?token=external-token";
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        CapturingSerilogSink sink = new();
+        using Serilog.Core.Logger serilog = new Serilog.LoggerConfiguration().WriteTo.Sink(sink).CreateLogger();
+        using Serilog.Extensions.Logging.SerilogLoggerFactory factory = new(serilog);
+        LinkService service = new(factory.CreateLogger<LinkService>(), new CurrentUser(7), collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, url));
+
+        Assert.False(result.IsSuccess);
+        Serilog.Events.LogEvent entry = Assert.Single(sink.Events);
+        Assert.Equal(url, Assert.IsType<Serilog.Events.ScalarValue>(entry.Properties["Url"]).Value);
+        Assert.Equal(7L, Assert.IsType<Serilog.Events.ScalarValue>(entry.Properties["UserId"]).Value);
+    }
+
+    [Fact]
     public void SafeLogger_Log_WhenContextIsEmpty_AddsHasValueFalse()
     {
         TestLogger<LinkService> logger = new();
@@ -163,13 +317,13 @@ public sealed class LoggingTests
     }
 
     [Fact]
-    public void SafeLogger_Log_WhenContextContainsEnumerableAndCustomValues_SanitizesThem()
+    public void SafeLogger_Log_WithEnumerable_PreservesAllItemsAndEscapesControls()
     {
         TestLogger<LinkService> logger = new();
         var request = new
         {
             Query = "1234567890123456789012345678901234567890",
-            Tags = new object[] { "very-long-string-that-must-be-previewed", "short", 7 },
+            Tags = new object[] { "long-user-content-that-must-be-preserved\nnext", "short", 7 },
             Role = SampleRole.Admin,
             Payload = new SamplePayload()
         };
@@ -181,7 +335,7 @@ public sealed class LoggingTests
         Assert.Equal("Rich context [UserId=7]", entry.Message);
         Assert.Equal("1234567890123456789012345678901234567890", entry.Values["Query"]);
         IEnumerable<object?> tags = Assert.IsAssignableFrom<IEnumerable<object?>>(entry.Values["Tags"]);
-        Assert.Contains("short", tags.Select(item => item?.ToString()), StringComparer.Ordinal);
+        Assert.Equal(new object?[] { "long-user-content-that-must-be-preserved\\nnext", "short", 7 }, tags);
         Assert.Equal(SampleRole.Admin.ToString(), entry.Values["Role"]?.ToString());
         Assert.Equal(nameof(SamplePayload), entry.Values["Payload"]?.ToString());
     }
@@ -288,6 +442,23 @@ public sealed class LoggingTests
         public string this[int index] => $"index-{index}";
     }
 
+    private sealed record ProtectedRequest(string Password, string Token);
+
+    private sealed class ProtectedRequestService(ILogger<ProtectedRequestService> logger, IUnitOfWorkFactory factory)
+        : ApplicationServiceBase(logger, new CurrentUser(7), factory)
+    {
+        public Task<Result<string>> Run(ProtectedRequest request)
+            => ExecuteInTransaction<ProtectedRequest, string>(
+                request, default, (_, _, _) => throw new InvalidOperationException("Operation failed"), "Operation failed");
+    }
+
+    private sealed class CapturingSerilogSink : Serilog.Core.ILogEventSink
+    {
+        public List<Serilog.Events.LogEvent> Events { get; } = [];
+
+        public void Emit(Serilog.Events.LogEvent logEvent) => Events.Add(logEvent);
+    }
+
     private sealed class TestLogger<T> : ILogger<T>
     {
         public List<LogEntry> Entries { get; } = [];
@@ -323,6 +494,7 @@ public sealed class LoggingTests
     private sealed class InMemoryCollectionRepository : ICollectionRepository
     {
         public List<Collection> Items { get; } = [];
+        public Exception? PageFailure { get; init; }
 
         public Task<Collection?> GetById(long id, long userId, CancellationToken cancellationToken = default)
             => Task.FromResult(Items.FirstOrDefault(item => item.Id == id && item.UserId == userId));
@@ -343,7 +515,7 @@ public sealed class LoggingTests
             => Task.FromResult<IReadOnlyCollection<CollectionDto>>(Array.Empty<CollectionDto>());
 
         public Task<int> GetPageCountByUser(long userId, string? query, CancellationToken cancellationToken = default)
-            => Task.FromResult(0);
+            => PageFailure is null ? Task.FromResult(0) : throw PageFailure;
 
         public Task Insert(Collection collection, CancellationToken cancellationToken = default)
         {
@@ -362,6 +534,19 @@ public sealed class LoggingTests
     {
         public List<Link> Items { get; } = [];
         public Exception? PageFailure { get; init; }
+
+        public Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => Task.FromResult(Items.Count(item => item.UserId == userId && item.CollectionId == collectionId));
+
+        public Task UpdatePrivateByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+        {
+            foreach (Link link in Items.Where(item => item.UserId == userId && item.CollectionId == collectionId && item.IsPublic))
+            {
+                link.ChangePrivacy(false, link.Collection);
+            }
+
+            return Task.CompletedTask;
+        }
 
         public Task<Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
             => Task.FromResult(Items.FirstOrDefault(item => item.Id == id && item.UserId == userId));

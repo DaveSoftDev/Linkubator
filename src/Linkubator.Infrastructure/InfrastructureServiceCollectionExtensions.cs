@@ -32,9 +32,6 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton(provider =>
         {
             DevelopmentIdentityOptions configured = provider.GetRequiredService<IOptions<DevelopmentIdentityOptions>>().Value;
-            configured.Email ??= "user@linkubator.test";
-            configured.Name ??= "Demo User";
-            configured.Alias ??= "my-demo-user";
             configured.PasswordHash ??= string.Empty;
             return configured;
         });

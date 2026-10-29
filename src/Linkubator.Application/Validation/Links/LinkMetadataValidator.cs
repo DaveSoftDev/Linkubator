@@ -1,4 +1,4 @@
-using Linkubator.Application.Results;
+using Linkubator.Application.Constants;
 using Linkubator.Application.Dtos.Requests;
 using DomainExceptions = Linkubator.Domain.Exceptions;
 using DomainPolicies = Linkubator.Domain.Policies;
@@ -8,15 +8,15 @@ namespace Linkubator.Application.Validation.Links;
 
 internal static class LinkMetadataValidator
 {
-    public static Result Validate(string? title, string? description, string? image, string baseUrl)
+    public static Result Validate(LinkMetadataValidationRequest request)
     {
-        Result titleResult = ValidateField(nameof(LinkUpdateRequest.Title), () => DomainPolicies.UserTextPolicy.EnsureOptionalMaximumLength(title, LengthLimits.LinkTitle));
+        Result titleResult = ValidateField(nameof(LinkUpdateRequest.Title), () => DomainPolicies.UserTextPolicy.EnsureOptionalMaximumLength(request.Title, LengthLimits.LinkTitle));
         if (!titleResult.IsSuccess)
         {
             return titleResult;
         }
 
-        Result descriptionResult = ValidateField(nameof(LinkUpdateRequest.Description), () => DomainPolicies.UserTextPolicy.EnsureOptionalMaximumLength(description, LengthLimits.LinkDescription));
+        Result descriptionResult = ValidateField(nameof(LinkUpdateRequest.Description), () => DomainPolicies.UserTextPolicy.EnsureOptionalMaximumLength(request.Description, LengthLimits.LinkDescription));
         if (!descriptionResult.IsSuccess)
         {
             return descriptionResult;
@@ -24,10 +24,10 @@ internal static class LinkMetadataValidator
 
         return ValidateField(nameof(LinkUpdateRequest.Image), () =>
         {
-            string? adjustedImage = DomainPolicies.UserTextPolicy.EnsureOptionalMaximumLength(image, LengthLimits.LinkImage);
+            string? adjustedImage = DomainPolicies.UserTextPolicy.EnsureOptionalMaximumLength(request.Image, LengthLimits.LinkImage);
             if (adjustedImage is not null)
             {
-                DomainPolicies.ImageUrlPolicy.Adjust(adjustedImage, baseUrl);
+                DomainPolicies.ImageUrlPolicy.Adjust(adjustedImage, request.BaseUrl);
             }
         });
     }

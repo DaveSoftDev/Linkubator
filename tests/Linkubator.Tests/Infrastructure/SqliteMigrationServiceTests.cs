@@ -13,17 +13,17 @@ public sealed class SqliteMigrationServiceTests
         SqliteConnectionFactory factory = new($"Data Source={databasePath}");
         SqliteMigrationService service = new(factory, new[]
         {
-            new SqliteMigrationScript("V001", "CREATE TABLE sample_data (id INTEGER PRIMARY KEY, value TEXT);"),
-            new SqliteMigrationScript("V002", "INSERT INTO sample_data (value) VALUES ('after-v002');"),
-            new SqliteMigrationScript("V003", "UPDATE sample_data SET value = 'after-v003' WHERE value = 'after-v002';")
+            new SqliteMigrationScript("V10", "UPDATE sample_data SET value = 'after-v10' WHERE value = 'after-v2';"),
+            new SqliteMigrationScript("V2", "INSERT INTO sample_data (value) VALUES ('after-v2');"),
+            new SqliteMigrationScript("V1", "CREATE TABLE sample_data (id INTEGER PRIMARY KEY, value TEXT);")
         });
 
         await service.ApplyPendingMigrations();
 
         using SqliteConnection connection = factory.CreateOpenConnection();
-        Assert.Equal(new[] { "V001", "V002", "V003" }, connection.Query<string>("SELECT version FROM schema_migrations ORDER BY version").ToArray());
+        Assert.Equal(new[] { "V1", "V2", "V10" }, connection.Query<string>("SELECT version FROM schema_migrations ORDER BY CAST(SUBSTR(version, 2) AS INTEGER)").ToArray());
         Assert.Equal(1, connection.QuerySingle<int>("SELECT COUNT(*) FROM sample_data;"));
-        Assert.Equal("after-v003", connection.QuerySingle<string>("SELECT value FROM sample_data WHERE id = 1;"));
+        Assert.Equal("after-v10", connection.QuerySingle<string>("SELECT value FROM sample_data WHERE id = 1;"));
 
         DeleteDatabaseFiles(databasePath);
     }
@@ -58,8 +58,8 @@ public sealed class SqliteMigrationServiceTests
         SqliteConnectionFactory factory = new($"Data Source={databasePath}");
         SqliteMigrationService service = new(factory, new[]
         {
-            new SqliteMigrationScript("V001", "CREATE TABLE sample_data (id INTEGER PRIMARY KEY, value TEXT);"),
-            new SqliteMigrationScript("V002", "INSERT INTO missing_table (value) VALUES ('should fail');"),
+            new SqliteMigrationScript("V001", "CREATE TABLE sample_data (id INTEGER PRIMARY KEY, value TEXT); INSERT INTO sample_data (value) VALUES ('keep');"),
+            new SqliteMigrationScript("V002", "INSERT INTO sample_data (value) VALUES ('rollback'); INSERT INTO missing_table (value) VALUES ('should fail');"),
             new SqliteMigrationScript("V003", "CREATE TABLE should_not_be_created (id INTEGER PRIMARY KEY);")
         });
 
@@ -67,6 +67,7 @@ public sealed class SqliteMigrationServiceTests
 
         using SqliteConnection connection = factory.CreateOpenConnection();
         Assert.Equal(new[] { "V001" }, connection.Query<string>("SELECT version FROM schema_migrations ORDER BY version").ToArray());
+        Assert.Equal(new[] { "keep" }, connection.Query<string>("SELECT value FROM sample_data ORDER BY id;").ToArray());
         Assert.Equal(0, connection.QuerySingle<int>("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'should_not_be_created';"));
 
         DeleteDatabaseFiles(databasePath);
@@ -118,7 +119,7 @@ public sealed class SqliteMigrationServiceTests
 
         using (SqliteConnection connection = factory.CreateOpenConnection())
         {
-            Assert.Equal(new[] { "V001", "V002", "V003", "V004", "V005", "V006" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version")).ToArray());
+            Assert.Equal(new[] { "V001", "V002", "V003", "V004", "V005", "V006", "V007" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version")).ToArray());
             Assert.Equal("legacy-seed", await connection.QuerySingleAsync<string>("SELECT value FROM sample_data WHERE id = 1;"));
         }
 

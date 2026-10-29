@@ -5,7 +5,7 @@ namespace Linkubator.Application.Validation.Collections;
 
 public sealed class CollectionDeleteValidator : IValidator<CollectionDeleteRequest>
 {
-    public Result Validate(CollectionDeleteRequest request)
+    public Result Validate(CollectionDeleteRequest? request)
     {
         if (request is null)
         {

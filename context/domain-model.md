@@ -27,14 +27,15 @@ Invariantes:
 
 - `Email` es obligatorio y único en todo el sistema, normalizado y validado según [specifications.md → «Email»](specifications.md#email).
 - `EmailConfirmedAt` es `null` mientras el registro está sin completar. En el perfil, un registro sin completar solo tiene email y `SecurityStamp`; `Name`, `Alias` y `Password` son `null`, no tiene colecciones y no puede iniciar sesión. Esto no excluye campos operativos de `User`, como las marcas de envío de correo. Al completar el registro se fijan `Name`, `Alias`, `Password` y `EmailConfirmedAt` a la vez y, desde entonces, `Name`, `Alias` y `Password` son obligatorios.
+- `EmailConfirmedAt` representa la confirmación más reciente del email actualmente almacenado, no la fecha histórica de compleción inicial del registro. Se informa al completar la confirmación inicial y se actualiza cada vez que se confirma un cambio de email posterior. Solicitar el cambio no modifica esta fecha ni el email actual. La identidad de desarrollo conserva la excepción técnica descrita en [specifications.md → «Identidad de desarrollo»](specifications.md#identidad-de-desarrollo).
 - Volver a registrarse con el email de un registro sin completar no crea otra cuenta: reenvía el correo de completar registro (ver [specifications.md → «Registro»](specifications.md#registro)).
 - `Name` no necesita ser único, ya que su finalidad es sólo para uso privado de la aplicación (Pantallas, Emails...).
 - `Alias` es público, mutable y único en todo el sistema. Se genera según [specifications.md → «Generación del alias»](specifications.md#generación-del-alias).
 - `Password` guarda solo el hash de la contraseña, nunca la contraseña en claro.
-- `Password` solo cambia por tres vías: completar el registro (contraseña inicial), el cambio de contraseña (tras verificar la actual) y el restablecimiento con un token de recuperación válido.
+- Durante el ciclo de vida de la cuenta, la contraseña del usuario solo se establece o cambia por tres vías: completar el registro (contraseña inicial), el cambio de contraseña (tras verificar la actual) y el restablecimiento con un token de recuperación válido. La renovación técnica excepcional del hash almacenado en `Password`, sin cambiar la contraseña del usuario, se regula en [specifications.md → «Hash de la contraseña»](specifications.md#hash-de-la-contraseña).
 - Cambiar `Email` no lo sustituye de inmediato: el nuevo valor solo se aplica al verificarlo con un token de cambio de email. Solicitar el cambio exige verificar la contraseña actual. Solo se emite el token si el nuevo email está libre al solicitarlo, y solo se aplica si sigue libre al confirmarlo (ver [specifications.md → «Cambio de email»](specifications.md#cambio-de-email)).
 - `FailedLoginAttempts` cuenta los intentos fallidos consecutivos de verificar la contraseña. Es un único contador por cuenta, compartido por todas las operaciones que verifican la contraseña. Al llegar al máximo se fija `LockoutEnd`; mientras `LockoutEnd` está en el futuro, ninguna contraseña se da por válida. Cuándo se reinicia el contador se vuelven a validar (ver [specifications.md → «Bloqueo por intentos fallidos»](specifications.md#bloqueo-por-intentos-fallidos)).
-- `LastEmailSentAt` guarda el momento del último correo con token enviado a la cuenta, y `LastExistingAccountNoticeAt` el del último aviso de cuenta existente. Cada uno alimenta su propio límite (ver [specifications.md → «Correo»](specifications.md#correo)).
+- `LastEmailSentAt` guarda el momento de aceptación de la última solicitud de correo con token confirmada en base de datos, y `LastExistingAccountNoticeAt` el de la última solicitud de aviso de cuenta existente confirmada en base de datos. Son marcas de aceptación de solicitudes, no de envío SMTP ni de entrega al destinatario; cada una alimenta su propio límite (ver [specifications.md → «Correo»](specifications.md#correo)).
 - `SecurityStamp` es un valor aleatorio que se genera al crear el usuario y se regenera al cambiar o restablecer la contraseña y al confirmar un cambio de email. Las sesiones emitidas con un sello anterior dejan de ser válidas.
 - `CreatedAt` es solo informativo, para auditoría; no participa en ninguna regla.
 - Un usuario con el registro completado tiene siempre al menos una colección: al completar el registro se crea su colección privada «Bandeja de entrada».
@@ -62,7 +63,7 @@ Invariantes:
 - Solo se guarda el hash del token (`Token`), que es único.
 - Un token es válido si no ha caducado y tanto `UsedAt` como `InvalidatedAt` son `null`.
 - `UsedAt` indica que el token completó su operación; `InvalidatedAt` indica que otra operación lo revocó sin consumirlo. Nunca pueden estar informados ambos campos.
-- `NewEmail` solo se informa en los tokens de cambio de email, y es el único sitio donde se guarda el email pendiente: `User.Email` no se cambia hasta confirmarlo.
+- `NewEmail` es obligatorio si y solo si el propósito del token es cambiar el email. Su valor se normaliza y valida según [specifications.md → «Email»](specifications.md#email). Para cualquier otro propósito es `null`. Es el único sitio donde se guarda el email pendiente: `User.Email` conserva el actual hasta confirmar el cambio.
 - Un token deja de ser válido cuando se usa, cuando caduca o cuando lo invalida otra operación de la cuenta (ver [specifications.md → «Tokens»](specifications.md#tokens)).
 - El formato y las caducidades están en [specifications.md → «Tokens»](specifications.md#tokens).
 
@@ -127,6 +128,9 @@ Propiedades:
 Invariantes:
 
 - La pareja `LinkId + TagId` es única y es su clave: `LinkTag` no tiene `Id` propio.
+- Cada asociación corresponde a un enlace y una etiqueta existentes del mismo usuario, según [«Propiedad de los datos»](#propiedad-de-los-datos).
+- Un enlace puede no tener etiquetas o tener varias, y una etiqueta puede asociarse a varios enlaces; una misma pareja no se duplica.
+- Añadir o quitar etiquetas de un enlace crea o elimina sus asociaciones `LinkTag`, no modifica la identidad ni el nombre de las etiquetas. Eliminar una asociación no elimina el enlace ni la etiqueta, ni altera las asociaciones de otros enlaces.
 
 ## Link
 
@@ -153,7 +157,7 @@ Invariantes:
 - `UrlNormalized` es único dentro del usuario.
 - `UrlNormalized` se calcula a partir de `UrlOriginal` según [specifications.md → «Normalización para duplicados»](specifications.md#normalización-para-duplicados). Es una clave plana, no una URL válida, y solo sirve para detectar duplicados.
 - `Title`, `Description` e `Image` son opcionales. `Image`, si existe, cumple las reglas de ajuste [specifications.md → «Ajuste de `Image`»](specifications.md#ajuste-de-image) y validación [specifications.md → «Validación»](specifications.md#validación).
-- De sus propiedades, solo se pueden editar `Title`, `Description`, `Image` e `IsPublic` y moverlo a otra colección (`CollectionId`).
+- De sus propiedades, solo se pueden editar `Title`, `Description`, `Image` e `IsPublic` y moverlo a otra colección (`CollectionId`). Esta lista no excluye añadir o quitar asociaciones con etiquetas, que se representan mediante [«LinkTag»](#linktag), no mediante una propiedad de esta lista.
 - `IsPublic` es `false` al crearlo, salvo que el usuario lo marque como público si está habilitado (ver [«Público y privado»](#público-y-privado)).
 - `ScrapingStatus` es `NotRequested` mientras no se ha solicitado scraping (ver [specifications.md → «Estados del scraping»](specifications.md#estados-del-scraping)).
 - `Link.CreatedAt` solo se usa para ordenar (ver [specifications.md → «Listados»](specifications.md#listados)).
@@ -202,8 +206,9 @@ Invariantes:
 
 - Las colecciones y los enlaces nuevos son privados por defecto. El usuario puede hacerlos públicos al crearlos si se cumplen las condiciones para publicarlos.
 - Un enlace de una colección privada no puede ser público.
-- Al guardar la edición de una colección como privada, todos sus enlaces pasan a ser privados.
-- Al guardar la edición de una colección como pública, sus enlaces permanecen privados; el estado de cada enlace se conserva de forma independiente.
+- Al cambiar una colección de pública a privada, todos sus enlaces pasan a ser privados.
+- Al cambiar una colección de privada a pública, no se modifica el estado de sus enlaces: todos siguen privados, como ya exigía la invariante de la colección privada. Hacer pública la colección no hace públicos sus enlaces.
+- Al editar una colección sin cambiar su estado público o privado, no se modifica el estado de sus enlaces. En particular, una colección que sigue pública conserva tanto sus enlaces públicos como los privados.
 - Al mover un enlace a otra colección, el enlace pasa a ser privado, con independencia de la privacidad de la colección de origen o de destino.
 - Una colección vacía puede ser pública aunque todavía no aparezca en las páginas públicas por no tener enlaces.
 

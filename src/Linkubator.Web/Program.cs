@@ -1,7 +1,6 @@
 using Linkubator.Infrastructure;
 using Microsoft.AspNetCore.HostFiltering;
 using Serilog;
-using Serilog.Events;
 using ApplicationContracts = Linkubator.Application.Contracts;
 using CollectionService = Linkubator.Application.UseCases.Collections.CollectionService;
 using DashboardService = Linkubator.Application.UseCases.Dashboard.DashboardService;
@@ -52,7 +51,7 @@ using (AsyncServiceScope scope = app.Services.CreateAsyncScope())
 
     ApplicationContracts.IDevelopmentIdentityProvider identityProvider =
         scope.ServiceProvider.GetRequiredService<ApplicationContracts.IDevelopmentIdentityProvider>();
-    await identityProvider.GetUserId();
+    await identityProvider.GetProfile();
 }
 
 if (!app.Environment.IsDevelopment())
@@ -106,15 +105,6 @@ app.UseStatusCodePages(async ctx =>
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging(options =>
 {
-    Func<HttpContext, string, double, int, IEnumerable<LogEventProperty>> getMessageTemplateProperties =
-        options.GetMessageTemplateProperties;
-    options.GetMessageTemplateProperties = (httpContext, requestPath, elapsedMilliseconds, statusCode) =>
-    {
-        string safeRequestPath = WebLogging.RequestLoggingDiagnosticContext.GetSafeRequestPath(
-            requestPath,
-            httpContext.Request.QueryString.Value ?? string.Empty);
-        return getMessageTemplateProperties(httpContext, safeRequestPath, elapsedMilliseconds, statusCode);
-    };
     options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
         WebLogging.RequestLoggingDiagnosticContext.Enrich(diagnosticContext, httpContext);

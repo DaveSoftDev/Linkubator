@@ -76,6 +76,7 @@ public static class LinkCardViewModelFactory
             hash = (hash * 31) + char.ToUpperInvariant(character);
         }
 
-        return _accentClasses[Math.Abs(hash) % _accentClasses.Length];
+        int index = (int)(Math.Abs((long)hash) % _accentClasses.Length);
+        return _accentClasses[index];
     }
 }

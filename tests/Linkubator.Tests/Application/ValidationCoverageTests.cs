@@ -13,7 +13,7 @@ public class ValidationCoverageTests
     {
         LinkCreateValidator validator = new();
 
-        Result nullResult = validator.Validate(null!);
+            Result nullResult = validator.Validate(null);
         Assert.False(nullResult.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", nullResult.Errors[0].Code);
 
@@ -34,7 +34,7 @@ public class ValidationCoverageTests
     {
         LinkUpdateValidator validator = new();
 
-        Result nullResult = validator.Validate(null!);
+            Result nullResult = validator.Validate(null);
         Assert.False(nullResult.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", nullResult.Errors[0].Code);
 
@@ -55,7 +55,7 @@ public class ValidationCoverageTests
     {
         LinkMoveValidator validator = new();
 
-        Result nullResult = validator.Validate(null!);
+            Result nullResult = validator.Validate(null);
         Assert.False(nullResult.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", nullResult.Errors[0].Code);
 
@@ -76,7 +76,7 @@ public class ValidationCoverageTests
     {
         LinkDeleteValidator deleteValidator = new();
 
-        Result deleteNull = deleteValidator.Validate(null!);
+        Result deleteNull = deleteValidator.Validate(null);
         Assert.False(deleteNull.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", deleteNull.Errors[0].Code);
 
@@ -109,7 +109,7 @@ public class ValidationCoverageTests
     {
         CollectionCreateValidator validator = new();
 
-        Result nullResult = validator.Validate(null!);
+            Result nullResult = validator.Validate(null);
         Assert.False(nullResult.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", nullResult.Errors[0].Code);
 
@@ -126,7 +126,7 @@ public class ValidationCoverageTests
     {
         CollectionDeleteValidator validator = new();
 
-        Result nullResult = validator.Validate(null!);
+            Result nullResult = validator.Validate(null);
         Assert.False(nullResult.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", nullResult.Errors[0].Code);
 
@@ -143,7 +143,7 @@ public class ValidationCoverageTests
     {
         CollectionGetValidator validator = new();
 
-        Result nullResult = validator.Validate(null!);
+            Result nullResult = validator.Validate(null);
         Assert.False(nullResult.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", nullResult.Errors[0].Code);
 
@@ -203,7 +203,7 @@ public class ValidationCoverageTests
     {
         LinkGetValidator validator = new();
 
-        Result nullResult = validator.Validate(null!);
+            Result nullResult = validator.Validate(null);
         Assert.False(nullResult.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", nullResult.Errors[0].Code);
 

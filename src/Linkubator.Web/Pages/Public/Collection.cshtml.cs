@@ -66,7 +66,7 @@ public sealed class CollectionModel : PageModel
         int requestedPage = TryGetRequestedPage();
         if (requestedPage > PageCount)
         {
-            requestedPage = 1;
+            requestedPage = PageCount;
         }
 
         PageNumber = requestedPage;

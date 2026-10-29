@@ -24,7 +24,6 @@ La carpeta [`specs/`](specs/) es documentación técnica derivada: explica cómo
 
 La documentación es genérica para todo el producto, las únicas referencias a MVPs concretos se deben hacer en [README.md](README.md), [decisions.md](context/decisions.md) y en [roadmap.md](context/roadmap.md), las especificaciones (Carpeta [`specs/`](specs/)) y el [Plan para afrontar el MVP0](plans/mvp0-plan.md). Fuera de él, no deben aparecer ninguna mención a MVPs específicos.
 
-
 ### Dónde va cada texto
 
 Antes de escribir cualquier texto, clasifícalo. **Si no encaja en el documento que estás editando, no se escribe ahí:** se escribe en su documento propietario y, si hace falta, se enlaza desde el actual.
@@ -71,7 +70,7 @@ Estas reglas no se pueden romper nunca, ni en la documentación ni en el código
 - Toda lectura o modificación privada se limita al usuario identificado, y nunca se confía en un `UserId`, `Alias` o `Slug` enviado por el cliente ([domain-model.md → «Propiedad de los datos»](context/domain-model.md#propiedad-de-los-datos)).
 - Una colección privada nunca expone sus enlaces, y nada se hace público sin una acción explícita del usuario ([domain-model.md → «Público y privado»](context/domain-model.md#público-y-privado)).
 - Las respuestas de login, registro, recuperación y cambio de email no revelan si una cuenta existe, ni por su contenido ni por su tipo de respuesta ([specifications.md → «Respuestas que no revelan si una cuenta existe»](context/specifications.md#respuestas-que-no-revelan-si-una-cuenta-existe)).
-- Contraseñas y tokens nunca se guardan ni se registran en claro ([specifications.md → «Contraseñas»](context/specifications.md#contraseñas) y [«Tokens»](context/specifications.md#tokens)).
+- Las contraseñas de las cuentas de Linkubator y los tokens emitidos para sus operaciones de cuenta nunca se guardan ni se registran en claro ([specifications.md → «Contraseñas»](context/specifications.md#contraseñas) y [«Tokens»](context/specifications.md#tokens)).
 - Dentro de una transacción de base de datos nunca se espera al usuario, ni se hacen llamadas HTTP, scraping o envíos de correo ([architecture.md → «Persistencia»](context/architecture.md#persistencia)).
 
 ## Reglas de documentación
@@ -101,6 +100,9 @@ Se permite crear los proyectos, el código, el SQL de aplicación y migraciones,
 
 ## Convención de estructura del código
 
+La vista de carpetas actuales se mantiene en [README.md → «Estructura de la solución»](README.md#estructura-de-la-solución), y sus responsabilidades en [architecture.md → «Arquitectura»](context/architecture.md#arquitectura). Las convenciones siguientes se aplican según la capa; no son una plantilla de carpetas que deba reproducirse en todas ellas.
+
+- Domain organiza entidades, políticas, excepciones, enumeraciones y constantes; no contiene DTOs de aplicación ni modelos de presentación. Application organiza contratos, peticiones, modelos de salida, resultados y casos de uso. Los modelos de presentación pertenecen a Web.
 - Cada tipo público debe vivir en su propio archivo.
 - Los tipos no deben acumularse en archivos raíz dentro de una capa; se organizan por carpeta y responsabilidad: `Contracts/`, `Results/`, `Enums/`, `Models/`, `Dtos/Requests/`, `Dtos/Models/`, `Validation/`, `UseCases/`, `Services/` y así sucesivamente.
 - Las carpetas deben reflejar el dominio y no dejar tipos sueltos que luego se reubiquen por refactor.

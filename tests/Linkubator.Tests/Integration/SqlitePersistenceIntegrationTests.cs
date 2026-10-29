@@ -187,6 +187,63 @@ public sealed class SqlitePersistenceIntegrationTests
     }
 
     [Fact]
+    public async Task UpdateCollection_WhenPrivatizedAndRenamed_UpdatesLinksAndSearchWithoutChangingOtherCollections()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(OwnerUserId, "Original", "original", true);
+        long otherCollectionId = await database.SeedCollection(OwnerUserId, "Other", "other", true);
+        long publicId = await database.SeedLink(OwnerUserId, collectionId, "https://example.test/public", "https://example.test/public", "Public", true);
+        long privateId = await database.SeedLink(OwnerUserId, collectionId, "https://example.test/private", "https://example.test/private", "Private", false);
+        long otherId = await database.SeedLink(OwnerUserId, otherCollectionId, "https://example.test/other", "https://example.test/other", "Other", true);
+        await using SqliteConnection connection = database.OpenConnection();
+        InfrastructureSqlite.SqliteConnectionFactory connectionFactory = new(database.ConnectionString);
+        AppContracts.ICollectionRepository collectionRepository = new InfrastructureRepositories.SqliteCollectionRepository(connection);
+        AppContracts.ILinkRepository linkRepository = new InfrastructureRepositories.SqliteLinkRepository(connection);
+        AppContracts.IUnitOfWorkFactory unitOfWorkFactory = new InfrastructureSqlite.SqliteUnitOfWorkFactory(connectionFactory);
+        CollectionService service = new(NullLogger<CollectionService>.Instance, new AppModels.CurrentUser(OwnerUserId), collectionRepository, unitOfWorkFactory);
+
+        Linkubator.Application.Results.Result<Linkubator.Application.Dtos.Models.CollectionDto> result = await service.UpdateCollection(
+            new AppRequests.CollectionUpdateRequest(collectionId, "Renamed", "Description", false));
+        Dictionary<long, long> states = (await connection.QueryAsync<(long Id, long IsPublic)>("SELECT Id, IsPublic FROM Link;"))
+            .ToDictionary(item => item.Id, item => item.IsPublic);
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> searchResults = await linkRepository.GetPageByUser(OwnerUserId, "Renamed", null, 1);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value!.LinkCount);
+        Assert.Equal(0, states[publicId]);
+        Assert.Equal(0, states[privateId]);
+        Assert.Equal(1, states[otherId]);
+        Assert.Equal(new[] { publicId, privateId }.OrderBy(id => id), searchResults.Select(item => item.Id).OrderBy(id => id));
+    }
+
+    [Fact]
+    public async Task UpdateCollection_WhenPrivatizingCollectionAndCreatingPublicLinkConcurrently_LeavesNoPublicLinks()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(OwnerUserId, "Public", "public", true);
+        await using SqliteConnection connection = database.OpenConnection();
+        InfrastructureSqlite.SqliteConnectionFactory connectionFactory = new(database.ConnectionString);
+        AppModels.CurrentUser currentUser = new(OwnerUserId);
+        AppContracts.ICollectionRepository collectionRepository = new InfrastructureRepositories.SqliteCollectionRepository(connection);
+        AppContracts.ILinkRepository linkRepository = new InfrastructureRepositories.SqliteLinkRepository(connection);
+        AppContracts.IUnitOfWorkFactory unitOfWorkFactory = new InfrastructureSqlite.SqliteUnitOfWorkFactory(connectionFactory);
+        CollectionService collectionService = new(NullLogger<CollectionService>.Instance, currentUser, collectionRepository, unitOfWorkFactory);
+        LinkService linkService = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
+
+        (Linkubator.Application.Results.Result<Linkubator.Application.Dtos.Models.CollectionDto> collectionResult,
+            Linkubator.Application.Results.Result<Linkubator.Application.Dtos.Models.LinkDto> linkResult) = await RunConcurrently(
+            () => collectionService.UpdateCollection(new AppRequests.CollectionUpdateRequest(collectionId, "Public", null, false)),
+            () => linkService.CreateLink(new AppRequests.LinkCreateRequest(collectionId, "https://example.test/concurrent", IsPublic: true)));
+        long publicLinkCount = await connection.ExecuteScalarAsync<long>(
+            "SELECT COUNT(*) FROM Link WHERE UserId = @UserId AND CollectionId = @CollectionId AND IsPublic = 1;",
+            new { UserId = OwnerUserId, CollectionId = collectionId });
+
+        Assert.True(collectionResult.IsSuccess);
+        Assert.True(linkResult.IsSuccess || linkResult.Errors.Any(error => error.Code == "LINK_PUBLIC_IN_PRIVATE_COLLECTION"));
+        Assert.Equal(0, publicLinkCount);
+    }
+
+    [Fact]
     public async Task UpdateCollection_WhenPrivatizingCollectionAndPublishingLinkConcurrently_KeepsLinkPrivate()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
@@ -201,7 +258,7 @@ public sealed class SqlitePersistenceIntegrationTests
         CollectionService collectionService = new(NullLogger<CollectionService>.Instance, currentUser, collectionRepository, unitOfWorkFactory);
         LinkService linkService = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        await RunConcurrently(
+        var (collectionResult, linkResult) = await RunConcurrently(
             () => collectionService.UpdateCollection(new AppRequests.CollectionUpdateRequest(collectionId, "Public", null, false)),
             () => linkService.UpdateLink(new AppRequests.LinkUpdateRequest(linkId, collectionId, "Link", null, null, true)));
         int collectionIsPublic = await connection.ExecuteScalarAsync<int>(
@@ -211,6 +268,8 @@ public sealed class SqlitePersistenceIntegrationTests
             "SELECT IsPublic FROM Link WHERE Id = @LinkId;",
             new { LinkId = linkId });
 
+        Assert.True(collectionResult.IsSuccess);
+        Assert.True(linkResult.IsSuccess || (linkResult.Errors.Count == 1 && linkResult.Errors[0].Code == "LINK_PUBLIC_IN_PRIVATE_COLLECTION"));
         Assert.Equal(0, collectionIsPublic);
         Assert.Equal(0, linkIsPublic);
     }
@@ -227,12 +286,19 @@ public sealed class SqlitePersistenceIntegrationTests
             "https://example.test/rollback",
             "Public link",
             true);
+        long failingLinkId = await database.SeedLink(
+            OwnerUserId,
+            collectionId,
+            "https://example.test/rollback-fail",
+            "https://example.test/rollback-fail",
+            "Second public link",
+            true);
         await using SqliteConnection connection = database.OpenConnection();
         await connection.ExecuteAsync(
             """
             CREATE TRIGGER FailCollectionLinkPrivacyUpdate
             BEFORE UPDATE OF IsPublic ON Link
-            WHEN OLD.IsPublic = 1 AND NEW.IsPublic = 0
+            WHEN OLD.UrlNormalized = 'https://example.test/rollback-fail' AND NEW.IsPublic = 0
             BEGIN
                 SELECT RAISE(ABORT, 'Injected link update failure');
             END;
@@ -260,6 +326,9 @@ public sealed class SqlitePersistenceIntegrationTests
         int linkVisibility = await connection.ExecuteScalarAsync<int>(
             "SELECT IsPublic FROM Link WHERE Id = @LinkId;",
             new { LinkId = linkId });
+        int failingLinkVisibility = await connection.ExecuteScalarAsync<int>(
+            "SELECT IsPublic FROM Link WHERE Id = @LinkId;",
+            new { LinkId = failingLinkId });
         string? linkSearchCollectionName = await connection.ExecuteScalarAsync<string?>(
             "SELECT CollectionName FROM LinkSearch WHERE rowid = @LinkId AND UserId = @UserId;",
             new { LinkId = linkId, UserId = OwnerUserId });
@@ -267,6 +336,7 @@ public sealed class SqlitePersistenceIntegrationTests
         Assert.Equal(new PersistedCollectionState("Original name", "original-name", "Original description", 1), collectionState);
         Assert.Equal(new PersistedCollectionSearchState("Original name", "Original description"), collectionSearchState);
         Assert.Equal(1, linkVisibility);
+        Assert.Equal(1, failingLinkVisibility);
         Assert.Equal("Original name", linkSearchCollectionName);
     }
 

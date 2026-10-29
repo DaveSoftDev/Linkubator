@@ -31,6 +31,17 @@ public class LinkServiceTests
     }
 
     [Fact]
+    public async Task GetLink_WhenRequestIsNull_ReturnsRequestRequired()
+    {
+        LinkService service = CreateService(new(7), new(), new());
+
+        Result<LinkDto> result = await service.GetLink(null);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(result.Errors).Code);
+    }
+
+    [Fact]
     public async Task GetLink_WhenUserIsUnauthenticated_ReturnsNotAuthenticated()
     {
         CurrentUser currentUser = new(0);
@@ -204,7 +215,7 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.CreateLink(null!);
+        Result<LinkDto> result = await service.CreateLink(null);
 
         Assert.False(result.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
@@ -278,7 +289,7 @@ public class LinkServiceTests
     {
         LinkService service = CreateService(new(7), new(), new());
 
-        Result<LinkDto> result = await service.UpdateLink(null!);
+        Result<LinkDto> result = await service.UpdateLink(null);
 
         Assert.False(result.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
@@ -389,6 +400,21 @@ public class LinkServiceTests
         Assert.Equal("LINK_ID_INVALID", result.Errors[0].Code);
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-4)]
+    public async Task MoveLink_WhenDestinationIdIsInvalid_ReturnsDestinationValidationError(long destinationId)
+    {
+        LinkService service = CreateService(new(7), new(), new());
+
+        Result<LinkDto> result = await service.MoveLink(new LinkMoveRequest(20, destinationId));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
+        Assert.Equal("LINK_DESTINATION_COLLECTION_ID_INVALID", result.Errors[0].Code);
+        Assert.Equal("DestinationCollectionId", result.Errors[0].Field);
+    }
+
     [Fact]
     public async Task MoveLink_WhenUserIsUnauthenticated_ReturnsResourceNotAccessible()
     {
@@ -410,7 +436,7 @@ public class LinkServiceTests
     {
         LinkService service = CreateService(new(7), new(), new());
 
-        Result<LinkDto> result = await service.MoveLink(null!);
+        Result<LinkDto> result = await service.MoveLink(null);
 
         Assert.False(result.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
@@ -496,7 +522,7 @@ public class LinkServiceTests
         SetId(destinationCollection, 11);
         collectionRepository.Items.Add(originalCollection);
         collectionRepository.Items.Add(destinationCollection);
-        Link link = Link.Create(9, originalCollection, "https://example.com/path", null, null, null, false);
+        Link link = Link.Create(9, originalCollection, "https://example.com/path", null, null, null, true);
         SetId(link, 20);
         linkRepository.Items.Add(link);
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
@@ -507,6 +533,13 @@ public class LinkServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
         Assert.Equal("LINK_NOT_ACCESSIBLE", result.Errors[0].Code);
+        Assert.Equal(originalCollection.Id, link.CollectionId);
+        Assert.Equal(originalCollection.UserId, link.UserId);
+        Assert.Same(originalCollection, link.Collection);
+        Assert.True(link.IsPublic);
+        Assert.Contains(link, originalCollection.Links);
+        Assert.DoesNotContain(link, destinationCollection.Links);
+        Assert.Empty(linkRepository.UpdatedItems);
     }
 
     [Fact]
@@ -530,7 +563,7 @@ public class LinkServiceTests
     {
         LinkService service = CreateService(new(7), new(), new());
 
-        Result result = await service.DeleteLink(null!);
+        Result result = await service.DeleteLink(null);
 
         Assert.False(result.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", result.Errors[0].Code);
@@ -687,7 +720,6 @@ public class LinkServiceTests
     [Theory]
     [InlineData(0, 1, "NOT_AUTHENTICATED")]
     [InlineData(7, 0, "PAGE_INVALID")]
-    [InlineData(7, 2, "PAGE_INVALID")]
     public async Task ListLinksPage_WithInvalidAccessOrPage_ReturnsFailure(long userId, int page, string code)
     {
         InMemoryCollectionRepository collectionRepository = new();
@@ -699,6 +731,22 @@ public class LinkServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(code, Assert.Single(result.Errors).Code);
+    }
+
+    [Fact]
+    public async Task ListLinksPage_WhenPageExceedsEmptyResults_ReturnsFirstEmptyPage()
+    {
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkService service = new(NullLogger<LinkService>.Instance, new CurrentUser(7), collectionRepository, linkRepository, unitOfWorkFactory);
+
+        Result<LinkPageDto> result = await service.ListLinksPage(page: 2);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, result.Value!.Page);
+        Assert.Equal(0, result.Value.PageCount);
+        Assert.Empty(result.Value.Items);
     }
 
     [Fact]
@@ -921,7 +969,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task MoveLink_WhenDestinationCollectionDoesNotBelongToUser_ReturnsResourceNotAccessible()
+    public async Task MoveLink_WhenDestinationCollectionDoesNotBelongToUser_ReturnsCollectionNotAccessible()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -945,6 +993,28 @@ public class LinkServiceTests
         Assert.Equal("LINK_COLLECTION_NOT_ACCESSIBLE", result.Errors[0].Code);
         Assert.Equal(10, link.CollectionId);
         Assert.False(link.IsPublic);
+        Assert.Empty(linkRepository.UpdatedItems);
+    }
+
+    [Fact]
+    public async Task MoveLink_WhenDestinationCollectionDoesNotExist_ReturnsCollectionNotAccessible()
+    {
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        Collection collection = Collection.Create(7, "Mine", null, true);
+        SetId(collection, 10);
+        collectionRepository.Items.Add(collection);
+        Link link = Link.Create(7, collection, "https://example.com/path", null, null, null, false);
+        SetId(link, 20);
+        linkRepository.Items.Add(link);
+        LinkService service = CreateService(new(7), collectionRepository, linkRepository);
+
+        Result<LinkDto> result = await service.MoveLink(new LinkMoveRequest(20, 99));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
+        Assert.Equal("LINK_COLLECTION_NOT_ACCESSIBLE", result.Errors[0].Code);
+        Assert.Equal(10, link.CollectionId);
         Assert.Empty(linkRepository.UpdatedItems);
     }
 
@@ -1231,7 +1301,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public async Task DeleteLink_WhenRepositoryThrowsAfterLookup_RollsBackAndReThrows()
+    public async Task DeleteLink_WhenRepositoryThrowsAfterLookup_DisposesWithoutCommitAndReThrows()
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -1247,6 +1317,11 @@ public class LinkServiceTests
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.DeleteLink(new LinkDeleteRequest(20)));
+
+        Assert.Equal(1, unitOfWorkFactory.LastUnitOfWork!.BeginCount);
+        Assert.Equal(1, unitOfWorkFactory.LastUnitOfWork.DisposeAsyncCount);
+        Assert.Equal(0, unitOfWorkFactory.LastUnitOfWork.CommitCount);
+        Assert.Contains(link, linkRepository.Items);
     }
 
     [Fact]
@@ -1400,7 +1475,7 @@ public class LinkServiceTests
 
     private sealed class StubValidator<TRequest> : IValidator<TRequest>
     {
-        public Result Validate(TRequest request)
+        public Result Validate(TRequest? request)
             => Result.Success();
     }
 
@@ -1436,6 +1511,12 @@ public class LinkServiceTests
 
     private sealed class ThrowingLinkRepository : ILinkRepository
     {
+        public Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => Task.FromException<int>(new DomainExceptions.NotValidInputException());
+
+        public Task UpdatePrivateByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => Task.FromException(new DomainExceptions.NotValidInputException());
+
         public Task<Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
             => Task.FromException<Link?>(new DomainExceptions.NotValidInputException());
 
@@ -1473,6 +1554,12 @@ public class LinkServiceTests
             _inner = inner;
         }
 
+        public Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => _inner.GetCountByCollection(userId, collectionId, cancellationToken);
+
+        public Task UpdatePrivateByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => _inner.UpdatePrivateByCollection(userId, collectionId, cancellationToken);
+
         public Task<Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
             => _inner.GetById(id, userId, cancellationToken);
 
@@ -1507,6 +1594,12 @@ public class LinkServiceTests
         public bool ThrowOnInsert { get; set; }
         public bool ThrowOnUpdate { get; set; }
         public bool ThrowOnDelete { get; set; }
+
+        public Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        public Task UpdatePrivateByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
 
         public Task<Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
             => Task.FromResult(Items.FirstOrDefault(item => item.Id == id && item.UserId == userId));
@@ -1588,6 +1681,12 @@ public class LinkServiceTests
 
     private sealed class UnexpectedLinkRepository : ILinkRepository
     {
+        public Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => Task.FromException<int>(new InvalidOperationException("boom"));
+
+        public Task UpdatePrivateByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => Task.FromException(new InvalidOperationException("boom"));
+
         public Task<Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
             => Task.FromException<Link?>(new InvalidOperationException("boom"));
 
@@ -1627,14 +1726,20 @@ public class LinkServiceTests
             _linkRepository = linkRepository;
         }
 
+        public UnexpectedUnitOfWork? LastUnitOfWork { get; private set; }
+
         public IUnitOfWork Get(string contextName)
-            => new UnexpectedUnitOfWork(_collectionRepository, _linkRepository);
+            => LastUnitOfWork = new UnexpectedUnitOfWork(_collectionRepository, _linkRepository);
     }
 
     private sealed class UnexpectedUnitOfWork : IUnitOfWork
     {
         private readonly ICollectionRepository _collectionRepository;
         private readonly ILinkRepository _linkRepository;
+
+        public int BeginCount { get; private set; }
+        public int CommitCount { get; private set; }
+        public int DisposeAsyncCount { get; private set; }
 
         public UnexpectedUnitOfWork(ICollectionRepository collectionRepository, ILinkRepository linkRepository)
         {
@@ -1647,11 +1752,25 @@ public class LinkServiceTests
                 ? (TRepository)(object)_collectionRepository
                 : (TRepository)(object)_linkRepository;
 
-        public Task Begin(CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task Commit(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task Begin(CancellationToken cancellationToken = default)
+        {
+            BeginCount++;
+            return Task.CompletedTask;
+        }
+
+        public Task Commit(CancellationToken cancellationToken = default)
+        {
+            CommitCount++;
+            return Task.CompletedTask;
+        }
+
         public Task Rollback(CancellationToken cancellationToken = default) => Task.CompletedTask;
         public void Dispose() { }
-        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+        public ValueTask DisposeAsync()
+        {
+            DisposeAsyncCount++;
+            return ValueTask.CompletedTask;
+        }
     }
 
     private sealed class InMemoryCollectionRepository : ICollectionRepository
@@ -1702,6 +1821,12 @@ public class LinkServiceTests
         public long? LastCollectionId { get; private set; }
         public int LastPage { get; private set; }
 
+        public Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        public Task UpdatePrivateByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
         public Task<Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
             => Task.FromResult(Items.FirstOrDefault(item => item.Id == id && item.UserId == userId));
 
@@ -1726,7 +1851,7 @@ public class LinkServiceTests
         }
 
         public Task<int> GetPageCountByUser(long userId, string? query, long? collectionId, CancellationToken cancellationToken = default)
-            => Task.FromResult(1);
+            => Task.FromResult(Items.Any(item => item.UserId == userId) ? 1 : 0);
 
         public Task Insert(Link link, CancellationToken cancellationToken = default)
         {

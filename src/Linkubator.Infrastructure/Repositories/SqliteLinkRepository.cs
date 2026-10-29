@@ -81,6 +81,12 @@ public sealed class SqliteLinkRepository : ILinkRepository
             cancellationToken);
     }
 
+    public Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+        => _connection.ExecuteScalarAsync<int>(new CommandDefinition(
+            "SELECT COUNT(*) FROM Link WHERE UserId = @UserId AND CollectionId = @CollectionId;",
+            new { UserId = userId, CollectionId = collectionId },
+            cancellationToken: cancellationToken));
+
     public async Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
@@ -203,6 +209,13 @@ public sealed class SqliteLinkRepository : ILinkRepository
             await InsertSearchProjection(link.Id, link, cancellationToken);
         }
     }
+
+    public Task UpdatePrivateByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+        => _connection.ExecuteAsync(new CommandDefinition(
+            @"UPDATE Link SET IsPublic = 0
+              WHERE UserId = @UserId AND CollectionId = @CollectionId AND IsPublic = 1;",
+            new { UserId = userId, CollectionId = collectionId },
+            cancellationToken: cancellationToken));
 
     public async Task Delete(long id, long userId, CancellationToken cancellationToken = default)
     {

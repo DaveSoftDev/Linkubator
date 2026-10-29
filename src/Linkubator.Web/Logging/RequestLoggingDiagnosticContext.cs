@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using Serilog;
 
 namespace Linkubator.Web.Logging;
@@ -9,38 +10,22 @@ public static class RequestLoggingDiagnosticContext
     {
         string requestPath = httpContext.Request.Path.Value ?? string.Empty;
         string requestQueryString = httpContext.Request.QueryString.Value ?? string.Empty;
-        string safeRequestPath = GetSafeRequestPath(requestPath, requestQueryString);
-        bool omitQueryString = IsPrivateListQuery(requestPath, requestQueryString)
-            || !string.Equals(safeRequestPath, requestPath, StringComparison.Ordinal);
+        string loggedQueryString = requestPath.StartsWith("/app", StringComparison.OrdinalIgnoreCase)
+            ? string.Empty
+            : requestQueryString;
+        if (IsPrivateList(requestPath)
+            && httpContext.Request.Query.TryGetValue("q", out StringValues search)
+            && search.Count > 0
+            && search[0] is string searchValue)
+        {
+            loggedQueryString = QueryString.Create("q", searchValue).Value ?? string.Empty;
+        }
 
-        diagnosticContext.Set("RequestPath", safeRequestPath);
-        diagnosticContext.Set("RequestQueryString", omitQueryString ? string.Empty : requestQueryString);
+        diagnosticContext.Set("RequestPath", requestPath);
+        diagnosticContext.Set("RequestQueryString", loggedQueryString);
     }
 
-    public static string GetSafeRequestPath(string requestPath, string requestQueryString)
-        => ContainsTokenLikeParameter(requestQueryString) || ContainsSensitivePathToken(requestPath)
-            ? "[redacted-token-url]"
-            : requestPath;
-
-    public static bool IsPrivateListQuery(string requestPath, string requestQueryString)
-        => requestPath.StartsWith("/app", StringComparison.OrdinalIgnoreCase)
-            && !string.IsNullOrEmpty(requestQueryString);
-
-    public static bool ContainsTokenLikeParameter(string requestQueryString)
-        => !string.IsNullOrEmpty(requestQueryString)
-            && (requestQueryString.Contains("token=", StringComparison.OrdinalIgnoreCase)
-                || requestQueryString.Contains("access_token=", StringComparison.OrdinalIgnoreCase)
-                || requestQueryString.Contains("refresh_token=", StringComparison.OrdinalIgnoreCase)
-                || requestQueryString.Contains("code=", StringComparison.OrdinalIgnoreCase)
-                || requestQueryString.Contains("sig=", StringComparison.OrdinalIgnoreCase)
-                || requestQueryString.Contains("signature=", StringComparison.OrdinalIgnoreCase)
-                || requestQueryString.Contains("api_key=", StringComparison.OrdinalIgnoreCase)
-                || requestQueryString.Contains("key=", StringComparison.OrdinalIgnoreCase));
-
-    public static bool ContainsSensitivePathToken(string requestPath)
-        => requestPath.Contains("token", StringComparison.OrdinalIgnoreCase)
-            || requestPath.Contains("code", StringComparison.OrdinalIgnoreCase)
-            || requestPath.Contains("sig", StringComparison.OrdinalIgnoreCase)
-            || requestPath.Contains("api_key", StringComparison.OrdinalIgnoreCase)
-            || requestPath.Contains("key", StringComparison.OrdinalIgnoreCase);
+    private static bool IsPrivateList(string requestPath)
+        => string.Equals(requestPath.TrimEnd('/'), Linkubator.Web.Constants.AppRoutes.Links, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(requestPath.TrimEnd('/'), Linkubator.Web.Constants.AppRoutes.Collections, StringComparison.OrdinalIgnoreCase);
 }

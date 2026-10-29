@@ -81,7 +81,7 @@ public sealed class LinksModel : PrivatePageModel
         {
             ErrorSummary = new Presentation.PageErrorSummaryViewModel
             {
-                Items = new[] { analysis.PageErrorMessage, analysis.CollectionErrorMessage, analysis.SearchErrorMessage }
+                Items = new[] { analysis.CollectionErrorMessage, analysis.SearchErrorMessage }
                     .OfType<string>()
                     .Select(message => new Presentation.PageErrorSummaryItemViewModel { Message = message }).ToArray(),
             };

@@ -80,7 +80,8 @@ public class GenerationExamplesTests
         Assert.Equal("salto-la-rana-al-charco-i-luego-croo", DomainPolicies.SlugPolicy.Generate("Saltó la raña al charço!!! I luego, croo"));
 
         Assert.Equal(DomainPolicies.SlugPolicy.Generate("Papá"), DomainPolicies.SlugPolicy.Generate("PAPA"));
-        Assert.Equal(DomainPolicies.SlugPolicy.Generate("Node.js"), DomainPolicies.SlugPolicy.Generate("Node.js"));
+        Assert.Equal("node-js", DomainPolicies.SlugPolicy.Generate("Node.js"));
+        Assert.Equal("node-js", DomainPolicies.SlugPolicy.Generate("NODE JS"));
         Assert.Throws<DomainExceptions.TextBelowMinimumLengthException>(() => DomainPolicies.SlugPolicy.Generate("!!!"));
         Assert.Throws<DomainExceptions.TextContainsUnsupportedCharactersException>(() => DomainPolicies.SlugPolicy.Generate("日本語 Tokyo"));
     }

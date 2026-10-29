@@ -5,7 +5,7 @@ namespace Linkubator.Application.Validation.Links;
 
 public sealed class LinkMoveValidator : IValidator<LinkMoveRequest>
 {
-    public Result Validate(LinkMoveRequest request)
+    public Result Validate(LinkMoveRequest? request)
     {
         if (request is null)
         {

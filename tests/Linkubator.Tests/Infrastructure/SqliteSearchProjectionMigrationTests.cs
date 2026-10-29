@@ -1,4 +1,5 @@
 using Dapper;
+using Linkubator.Infrastructure.Repositories;
 using Linkubator.Infrastructure.Sqlite;
 using Microsoft.Data.Sqlite;
 
@@ -79,12 +80,50 @@ public sealed class SqliteSearchProjectionMigrationTests
 
             using (SqliteConnection migratedConnection = factory.CreateOpenConnection())
             {
-                Assert.Equal(new[] { "V004", "V005", "V006" }, migratedConnection.Query<string>("SELECT version FROM schema_migrations ORDER BY version;").ToArray());
+                Assert.Equal(new[] { "V004", "V005", "V006", "V007" }, migratedConnection.Query<string>("SELECT version FROM schema_migrations ORDER BY version;").ToArray());
                 Assert.Equal("Owner", migratedConnection.QuerySingle<string>("SELECT Name FROM User WHERE Id = 42;"));
                 Assert.Equal("Inbox", migratedConnection.QuerySingle<string>("SELECT Name FROM Collection WHERE Id = 11;"));
                 Assert.Equal("https://example.test", migratedConnection.QuerySingle<string>("SELECT UrlOriginal FROM Link WHERE Id = 13;"));
                 Assert.Equal(new[] { "Collection", "CollectionSearch", "Link", "LinkSearch", "User" }, GetApplicationTableNames(migratedConnection));
             }
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task ApplyPendingMigrations_WhenLegacyDescriptionIsDecomposed_SearchFindsNormalizedText()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory factory = new($"Data Source={databasePath}");
+        SqliteMigrationService legacyMigrationService = new(factory, SqliteMigrationCatalog.Load().Where(script => script.Version == "V004"));
+        SqliteMigrationService previousMigrationService = new(factory, SqliteMigrationCatalog.Load().Where(script => string.CompareOrdinal(script.Version, "V007") < 0));
+        SqliteMigrationService migrationService = new(factory, SqliteMigrationCatalog.Load());
+
+        try
+        {
+            await legacyMigrationService.ApplyPendingMigrations();
+            using (SqliteConnection connection = factory.CreateOpenConnection())
+            {
+                await connection.ExecuteAsync("INSERT INTO User (Id, Email, Name, Alias, SecurityStamp) VALUES (42, 'owner@example.test', 'Owner', 'owner', 'stamp');");
+                await connection.ExecuteAsync(
+                    "INSERT INTO Collection (Id, UserId, Name, Slug, Description) VALUES (11, 42, 'Recipes', 'recipes', @Description);",
+                    new { Description = "\u1100\u1161" });
+            }
+
+            await previousMigrationService.ApplyPendingMigrations();
+            await migrationService.ApplyPendingMigrations();
+            await migrationService.ApplyPendingMigrations();
+
+            using SqliteConnection migratedConnection = factory.CreateOpenConnection();
+            SqliteCollectionRepository repository = new(migratedConnection);
+            IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "\uAC00", 1);
+
+            Assert.Equal(new long[] { 11 }, result.Select(item => item.Id));
+            Assert.Equal("\u1100\u1161", await migratedConnection.QuerySingleAsync<string>("SELECT Description FROM Collection WHERE Id = 11;"));
+            Assert.Equal("\uAC00", await migratedConnection.QuerySingleAsync<string>("SELECT Description FROM CollectionSearch WHERE rowid = 11;"));
         }
         finally
         {

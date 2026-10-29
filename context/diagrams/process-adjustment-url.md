@@ -6,7 +6,7 @@ Diagrama derivado de [specifications.md → «Ajuste de URL»](../specifications
 flowchart TD
     start([URL introducida])
     trim[Recortar espacios del principio y del final]
-    invalid{¿Quedó vacía o contiene controles o saltos de línea?}
+    invalid{¿Quedó vacía o contiene controles,<br/>saltos de línea o espacios interiores?}
     rejected[Rechazar ajuste y dejar URL ajustada en `""`]
     formError[El formulario muestra error y no guarda el enlace]
     protocolRelative{¿Empieza por //?}

@@ -18,7 +18,6 @@ namespace Linkubator.Tests.Integration;
 [Trait("Category", "Web")]
 public sealed class WebSecurityIntegrationTests
 {
-    private const string DemoEmail = "user@linkubator.test";
     private const string ValidArgon2idHash = "$argon2id$v=19$m=65536,t=3,p=1$42xS9y5nNCo8mABa9Y0KQw$w2hDMTrLZgBZ0Iqk7Q1m5J0C2U0xHgpiA62b0mXkVQ4";
 
     [Fact]
@@ -105,6 +104,44 @@ public sealed class WebSecurityIntegrationTests
     }
 
     [Fact]
+    public async Task Antiforgery_WithAlteredTokenOrAnotherClientsToken_RejectsWithoutExecutingPost()
+    {
+        string databasePath = CreateDatabasePath();
+        try
+        {
+            await using SecurityIntegrationWebApplicationFactory factory = new(databasePath);
+            using HttpClient issuingClient = factory.CreateClient();
+            using HttpClient otherClient = factory.CreateClient();
+            AntiforgeryTokenResponse? issued = await issuingClient.GetFromJsonAsync<AntiforgeryTokenResponse>("/__tests/antiforgery-token");
+            AntiforgeryTokenResponse? other = await otherClient.GetFromJsonAsync<AntiforgeryTokenResponse>("/__tests/antiforgery-token");
+            Assert.False(string.IsNullOrWhiteSpace(issued?.RequestToken));
+            Assert.False(string.IsNullOrWhiteSpace(other?.RequestToken));
+            factory.ResetPostExecutionCount();
+            using HttpRequestMessage alteredRequest = new(HttpMethod.Post, "/__tests/antiforgery")
+            {
+                Content = new FormUrlEncodedContent([]),
+            };
+            alteredRequest.Headers.Add("RequestVerificationToken", "invalid-" + issued!.RequestToken);
+            using HttpRequestMessage mismatchedRequest = new(HttpMethod.Post, "/__tests/antiforgery")
+            {
+                Content = new FormUrlEncodedContent([]),
+            };
+            mismatchedRequest.Headers.Add("RequestVerificationToken", issued.RequestToken);
+
+            using HttpResponseMessage alteredResponse = await issuingClient.SendAsync(alteredRequest);
+            using HttpResponseMessage mismatchedResponse = await otherClient.SendAsync(mismatchedRequest);
+
+            Assert.Equal(HttpStatusCode.BadRequest, alteredResponse.StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, mismatchedResponse.StatusCode);
+            Assert.Equal(0, factory.PostExecutionCount);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
     public async Task PrivateListingQueryEndpoint_UsesProductionAnalyzer()
     {
         string databasePath = CreateDatabasePath();
@@ -126,7 +163,7 @@ public sealed class WebSecurityIntegrationTests
             Assert.False(firstResult.HasAnyError);
             Assert.NotNull(invalidResult);
             Assert.Equal(1, invalidResult.PageNumber);
-            Assert.True(invalidResult.HasPageError);
+            Assert.False(invalidResult.HasAnyError);
             Assert.Null(invalidResult.SearchText);
             Assert.NotNull(emptyResult);
             Assert.Equal(1, emptyResult.PageNumber);
@@ -184,9 +221,6 @@ public sealed class WebSecurityIntegrationTests
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseSetting("ConnectionStrings:Linkubator", $"Data Source={databasePath}");
-            builder.UseSetting("DevelopmentIdentity:Email", DemoEmail);
-            builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
-            builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");
             builder.UseSetting("DevelopmentIdentity:PasswordHash", ValidArgon2idHash);
             builder.UseSetting("https_port", "443");
             builder.ConfigureTestServices(services =>

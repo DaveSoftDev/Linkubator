@@ -179,6 +179,19 @@ public class CollectionTests
     }
 
     [Fact]
+    public void ChangePrivacy_WhenUsingLoadedLinks_MakesThemPrivate()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null, true);
+        EntityTestFactory.SetId(collection, 12);
+        DomainEntities.Link link = DomainEntities.Link.Create(7, collection, "https://example.com/1", null, null, null, true);
+
+        collection.ChangePrivacy(false);
+
+        Assert.False(collection.IsPublic);
+        Assert.False(link.IsPublic);
+    }
+
+    [Fact]
     public void ChangePrivacy_WhenLinkDoesNotBelongToCollection_ThrowsWithoutPartialMutation()
     {
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", "desc", true);
@@ -376,13 +389,106 @@ public class CollectionTests
     }
 
     [Fact]
+    public void RehydrateLinks_WhenSourceIsItsOwnLinks_PreservesMembership()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
+        EntityTestFactory.SetId(collection, 12);
+        DomainEntities.Link first = DomainEntities.Link.Create(7, collection, "https://example.com/1", null, null, null);
+        DomainEntities.Link second = DomainEntities.Link.Create(7, collection, "https://example.com/2", null, null, null);
+
+        collection.RehydrateLinks(collection.Links);
+
+        Assert.Equal(new[] { first, second }, collection.Links);
+        Assert.Same(collection, first.Collection);
+        Assert.Same(collection, second.Collection);
+    }
+
+    [Fact]
+    public void RehydrateLinks_WhenSourceIsDeferredOverItsOwnLinks_PreservesSelectedMembership()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
+        EntityTestFactory.SetId(collection, 12);
+        DomainEntities.Link first = DomainEntities.Link.Create(7, collection, "https://example.com/1", null, null, null);
+        _ = DomainEntities.Link.Create(7, collection, "https://example.com/2", null, null, null);
+        IEnumerable<DomainEntities.Link> selected = collection.Links.Where(link => ReferenceEquals(link, first));
+
+        collection.RehydrateLinks(selected);
+
+        Assert.Same(first, Assert.Single(collection.Links));
+    }
+
+    [Fact]
+    public void RehydrateLinks_WhenLaterLinkIsInvalid_PreservesExistingMembershipAndOtherInstance()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
+        EntityTestFactory.SetId(collection, 12);
+        DomainEntities.Link original = DomainEntities.Link.Create(7, collection, "https://example.com/original", null, null, null);
+        DomainEntities.Collection otherInstance = DomainEntities.Collection.Create(7, "My Collection", null);
+        EntityTestFactory.SetId(otherInstance, 12);
+        DomainEntities.Link candidate = DomainEntities.Link.Create(7, otherInstance, "https://example.com/candidate", null, null, null);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => collection.RehydrateLinks(new[] { candidate, null! }));
+
+        Assert.Same(original, Assert.Single(collection.Links));
+        Assert.Same(collection, original.Collection);
+        Assert.Same(candidate, Assert.Single(otherInstance.Links));
+        Assert.Same(otherInstance, candidate.Collection);
+    }
+
+    [Fact]
+    public void RehydrateLinks_WhenEnumerationFails_PreservesExistingMembership()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
+        EntityTestFactory.SetId(collection, 12);
+        DomainEntities.Link original = DomainEntities.Link.Create(7, collection, "https://example.com/original", null, null, null);
+        IEnumerable<DomainEntities.Link> source = collection.Links.Select<DomainEntities.Link, DomainEntities.Link>(
+            _ => throw new InvalidOperationException("Enumeration failed."));
+
+        Assert.Throws<InvalidOperationException>(() => collection.RehydrateLinks(source));
+
+        Assert.Same(original, Assert.Single(collection.Links));
+        Assert.Same(collection, original.Collection);
+    }
+
+    [Fact]
+    public void RehydrateLinks_WhenSourceIsEmpty_ClearsMembership()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
+        EntityTestFactory.SetId(collection, 12);
+        _ = DomainEntities.Link.Create(7, collection, "https://example.com/original", null, null, null);
+
+        collection.RehydrateLinks(Array.Empty<DomainEntities.Link>());
+
+        Assert.Empty(collection.Links);
+    }
+
+    [Fact]
+    public void RehydrateLinks_WhenSourceBelongsToAnotherInstance_ReassignsNavigationWithoutDuplicates()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
+        EntityTestFactory.SetId(collection, 12);
+        DomainEntities.Collection otherInstance = DomainEntities.Collection.Create(7, "My Collection", null);
+        EntityTestFactory.SetId(otherInstance, 12);
+        DomainEntities.Link candidate = DomainEntities.Link.Create(7, otherInstance, "https://example.com/candidate", null, null, null);
+
+        collection.RehydrateLinks(new[] { candidate, candidate });
+
+        Assert.Same(candidate, Assert.Single(collection.Links));
+        Assert.Same(collection, candidate.Collection);
+        Assert.Empty(otherInstance.Links);
+    }
+
+    [Fact]
     public void RehydrateLinks_WhenLinksIsNull_ThrowsWithoutMutatingState()
     {
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
         EntityTestFactory.SetId(collection, 12);
 
+        DomainEntities.Link original = DomainEntities.Link.Create(7, collection, "https://example.com/original", null, null, null);
+
         Assert.Throws<DomainExceptions.NotValidInputException>(() => collection.RehydrateLinks(null!));
-        Assert.Empty(collection.Links);
+
+        Assert.Same(original, Assert.Single(collection.Links));
     }
 
     [Fact]
@@ -391,8 +497,11 @@ public class CollectionTests
         DomainEntities.Collection collection = DomainEntities.Collection.Create(7, "My Collection", null);
         EntityTestFactory.SetId(collection, 12);
 
-        Assert.Throws<DomainExceptions.NotValidInputException>(() => EntityTestFactory.RehydrateLinks(collection, null!));
-        Assert.Empty(collection.Links);
+        DomainEntities.Link original = DomainEntities.Link.Create(7, collection, "https://example.com/original", null, null, null);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => collection.RehydrateLinks(new DomainEntities.Link[] { null! }));
+
+        Assert.Same(original, Assert.Single(collection.Links));
     }
 
     [Fact]
@@ -406,8 +515,12 @@ public class CollectionTests
         EntityTestFactory.SetId(otherCollection, 13);
         DomainEntities.Link foreignUserLink = DomainEntities.Link.Create(8, otherCollection, "https://example.com/2", null, null, null);
 
-        Assert.Throws<DomainExceptions.NotValidInputException>(() => EntityTestFactory.RehydrateLinks(collection, validLink, foreignUserLink));
-        Assert.Single(collection.Links);
+        DomainEntities.Link original = DomainEntities.Link.Create(7, collection, "https://example.com/original", null, null, null);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => collection.RehydrateLinks(new[] { validLink, foreignUserLink }));
+
+        Assert.Equal(new[] { validLink, original }, collection.Links);
+        Assert.Same(otherCollection, foreignUserLink.Collection);
     }
 
     [Fact]
@@ -421,8 +534,12 @@ public class CollectionTests
         EntityTestFactory.SetId(otherCollection, 13);
         DomainEntities.Link foreignLink = DomainEntities.Link.Create(7, otherCollection, "https://example.com/2", null, null, null);
 
-        Assert.Throws<DomainExceptions.NotValidInputException>(() => EntityTestFactory.RehydrateLinks(collection, validLink, foreignLink));
-        Assert.Single(collection.Links);
+        DomainEntities.Link original = DomainEntities.Link.Create(7, collection, "https://example.com/original", null, null, null);
+
+        Assert.Throws<DomainExceptions.NotValidInputException>(() => collection.RehydrateLinks(new[] { validLink, foreignLink }));
+
+        Assert.Equal(new[] { validLink, original }, collection.Links);
+        Assert.Same(otherCollection, foreignLink.Collection);
     }
 
     [Fact]

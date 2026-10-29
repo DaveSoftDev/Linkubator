@@ -1,11 +1,10 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Dapper;
-using Linkubator.Domain.Constants;
-using Linkubator.Domain.Policies;
 using Linkubator.Infrastructure.Contracts;
 using Linkubator.Infrastructure.Options;
 using Microsoft.Data.Sqlite;
+using InfrastructureConstants = Linkubator.Infrastructure.Constants;
 
 namespace Linkubator.Infrastructure.DevelopmentIdentity;
 
@@ -41,9 +40,7 @@ public sealed class DevelopmentIdentityProvisioner
             string sql = LoadProvisioningSql();
             await connection.ExecuteAsync(sql, new
             {
-                Email = _options.Email,
-                Name = _options.Name,
-                Alias = _options.Alias,
+                Email = InfrastructureConstants.DevelopmentIdentityDefaults.Email,
                 PasswordHash = _options.PasswordHash,
                 EmailConfirmedAt = DateTime.UtcNow,
                 SecurityStamp = Guid.NewGuid().ToString("N"),
@@ -61,10 +58,6 @@ public sealed class DevelopmentIdentityProvisioner
 
     private static void ValidateOptions(DevelopmentIdentityOptions options)
     {
-        options.Email = EmailPolicy.Normalize(options.Email);
-        options.Name = UserTextPolicy.EnsureRequiredText(options.Name, LengthLimitsConstants.UserName);
-        options.Alias = AliasPolicy.Generate(options.Alias);
-
         Match hashMatch = string.IsNullOrWhiteSpace(options.PasswordHash)
             ? Match.Empty
             : _argon2idHashPattern.Match(options.PasswordHash);

@@ -147,8 +147,11 @@ public class WebStartupTests
             string html = await client.GetStringAsync(PublicUserCanonicalPath);
 
             Assert.Equal(6, System.Text.RegularExpressions.Regex.Matches(html, "<article class=\"link-card public-link\">").Count);
-            Assert.Contains("Public page link 15", html, StringComparison.Ordinal);
-            Assert.Contains("Public page link 10", html, StringComparison.Ordinal);
+            Assert.Equal(
+                new[] { "15", "14", "13", "12", "11", "10" },
+                System.Text.RegularExpressions.Regex.Matches(
+                    html, "<h3><a href=\"https://links.example/page-\\d{2}\"[^>]*>Public page link (\\d{2})")
+                    .Select(match => match.Groups[1].Value));
             Assert.DoesNotContain("Public page link 09", html, StringComparison.Ordinal);
             Assert.DoesNotContain("PRIVATE_PUBLIC_LINK_TITLE", html, StringComparison.Ordinal);
             Assert.DoesNotContain("PRIVATE_COLLECTION_LINK_TITLE", html, StringComparison.Ordinal);
@@ -171,17 +174,25 @@ public class WebStartupTests
             await using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
             using HttpClient client = factory.CreateClient();
             await SeedPublicUserPageContent(databasePath);
+            await using (SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection())
+            {
+                Assert.True(await connection.ExecuteScalarAsync<long>(
+                    @"SELECT COUNT(*) FROM Collection c
+                      JOIN Link l ON l.CollectionId = c.Id AND l.IsPublic = 1
+                      WHERE c.UserId = (SELECT Id FROM User WHERE Email = @Email) AND c.IsPublic = 1;",
+                    new { Email = DemoEmail }) > 0, "El test requiere una colección pública con al menos un enlace público.");
+            }
 
             string html = System.Net.WebUtility.HtmlDecode(await client.GetStringAsync(path));
+            System.Text.RegularExpressions.Match navigation = System.Text.RegularExpressions.Regex.Match(
+                html, "(?s)<nav class=\"public-navigation\".*?</nav>");
 
             Assert.Matches("(?s)<header class=\"public-heading public-profile-heading\">.*?</header>\\s*<nav class=\"public-navigation\"", html);
-            Assert.Contains($"aria-current=\"{currentState}\">{currentTab}</a>", html, StringComparison.Ordinal);
-            Assert.DoesNotContain("aria-current=\"location\">Colecciones</a>", html, StringComparison.Ordinal);
-            Assert.Matches("(?s)<nav class=\"public-navigation\".*?</nav>", html);
-            string navigation = System.Text.RegularExpressions.Regex.Match(html, "(?s)<nav class=\"public-navigation\".*?</nav>").Value;
-            Assert.Single(System.Text.RegularExpressions.Regex.Matches(navigation, "aria-current="));
-            Assert.Contains("href=\"/my-demo-user/\"", html, StringComparison.Ordinal);
-            Assert.Contains("href=\"/my-demo-user/colecciones/\"", html, StringComparison.Ordinal);
+            Assert.True(navigation.Success);
+            Assert.Contains($"aria-current=\"{currentState}\">{currentTab}</a>", navigation.Value, StringComparison.Ordinal);
+            Assert.Single(System.Text.RegularExpressions.Regex.Matches(navigation.Value, "aria-current="));
+            Assert.Contains("href=\"/my-demo-user/\"", navigation.Value, StringComparison.Ordinal);
+            Assert.Contains("href=\"/my-demo-user/colecciones/\"", navigation.Value, StringComparison.Ordinal);
             Assert.DoesNotContain("class=\"public-owner\"", html, StringComparison.Ordinal);
             Assert.DoesNotContain("Espacio público", html, StringComparison.Ordinal);
             Assert.DoesNotContain("class=\"public-back\"", html, StringComparison.Ordinal);
@@ -680,6 +691,8 @@ public class WebStartupTests
 
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Contains("my demo user todavía no ha creado colecciones", html, StringComparison.Ordinal);
+            Assert.Contains("href=\"/my-demo-user/\"", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("href=\"/my-demo-user/colecciones/\"", html, StringComparison.Ordinal);
         }
         finally
         {
@@ -719,14 +732,23 @@ public class WebStartupTests
     }
 
     [Theory]
-    [InlineData("?p=02&unknown=ignored", "Visible link", "https://localhost:5001/my-demo-user/colecciones/public-collection?p=2")]
-    [InlineData("?p=2&p=1", "Visible link", "https://localhost:5001/my-demo-user/colecciones/public-collection?p=2")]
-    [InlineData("?p=%2B2", "Public page link 00", "https://localhost:5001/my-demo-user/colecciones/public-collection")]
-    [InlineData("?p=999", "Public page link 00", "https://localhost:5001/my-demo-user/colecciones/public-collection")]
+    [InlineData("?p=02&unknown=ignored", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=2&p=1", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=1&p=2", "Public page link 00", "Visible link", 1, 16, "")]
+    [InlineData("?p=0001", "Public page link 00", "Visible link", 1, 16, "")]
+    [InlineData("?p=", "Public page link 00", "Visible link", 1, 16, "")]
+    [InlineData("?p=%2B2", "Public page link 00", "Visible link", 1, 16, "")]
+    [InlineData("?p=0", "Public page link 00", "Visible link", 1, 16, "")]
+    [InlineData("?p=999", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=999&p=1", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=99999999999999999999", "Public page link 00", "Visible link", 1, 16, "")]
     public async Task PublicCollectionPage_NormalizesPageParameterAndCanonical(
         string query,
         string expectedLinkTitle,
-        string expectedCanonical)
+        string excludedLinkTitle,
+        int expectedPage,
+        int expectedLinkCount,
+        string canonicalQuery)
     {
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
         try
@@ -741,8 +763,11 @@ public class WebStartupTests
             string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-            Assert.Contains($"<link rel=\"canonical\" href=\"{expectedCanonical}\" />", html, StringComparison.Ordinal);
+            Assert.Contains($"<link rel=\"canonical\" href=\"https://localhost:5001{PublicCollectionCanonicalPath}{canonicalQuery}\" />", html, StringComparison.Ordinal);
+            Assert.Contains($"Página {expectedPage} de 2", html, StringComparison.Ordinal);
+            Assert.Equal(expectedLinkCount, System.Text.RegularExpressions.Regex.Matches(html, "<article class=\"link-card public-link\">").Count);
             Assert.Contains(expectedLinkTitle, html, StringComparison.Ordinal);
+            Assert.DoesNotContain(excludedLinkTitle, html, StringComparison.Ordinal);
         }
         finally
         {
@@ -800,7 +825,10 @@ public class WebStartupTests
 
             Assert.Equal(System.Net.HttpStatusCode.OK, canonicalResponse.StatusCode);
             Assert.Contains("<link rel=\"canonical\" href=\"https://localhost:5001/my-demo-user/colecciones/public-collection?p=2\" />", html, StringComparison.Ordinal);
+            Assert.Contains("Página 2 de 2", html, StringComparison.Ordinal);
+            Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "<article class=\"link-card public-link\">"));
             Assert.Contains("Visible link", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("Public page link 00", html, StringComparison.Ordinal);
         }
         finally
         {
@@ -851,7 +879,7 @@ public class WebStartupTests
     }
 
     [Fact]
-    public async Task UserPage_ShowsEmptyStatesWithoutCollectionsLink()
+    public async Task UserPage_WithoutRecentPublicLinks_ShowsEmptyStatesAndProfileOnlyNavigation()
     {
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
         try
@@ -865,7 +893,65 @@ public class WebStartupTests
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Contains("my demo user todavía no ha creado enlaces", html, StringComparison.Ordinal);
             Assert.Contains("my demo user todavía no ha creado colecciones", html, StringComparison.Ordinal);
+            Assert.Matches("(?s)<header class=\"public-heading public-profile-heading\">.*?</header>\\s*<nav class=\"public-navigation\"", html);
+            Assert.Contains("aria-current=\"page\">Perfil</a>", html, StringComparison.Ordinal);
             Assert.DoesNotContain("href=\"/my-demo-user/colecciones/\"", html, StringComparison.Ordinal);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task UserPage_WithPublicCollectionWithoutPublicLinks_HidesCollectionAndNavigation()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
+            using HttpClient client = factory.CreateClient();
+            await using (SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection())
+            {
+                long userId = await connection.ExecuteScalarAsync<long>(
+                    "SELECT Id FROM User WHERE Email = @Email;",
+                    new { Email = DemoEmail });
+                long collectionId = await connection.ExecuteScalarAsync<long>(
+                    @"INSERT INTO Collection (UserId, Name, Slug, IsPublic)
+                      VALUES (@UserId, @Name, @Slug, 1);
+                      SELECT last_insert_rowid();",
+                    new { UserId = userId, Name = "Empty public collection", Slug = "empty-public" });
+                await connection.ExecuteAsync(
+                    @"INSERT INTO Link (UserId, CollectionId, UrlOriginal, UrlNormalized, Title, IsPublic, CreatedAt)
+                      VALUES (@UserId, @CollectionId, @Url, @Url, @Title, 0, @CreatedAt);",
+                    new
+                    {
+                        UserId = userId,
+                        CollectionId = collectionId,
+                        Url = "https://links.example/unpublished",
+                        Title = "Unpublished link",
+                        CreatedAt = DateTime.UtcNow,
+                    });
+            }
+
+            using HttpResponseMessage profileResponse = await client.GetAsync(PublicUserCanonicalPath);
+            string profileHtml = System.Net.WebUtility.HtmlDecode(await profileResponse.Content.ReadAsStringAsync());
+            using HttpResponseMessage collectionsResponse = await client.GetAsync(PublicCollectionsCanonicalPath);
+            string collectionsHtml = System.Net.WebUtility.HtmlDecode(await collectionsResponse.Content.ReadAsStringAsync());
+            using HttpResponseMessage collectionResponse = await client.GetAsync("/my-demo-user/colecciones/empty-public");
+
+            Assert.Equal(System.Net.HttpStatusCode.OK, profileResponse.StatusCode);
+            Assert.Contains("my demo user todavía no ha creado enlaces", profileHtml, StringComparison.Ordinal);
+            Assert.Contains("my demo user todavía no ha creado colecciones", profileHtml, StringComparison.Ordinal);
+            Assert.Contains("aria-current=\"page\">Perfil</a>", profileHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("href=\"/my-demo-user/colecciones/\"", profileHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("Empty public collection", profileHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("Unpublished link", profileHtml, StringComparison.Ordinal);
+            Assert.Equal(System.Net.HttpStatusCode.OK, collectionsResponse.StatusCode);
+            Assert.Contains("my demo user todavía no ha creado colecciones", collectionsHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("href=\"/my-demo-user/colecciones/\"", collectionsHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("Empty public collection", collectionsHtml, StringComparison.Ordinal);
+            Assert.Equal(System.Net.HttpStatusCode.NotFound, collectionResponse.StatusCode);
         }
         finally
         {
@@ -894,6 +980,39 @@ public class WebStartupTests
             Assert.Equal(System.Net.HttpStatusCode.NotFound, unknownAliasResponse.StatusCode);
             Assert.Equal(System.Net.HttpStatusCode.NotFound, formerAliasResponse.StatusCode);
             Assert.Null(formerAliasResponse.Headers.Location);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Theory]
+    [InlineData("/MY-DEMO-USER/colecciones/", PublicCollectionsCanonicalPath)]
+    [InlineData("/MY-DEMO-USER/colecciones/public-collection", PublicCollectionCanonicalPath)]
+    public async Task PublicCollectionPages_WhenAliasChanges_ReturnNotFoundAtFormerAlias(string formerPath, string originalPath)
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            await SeedPublicUserPageContent(databasePath);
+
+            using HttpResponseMessage originalResponse = await client.GetAsync(originalPath);
+            Assert.Equal(System.Net.HttpStatusCode.OK, originalResponse.StatusCode);
+
+            await using (SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection())
+            {
+                await connection.ExecuteAsync(
+                    "UPDATE User SET Alias = @Alias WHERE Email = @Email;",
+                    new { Alias = "current-demo-alias", Email = DemoEmail });
+            }
+
+            using HttpResponseMessage formerResponse = await client.GetAsync(formerPath);
+
+            Assert.Equal(System.Net.HttpStatusCode.NotFound, formerResponse.StatusCode);
+            Assert.Null(formerResponse.Headers.Location);
         }
         finally
         {
@@ -1050,10 +1169,9 @@ public class WebStartupTests
     }
 
     [Fact]
-    public void RequestLogging_OmitsPrivateQueryStringAndTokenUrls()
+    public void RequestLogging_IncludesPrivateSearch()
     {
         const string privateSearch = "private-search-sentinel-4f9c";
-        const string tokenValue = "token-sentinel-4f9c";
 
         HttpContext privateSearchContext = new DefaultHttpContext();
         privateSearchContext.Request.Path = "/app/enlaces";
@@ -1063,21 +1181,9 @@ public class WebStartupTests
         RequestLoggingDiagnosticContext.Enrich(privateContext, privateSearchContext);
 
         Assert.Equal("/app/enlaces", privateContext.Properties["RequestPath"]);
-        Assert.Equal(string.Empty, privateContext.Properties["RequestQueryString"]);
+        Assert.Equal($"?q={privateSearch}", privateContext.Properties["RequestQueryString"]);
         Assert.DoesNotContain(privateSearch, privateContext.Properties["RequestPath"]?.ToString() ?? string.Empty, StringComparison.Ordinal);
-        Assert.DoesNotContain(privateSearch, privateContext.Properties["RequestQueryString"]?.ToString() ?? string.Empty, StringComparison.Ordinal);
-
-        HttpContext tokenContext = new DefaultHttpContext();
-        tokenContext.Request.Path = "/app/enlaces/verify";
-        tokenContext.Request.QueryString = new QueryString($"?token={tokenValue}");
-
-        CapturingDiagnosticContext tokenDiagnosticContext = new();
-        RequestLoggingDiagnosticContext.Enrich(tokenDiagnosticContext, tokenContext);
-
-        Assert.Equal("[redacted-token-url]", tokenDiagnosticContext.Properties["RequestPath"]);
-        Assert.Equal(string.Empty, tokenDiagnosticContext.Properties["RequestQueryString"]);
-        Assert.DoesNotContain(tokenValue, tokenDiagnosticContext.Properties["RequestPath"]?.ToString() ?? string.Empty, StringComparison.Ordinal);
-        Assert.DoesNotContain(tokenValue, tokenDiagnosticContext.Properties["RequestQueryString"]?.ToString() ?? string.Empty, StringComparison.Ordinal);
+        Assert.Contains(privateSearch, privateContext.Properties["RequestQueryString"]?.ToString() ?? string.Empty, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1104,7 +1210,7 @@ public class WebStartupTests
     }
 
     [Fact]
-    public async Task RequestLoggingMiddleware_OmitsPrivateQueryStringAndSearchTextFromEvents()
+    public async Task RequestLoggingMiddleware_IncludesSearchButOmitsOtherQueryParameters()
     {
         const string searchText = "private-search-sentinel-ca02";
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
@@ -1112,20 +1218,26 @@ public class WebStartupTests
         {
             await using CapturingRequestLoggingWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
             using HttpClient client = factory.CreateClient();
-            using HttpResponseMessage searchResponse = await client.GetAsync($"/app/enlaces?q={searchText}");
+            using HttpResponseMessage searchResponse = await client.GetAsync($"/app/enlaces?q={searchText}&p=3&other=other-sentinel");
             using HttpResponseMessage pagingResponse = await client.GetAsync("/app/enlaces?p=2");
+            using HttpResponseMessage tokenSearchResponse = await client.GetAsync("/app/enlaces?q=token%3Dexternal-token");
 
             Assert.Equal(System.Net.HttpStatusCode.OK, searchResponse.StatusCode);
             Assert.Equal(System.Net.HttpStatusCode.OK, pagingResponse.StatusCode);
+            Assert.Equal(System.Net.HttpStatusCode.OK, tokenSearchResponse.StatusCode);
 
             LogEvent[] requestEvents = factory.RequestLogEvents.ToArray();
-            Assert.Equal(2, requestEvents.Length);
+            Assert.Equal(3, requestEvents.Length);
             Assert.Equal("/app/enlaces", Assert.IsType<ScalarValue>(requestEvents[0].Properties["RequestPath"]).Value);
-            Assert.Equal(string.Empty, Assert.IsType<ScalarValue>(requestEvents[0].Properties["RequestQueryString"]).Value);
-            Assert.DoesNotContain(searchText, GetRenderedLogEvent(requestEvents[0]), StringComparison.Ordinal);
+            Assert.Equal($"?q={searchText}", Assert.IsType<ScalarValue>(requestEvents[0].Properties["RequestQueryString"]).Value);
+            Assert.Contains(searchText, GetRenderedLogEvent(requestEvents[0]), StringComparison.Ordinal);
+            Assert.DoesNotContain("other-sentinel", GetRenderedLogEvent(requestEvents[0]), StringComparison.Ordinal);
             Assert.Equal("/app/enlaces", Assert.IsType<ScalarValue>(requestEvents[1].Properties["RequestPath"]).Value);
             Assert.Equal(string.Empty, Assert.IsType<ScalarValue>(requestEvents[1].Properties["RequestQueryString"]).Value);
             Assert.DoesNotContain("?p=2", GetRenderedLogEvent(requestEvents[1]), StringComparison.Ordinal);
+            Assert.Equal("/app/enlaces", Assert.IsType<ScalarValue>(requestEvents[2].Properties["RequestPath"]).Value);
+            Assert.Contains("token=external-token", Uri.UnescapeDataString(
+                Assert.IsType<string>(Assert.IsType<ScalarValue>(requestEvents[2].Properties["RequestQueryString"]).Value)), StringComparison.Ordinal);
         }
         finally
         {
@@ -1133,8 +1245,71 @@ public class WebStartupTests
         }
     }
 
+    [Theory]
+    [InlineData("/app/enlaces")]
+    [InlineData("/app/colecciones")]
+    public void RequestLogging_DoesNotMistakeSearchContentForTokenParameter(string path)
+    {
+        HttpContext context = new DefaultHttpContext();
+        context.Request.Path = path;
+        context.Request.QueryString = new QueryString("?q=token%3Dexternal-token");
+        CapturingDiagnosticContext diagnosticContext = new();
+
+        RequestLoggingDiagnosticContext.Enrich(diagnosticContext, context);
+
+        Assert.Equal(path, diagnosticContext.Properties["RequestPath"]);
+        Assert.Contains("token=external-token", Uri.UnescapeDataString(
+            Assert.IsType<string>(diagnosticContext.Properties["RequestQueryString"])), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/app/enlaces")]
+    [InlineData("/app/colecciones")]
+    public void RequestLogging_PreservesSearchWhenAnotherParameterLooksLikeToken(string path)
+    {
+        HttpContext context = new DefaultHttpContext();
+        context.Request.Path = path;
+        context.Request.QueryString = new QueryString("?q=ordinary-search&access_token=external-value");
+        CapturingDiagnosticContext diagnosticContext = new();
+
+        RequestLoggingDiagnosticContext.Enrich(diagnosticContext, context);
+
+        Assert.Equal(path, diagnosticContext.Properties["RequestPath"]);
+        Assert.Equal("?q=ordinary-search", diagnosticContext.Properties["RequestQueryString"]);
+    }
+
     [Fact]
-    public async Task RequestLoggingMiddleware_RedactsTokenUrlAndSensitiveValuesFromEvent()
+    public void RequestLogging_OmitsQueryOnOtherPrivatePaths()
+    {
+        HttpContext context = new DefaultHttpContext();
+        context.Request.Path = "/app/enlaces/verify";
+        context.Request.QueryString = new QueryString("?token=external-value");
+        CapturingDiagnosticContext diagnosticContext = new();
+
+        RequestLoggingDiagnosticContext.Enrich(diagnosticContext, context);
+
+        Assert.Equal("/app/enlaces/verify", diagnosticContext.Properties["RequestPath"]);
+        Assert.Equal(string.Empty, diagnosticContext.Properties["RequestQueryString"]);
+    }
+
+    [Theory]
+    [InlineData("/monkey", "?signature=external-value")]
+    [InlineData("/code-examples", "?token=external-value")]
+    public void RequestLogging_PreservesPublicPathAndQueryWithoutTokenHeuristics(string path, string query)
+    {
+        HttpContext context = new DefaultHttpContext();
+        context.Request.Path = path;
+        context.Request.QueryString = new QueryString(query);
+        CapturingDiagnosticContext diagnosticContext = new();
+
+        RequestLoggingDiagnosticContext.Enrich(diagnosticContext, context);
+
+        Assert.Equal(path, diagnosticContext.Properties["RequestPath"]);
+        Assert.Equal(query, diagnosticContext.Properties["RequestQueryString"]);
+    }
+
+    [Fact]
+    public async Task RequestLoggingMiddleware_PreservesPublicPathAndQueryWithoutTokenHeuristics()
     {
         const string token = "token-sentinel-ca03";
         const string password = "password-sentinel-ca04";
@@ -1155,19 +1330,15 @@ public class WebStartupTests
 
             LogEvent[] requestEvents = factory.RequestLogEvents.ToArray();
             Assert.Equal(2, requestEvents.Length);
-            Assert.Equal("[redacted-token-url]", Assert.IsType<ScalarValue>(requestEvents[0].Properties["RequestPath"]).Value);
-            Assert.Equal(string.Empty, Assert.IsType<ScalarValue>(requestEvents[0].Properties["RequestQueryString"]).Value);
+            Assert.Equal("/test-token-endpoint", Assert.IsType<ScalarValue>(requestEvents[0].Properties["RequestPath"]).Value);
+            Assert.Contains($"token={token}", Assert.IsType<string>(Assert.IsType<ScalarValue>(requestEvents[0].Properties["RequestQueryString"]).Value), StringComparison.Ordinal);
             string queryTokenEvent = GetRenderedLogEvent(requestEvents[0]);
-            Assert.DoesNotContain("/test-token-endpoint?token=", queryTokenEvent, StringComparison.Ordinal);
-            Assert.DoesNotContain(token, queryTokenEvent, StringComparison.Ordinal);
-            Assert.DoesNotContain(password, queryTokenEvent, StringComparison.Ordinal);
-            Assert.DoesNotContain(hash, queryTokenEvent, StringComparison.Ordinal);
-            Assert.DoesNotContain(credential, queryTokenEvent, StringComparison.Ordinal);
-            Assert.Equal("[redacted-token-url]", Assert.IsType<ScalarValue>(requestEvents[1].Properties["RequestPath"]).Value);
+            Assert.Contains(token, queryTokenEvent, StringComparison.Ordinal);
+            Assert.Equal($"/token-endpoint/{pathToken}", Assert.IsType<ScalarValue>(requestEvents[1].Properties["RequestPath"]).Value);
             Assert.Equal(string.Empty, Assert.IsType<ScalarValue>(requestEvents[1].Properties["RequestQueryString"]).Value);
             string pathTokenEvent = GetRenderedLogEvent(requestEvents[1]);
-            Assert.DoesNotContain($"/token-endpoint/{pathToken}", pathTokenEvent, StringComparison.Ordinal);
-            Assert.DoesNotContain(pathToken, pathTokenEvent, StringComparison.Ordinal);
+            Assert.Contains($"/token-endpoint/{pathToken}", pathTokenEvent, StringComparison.Ordinal);
+            Assert.Contains(pathToken, pathTokenEvent, StringComparison.Ordinal);
         }
         finally
         {
@@ -1176,7 +1347,7 @@ public class WebStartupTests
     }
 
     private static string GetRenderedLogEvent(LogEvent logEvent)
-        => $"{logEvent.RenderMessage()} {string.Join(" ", logEvent.Properties.Values)}";
+        => $"{logEvent.RenderMessage()} {string.Join(" ", logEvent.Properties.Values)} {logEvent.Exception}";
 
     private sealed class CapturingDiagnosticContext : IDiagnosticContext
     {
@@ -1274,16 +1445,20 @@ public class WebStartupTests
         }
     }
 
-    [Fact]
-    public async Task HomePage_IncludesSecurityHeaders()
+    [Theory]
+    [InlineData("/", System.Net.HttpStatusCode.OK)]
+    [InlineData("/app", System.Net.HttpStatusCode.OK)]
+    [InlineData("/missing/security-header-check", System.Net.HttpStatusCode.NotFound)]
+    public async Task Pages_WithSuccessOrNotFound_IncludeSecurityHeaders(string path, System.Net.HttpStatusCode expectedStatus)
     {
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
         try
         {
             await using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
             using HttpClient client = factory.CreateClient();
-            using HttpResponseMessage response = await client.GetAsync("/");
+            using HttpResponseMessage response = await client.GetAsync(path);
 
+            Assert.Equal(expectedStatus, response.StatusCode);
             Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
             Assert.Equal("frame-ancestors 'none'", response.Headers.GetValues("Content-Security-Policy").Single());
             Assert.Equal("strict-origin-when-cross-origin", response.Headers.GetValues("Referrer-Policy").Single());
@@ -1353,7 +1528,7 @@ public class WebStartupTests
             await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
             Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM User WHERE Email = @Email;", new { Email = DemoEmail }));
             Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Collection WHERE UserId = (SELECT Id FROM User WHERE Email = @Email);", new { Email = DemoEmail }));
-            Assert.Equal(3L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
+            Assert.Equal(SqliteMigrationCatalog.Load().Count(), await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
         }
         finally
         {
@@ -1372,8 +1547,49 @@ public class WebStartupTests
             Assert.ThrowsAny<Exception>(() => factory.CreateClient());
 
             await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
-            Assert.Equal(3L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
+            Assert.Equal(SqliteMigrationCatalog.Load().Count(), await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
             Assert.Equal(0L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM User WHERE Email = @Email;", new { Email = DemoEmail }));
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task PrivateProfile_WhenPersistedNameAndAliasChange_RendersThemAfterRestart()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            long originalUserId;
+            await using (ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash))
+            {
+                using HttpClient client = factory.CreateClient();
+                await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+                originalUserId = await connection.ExecuteScalarAsync<long>("SELECT Id FROM User WHERE Email = @Email;", new { Email = DemoEmail });
+                await connection.ExecuteAsync(
+                    "UPDATE User SET Name = @Name, Alias = @Alias WHERE Id = @UserId;",
+                    new { Name = "Ana Pérez", Alias = "ana-perez", UserId = originalUserId });
+
+                string html = System.Net.WebUtility.HtmlDecode(await client.GetStringAsync("/app"));
+
+                Assert.Contains("Ana Pérez", html, StringComparison.Ordinal);
+                Assert.Contains(DemoEmail, html, StringComparison.Ordinal);
+                Assert.Contains("href=\"/ana-perez/\"", html, StringComparison.Ordinal);
+            }
+
+            await using (ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash))
+            {
+                using HttpClient client = factory.CreateClient();
+                string html = System.Net.WebUtility.HtmlDecode(await client.GetStringAsync("/app"));
+                await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+
+                Assert.Contains("href=\"/ana-perez/\"", html, StringComparison.Ordinal);
+                Assert.Contains(DemoEmail, html, StringComparison.Ordinal);
+                Assert.Equal(originalUserId, await connection.ExecuteScalarAsync<long>("SELECT Id FROM User WHERE Email = @Email;", new { Email = DemoEmail }));
+                Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM User;"));
+            }
         }
         finally
         {
@@ -1392,7 +1608,7 @@ public class WebStartupTests
             Assert.ThrowsAny<Exception>(() => factory.CreateClient());
 
             await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
-            Assert.Equal(3L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
+            Assert.Equal(SqliteMigrationCatalog.Load().Count(), await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM schema_migrations;"));
             Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM User WHERE Email = @Email;", new { Email = DemoEmail }));
         }
         finally
@@ -1565,9 +1781,6 @@ public class WebStartupTests
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseSetting("ConnectionStrings:Linkubator", $"Data Source={databasePath}");
-            builder.UseSetting("DevelopmentIdentity:Email", DemoEmail);
-            builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
-            builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");
             builder.UseSetting("DevelopmentIdentity:PasswordHash", ValidArgon2idHash);
             builder.ConfigureTestServices(services =>
             {
@@ -1587,16 +1800,10 @@ public class WebStartupTests
 
         public void ResetCallCount() => Interlocked.Exchange(ref _callCount, 0);
 
-        public Task<long> GetUserId(CancellationToken cancellationToken = default)
-        {
-            Interlocked.Increment(ref _callCount);
-            return Task.FromResult(userId);
-        }
-
         public Task<Linkubator.Application.Models.DevelopmentIdentityProfile> GetProfile(CancellationToken cancellationToken = default)
         {
             Interlocked.Increment(ref _callCount);
-            return Task.FromResult(new Linkubator.Application.Models.DevelopmentIdentityProfile(userId, "Demo User", "my-demo-user"));
+            return Task.FromResult(new Linkubator.Application.Models.DevelopmentIdentityProfile(userId, "Demo User", "my-demo-user", "user@linkubator.test"));
         }
     }
 
@@ -1618,9 +1825,6 @@ public class WebStartupTests
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseSetting("ConnectionStrings:Linkubator", $"Data Source={databasePath}");
-            builder.UseSetting("DevelopmentIdentity:Email", DemoEmail);
-            builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
-            builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");
             builder.UseSetting("DevelopmentIdentity:PasswordHash", ValidArgon2idHash);
             builder.ConfigureTestServices(services =>
                 services.AddSingleton<IStartupFilter, PrivateResourceUnavailableTestEndpointFilter>());
@@ -1699,9 +1903,6 @@ public class WebStartupTests
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseSetting("ConnectionStrings:Linkubator", $"Data Source={databasePath}");
-            builder.UseSetting("DevelopmentIdentity:Email", DemoEmail);
-            builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
-            builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");
             builder.UseSetting("DevelopmentIdentity:PasswordHash", passwordHash);
             builder.ConfigureTestServices(services =>
             {
@@ -1711,6 +1912,9 @@ public class WebStartupTests
                     .Enrich.FromLogContext()
                     .WriteTo.Sink(new CapturingLogEventSink(_requestLogEvents))
                     .CreateLogger());
+                // Other test hosts can replace Serilog's global logger while these requests run.
+                services.Replace(ServiceDescriptor.Singleton<Serilog.Extensions.Hosting.DiagnosticContext>(provider =>
+                    new Serilog.Extensions.Hosting.DiagnosticContext(provider.GetRequiredService<Serilog.ILogger>())));
                 services.AddOptions<Serilog.AspNetCore.RequestLoggingOptions>()
                     .Configure<Serilog.ILogger>((options, logger) => options.Logger = logger);
             });
@@ -1762,9 +1966,6 @@ public class WebStartupTests
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseSetting("ConnectionStrings:Linkubator", $"Data Source={databasePath}");
-            builder.UseSetting("DevelopmentIdentity:Email", DemoEmail);
-            builder.UseSetting("DevelopmentIdentity:Name", "Demo User");
-            builder.UseSetting("DevelopmentIdentity:Alias", "my-demo-user");
             builder.UseSetting("DevelopmentIdentity:PasswordHash", passwordHash);
 
             if (failIdentityResolution)
@@ -1777,9 +1978,6 @@ public class WebStartupTests
 
     private sealed class UnresolvableDevelopmentIdentityProvider : IDevelopmentIdentityProvider
     {
-        public Task<long> GetUserId(CancellationToken cancellationToken = default)
-            => throw new InvalidOperationException("The configured development identity cannot be resolved.");
-
         public Task<Linkubator.Application.Models.DevelopmentIdentityProfile> GetProfile(CancellationToken cancellationToken = default)
             => throw new InvalidOperationException("The configured development identity cannot be resolved.");
     }

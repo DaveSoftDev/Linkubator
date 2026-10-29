@@ -1,4 +1,5 @@
 using ApplicationContracts = Linkubator.Application.Contracts;
+using ApplicationModels = Linkubator.Application.Models;
 
 namespace Linkubator.Web.DevelopmentIdentity;
 
@@ -12,29 +13,16 @@ public sealed class DevelopmentIdentityMiddleware
         _next = next;
     }
 
-    public Task InvokeAsync(
+    public async Task InvokeAsync(
         HttpContext context,
         ApplicationContracts.IDevelopmentIdentityProvider identityProvider,
         DevelopmentCurrentUser currentUser)
     {
-        return InvokeAsync(context, identityProvider, currentUser, configuration: null);
-    }
-
-    private async Task InvokeAsync(
-        HttpContext context,
-        ApplicationContracts.IDevelopmentIdentityProvider identityProvider,
-        DevelopmentCurrentUser currentUser,
-        IConfiguration? configuration)
-    {
         if (context.Request.Path.StartsWithSegments("/app"))
         {
-            long userId = await identityProvider.GetUserId(context.RequestAborted);
-            currentUser.SetUserId(userId);
-
-            string name = configuration?["DevelopmentIdentity:Name"] ?? "Demo User";
-            string alias = configuration?["DevelopmentIdentity:Alias"] ?? "my-demo-user";
-            string email = configuration?["DevelopmentIdentity:Email"] ?? "demo@user.com";
-            currentUser.SetProfile(name, alias, email);
+            ApplicationModels.DevelopmentIdentityProfile profile = await identityProvider.GetProfile(context.RequestAborted);
+            currentUser.SetUserId(profile.UserId);
+            currentUser.SetProfile(profile.Name, profile.Alias, profile.Email);
         }
 
         await _next(context);

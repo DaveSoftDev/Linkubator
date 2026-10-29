@@ -21,6 +21,37 @@ public sealed class LinkCreateValidatorTests
         Assert.Equal(code, result.Errors[0].Code);
     }
 
+    [Fact]
+    public void Validate_WithSupplementaryCharactersAtBothMaximumLengths_AcceptsTrimmedValues()
+    {
+        LinkCreateValidator validator = new();
+        string title = "  " + string.Concat(Enumerable.Repeat("😀", 300)) + "  ";
+        string description = "  " + string.Concat(Enumerable.Repeat("😀", 1000)) + "  ";
+
+        Results.Result result = validator.Validate(new Requests.LinkCreateRequest(
+            1, "https://example.com", Title: title, Description: description));
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Errors);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Validate_WithSupplementaryCharactersAboveMaximumLength_IdentifiesField(bool title)
+    {
+        LinkCreateValidator validator = new();
+        Requests.LinkCreateRequest request = new(1, "https://example.com",
+            Title: title ? string.Concat(Enumerable.Repeat("😀", 301)) : null,
+            Description: title ? null : string.Concat(Enumerable.Repeat("😀", 1001)));
+
+        Results.Result result = validator.Validate(request);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(title ? "Title" : "Description", Assert.Single(result.Errors).Field);
+        Assert.Equal("TextExceedsMaximumLength", result.Errors[0].Code);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

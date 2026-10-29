@@ -47,7 +47,6 @@ public sealed class SqliteInfrastructureRegistrationTests
         IConfiguration configuration = new ConfigurationBuilder().Build();
 
         InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => services.AddInfrastructure(configuration));
-
         Assert.Equal("A connection string named 'Linkubator' is required.", exception.Message);
     }
 }

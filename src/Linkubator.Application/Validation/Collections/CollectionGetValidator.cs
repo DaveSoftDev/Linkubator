@@ -5,7 +5,7 @@ namespace Linkubator.Application.Validation.Collections;
 
 public sealed class CollectionGetValidator : IValidator<CollectionGetRequest>
 {
-    public Result Validate(CollectionGetRequest request)
+    public Result Validate(CollectionGetRequest? request)
     {
         if (request is null)
         {

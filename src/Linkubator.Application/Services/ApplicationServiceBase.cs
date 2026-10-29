@@ -56,7 +56,8 @@ public abstract class ApplicationServiceBase
         TRequest request,
         CancellationToken cancellationToken,
         Func<TRequest, IUnitOfWork, CancellationToken, Task<Result<TResponse>>> operation,
-        string failureMessage)
+        string failureMessage,
+        object? logContext = null)
     {
         try
         {
@@ -72,12 +73,12 @@ public abstract class ApplicationServiceBase
         }
         catch (DomainExceptions.DomainException exception)
         {
-            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, request);
+            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, logContext);
             return exception.FailDomain<TResponse>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, UserContext, request);
+            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, UserContext, logContext);
             throw;
         }
     }
@@ -86,7 +87,8 @@ public abstract class ApplicationServiceBase
         TRequest request,
         CancellationToken cancellationToken,
         Func<TRequest, IUnitOfWork, CancellationToken, Task<Result>> operation,
-        string failureMessage)
+        string failureMessage,
+        object? logContext = null)
     {
         try
         {
@@ -102,12 +104,12 @@ public abstract class ApplicationServiceBase
         }
         catch (DomainExceptions.DomainException exception)
         {
-            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, request);
+            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, logContext);
             return exception.FailDomain();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, UserContext, request);
+            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, UserContext, logContext);
             throw;
         }
     }
@@ -126,12 +128,12 @@ public abstract class ApplicationServiceBase
         }
         catch (DomainExceptions.DomainException exception) when (handleDomainExceptions)
         {
-            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, request);
+            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, logContext);
             return exception.FailDomain<TResponse>();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, logContext ?? UserContext, null);
+            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, UserContext, logContext);
             throw;
         }
     }
@@ -141,7 +143,8 @@ public abstract class ApplicationServiceBase
         CancellationToken cancellationToken,
         Func<TRequest, CancellationToken, Task<Result>> operation,
         string failureMessage,
-        bool handleDomainExceptions = true)
+        bool handleDomainExceptions = true,
+        object? logContext = null)
     {
         try
         {
@@ -149,12 +152,12 @@ public abstract class ApplicationServiceBase
         }
         catch (DomainExceptions.DomainException exception) when (handleDomainExceptions)
         {
-            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, request);
+            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, logContext);
             return exception.FailDomain();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, UserContext, request);
+            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, UserContext, logContext);
             throw;
         }
     }

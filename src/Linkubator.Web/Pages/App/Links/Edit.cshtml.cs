@@ -121,6 +121,11 @@ public sealed class EditModel : LinkManagementPageModel
             cancellationToken);
         if (!currentResult.IsSuccess || currentResult.Value is null)
         {
+            if (currentResult.Errors.Any(error => error.Category == Linkubator.Application.Enums.ApplicationErrorCategory.ResourceNotAccessible))
+            {
+                return RedirectUnavailableLink();
+            }
+
             ApplyErrors(currentResult.Errors);
             return Page();
         }
@@ -172,6 +177,11 @@ public sealed class EditModel : LinkManagementPageModel
         if (result.IsSuccess)
         {
             return LocalRedirect(ReturnRoute);
+        }
+
+        if (result.Errors.Any(error => error.Code == ApplicationConstants.LinkErrors.LinkNotAccessible().Code))
+        {
+            return RedirectUnavailableLink();
         }
 
         ApplicationResults.ApplicationError? publicInPrivateCollection = result.Errors.FirstOrDefault(

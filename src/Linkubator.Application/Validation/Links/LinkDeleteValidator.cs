@@ -5,7 +5,7 @@ namespace Linkubator.Application.Validation.Links;
 
 public sealed class LinkDeleteValidator : IValidator<LinkDeleteRequest>
 {
-    public Result Validate(LinkDeleteRequest request)
+    public Result Validate(LinkDeleteRequest? request)
     {
         if (request is null)
         {

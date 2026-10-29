@@ -10,6 +10,59 @@ namespace Linkubator.Tests.Infrastructure;
 public sealed class SqliteLinkRepositoryTests
 {
     [Fact]
+    public async Task UpdatePrivateByCollection_WhenLinksBelongToDifferentCollectionsOrUsers_UpdatesOnlyOwnedCollection()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", true);
+        long otherCollectionId = await database.SeedCollection(42, "Also mine", "also-mine", true);
+        long otherUserCollectionId = await database.SeedCollection(99, "Other", "other", true);
+        long publicId = await database.SeedLink(42, collectionId, "https://example.test/public", "https://example.test/public", "Public", true);
+        long privateId = await database.SeedLink(42, collectionId, "https://example.test/private", "https://example.test/private", "Private", false);
+        long otherCollectionLinkId = await database.SeedLink(42, otherCollectionId, "https://example.test/other", "https://example.test/other", "Other", true);
+        long otherUserLinkId = await database.SeedLink(99, otherUserCollectionId, "https://example.test/user", "https://example.test/user", "User", true);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        await connection.ExecuteAsync(
+            """
+            CREATE TRIGGER RejectPrivateLinkUpdate
+            BEFORE UPDATE OF IsPublic ON Link
+            WHEN OLD.IsPublic = 0
+            BEGIN
+                SELECT RAISE(ABORT, 'Private link should not be updated');
+            END;
+            """);
+
+        await repository.UpdatePrivateByCollection(42, otherUserCollectionId);
+        await repository.UpdatePrivateByCollection(42, collectionId);
+        Dictionary<long, long> states = (await connection.QueryAsync<(long Id, long IsPublic)>("SELECT Id, IsPublic FROM Link;"))
+            .ToDictionary(item => item.Id, item => item.IsPublic);
+
+        Assert.Equal(0, states[publicId]);
+        Assert.Equal(0, states[privateId]);
+        Assert.Equal(1, states[otherCollectionLinkId]);
+        Assert.Equal(1, states[otherUserLinkId]);
+    }
+
+    [Fact]
+    public async Task GetCountByCollection_WhenLinksBelongToDifferentCollectionsOrUsers_CountsOnlyOwnedCollection()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", true);
+        long otherCollectionId = await database.SeedCollection(99, "Other", "other", true);
+        await database.SeedLink(42, collectionId, "https://example.test/one", "https://example.test/one", "One", true);
+        await database.SeedLink(42, collectionId, "https://example.test/two", "https://example.test/two", "Two", false);
+        await database.SeedLink(99, otherCollectionId, "https://example.test/other", "https://example.test/other", "Other", true);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        int count = await repository.GetCountByCollection(42, collectionId);
+        int otherUserCount = await repository.GetCountByCollection(42, otherCollectionId);
+
+        Assert.Equal(2, count);
+        Assert.Equal(0, otherUserCount);
+    }
+
+    [Fact]
     public async Task GetById_WhenLinkBelongsToDifferentUser_ReturnsNull()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
@@ -120,7 +173,7 @@ public sealed class SqliteLinkRepositoryTests
     }
 
     [Fact]
-    public async Task Update_WhenLinkBelongsToAnotherUser_DoesNotChangeIt()
+    public async Task Update_WhenEntityHasItsActualOwner_PersistsChanges()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(99, "Other", "other", false);
@@ -134,6 +187,28 @@ public sealed class SqliteLinkRepositoryTests
         Link? resultForOtherUser = await repository.GetById(linkId, 99);
 
         Assert.Equal("Changed", resultForOtherUser!.Title);
+    }
+
+    [Fact]
+    public async Task Update_WhenEntityOwnerDoesNotMatchPersistedOwner_LeavesLinkAndProjectionUnchanged()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(99, "Other", "other", false);
+        long linkId = await database.SeedLink(99, collectionId, "https://example.test/a", "https://example.test/a", "Original", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        Link mismatched = await connection.QuerySingleAsync<Link>(
+            "SELECT Id, 42 AS UserId, CollectionId, UrlOriginal, UrlNormalized, Title, Description, Image, IsPublic, ScrapingStatus, CreatedAt FROM Link WHERE Id = @Id;",
+            new { Id = linkId });
+        mismatched.Edit("Changed", null, null);
+
+        await repository.Update(mismatched);
+
+        Assert.Equal("Original", (await repository.GetById(linkId, 99))!.Title);
+        Assert.Equal("Original", await connection.QuerySingleAsync<string>(
+            "SELECT Title FROM LinkSearch WHERE rowid = @Id AND UserId = 99;", new { Id = linkId }));
+        Assert.Equal(0, await connection.ExecuteScalarAsync<long>(
+            "SELECT COUNT(*) FROM LinkSearch WHERE rowid = @Id AND UserId = 42;", new { Id = linkId }));
     }
 
     [Fact]
@@ -412,6 +487,25 @@ public sealed class SqliteLinkRepositoryTests
         IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, "needle", null, 1);
 
         Assert.Equal(new[] { "https://example.test/second", "https://example.test/first" }, result.Select(item => item.UrlOriginal));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenRankIsEqual_OrdersByDateBeforeIdentifier()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
+        DateTime date = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        long newerId = await database.SeedLink(42, collectionId, "https://example.test/newer", "https://example.test/newer", "needle", false,
+            new SqliteTestLinkOptions(CreatedAt: date.AddDays(1)));
+        long olderId = await database.SeedLink(42, collectionId, "https://example.test/older", "https://example.test/older", "needle", false,
+            new SqliteTestLinkOptions(CreatedAt: date));
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, "needle", null, 1);
+
+        Assert.True(newerId < olderId);
+        Assert.Equal(new[] { newerId, olderId }, result.Select(item => item.Id));
     }
 
     [Fact]

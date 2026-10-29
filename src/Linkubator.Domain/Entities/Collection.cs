@@ -92,6 +92,7 @@ public sealed class Collection : Bases.BaseEntity
 
     /// <summary>
     /// Rehidrata la colección con la lista de enlaces que pertenecen a ella.
+    /// Materializa y valida toda la entrada antes de modificar las asociaciones existentes.
     /// </summary>
     /// <param name="links">Enlaces asociados a la colección.</param>
     /// <exception cref="DomainExceptions.NotValidInputException">Si la colección o los enlaces no son válidos.</exception>
@@ -102,24 +103,31 @@ public sealed class Collection : Bases.BaseEntity
             throw new DomainExceptions.NotValidInputException();
         }
 
-        _links.Clear();
-        foreach (Link link in links)
+        List<Link> associatedLinks = links.ToList();
+        foreach (Link link in associatedLinks)
         {
             if (link is null || link.UserId != UserId || link.CollectionId != Id)
             {
                 throw new DomainExceptions.NotValidInputException();
             }
+        }
 
+        _links.Clear();
+        foreach (Link link in associatedLinks)
+        {
             link.RehydrateCollection(this);
-            if (!_links.Contains(link))
-            {
-                _links.Add(link);
-            }
         }
     }
 
     /// <summary>
-    /// Cambia la privacidad de la colección y, si pasa a privada, de todos sus enlaces.
+    /// Cambia la privacidad de la colección y de sus enlaces cargados.
+    /// Los enlaces no cargados deben actualizarse mediante la operación de persistencia correspondiente.
+    /// </summary>
+    public void ChangePrivacy(bool isPublic)
+        => ChangePrivacy(isPublic, _links);
+
+    /// <summary>
+    /// Cambia la privacidad de la colección y, si pasa a privada, de los enlaces asociados cargados.
     /// </summary>
     /// <param name="isPublic">Nuevo valor de privacidad.</param>
     /// <param name="links">Colección de enlaces asociados que se validan contra el estado actual.</param>

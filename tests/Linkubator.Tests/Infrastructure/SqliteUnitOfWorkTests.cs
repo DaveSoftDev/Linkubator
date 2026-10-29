@@ -68,6 +68,8 @@ public sealed class SqliteUnitOfWorkTests
         int count = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection WHERE UserId = 99;");
 
         Assert.Equal(0, count);
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM CollectionSearch WHERE rowid = @Id;", new { Id = collection.Id }));
 
         DeleteDatabaseFiles(databasePath);
     }
@@ -102,13 +104,16 @@ public sealed class SqliteUnitOfWorkTests
         IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(connectionFactory).Get(UnitOfWorkContexts.Linkubator);
         await unitOfWork.Begin();
         ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
-        await repository.Insert(Linkubator.Domain.Entities.Collection.Create(99, "Temporary", null));
+        Collection collection = Collection.Create(99, "Temporary", null);
+        await repository.Insert(collection);
 
         await unitOfWork.DisposeAsync();
         await using SqliteConnection observer = connectionFactory.CreateOpenConnection();
         int count = await observer.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection WHERE UserId = 99;");
 
         Assert.Equal(0, count);
+        Assert.Equal(0, await observer.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM CollectionSearch WHERE rowid = @Id;", new { Id = collection.Id }));
         DeleteDatabaseFiles(databasePath);
     }
 

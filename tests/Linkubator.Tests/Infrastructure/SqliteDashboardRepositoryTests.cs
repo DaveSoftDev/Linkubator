@@ -35,19 +35,25 @@ public sealed class SqliteDashboardRepositoryTests
         Assert.Equal(new[] { "Árbol" }, result.RecentLinks.Select(item => item.CollectionName));
     }
 
-    [Fact]
-    public async Task GetByUser_WhenUserHasMoreThanTwelveLinks_ReturnsTwelveMostRecent()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GetByUser_WhenUserHasMoreThanTwelveLinks_ReturnsTwelveMostRecent(bool sameCreatedAt)
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
         await database.SeedLinkRange(42, collectionId, 13);
 
         await using SqliteConnection connection = database.OpenConnection();
+        await Dapper.SqlMapper.ExecuteAsync(connection,
+            "UPDATE Link SET CreatedAt = @CreatedAt WHERE @SameCreatedAt = 1;",
+            new { CreatedAt = DateTime.UnixEpoch, SameCreatedAt = sameCreatedAt });
         IDashboardRepository repository = new SqliteDashboardRepository(connection);
 
         Linkubator.Application.Dtos.Models.DashboardDto result = await repository.GetByUser(42);
 
-        Assert.Equal(12, result.RecentLinks.Count);
-        Assert.Equal("https://example.test/12", result.RecentLinks[0].UrlOriginal);
+        Assert.Equal(
+            Enumerable.Range(1, 12).Reverse().Select(index => $"https://example.test/{index:D2}"),
+            result.RecentLinks.Select(link => link.UrlOriginal));
     }
 }

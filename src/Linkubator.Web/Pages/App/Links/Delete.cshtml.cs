@@ -86,6 +86,16 @@ public sealed class DeleteModel : LinkManagementPageModel
             return LocalRedirect(ReturnRoute);
         }
 
+        ApplicationResults.Result<ApplicationDtos.LinkDto> linkResult = await _linkService.GetLink(
+            new ApplicationRequests.LinkGetRequest(linkId),
+            cancellationToken);
+        if (linkResult.IsSuccess && linkResult.Value is not null)
+        {
+            LinkLabel = string.IsNullOrWhiteSpace(linkResult.Value.Title)
+                ? linkResult.Value.UrlOriginal
+                : linkResult.Value.Title;
+        }
+
         ApplyErrors(result.Errors);
         return Page();
     }

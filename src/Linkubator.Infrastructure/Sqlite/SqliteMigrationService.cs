@@ -51,6 +51,7 @@ public sealed class SqliteMigrationService : ISqliteMigrationService
     public async Task ApplyPendingMigrations()
     {
         using SqliteConnection connection = _connectionFactory.CreateOpenConnection();
+        connection.CreateFunction<string?, string?>("NormalizeSearchText", Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize, isDeterministic: true);
 
         await EnsureMigrationHistoryTableAsync(connection);
 

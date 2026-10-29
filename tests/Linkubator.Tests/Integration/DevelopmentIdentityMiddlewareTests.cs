@@ -6,8 +6,10 @@ namespace Linkubator.Tests.Integration;
 
 public sealed class DevelopmentIdentityMiddlewareTests
 {
-    [Fact]
-    public async Task InvokeAsync_WhenRequestIsPrivate_SetsCurrentUserFromProvider()
+    [Theory]
+    [InlineData("/app")]
+    [InlineData("/app/dashboard")]
+    public async Task InvokeAsync_WhenRequestIsPrivate_SetsCurrentUserFromProvider(string path)
     {
         const long expectedUserId = 42;
         bool nextCalled = false;
@@ -17,7 +19,7 @@ public sealed class DevelopmentIdentityMiddlewareTests
             return Task.CompletedTask;
         });
         DefaultHttpContext context = new();
-        context.Request.Path = "/app/dashboard";
+        context.Request.Path = path;
         context.Request.QueryString = new QueryString("?userId=99");
         WebDevelopmentIdentity.DevelopmentCurrentUser currentUser = new();
         FakeDevelopmentIdentityProvider identityProvider = new(expectedUserId);
@@ -27,10 +29,15 @@ public sealed class DevelopmentIdentityMiddlewareTests
         Assert.True(nextCalled);
         Assert.Equal(expectedUserId, currentUser.UserId);
         Assert.True(currentUser.IsAuthenticated);
+        Assert.Equal(1, identityProvider.CallCount);
+        Assert.Equal(("Ana Pérez", "ana-perez", "ana@example.test"), (currentUser.Name, currentUser.Alias, currentUser.Email));
     }
 
-    [Fact]
-    public async Task InvokeAsync_WhenRequestIsPublic_DoesNotResolveDevelopmentIdentity()
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/application")]
+    [InlineData("/app-public")]
+    public async Task InvokeAsync_WhenRequestIsPublic_DoesNotResolveDevelopmentIdentity(string path)
     {
         bool nextCalled = false;
         WebDevelopmentIdentity.DevelopmentIdentityMiddleware middleware = new(_ =>
@@ -39,7 +46,7 @@ public sealed class DevelopmentIdentityMiddlewareTests
             return Task.CompletedTask;
         });
         DefaultHttpContext context = new();
-        context.Request.Path = "/";
+        context.Request.Path = path;
         WebDevelopmentIdentity.DevelopmentCurrentUser currentUser = new();
         FakeDevelopmentIdentityProvider identityProvider = new(42);
 
@@ -54,16 +61,10 @@ public sealed class DevelopmentIdentityMiddlewareTests
     {
         public int CallCount { get; private set; }
 
-        public Task<long> GetUserId(CancellationToken cancellationToken = default)
-        {
-            CallCount++;
-            return Task.FromResult(userId);
-        }
-
         public Task<Linkubator.Application.Models.DevelopmentIdentityProfile> GetProfile(CancellationToken cancellationToken = default)
         {
             CallCount++;
-            return Task.FromResult(new Linkubator.Application.Models.DevelopmentIdentityProfile(userId, "Demo User", "my-demo-user"));
+            return Task.FromResult(new Linkubator.Application.Models.DevelopmentIdentityProfile(userId, "Ana Pérez", "ana-perez", "ana@example.test"));
         }
     }
 }

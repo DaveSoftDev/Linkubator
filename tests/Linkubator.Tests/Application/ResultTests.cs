@@ -65,14 +65,19 @@ public class ResultTests
         Assert.Equal(2, paramsFailure.Errors.Count);
         Assert.Equal(default(int), paramsFailure.Value);
 
-        Result<int> enumerableFailure = Result<int>.Failure(ApplicationError.Validation("DOMAIN_ERROR", "title", "Error de dominio."));
+        IEnumerable<ApplicationError> errors = new[]
+        {
+            ApplicationError.Validation("FIRST", "title", "Primero."),
+            null!,
+            ApplicationError.Validation("SECOND", "title", "Segundo."),
+        };
+        Result<int> enumerableFailure = Result<int>.Failure(errors);
 
 
         Assert.False(enumerableFailure.IsSuccess);
-        Assert.Single(enumerableFailure.Errors);
-        Assert.Equal("DOMAIN_ERROR", enumerableFailure.Errors[0].Code);
+        Assert.Equal(new[] { "FIRST", "SECOND" }, enumerableFailure.Errors.Select(error => error.Code));
 
-        Result<int> filteredFailure = Result<int>.Failure(ApplicationError.Validation("ONLY_VALID", "name", "Mensaje."));
+        Result<int> filteredFailure = Result<int>.Failure(null!, ApplicationError.Validation("ONLY_VALID", "name", "Mensaje."), null!);
 
         Assert.False(filteredFailure.IsSuccess);
         Assert.Single(filteredFailure.Errors);

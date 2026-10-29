@@ -42,10 +42,11 @@
                     <span asp-validation-for="Input.Description" id="collection-description-error" class="collection-form__error"></span>
                 </div>
                 <div class="collection-form__privacy">
-                    <input asp-for="Input.IsPublic" />
-                    <label asp-for="Input.IsPublic">Hacer pública</label>
+                    <input asp-for="Input.IsPublic" id="collection-public" aria-describedby="collection-public-error" />
+                    <label asp-for="Input.IsPublic" for="collection-public">Hacer pública</label>
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18Z" /></svg>
                 </div>
+                <span asp-validation-for="Input.IsPublic" id="collection-public-error" class="collection-form__error"></span>
             </div>
             <div class="collection-form__actions">
                 <a class="collection-form__cancel" href="@Linkubator.Web.Constants.AppRoutes.Collections">Cancelar</a>

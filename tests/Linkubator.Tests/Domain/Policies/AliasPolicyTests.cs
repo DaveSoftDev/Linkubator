@@ -62,7 +62,7 @@ public class AliasPolicyTests
     [InlineData("mi-administrador")]
     public void GenerateAcceptsAliasesThatOnlyContainAReservedWord(string candidate)
     {
-        Assert.NotNull(DomainPolicies.AliasPolicy.Generate(candidate));
+        Assert.Equal(candidate, DomainPolicies.AliasPolicy.Generate(candidate));
     }
 
     [Theory]

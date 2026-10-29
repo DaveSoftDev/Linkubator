@@ -1,5 +1,7 @@
 using ApplicationContracts = Linkubator.Application.Contracts;
+using AppRoutes = Linkubator.Web.Constants.AppRoutes;
 using LinkReturnRoute = Linkubator.Web.Navigation.LinkReturnRoute;
+using PrivateResourceUnavailablePresenter = Linkubator.Web.Models.Presentation.PrivateResourceUnavailablePresenter;
 using WebDevelopmentIdentity = Linkubator.Web.DevelopmentIdentity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,4 +22,10 @@ public abstract class LinkManagementPageModel : PrivatePageModel
     public string ReturnRoute => LinkReturnRoute.Resolve(Url, Request.PathBase, ReturnUrl, AllowCollectionsReturn);
 
     protected virtual bool AllowCollectionsReturn => false;
+
+    protected IActionResult RedirectUnavailableLink()
+    {
+        TempData[nameof(LinksModel.LinkManagementError)] = PrivateResourceUnavailablePresenter.GenericMessage;
+        return LocalRedirect($"{Request.PathBase}{AppRoutes.Links}");
+    }
 }

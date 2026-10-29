@@ -5,7 +5,7 @@ namespace Linkubator.Web.Models.Presentation;
 
 public static class PrivateResourceUnavailablePresenter
 {
-    private const string GenericMessage = "No se ha podido acceder al elemento solicitado.";
+    public const string GenericMessage = "No se ha podido acceder al elemento solicitado.";
 
     public static PrivateResourceUnavailableViewModel? Create(
         ApplicationError error,

@@ -35,7 +35,7 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - Fuente: [requirements.md → «Colecciones»](../context/requirements.md#colecciones), [requirements.md → «Público y privado»](../context/requirements.md#público-y-privado), [specifications.md → «Generación de slugs»](../context/specifications.md#generación-de-slugs), [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas), [domain-model.md → «Collection»](../context/domain-model.md#collection), [domain-model.md → «Público y privado»](../context/domain-model.md#público-y-privado), [architecture.md → «Persistencia»](../context/architecture.md#persistencia)
 - Dada una colección del usuario identificado.
 - Cuando edita nombre, descripción y visibilidad desde su único formulario de edición, con un nombre válido cuyo slug no colisiona con otra colección suya y un estado destino válido.
-- Entonces se actualizan sus campos; al cambiar el nombre también se regenera el slug y, si la colección era pública, la dirección anterior deja de existir. Al hacerla privada, todos sus enlaces pasan a ser privados; al hacerla pública, sus enlaces permanecen privados. El cambio de la colección y sus enlaces es atómico.
+- Entonces se actualizan sus campos; al cambiar el nombre también se regenera el slug. Se comprueban renombrados que generan un slug distinto y renombrados que generan el mismo, con el tratamiento de la dirección definido en [specifications.md → «Página de colección»](../context/specifications.md#página-de-colección). Se comprueban por separado las transiciones pública → privada y privada → pública, y las ediciones sin cambio de estado, contra [domain-model.md → «Público y privado»](../context/domain-model.md#público-y-privado). La atomicidad y la ausencia de escrituras de privacidad sobre enlaces cuando no corresponden se verifican según [architecture.md → «Persistencia»](../context/architecture.md#persistencia).
 - Si el nombre no genera un slug válido, colisiona con otra colección suya o el estado destino falta, se repite o es inválido, se rechaza la edición y no se modifican la colección ni sus enlaces.
 - El formulario Web y su ruta canónica están definidos en [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas); la implementación técnica se desglosa en [S8.2](../specs/archive/s8.2-operaciones-colecciones/spec.md).
 
@@ -58,11 +58,11 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 
 #### AC-COL-05 — Listar colecciones del usuario
 
-- Fuente: [requirements.md → «Búsqueda y filtros»](../context/requirements.md#búsqueda-y-filtros), [specifications.md → «Búsqueda y filtros»](../context/specifications.md#búsqueda-y-filtros), [specifications.md → «Listados»](../context/specifications.md#listados)
+- Fuente: [requirements.md → «Búsqueda y filtros»](../context/requirements.md#búsqueda-y-filtros), [specifications.md → «Búsqueda y filtros»](../context/specifications.md#búsqueda-y-filtros), [specifications.md → «Listados»](../context/specifications.md#listados) y [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas)
 - Dado un usuario identificado.
 - Cuando entra al listado de colecciones con o sin texto de búsqueda y filtros aplicables.
 - Entonces solo se muestran las colecciones del usuario identificado, ordenadas por nombre ascendente con desempate por id.
-- `q` y `p` siguen las reglas del listado: vacío en `q` equivale a no buscar; si `q`, tras recortar los espacios extremos, supera su longitud máxima, se muestra el error previsto; un valor inválido de `p` produce el error previsto; los parámetros repetidos usan el primero y los parámetros no aplicables se ignoran.
+- `q` y `p` siguen las reglas del listado, incluido el tratamiento de valores vacíos, inválidos, fuera de rango o repetidos y de parámetros no aplicables.
 
 ### Enlaces
 
@@ -89,9 +89,10 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - Dado un enlace del usuario identificado.
 - Cuando edita su título, descripción, imagen, colección y estado público o privado en el mismo formulario, sin cambiar la URL base.
 - Entonces solo se actualizan los campos válidos; si cambia la colección, se aplica la regla de privacidad del movimiento; si conserva la colección actual, el checkbox establece el estado del enlace conforme a las reglas de privacidad. Un valor del checkbox que no se pueda interpretar como booleano rechaza la edición completa y conserva el estado original. La opción de hacerlo público solo está disponible cuando conserva su colección actual pública.
+- Si cambia a otra colección propia, pública o privada, y los demás datos son válidos, la edición se confirma con el enlace privado aunque solicite simultáneamente hacerlo público; no se rechaza por esa solicitud de publicación. Se comprueban ambos estados del destino según [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas).
 - Si la colección seleccionada es inválida o ajena, o la imagen no es válida, la operación se rechaza sin cambiar la entidad. El formulario independiente de movimiento y su acción se mantienen conforme a AC-LINK-03.
 - Dado un enlace del usuario identificado en una colección privada.
-- Cuando intenta editarlo para hacerlo público, incluso si la petición incluye otros cambios válidos.
+- Cuando intenta editarlo para hacerlo público sin cambiar su colección, incluso si la petición incluye otros cambios válidos.
 - Entonces se rechaza la edición completa, no se modifica ningún campo del enlace y se muestra el mensaje «No se puede hacer público un enlace de una colección privada».
 
 #### AC-LINK-03 — Mover enlace
@@ -118,7 +119,8 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - Dado un usuario identificado.
 - Cuando entra al listado de enlaces con `q`, filtro de colección y paginación previstos para este caso de uso.
 - Entonces solo aparecen sus enlaces, filtrados por texto y colección, ordenados por relevancia cuando hay búsqueda —con los desempates especificados— y paginados según la regla propietaria.
-- Los valores inválidos de `p` o `c` producen el error previsto; una colección inexistente o ajena en `c` se ignora. Los parámetros no aplicables al listado no se validan ni alteran el resultado.
+- `p` se recupera sin error conforme a [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas): un valor inválido muestra la primera página y uno válido que supera la última muestra la última; sin resultados se muestra el estado vacío de la primera página. Se conservan la búsqueda y los filtros válidos.
+- Un valor inválido de `c` produce el error previsto; una colección inexistente o ajena en `c` se ignora. Los parámetros no aplicables al listado no se validan ni alteran el resultado.
 - `q` vacío equivale a no buscar; si supera el límite especificado se informa del error. Si un parámetro se repite, se aplica solo el primer valor.
 
 ### Dashboard y páginas públicas
@@ -127,16 +129,16 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 
 - Fuente: [requirements.md → «Páginas privadas»](../context/requirements.md#páginas-privadas), [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas)
 - Dado un usuario identificado.
-- Cuando accede a `/app/dashboard`.
-- Entonces ve accesos para crear enlaces y colecciones y puede navegar a sus listados privados, conforme al alcance de estos casos de uso. El formulario de búsqueda envía `q` por GET al listado de enlaces; el dashboard no presenta resultados ni permite editar o eliminar elementos. La gestión de etiquetas queda fuera del alcance de este catálogo.
-- Al solicitar `/app`, se redirige a `/app/dashboard`; el dashboard solo se entrega al usuario identificado y no acepta identidad enviada por el cliente.
+- Cuando accede a la ruta del dashboard definida en [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas).
+- Entonces ve sus enlaces recientes, el estado vacío cuando corresponda, las opciones de creación rápida y completa y los accesos a edición, movimiento, eliminación y apertura de enlaces, con el comportamiento definido en [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas) y la cantidad y el orden de [«Listados»](../context/specifications.md#listados). La búsqueda lleva al listado de enlaces; no filtra el bloque de recientes. La gestión de etiquetas queda fuera del alcance de este catálogo.
+- La entrada del área privada entrega directamente el dashboard al usuario identificado, sin aceptar identidad enviada por el cliente. Sus acciones de gestión abren los formularios correspondientes; el GET del dashboard no modifica datos.
 
 #### AC-USER-01 — Página pública de usuario
 
 - Fuente: [requirements.md → «Páginas públicas»](../context/requirements.md#páginas-públicas), [specifications.md → «Página de usuario»](../context/specifications.md#página-de-usuario)
 - Dado un alias público existente.
 - Cuando visita la ruta `/{alias}/`.
-- Entonces ve hasta los cinco enlaces públicos más recientes de las colecciones que se muestran en público y, después, hasta las cinco colecciones públicas más recientes; cada conjunto respeta sus reglas de orden. Los elementos muestran el contenido público previsto, sin nombre/email del usuario ni contenido privado. El enlace al listado completo de colecciones aparece cuando corresponda.
+- Entonces ve hasta los seis enlaces públicos más recientes de las colecciones que se muestran en público y, después, hasta las cinco colecciones públicas más recientes; cada conjunto respeta sus reglas de orden. Los elementos muestran el contenido público previsto, sin nombre/email del usuario ni contenido privado. El enlace al listado completo de colecciones aparece cuando corresponda.
 - Si no hay enlaces o colecciones que mostrar, aparece el estado vacío definido para cada sección. Si el alias no existe, la ruta responde `404`, incluidos los alias antiguos.
 - La página incluye los metadatos, canonical, encabezados y enlaces externos definidos por la fuente propietaria.
 
@@ -151,11 +153,11 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 
 #### AC-COLLECTION-01 — Página pública de una colección
 
-- Fuente: [requirements.md → «Páginas públicas»](../context/requirements.md#páginas-públicas), [specifications.md → «Página de colección»](../context/specifications.md#página-de-colección)
+- Fuente: [requirements.md → «Páginas públicas»](../context/requirements.md#páginas-públicas), [specifications.md → «Página de colección»](../context/specifications.md#página-de-colección) y [specifications.md → «Paginación de las páginas públicas»](../context/specifications.md#paginación-de-las-páginas-públicas)
 - Dada una colección pública con al menos un enlace público y un alias existente.
 - Cuando visita `/{alias}/colecciones/{slug}`.
-- Entonces se muestran solo enlaces públicos de la colección, con el contenido, orden y paginación definidos, y la ruta responde `404` si la colección es privada, inexistente, renombrada o no tiene enlaces públicos.
-- Si `p` falta, está vacío, es inválido o fuera de rango, se muestra la primera página sin error; si se repite, se usa el primer valor. La canonical sigue la regla propietaria para primera página, páginas interiores y parámetros desconocidos.
+- Entonces se muestran solo enlaces públicos de la colección, con el contenido, orden y paginación definidos, y la ruta responde `404` si la colección es privada, inexistente, no tiene enlaces públicos o se solicita un slug anterior distinto del actual tras renombrarla. Un renombrado que conserva el slug no invalida la dirección, conforme a [specifications.md → «Página de colección»](../context/specifications.md#página-de-colección).
+- La paginación y la canonical siguen la regla propietaria, incluidos los valores vacíos, inválidos, fuera de rango o repetidos y los parámetros desconocidos.
 - La página incluye los metadatos, canonical, encabezados e hipervínculos externos definidos por la fuente propietaria.
 
 ### Reglas transversales
@@ -179,7 +181,7 @@ No sustituye a las fuentes ni repite sus reglas: cada criterio enlaza el documen
 - Fuente: [requirements.md → «Operación»](../context/requirements.md#operación), [specifications.md → «Registro de eventos»](../context/specifications.md#registro-de-eventos), [architecture.md → «Logs»](../context/architecture.md#logs)
 - Dado un caso de uso S4 cuya operación debe producir un evento según la fuente propietaria.
 - Cuando se implementa el registro de eventos en S4.10.
-- Entonces los eventos cumplen la fuente propietaria y la prohibición de registrar datos sensibles; este criterio no declara implementado el registro ni evidencia de logging antes de S4.10.
+- Entonces los eventos cumplen las reglas de registro y protección de datos de la fuente propietaria; este criterio no declara implementado el registro ni evidencia de logging antes de S4.10.
 
 ## Criterio de cierre de S4.5
 

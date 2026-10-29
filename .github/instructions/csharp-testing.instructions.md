@@ -43,4 +43,5 @@ applyTo: 'tests/**/*.cs'
 ## General
 - Avoid magic strings — assign hardcoded values to constants.
 - Test through **public APIs** only; do not change visibility or use `InternalsVisibleTo`. 
-- Require tests for every new or changed public API.   
+- Require tests for every new or changed public API.
+- Avoid comments like `// Arrange`, `// Act`, `// Assert` in test methods; rely on clear section separation instead.

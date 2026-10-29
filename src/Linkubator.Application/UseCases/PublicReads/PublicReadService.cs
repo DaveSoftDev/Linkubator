@@ -42,7 +42,8 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
 
                 return Result<PublicUserDto>.Success(user);
             },
-            "Public user page lookup failed");
+            "Public user page lookup failed",
+            logContext: new { Alias = alias, TrimmedAlias = trimmedAlias });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Public user page loaded", UserContext);
@@ -73,7 +74,8 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
 
                 return Result<IReadOnlyList<PublicCollectionSummaryDto>>.Success(collections.ToList());
             },
-            "Public collections lookup failed");
+            "Public collections lookup failed",
+            logContext: new { Alias = alias, TrimmedAlias = trimmedAlias });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Public collections page loaded", UserContext, new { Alias = alias });
@@ -117,7 +119,8 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
 
                 return Result<PublicCollectionDto>.Success(collection);
             },
-            "Public collection page lookup failed");
+            "Public collection page lookup failed",
+            logContext: new { Alias = alias, Slug = slug, TrimmedAlias = trimmedAlias, TrimmedSlug = trimmedSlug, Page = page });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Public collection page loaded", UserContext, new { Alias = alias, Slug = slug, Page = page });
@@ -156,7 +159,8 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
                 int count = await _publicReadRepository.GetCollectionPageCount(request.TrimmedAlias, request.TrimmedSlug, token);
                 return Result<int>.Success(count);
             },
-            "Public collection count lookup failed");
+            "Public collection count lookup failed",
+            logContext: new { Alias = alias, Slug = slug, TrimmedAlias = trimmedAlias, TrimmedSlug = trimmedSlug });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Public collection count loaded", UserContext);

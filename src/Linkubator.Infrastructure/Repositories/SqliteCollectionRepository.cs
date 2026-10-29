@@ -203,6 +203,7 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
                 @"UPDATE LinkSearch
                   SET CollectionName = @CollectionName
                   WHERE UserId = @UserId
+                    AND CollectionName IS NOT @CollectionName
                     AND rowid IN (SELECT Id FROM Link WHERE UserId = @UserId AND CollectionId = @CollectionId);",
                 new
                 {
