@@ -1,9 +1,6 @@
-using Linkubator.Application.Dtos.Requests;
 using Linkubator.Application.Enums;
 using Linkubator.Application.Results;
 using Linkubator.Domain.Exceptions;
-using Linkubator.Application.Validation.Collections;
-using Linkubator.Application.Validation.Links;
 
 namespace Linkubator.Tests.Application;
 
@@ -83,11 +80,52 @@ public class ResultTests
         Assert.Single(filteredFailure.Errors);
         Assert.Equal("ONLY_VALID", filteredFailure.Errors[0].Code);
         Assert.Equal(default(int), filteredFailure.Value);
-
-        Result<int> emptyFailure = Result<int>.Failure(Array.Empty<ApplicationError>());
-        Assert.False(emptyFailure.IsSuccess);
-        Assert.Empty(emptyFailure.Errors);
     }
+
+    [Fact]
+    public void Failure_WhenNoValidErrorsAreProvided_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => Result.Failure());
+        Assert.Throws<ArgumentException>(() => Result.Failure(Array.Empty<ApplicationError>()));
+        Assert.Throws<ArgumentException>(() => Result.Failure((IEnumerable<ApplicationError>)null!));
+        Assert.Throws<ArgumentException>(() => Result.Failure(null!, null!));
+        Assert.Throws<ArgumentException>(() => Result<int>.Failure());
+        Assert.Throws<ArgumentException>(() => Result<int>.Failure(Array.Empty<ApplicationError>()));
+        Assert.Throws<ArgumentException>(() => Result<int>.Failure((IEnumerable<ApplicationError>)null!));
+        Assert.Throws<ArgumentException>(() => Result<int>.Failure(null!, null!));
+    }
+
+    [Fact]
+    public void Success_WhenValueIsNull_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => Result<string?>.Success(null));
+        Assert.Throws<ArgumentNullException>(() => Result<int?>.Success(null));
+    }
+
+    [Fact]
+    public void Failure_WhenSourceArrayIsModified_ErrorsRemainUnchanged()
+    {
+        ApplicationError first = ApplicationError.Validation("FIRST");
+        ApplicationError second = ApplicationError.Validation("SECOND");
+        ApplicationError[] errors = [first];
+        Result result = Result.Failure(errors);
+
+        errors[0] = second;
+
+        Assert.Same(first, Assert.Single(result.Errors));
+        Assert.Throws<NotSupportedException>(() => ((IList<ApplicationError>)result.Errors)[0] = second);
+    }
+
+    [Fact]
+    public void Constructor_WhenSuccessfulResultContainsErrors_Throws()
+    {
+        ApplicationError error = ApplicationError.Validation("INVALID");
+
+        Assert.Throws<ArgumentException>(() => new DerivedResult(true, [error]));
+    }
+
+    private sealed class DerivedResult(bool isSuccess, IEnumerable<ApplicationError> errors)
+        : Result(isSuccess, errors);
 
     [Fact]
     public void ApplicationErrorFactoriesAndConstructor_ProduceExpectedMetadata()
@@ -133,23 +171,4 @@ public class ResultTests
         Assert.Equal("NotValidInput", error.Message);
     }
 
-    [Fact]
-    public void ValidatorsRejectInvalidRequests()
-    {
-        CollectionCreateRequest badCollection = new CollectionCreateRequest(" ", "123456...", false);
-        CollectionCreateValidator collectionValidator = new CollectionCreateValidator();
-
-        Result collectionResult = collectionValidator.Validate(badCollection);
-
-        Assert.False(collectionResult.IsSuccess);
-        Assert.Contains(collectionResult.Errors, error => error.Field == "Name");
-
-        LinkCreateRequest badLink = new LinkCreateRequest(0, " ", "titulo", "descripcion", "https://example.com/image.jpg", true);
-        LinkCreateValidator linkValidator = new LinkCreateValidator();
-
-        Result linkResult = linkValidator.Validate(badLink);
-
-        Assert.False(linkResult.IsSuccess);
-        Assert.Contains(linkResult.Errors, error => error.Field == "CollectionId" || error.Field == "Url");
-    }
 }

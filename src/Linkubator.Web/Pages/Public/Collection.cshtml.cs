@@ -46,33 +46,9 @@ public sealed class CollectionModel : PageModel
         Alias = alias.ToLowerInvariant();
         Slug = slug.ToLowerInvariant();
 
-        ApplicationResults.Result<int> countResult = await _publicReadService.GetCollectionPageCount(Alias, Slug, cancellationToken);
-        if (countResult.Errors.Any(error => error.Category == ApplicationEnums.ApplicationErrorCategory.ResourceNotAccessible))
-        {
-            return NotFound();
-        }
-
-        if (!countResult.IsSuccess)
-        {
-            throw new InvalidOperationException("The public collection page count could not be loaded.");
-        }
-
-        if (countResult.Value < 1)
-        {
-            return NotFound();
-        }
-
-        PageCount = countResult.Value;
         int requestedPage = TryGetRequestedPage();
-        if (requestedPage > PageCount)
-        {
-            requestedPage = PageCount;
-        }
-
-        PageNumber = requestedPage;
-
         ApplicationResults.Result<ApplicationDtos.PublicCollectionDto> result =
-            await _publicReadService.GetCollectionPage(Alias, Slug, PageNumber, cancellationToken);
+            await _publicReadService.GetCollectionPage(Alias, Slug, requestedPage, cancellationToken);
 
         if (result.Errors.Any(error => error.Category == ApplicationEnums.ApplicationErrorCategory.ResourceNotAccessible))
         {
@@ -93,6 +69,8 @@ public sealed class CollectionModel : PageModel
         CollectionName = collection.CollectionName;
         Slug = collection.Slug;
         Links = collection.Links;
+        PageNumber = collection.Page;
+        PageCount = collection.PageCount;
 
         string canonicalPath = $"/{Uri.EscapeDataString(Alias)}/colecciones/{Uri.EscapeDataString(Slug)}";
         if (!string.Equals(Request.Path.Value, canonicalPath, StringComparison.Ordinal))

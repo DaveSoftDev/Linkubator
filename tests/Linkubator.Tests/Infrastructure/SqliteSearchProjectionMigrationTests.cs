@@ -47,15 +47,18 @@ public sealed class SqliteSearchProjectionMigrationTests
     }
 
     [Fact]
-    public async Task ApplyPendingMigrations_WhenProjectionRowsHaveDifferentUsers_FiltersByUser()
+    public async Task ApplyPendingMigrations_WhenProjectionRowsHaveDifferentUsers_PreservesUserIdColumn()
     {
             await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         using SqliteConnection connection = database.OpenConnection();
 
         connection.Execute($"INSERT INTO {LinkProjectionName} (rowid, UserId, UrlOriginal, Title, Description, CollectionName) VALUES (8, 42, '', 'privatesearchtoken', '', '');");
 
+        connection.Execute($"INSERT INTO {LinkProjectionName} (rowid, UserId, UrlOriginal, Title) VALUES (9, 99, '', 'privatesearchtoken');");
+        Assert.Equal(new long[] { 42, 99 }, connection.Query<long>($"SELECT UserId FROM {LinkProjectionName} WHERE {LinkProjectionName} MATCH 'privatesearchtoken' ORDER BY rowid;"));
+
         Assert.Equal(1, connection.QuerySingle<int>($"SELECT COUNT(*) FROM {LinkProjectionName} WHERE {LinkProjectionName} MATCH 'privatesearchtoken' AND UserId = 42;"));
-        Assert.Equal(0, connection.QuerySingle<int>($"SELECT COUNT(*) FROM {LinkProjectionName} WHERE {LinkProjectionName} MATCH 'privatesearchtoken' AND UserId = 99;"));
+        Assert.Equal(1, connection.QuerySingle<int>($"SELECT COUNT(*) FROM {LinkProjectionName} WHERE {LinkProjectionName} MATCH 'privatesearchtoken' AND UserId = 99;"));
     }
 
     [Fact]

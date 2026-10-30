@@ -15,8 +15,23 @@ public sealed class SqliteLinkRepository : ILinkRepository
               INNER JOIN Collection c ON c.Id = l.CollectionId AND c.UserId = l.UserId";
     private readonly SqliteConnection _connection;
 
-    private Task InsertSearchProjection(long id, Entities.Link link, CancellationToken cancellationToken)
-        => _connection.ExecuteAsync(new CommandDefinition(
+    private async Task InsertSearchProjection(long id, Entities.Link link, CancellationToken cancellationToken)
+    {
+        string? collectionName = link.Collection?.Name;
+        if (collectionName is null)
+        {
+            collectionName = await _connection.QuerySingleOrDefaultAsync<string>(new CommandDefinition(
+                "SELECT Name FROM Collection WHERE Id = @CollectionId AND UserId = @UserId;",
+                new { link.CollectionId, link.UserId },
+                cancellationToken: cancellationToken));
+        }
+
+        if (collectionName is null)
+        {
+            throw new InvalidOperationException("The link's collection could not be found for its search projection.");
+        }
+
+        await _connection.ExecuteAsync(new CommandDefinition(
             @"INSERT INTO LinkSearch (rowid, UserId, UrlOriginal, Title, Description, CollectionName)
               VALUES (@Id, @UserId, @UrlOriginal, @Title, @Description, @CollectionName);",
             new
@@ -26,9 +41,10 @@ public sealed class SqliteLinkRepository : ILinkRepository
                 UrlOriginal = Search.SearchTextNormalizer.Normalize(link.UrlOriginal),
                 Title = Search.SearchTextNormalizer.Normalize(link.Title),
                 Description = Search.SearchTextNormalizer.Normalize(link.Description),
-                CollectionName = Search.SearchTextNormalizer.Normalize(link.Collection.Name),
+                CollectionName = Search.SearchTextNormalizer.Normalize(collectionName),
             },
             cancellationToken: cancellationToken));
+    }
 
     private Task DeleteSearchProjection(long id, long userId, CancellationToken cancellationToken)
         => _connection.ExecuteAsync(new CommandDefinition(
@@ -71,15 +87,14 @@ public sealed class SqliteLinkRepository : ILinkRepository
             cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<Entities.Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
-    {
-        return await GetLinks(
-            $@"{LinkAndCollectionSelect}
-              WHERE l.UserId = @UserId AND l.CollectionId = @CollectionId
-              ORDER BY l.CreatedAt DESC, l.Id DESC;",
+    public Task<bool> ExistsByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+        => _connection.ExecuteScalarAsync<bool>(new CommandDefinition(
+            @"SELECT EXISTS (
+                  SELECT 1 FROM Link
+                  WHERE UserId = @UserId AND CollectionId = @CollectionId
+              );",
             new { UserId = userId, CollectionId = collectionId },
-            cancellationToken);
-    }
+            cancellationToken: cancellationToken));
 
     public Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
         => _connection.ExecuteScalarAsync<int>(new CommandDefinition(

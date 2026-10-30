@@ -70,17 +70,6 @@ public class EntityTestFactoryTests
     }
 
     [Fact]
-    public void ResolveIdProperty_ThrowsIfPropertyNotFound()
-    {
-        // Since the property is hardcoded, we cannot easily make it not found.
-        // However, we can test that the method returns a non-null property (success branch).
-        // The throw branch is unlikely to be hit unless the property is renamed.
-        // We'll still test that the method does not throw and returns a property.
-        PropertyInfo propertyInfo = EntityTestFactory.ResolveIdProperty();
-        Assert.NotNull(propertyInfo);
-    }
-
-    [Fact]
     public void ResolveInternalMethod_ReturnsMethodInfo_ForAddLink()
     {
         MethodInfo methodInfo = EntityTestFactory.ResolveInternalMethod(typeof(DomainEntities.Collection), "AddLink");

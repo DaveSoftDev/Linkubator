@@ -42,6 +42,33 @@ public class LinkServiceTests
     }
 
     [Fact]
+    public async Task Operations_WhenCustomValidatorsAcceptNull_ReturnRequestRequired()
+    {
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
+        LinkServiceValidators validators = new(
+            new StubValidator<LinkGetRequest>(),
+            new StubValidator<LinkCreateRequest>(),
+            new StubValidator<LinkUpdateRequest>(),
+            new StubValidator<LinkMoveRequest>(),
+            new StubValidator<LinkDeleteRequest>());
+        LinkService service = new(NullLogger<LinkService>.Instance, new CurrentUser(7), collectionRepository, linkRepository, unitOfWorkFactory, validators);
+
+        Result<LinkDto> get = await service.GetLink(null);
+        Result<LinkDto> create = await service.CreateLink(null);
+        Result<LinkDto> update = await service.UpdateLink(null);
+        Result<LinkDto> move = await service.MoveLink(null);
+        Result delete = await service.DeleteLink(null);
+
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(get.Errors).Code);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(create.Errors).Code);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(update.Errors).Code);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(move.Errors).Code);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(delete.Errors).Code);
+    }
+
+    [Fact]
     public async Task GetLink_WhenUserIsUnauthenticated_ReturnsNotAuthenticated()
     {
         CurrentUser currentUser = new(0);
@@ -119,13 +146,19 @@ public class LinkServiceTests
         FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
         LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
 
-        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com/path?x=1"));
+        Result<LinkDto> result = await service.CreateLink(new LinkCreateRequest(10, "https://example.com/path?x=1", " Title ", " Description ", "https://example.com/image.png"));
 
         Assert.True(result.IsSuccess);
         Assert.Equal(10, result.Value!.CollectionId);
         Assert.Equal("https://example.com/path?x=1", result.Value.UrlOriginal);
         Assert.False(result.Value.IsPublic);
-        Assert.Single(linkRepository.Items);
+        Link created = Assert.Single(linkRepository.Items);
+        Assert.Equal(created.Id, result.Value.Id);
+        Assert.Equal(created.UrlNormalized, result.Value.UrlNormalized);
+        Assert.Equal("Title", result.Value.Title);
+        Assert.Equal("Description", result.Value.Description);
+        Assert.Equal(created.Image, result.Value.Image);
+        Assert.Equal(created.CreatedAt, result.Value.CreatedAt);
     }
 
     [Fact]
@@ -316,7 +349,7 @@ public class LinkServiceTests
     {
         LinkService service = CreateService(new(7), new(), new());
 
-        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(0, 0));
+        Result<LinkDto> result = await service.UpdateLink(new LinkUpdateRequest(0, 10));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
@@ -713,7 +746,8 @@ public class LinkServiceTests
         Result<IReadOnlyList<LinkDto>> result = await service.ListLinks(collectionId: 10);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Value!.Count);
+        Assert.Equal(new[] { first, second }.Select(item => new LinkDto(item.Id, item.CollectionId, item.UrlOriginal, item.UrlNormalized, item.Title, item.Description, item.Image, item.IsPublic, item.CreatedAt)), result.Value);
+        Assert.NotNull(result.Value);
         Assert.All(result.Value, item => Assert.Equal(10, item.CollectionId));
     }
 
@@ -867,9 +901,9 @@ public class LinkServiceTests
     }
 
     [Theory]
-    [InlineData("img/logo.png")]
-    [InlineData("//cdn.example.com/img/logo.png")]
-    public async Task CreateLink_WhenImageUsesRelativeReference_IsAccepted(string image)
+    [InlineData("img/logo.png", "https://example.com/img/logo.png")]
+    [InlineData("//cdn.example.com/img/logo.png", "https://cdn.example.com/img/logo.png")]
+    public async Task CreateLink_WhenImageUsesRelativeReference_IsAccepted(string image, string expected)
     {
         CurrentUser currentUser = new(7);
         InMemoryCollectionRepository collectionRepository = new();
@@ -884,15 +918,7 @@ public class LinkServiceTests
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value!.Image);
-        if (image.StartsWith("//", StringComparison.Ordinal))
-        {
-            Assert.StartsWith("https://cdn.example.com", result.Value.Image);
-        }
-        else
-        {
-            Assert.StartsWith("https://example.com", result.Value.Image);
-        }
-        Assert.EndsWith("logo.png", result.Value.Image);
+        Assert.Equal(expected, result.Value.Image);
         Assert.Single(linkRepository.Items);
     }
 
@@ -1071,41 +1097,6 @@ public class LinkServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
         Assert.Equal("LINK_COLLECTION_ID_INVALID", result.Errors[0].Code);
-    }
-
-    [Fact]
-    public async Task ListLinks_WhenCollectionIdDoesNotBelongToUser_ReturnsResourceNotAccessible()
-    {
-        CurrentUser currentUser = new(7);
-        InMemoryCollectionRepository collectionRepository = new();
-        InMemoryLinkRepository linkRepository = new();
-        Collection collection = Collection.Create(9, "Other user's collection", null);
-        SetId(collection, 42);
-        collectionRepository.Items.Add(collection);
-        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
-
-        Result<IReadOnlyList<LinkDto>> result = await service.ListLinks(collectionId: 42);
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("LINK_COLLECTION_NOT_ACCESSIBLE", result.Errors[0].Code);
-    }
-
-    [Fact]
-    public async Task DeleteLink_WhenIdIsInvalid_ReturnsValidationError()
-    {
-        CurrentUser currentUser = new(7);
-        InMemoryCollectionRepository collectionRepository = new();
-        InMemoryLinkRepository linkRepository = new();
-        FakeUnitOfWorkFactory unitOfWorkFactory = new(collectionRepository, linkRepository);
-        LinkService service = new(NullLogger<LinkService>.Instance, currentUser, collectionRepository, linkRepository, unitOfWorkFactory);
-
-        Result result = await service.DeleteLink(new LinkDeleteRequest(0));
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
-        Assert.Equal("LINK_ID_INVALID", result.Errors[0].Code);
     }
 
     [Fact]
@@ -1358,7 +1349,7 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public void LinkServiceValidators_RecordHasExpectedValueSemantics()
+    public void LinkServiceValidators_DefaultAndCustomInstances_ExposeValidatorTypes()
     {
         LinkServiceValidators first = new();
         LinkServiceValidators second = new();
@@ -1386,31 +1377,11 @@ public class LinkServiceTests
     }
 
     [Fact]
-    public void LinkErrors_AllFactoryMethods_ReturnExpectedMetadata()
+    public void LinkErrors_SelectedFactoryMethods_ReturnExpectedMetadata()
     {
         Assert.Equal(CommonErrors.RequestRequiredCode, LinkErrors.RequestRequired().Code);
         Assert.Equal(ApplicationErrorCategory.Validation, LinkErrors.RequestRequired().Category);
         Assert.Equal("request", LinkErrors.RequestRequired().Field);
-
-        Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
-        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
-
-        Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
-        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
-
-        Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
-        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
-
-        Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
-        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
-
-        Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
-        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
         Assert.Equal(CommonErrors.NotAuthenticatedCode, CommonErrors.NotAuthenticated().Code);
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
@@ -1487,8 +1458,8 @@ public class LinkServiceTests
         public Task<Collection?> GetBySlug(long userId, string slug, CancellationToken cancellationToken = default)
             => Task.FromException<Collection?>(new DomainExceptions.NotValidInputException());
 
-        public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
-            => Task.FromException<IReadOnlyCollection<Collection>>(new DomainExceptions.NotValidInputException());
+        public Task<bool> ExistsOtherCollectionByUser(long userId, long excludedCollectionId, CancellationToken cancellationToken = default)
+            => Task.FromException<bool>(new DomainExceptions.NotValidInputException());
 
         public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<CollectionDto>>(new DomainExceptions.NotValidInputException());
@@ -1526,8 +1497,8 @@ public class LinkServiceTests
         public Task<IReadOnlyCollection<Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<Link>>(new DomainExceptions.NotValidInputException());
 
-        public Task<IReadOnlyCollection<Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
-            => Task.FromException<IReadOnlyCollection<Link>>(new DomainExceptions.NotValidInputException());
+        public Task<bool> ExistsByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => Task.FromException<bool>(new DomainExceptions.NotValidInputException());
 
         public Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<LinkDto>>(new DomainExceptions.NotValidInputException());
@@ -1569,8 +1540,8 @@ public class LinkServiceTests
         public Task<IReadOnlyCollection<Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => _inner.GetAllByUser(userId, cancellationToken);
 
-        public Task<IReadOnlyCollection<Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
-            => _inner.GetAllByCollection(userId, collectionId, cancellationToken);
+        public Task<bool> ExistsByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => _inner.ExistsByCollection(userId, collectionId, cancellationToken);
 
         public Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
             => _inner.GetPageByUser(userId, query, collectionId, page, cancellationToken);
@@ -1610,8 +1581,8 @@ public class LinkServiceTests
         public Task<IReadOnlyCollection<Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<Link>>(Items.Where(item => item.UserId == userId).ToList());
 
-        public Task<IReadOnlyCollection<Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyCollection<Link>>(Items.Where(item => item.UserId == userId && item.CollectionId == collectionId).ToList());
+        public Task<bool> ExistsByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => Task.FromResult(Items.Any(item => item.UserId == userId && item.CollectionId == collectionId));
 
         public Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<LinkDto>>(Items.Where(item => item.UserId == userId).Select(item => new LinkDto(item.Id, item.CollectionId, item.UrlOriginal, item.UrlNormalized, item.Title, item.Description, item.Image, item.IsPublic, item.CreatedAt)).ToList());
@@ -1657,8 +1628,8 @@ public class LinkServiceTests
         public Task<Collection?> GetBySlug(long userId, string slug, CancellationToken cancellationToken = default)
             => Task.FromException<Collection?>(new InvalidOperationException("boom"));
 
-        public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
-            => Task.FromException<IReadOnlyCollection<Collection>>(new InvalidOperationException("boom"));
+        public Task<bool> ExistsOtherCollectionByUser(long userId, long excludedCollectionId, CancellationToken cancellationToken = default)
+            => Task.FromException<bool>(new InvalidOperationException("boom"));
 
         public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<CollectionDto>>(new InvalidOperationException("boom"));
@@ -1696,8 +1667,8 @@ public class LinkServiceTests
         public Task<IReadOnlyCollection<Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<Link>>(new InvalidOperationException("boom"));
 
-        public Task<IReadOnlyCollection<Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
-            => Task.FromException<IReadOnlyCollection<Link>>(new InvalidOperationException("boom"));
+        public Task<bool> ExistsByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => Task.FromException<bool>(new InvalidOperationException("boom"));
 
         public Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<LinkDto>>(new InvalidOperationException("boom"));
@@ -1783,8 +1754,8 @@ public class LinkServiceTests
         public Task<Collection?> GetBySlug(long userId, string slug, CancellationToken cancellationToken = default)
             => Task.FromResult(Items.FirstOrDefault(item => item.UserId == userId && item.Slug == slug));
 
-        public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyCollection<Collection>>(Items.Where(item => item.UserId == userId).ToList());
+        public Task<bool> ExistsOtherCollectionByUser(long userId, long excludedCollectionId, CancellationToken cancellationToken = default)
+            => Task.FromResult(Items.Any(item => item.UserId == userId && item.Id != excludedCollectionId));
 
         public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<CollectionDto>>(Items
@@ -1836,8 +1807,8 @@ public class LinkServiceTests
         public Task<IReadOnlyCollection<Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<Link>>(Items.Where(item => item.UserId == userId).ToList());
 
-        public Task<IReadOnlyCollection<Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyCollection<Link>>(Items.Where(item => item.UserId == userId && item.CollectionId == collectionId).ToList());
+        public Task<bool> ExistsByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => Task.FromResult(Items.Any(item => item.UserId == userId && item.CollectionId == collectionId));
 
         public Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
         {

@@ -98,7 +98,7 @@ public class AliasPolicyTests
     }
 
     [Fact]
-    public void GenerateDoesNotConsultTheAvailabilityOfTheAlias()
+    public void GenerateIsDeterministicForTheSameCandidate()
     {
         string first = DomainPolicies.AliasPolicy.Generate("Ana López García");
         string second = DomainPolicies.AliasPolicy.Generate("Ana López García");

@@ -21,7 +21,7 @@ public class LinkTests
 
         Assert.Equal(1, link.UserId);
         Assert.Equal(2, link.CollectionId);
-        Assert.Equal(2, link.Collection.Id);
+        Assert.Equal(2, Assert.IsType<DomainEntities.Collection>(link.Collection).Id);
         Assert.StartsWith("https://Example.com", link.UrlOriginal);
         Assert.Equal("examplecompathx2", link.UrlNormalized);
         Assert.Equal("Title", link.Title);
@@ -319,6 +319,19 @@ public class LinkTests
     }
 
     [Fact]
+    public void Create_WhenCollectionIsPublicAndPrivacyIsOmitted_LeavesLinkPrivate()
+    {
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Public", null, true);
+        EntityTestFactory.SetId(collection, 22);
+
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com/default", null, null, null);
+
+        Assert.False(link.IsPublic);
+        Assert.Same(collection, link.Collection);
+        Assert.Same(link, Assert.Single(collection.Links));
+    }
+
+    [Fact]
     public void Create_WhenCollectionIsPrivateAndPublicRequested_Throws()
     {
         DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
@@ -463,9 +476,15 @@ public class LinkTests
 
         DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
 
-        EntityTestFactory.RehydrateCollection(link, collection);
+        DomainEntities.Collection replacement = DomainEntities.Collection.Create(1, "Replacement", null);
+        EntityTestFactory.SetId(replacement, 9);
+
+        EntityTestFactory.RehydrateCollection(link, replacement);
 
         Assert.Equal(collection.Id, link.CollectionId);
+        Assert.Same(replacement, link.Collection);
+        Assert.Same(link, Assert.Single(replacement.Links));
+        Assert.Empty(collection.Links);
     }
 
     [Fact]
@@ -505,11 +524,11 @@ public class LinkTests
     }
 
     [Fact]
-    public void MoveToCollection_WhenDestinationIsTheSameInstanceButItsIdChanges_UsesReferenceBranch()
+    public void MoveToCollection_WithArtificiallyChangedCollectionId_RepairsLinkAndPreservesMembership()
     {
-        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null);
+        DomainEntities.Collection collection = DomainEntities.Collection.Create(1, "Collection", null, true);
         EntityTestFactory.SetId(collection, 9);
-        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null);
+        DomainEntities.Link link = DomainEntities.Link.Create(1, collection, "https://example.com", null, null, null, true);
 
         PropertyInfo? property = typeof(DomainEntities.Bases.BaseEntity).GetProperty(nameof(DomainEntities.Bases.BaseEntity.Id), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
         property!.SetValue(collection, 42L);
@@ -518,6 +537,8 @@ public class LinkTests
 
         Assert.Equal(42L, link.CollectionId);
         Assert.False(link.IsPublic);
+        Assert.Same(collection, link.Collection);
+        Assert.Same(link, Assert.Single(collection.Links));
     }
 
     [Fact]

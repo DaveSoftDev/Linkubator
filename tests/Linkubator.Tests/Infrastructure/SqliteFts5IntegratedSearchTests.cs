@@ -8,6 +8,70 @@ namespace Linkubator.Tests.Infrastructure;
 
 public sealed class SqliteFts5IntegratedSearchTests
 {
+    [Theory]
+    [InlineData("AND OR NOT NEAR")]
+    [InlineData("AND-OR*NOT \"NEAR\"")]
+    public async Task Search_WithOperatorWords_TreatsEveryTermAsRequiredText(string query)
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long matching = await database.SeedCollection(42, "AND OR NOT NEAR", "matching", false);
+        long partial = await database.SeedCollection(42, "AND OR NOT", "partial", false);
+        long linkId = await database.SeedLink(42, matching, "https://example.test/matching", "matching", "AND OR NOT NEAR", false);
+        await database.SeedLink(42, partial, "https://example.test/partial", "partial", "AND OR NOT", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository collections = new SqliteCollectionRepository(connection);
+        ILinkRepository links = new SqliteLinkRepository(connection);
+
+        var collectionResult = await collections.GetPageByUser(42, query, 1);
+        var linkResult = await links.GetPageByUser(42, query, null, 1);
+
+        Assert.Equal(new[] { matching }, collectionResult.Select(item => item.Id));
+        Assert.Equal(new[] { linkId }, linkResult.Select(item => item.Id));
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Search_WithUnicodeForms_NormalizesQueryAndStoredFields(bool storedDecomposed, bool queryDecomposed)
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        string stored = storedDecomposed ? "Cafe\u0301" : "Caf\u00e9";
+        string query = queryDecomposed ? "Cafe\u0301" : "Caf\u00e9";
+        long collectionId = await database.SeedCollection(42, stored, "unicode", false, stored);
+        long linkId = await database.SeedLink(42, collectionId, "https://example.test/unicode", "unicode", stored, false);
+        await database.SeedCollection(42, "Unrelated", "unrelated", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository collections = new SqliteCollectionRepository(connection);
+        ILinkRepository links = new SqliteLinkRepository(connection);
+
+        var collectionResult = await collections.GetPageByUser(42, query, 1);
+        var linkResult = await links.GetPageByUser(42, query, null, 1);
+
+        Assert.Equal(new[] { collectionId }, collectionResult.Select(item => item.Id));
+        Assert.Equal(new[] { linkId }, linkResult.Select(item => item.Id));
+        Assert.Equal(stored, (await links.GetById(linkId, 42))!.Title);
+        Assert.Equal(stored, (await collections.GetById(collectionId, 42))!.Name);
+    }
+
+    [Fact]
+    public async Task Search_WithTermsDistributedAcrossLinkFields_RequiresAllFields()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "collectionword", "distributed", false);
+        long matching = await database.SeedLink(42, collectionId, "https://example.test/urlword", "matching", "titleword", false,
+            new SqliteTestLinkOptions(Description: "descriptionword"));
+        await database.SeedLink(42, collectionId, "https://example.test/partial", "partial", "titleword", false,
+            new SqliteTestLinkOptions(Description: "descriptionword"));
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository links = new SqliteLinkRepository(connection);
+
+        var result = await links.GetPageByUser(42, "urlword titleword descriptionword collectionword", null, 1);
+
+        Assert.Equal(new[] { matching }, result.Select(item => item.Id));
+    }
+
     [Fact]
     public async Task Writes_WhenEntitiesChange_KeepBothSearchListingsCurrent()
     {

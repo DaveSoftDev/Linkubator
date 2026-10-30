@@ -79,6 +79,7 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         using HttpResponseMessage response = await _client.GetAsync(CreateRoute);
         string html = await response.Content.ReadAsStringAsync();
 
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("class=\"collection-form\"", html, StringComparison.Ordinal);
         Assert.Contains("method=\"post\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
@@ -522,6 +523,9 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         using HttpResponseMessage response = await Post(fields);
         string html = await response.Content.ReadAsStringAsync();
 
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Matches($"<span[^>]*data-valmsg-for=\"{field}\"[^>]*>[^<]+</span>", WebUtility.HtmlDecode(html));
+        Assert.Contains(new string('x', length), html, StringComparison.Ordinal);
         Assert.Contains($"href=\"#{fieldId}\"", html, StringComparison.Ordinal);
         Assert.Equal(0, await LinkCount());
     }
@@ -534,6 +538,8 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Dictionary<string, string> fields = NewFields(otherCollectionId);
         fields["Input.Url"] = "http://example.com/path#fragment";
 
+        string before = await LinkSnapshot();
+
         using HttpResponseMessage response = await Post(fields);
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
@@ -542,6 +548,7 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.Contains("La colección asociada es 'Destino'", html, StringComparison.Ordinal);
         Assert.Contains("href=\"#link-url\"", html, StringComparison.Ordinal);
         Assert.Equal(1, await LinkCount());
+        Assert.Equal(before, await LinkSnapshot());
     }
 
     [Theory]
@@ -740,6 +747,8 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
     {
         using HttpResponseMessage created = await Post(NewFields(_collectionId));
 
+        string before = await LinkSnapshot();
+
         using HttpResponseMessage response = await Post(new() { ["QuickUrl"] = "http://example.com/path#fragment" }, QuickAddRoute);
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
@@ -749,6 +758,7 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.Contains("href=\"#quick-url\"", html, StringComparison.Ordinal);
         Assert.Contains("http://example.com/path#fragment", html, StringComparison.Ordinal);
         Assert.Equal(1, await LinkCount());
+        Assert.Equal(before, await LinkSnapshot());
     }
 
     [Fact]
@@ -773,6 +783,30 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal(0, await LinkCount());
+    }
+
+    [Theory]
+    [InlineData(CreateRoute)]
+    [InlineData("/app")]
+    public async Task PutLinkCreation_ReturnsNotFoundWithoutWriting(string route)
+    {
+        string before = await LinkSnapshot();
+        using HttpRequestMessage request = new(HttpMethod.Put, route)
+        {
+            Content = new FormUrlEncodedContent(NewFields(_collectionId)),
+        };
+
+        using HttpResponseMessage response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(before, await LinkSnapshot());
+    }
+
+    private async Task<string> LinkSnapshot()
+    {
+        string[] links = (await _keeper.QueryAsync<string>("SELECT json_object('Id',Id,'CollectionId',CollectionId,'Url',UrlOriginal,'Normalized',UrlNormalized,'Title',Title,'Description',Description,'Image',Image,'Public',IsPublic) FROM Link ORDER BY Id;")).ToArray();
+        string[] projections = (await _keeper.QueryAsync<string>("SELECT json_object('Id',rowid,'UserId',UserId,'Url',UrlOriginal,'Title',Title,'Description',Description,'CollectionName',CollectionName) FROM LinkSearch ORDER BY rowid;")).ToArray();
+        return string.Join("\n", links.Concat(projections));
     }
 
     private static Dictionary<string, string> NewFields(long collectionId)

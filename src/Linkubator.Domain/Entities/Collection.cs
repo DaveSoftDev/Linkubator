@@ -93,6 +93,7 @@ public sealed class Collection : Bases.BaseEntity
     /// <summary>
     /// Rehidrata la colección con la lista de enlaces que pertenecen a ella.
     /// Materializa y valida toda la entrada antes de modificar las asociaciones existentes.
+    /// Los enlaces excluidos conservan su identificador de colección, pero dejan de tenerla cargada.
     /// </summary>
     /// <param name="links">Enlaces asociados a la colección.</param>
     /// <exception cref="DomainExceptions.NotValidInputException">Si la colección o los enlaces no son válidos.</exception>
@@ -109,6 +110,15 @@ public sealed class Collection : Bases.BaseEntity
             if (link is null || link.UserId != UserId || link.CollectionId != Id)
             {
                 throw new DomainExceptions.NotValidInputException();
+            }
+        }
+
+        HashSet<Link> suppliedLinks = new(associatedLinks);
+        foreach (Link link in _links)
+        {
+            if (!suppliedLinks.Contains(link))
+            {
+                link.DetachCollection(this);
             }
         }
 

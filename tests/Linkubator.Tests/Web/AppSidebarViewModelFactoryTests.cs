@@ -55,24 +55,6 @@ public sealed class AppSidebarViewModelFactoryTests
     }
 
     [Fact]
-    public void CreateSidebar_WhenUserProvided_UsesDevelopmentIdentityData()
-    {
-        AppSidebarUserViewModel user = new()
-        {
-            Name = "Demo User",
-            Alias = "my-demo-user",
-        };
-
-        AppSidebarViewModel sidebar = AppSidebarViewModelFactory.CreateSidebar(
-            AppSidebarSelectionKind.Home,
-            [],
-            user);
-
-        Assert.Equal("Demo User", sidebar.User.Name);
-        Assert.Equal("my-demo-user", sidebar.User.Alias);
-    }
-
-    [Fact]
     public void CreateSidebar_WithEmptyCollections_UsesDevelopmentIdentityData()
     {
         AppSidebarUserViewModel user = new()

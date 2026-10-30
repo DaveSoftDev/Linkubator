@@ -48,8 +48,7 @@ public class DashboardServiceTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(7, repository.LastUserId);
-        Assert.Single(result.Value!.RecentLinks);
-        Assert.Equal("My collection", result.Value.RecentLinks[0].CollectionName);
+        Assert.Equal(recentLink, Assert.Single(result.Value!.RecentLinks));
     }
 
     [Fact]

@@ -40,19 +40,33 @@ public sealed class DevelopmentIdentityProviderTests
         Assert.Equal(before, after);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task GetProfile_WhenAccountIsMissingOrIncomplete_Throws(bool seedIncompleteAccount)
+    [Fact]
+    public async Task GetProfile_WhenAccountIsMissing_Throws()
     {
         await using DevelopmentIdentityTestDatabase database = await DevelopmentIdentityTestDatabase.Create();
-        if (seedIncompleteAccount)
-        {
-            await database.SeedIncompleteUser();
-        }
-        DevelopmentIdentityProvider provider = database.CreateProvider();
+        await database.SeedOtherUser();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => provider.GetProfile());
+        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() => database.CreateProvider().GetProfile());
+
+        Assert.Equal("The development identity is missing or incomplete.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(null, "demo-alias", ValidArgon2idHash, "2025-01-02T03:04:05Z")]
+    [InlineData("Demo Name", null, ValidArgon2idHash, "2025-01-02T03:04:05Z")]
+    [InlineData("Demo Name", "demo-alias", null, "2025-01-02T03:04:05Z")]
+    [InlineData("Demo Name", "demo-alias", ValidArgon2idHash, null)]
+    [InlineData(" ", "demo-alias", ValidArgon2idHash, "2025-01-02T03:04:05Z")]
+    [InlineData("Demo Name", " ", ValidArgon2idHash, "2025-01-02T03:04:05Z")]
+    public async Task GetProfile_WhenOneRequiredFieldIsMissingOrBlank_Throws(string? name, string? alias, string? password, string? confirmedAt)
+    {
+        await using DevelopmentIdentityTestDatabase database = await DevelopmentIdentityTestDatabase.Create();
+        await database.SeedOtherUser();
+        await database.SeedUser(name, alias, password, confirmedAt);
+
+        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() => database.CreateProvider().GetProfile());
+
+        Assert.Equal("The development identity is missing or incomplete.", exception.Message);
     }
 
     private sealed class DevelopmentIdentityTestDatabase : IAsyncDisposable
@@ -86,12 +100,12 @@ public sealed class DevelopmentIdentityProviderTests
             await new DevelopmentIdentityProvisioner(_connectionFactory, options).Provision();
         }
 
-        public async Task SeedIncompleteUser()
+        public async Task SeedUser(string? name, string? alias, string? password, string? confirmedAt)
         {
             using SqliteConnection connection = _connectionFactory.CreateOpenConnection();
             await connection.ExecuteAsync(
-                "INSERT INTO User (Email, SecurityStamp) VALUES (@Email, @SecurityStamp);",
-                new { Email = DemoEmail, SecurityStamp = Guid.NewGuid().ToString("N") });
+                "INSERT INTO User (Email, Name, Alias, Password, EmailConfirmedAt, SecurityStamp) VALUES (@Email, @Name, @Alias, @Password, @ConfirmedAt, @SecurityStamp);",
+                new { Email = DemoEmail, Name = name, Alias = alias, Password = password, ConfirmedAt = confirmedAt, SecurityStamp = Guid.NewGuid().ToString("N") });
         }
 
         public async Task SeedOtherUser()

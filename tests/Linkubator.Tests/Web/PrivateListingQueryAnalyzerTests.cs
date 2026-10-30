@@ -6,8 +6,10 @@ namespace Linkubator.Tests.Web;
 
 public sealed class PrivateListingQueryAnalyzerTests
 {
-    [Fact]
-    public void Analyze_WhenPageIsMissingOrEmpty_UsesDefaultPage()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Analyze_WhenPageIsMissingOrEmpty_UsesDefaultPage(bool includePage)
     {
         IQueryCollection query = new QueryCollection(new Dictionary<string, StringValues>
         {
@@ -15,11 +17,38 @@ public sealed class PrivateListingQueryAnalyzerTests
             ["q"] = new StringValues("   ")
         });
 
-        PrivateListingQueryAnalysisResult result = PrivateListingQueryAnalyzer.Analyze(query, PrivateListingKind.Links);
+        IQueryCollection actual = includePage ? query : new QueryCollection(new Dictionary<string, StringValues> { ["q"] = "   " });
+        PrivateListingQueryAnalysisResult result = PrivateListingQueryAnalyzer.Analyze(actual, PrivateListingKind.Links);
 
         Assert.Equal(1, result.PageNumber);
         Assert.Null(result.SearchText);
         Assert.False(result.HasAnyError);
+    }
+
+    [Fact]
+    public void Analyze_WithMaximumUnicodeSearch_AcceptsTrimmedText()
+    {
+        string text = string.Concat(Enumerable.Repeat("\U0001F600", 100));
+        QueryCollection query = new(new Dictionary<string, StringValues> { ["q"] = "  " + text + "  " });
+
+        var result = PrivateListingQueryAnalyzer.Analyze(query, PrivateListingKind.Links);
+
+        Assert.False(result.HasSearchError);
+        Assert.Equal(text, result.SearchText);
+    }
+
+    [Theory]
+    [InlineData("", PrivateListingKind.Links)]
+    [InlineData("invalid", PrivateListingKind.Collections)]
+    public void Analyze_WhenCollectionIsEmptyOrNotApplicable_DoesNotCheckAccessibility(string value, PrivateListingKind kind)
+    {
+        QueryCollection query = new(new Dictionary<string, StringValues> { ["c"] = value });
+
+        var result = PrivateListingQueryAnalyzer.Analyze(query, kind,
+            isAccessibleCollection: _ => throw new InvalidOperationException("Must not query accessibility"));
+
+        Assert.False(result.HasAnyError);
+        Assert.Null(result.CollectionId);
     }
 
     [Fact]
@@ -182,12 +211,12 @@ public sealed class PrivateListingQueryAnalyzerTests
     {
         IQueryCollection query = new QueryCollection(new Dictionary<string, StringValues>
         {
-            ["q"] = new StringValues("  dos términos  ")
+            ["q"] = new StringValues("  dos   términos  ")
         });
 
         PrivateListingQueryAnalysisResult result = PrivateListingQueryAnalyzer.Analyze(query, PrivateListingKind.Collections);
 
-        Assert.Equal("dos términos", result.SearchText);
+        Assert.Equal("dos   términos", result.SearchText);
         Assert.False(result.HasSearchError);
     }
 }

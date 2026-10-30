@@ -86,71 +86,49 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
 
     public async Task<PublicCollectionDto?> GetCollectionPage(string alias, string slug, int page, CancellationToken cancellationToken = default)
     {
-        UserRow? user = await GetUserByAlias(alias, cancellationToken);
+        ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
 
-        if (user is null)
-        {
-            return null;
-        }
-
-        CollectionPageRow? collection = await _connection.QuerySingleOrDefaultAsync<CollectionPageRow>(new CommandDefinition(
-            @"SELECT c.Id, c.Name, c.Slug
-              FROM Collection c
-              WHERE c.UserId = @UserId
-                AND c.Slug = @Slug
-                AND c.IsPublic = 1;",
-            new { UserId = user.Id, Slug = slug },
-            cancellationToken: cancellationToken));
-
-        if (collection is null)
-        {
-            return null;
-        }
-
-        IReadOnlyList<PublicLinkDto> links = (await _connection.QueryAsync<PublicLinkDto>(new CommandDefinition(
-            @"SELECT l.UrlOriginal, l.Title, l.Description, l.Image
-              FROM Link l
-              WHERE l.UserId = @UserId
-                AND l.CollectionId = @CollectionId
-                AND l.IsPublic = 1
-              ORDER BY CASE WHEN l.Title IS NOT NULL AND TRIM(l.Title) <> '' THEN l.Title ELSE l.UrlOriginal END COLLATE LINKUBATOR_ES_ES ASC,
-                       l.Id ASC
-              LIMIT @Limit OFFSET @Offset;",
-            new { UserId = user.Id, CollectionId = collection.Id, Limit = PageSize, Offset = (page - 1) * PageSize },
+        List<CollectionPageRow> rows = (await _connection.QueryAsync<CollectionPageRow>(new CommandDefinition(
+            @"WITH selected_collection AS MATERIALIZED (
+                  SELECT c.Id, c.UserId, c.Name, c.Slug,
+                         (SELECT COUNT(*) FROM Link l
+                          WHERE l.UserId = c.UserId AND l.CollectionId = c.Id AND l.IsPublic = 1) AS LinkCount
+                  FROM Collection c
+                  INNER JOIN User u ON u.Id = c.UserId
+                  WHERE u.Alias = @Alias AND c.Slug = @Slug AND c.IsPublic = 1
+              ), pagination AS MATERIALIZED (
+                  SELECT Id, UserId, Name, Slug,
+                         (LinkCount + @Limit - 1) / @Limit AS PageCount,
+                         MIN(@Page, MAX(1, (LinkCount + @Limit - 1) / @Limit)) AS Page
+                  FROM selected_collection
+              ), page_links AS (
+                  SELECT l.Id, l.UrlOriginal, l.Title, l.Description, l.Image,
+                         CASE WHEN l.Title IS NOT NULL AND TRIM(l.Title) <> '' THEN l.Title ELSE l.UrlOriginal END AS SortKey
+                  FROM pagination p
+                  CROSS JOIN Link l
+                  WHERE l.UserId = p.UserId AND l.CollectionId = p.Id AND l.IsPublic = 1
+                  ORDER BY SortKey COLLATE LINKUBATOR_ES_ES ASC, l.Id ASC
+                  LIMIT @Limit OFFSET COALESCE((SELECT (Page - 1) * @Limit FROM pagination), 0)
+              )
+              SELECT p.Name, p.Slug, p.Page, p.PageCount,
+                     l.UrlOriginal, l.Title, l.Description, l.Image
+              FROM pagination p
+              LEFT JOIN page_links l ON 1 = 1
+              ORDER BY l.SortKey COLLATE LINKUBATOR_ES_ES ASC, l.Id ASC;",
+            new { Alias = alias, Slug = slug, Page = page, Limit = PageSize },
             cancellationToken: cancellationToken))).ToList();
 
-        return new PublicCollectionDto(alias, collection.Name, collection.Slug, links);
-    }
-
-    public async Task<int> GetCollectionPageCount(string alias, string slug, CancellationToken cancellationToken = default)
-    {
-        UserRow? user = await GetUserByAlias(alias, cancellationToken);
-
-        if (user is null)
-        {
-            return 0;
-        }
-
-        CollectionPageRow? collection = await _connection.QuerySingleOrDefaultAsync<CollectionPageRow>(new CommandDefinition(
-            @"SELECT c.Id, c.Name, c.Slug
-              FROM Collection c
-              WHERE c.UserId = @UserId AND c.Slug = @Slug AND c.IsPublic = 1;",
-            new { UserId = user.Id, Slug = slug },
-            cancellationToken: cancellationToken));
-
+        CollectionPageRow? collection = rows.FirstOrDefault();
         if (collection is null)
         {
-            return 0;
+            return null;
         }
 
-        long total = await _connection.ExecuteScalarAsync<long>(new CommandDefinition(
-            @"SELECT COUNT(*)
-              FROM Link
-              WHERE UserId = @UserId AND CollectionId = @CollectionId AND IsPublic = 1;",
-            new { UserId = user.Id, CollectionId = collection.Id },
-            cancellationToken: cancellationToken));
-
-        return total == 0 ? 0 : (int)Math.Ceiling(total / (double)PageSize);
+        IReadOnlyList<PublicLinkDto> links = rows
+            .Where(row => row.UrlOriginal is not null)
+            .Select(row => new PublicLinkDto(row.UrlOriginal!, row.Title, row.Description, row.Image))
+            .ToList();
+        return new PublicCollectionDto(alias, collection.Name, collection.Slug, links, collection.Page, collection.PageCount);
     }
 
     private Task<UserRow?> GetUserByAlias(string alias, CancellationToken cancellationToken)
@@ -174,8 +152,13 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
 
     private sealed class CollectionPageRow
     {
-        public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
+        public int Page { get; set; }
+        public int PageCount { get; set; }
+        public string? UrlOriginal { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public string? Image { get; set; }
     }
 }

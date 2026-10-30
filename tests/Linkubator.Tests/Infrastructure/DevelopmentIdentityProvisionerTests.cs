@@ -76,17 +76,37 @@ public sealed class DevelopmentIdentityProvisionerTests
     public async Task Provision_WhenUserIsIncomplete_CompletesOnlyMissingProfileFields()
     {
         await using DevelopmentIdentityTestDatabase database = await DevelopmentIdentityTestDatabase.Create();
-        await database.SeedUser(DemoEmail, null, null, null, null);
+        const string otherEmail = "other@example.test";
+        const string existingName = "Existing Name";
+        DateTime confirmation = new(2025, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+        await database.SeedUser(DemoEmail, existingName, null, AnotherValidArgon2idHash, null);
+        await database.SeedUser(otherEmail, "Other Name", "other-alias", AnotherValidArgon2idHash, confirmation);
+        await using SqliteConnection connection = database.OpenConnection();
+        UserSnapshot before = await connection.QuerySingleAsync<UserSnapshot>("SELECT * FROM User WHERE Email = @Email;", new { Email = DemoEmail });
+        UserSnapshot otherBefore = await connection.QuerySingleAsync<UserSnapshot>("SELECT * FROM User WHERE Email = @Email;", new { Email = otherEmail });
 
         await database.CreateProvisioner().Provision();
 
-        await using SqliteConnection connection = database.OpenConnection();
-        (string? Name, string? Alias, string? Password, DateTime? EmailConfirmedAt) user = await connection.QuerySingleAsync<(string? Name, string? Alias, string? Password, DateTime? EmailConfirmedAt)>(
-            "SELECT Name, Alias, Password, EmailConfirmedAt FROM User WHERE Email = @Email;",
-            new { Email = DemoEmail });
+        UserSnapshot after = await connection.QuerySingleAsync<UserSnapshot>("SELECT * FROM User WHERE Email = @Email;", new { Email = DemoEmail });
+        UserSnapshot otherAfter = await connection.QuerySingleAsync<UserSnapshot>("SELECT * FROM User WHERE Email = @Email;", new { Email = otherEmail });
+        Assert.Equal(before with { Alias = DemoAlias, EmailConfirmedAt = after.EmailConfirmedAt }, after);
+        Assert.False(string.IsNullOrWhiteSpace(after.EmailConfirmedAt));
+        Assert.Equal(otherBefore, otherAfter);
+    }
 
-        Assert.Equal((DemoName, DemoAlias, ValidArgon2idHash), (user.Name, user.Alias, user.Password));
-        Assert.NotNull(user.EmailConfirmedAt);
+    [Fact]
+    public async Task Provision_WhenNameAndPasswordAreMissing_PreservesExistingAliasAndConfirmation()
+    {
+        await using DevelopmentIdentityTestDatabase database = await DevelopmentIdentityTestDatabase.Create();
+        DateTime confirmation = new(2025, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+        await database.SeedUser(DemoEmail, null, "existing-alias", null, confirmation);
+        await using SqliteConnection connection = database.OpenConnection();
+        UserSnapshot before = await connection.QuerySingleAsync<UserSnapshot>("SELECT * FROM User WHERE Email = @Email;", new { Email = DemoEmail });
+
+        await database.CreateProvisioner().Provision();
+
+        UserSnapshot after = await connection.QuerySingleAsync<UserSnapshot>("SELECT * FROM User WHERE Email = @Email;", new { Email = DemoEmail });
+        Assert.Equal(before with { Name = DemoName, Password = ValidArgon2idHash }, after);
     }
 
     [Fact]
@@ -164,7 +184,7 @@ public sealed class DevelopmentIdentityProvisionerTests
     }
 
     [Fact]
-    public async Task Provision_WhenConcurrentCallsTargetSameDatabase_CreatesSingleUserAndCollection()
+    public async Task Provision_WhenConcurrentCallsAreRequested_CreatesSingleUserAndCollection()
     {
         await using DevelopmentIdentityTestDatabase database = await DevelopmentIdentityTestDatabase.Create();
         DevelopmentIdentityProvisioner first = database.CreateProvisioner();
@@ -202,6 +222,29 @@ public sealed class DevelopmentIdentityProvisionerTests
     }
 
     [Fact]
+    public async Task Provision_WhenCollectionInsertFailsForIncompleteUser_RollsBackProfileAndProjections()
+    {
+        const string otherEmail = "other@example.test";
+        await using DevelopmentIdentityTestDatabase database = await DevelopmentIdentityTestDatabase.Create();
+        await database.SeedUser(DemoEmail, "Existing Name", null, AnotherValidArgon2idHash, null);
+        await database.SeedUser(otherEmail, "Other Name", "other-alias", AnotherValidArgon2idHash, DateTime.UtcNow);
+        await database.SeedCollection(otherEmail, "Other collection", "other-collection", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        await connection.ExecuteAsync("INSERT INTO CollectionSearch (rowid, UserId, Name, Description) SELECT Id, UserId, Name, 'Other description' FROM Collection;");
+        await connection.ExecuteAsync("CREATE TRIGGER fail_demo_collection_insert BEFORE INSERT ON Collection BEGIN SELECT RAISE(ABORT, 'injected collection insert failure'); END;");
+        UserSnapshot[] usersBefore = (await connection.QueryAsync<UserSnapshot>("SELECT * FROM User ORDER BY Id;")).ToArray();
+        CollectionSnapshot[] collectionsBefore = (await connection.QueryAsync<CollectionSnapshot>("SELECT * FROM Collection ORDER BY Id;")).ToArray();
+        ProjectionSnapshot[] projectionsBefore = (await connection.QueryAsync<ProjectionSnapshot>("SELECT rowid AS Id, UserId, Name, Description FROM CollectionSearch ORDER BY rowid;")).ToArray();
+
+        SqliteException exception = await Assert.ThrowsAsync<SqliteException>(() => database.CreateProvisioner().Provision());
+
+        Assert.Contains("injected collection insert failure", exception.Message, StringComparison.Ordinal);
+        Assert.Equal(usersBefore, (await connection.QueryAsync<UserSnapshot>("SELECT * FROM User ORDER BY Id;")).ToArray());
+        Assert.Equal(collectionsBefore, (await connection.QueryAsync<CollectionSnapshot>("SELECT * FROM Collection ORDER BY Id;")).ToArray());
+        Assert.Equal(projectionsBefore, (await connection.QueryAsync<ProjectionSnapshot>("SELECT rowid AS Id, UserId, Name, Description FROM CollectionSearch ORDER BY rowid;")).ToArray());
+    }
+
+    [Fact]
     public void Constructor_WhenPasswordHashIsNotArgon2idPhc_Throws()
     {
         InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
@@ -214,7 +257,7 @@ public sealed class DevelopmentIdentityProvisionerTests
     }
 
     [Fact]
-    public void Constructor_WhenPasswordHashIsNotCryptographicallyVerifiableAsGenericHash_StillAcceptsStructuralPhc()
+    public void Constructor_WhenPasswordHashHasValidPhcStructure_AcceptsConfiguration()
     {
         DevelopmentIdentityProvisioner provisioner = new(new SqliteConnectionFactory("Data Source=:memory:"), new DevelopmentIdentityOptions
         {
@@ -224,15 +267,71 @@ public sealed class DevelopmentIdentityProvisionerTests
         Assert.NotNull(provisioner);
     }
 
+    [Theory]
+    [InlineData(19456, 2, 1)]
+    [InlineData(131072, 2, 1)]
+    [InlineData(19456, 10, 1)]
+    public void Constructor_WhenPhcParametersAreAtAcceptedBoundaries_AcceptsConfiguration(int memory, int iterations, int parallelism)
+    {
+        string hash = CreatePhc(memory, iterations, parallelism, 16, 32);
+
+        DevelopmentIdentityProvisioner provisioner = new(new SqliteConnectionFactory("Data Source=:memory:"), new DevelopmentIdentityOptions { PasswordHash = hash });
+
+        Assert.NotNull(provisioner);
+    }
+
+    [Theory]
+    [InlineData(19455, 2, 1, 16, 32)]
+    [InlineData(131073, 2, 1, 16, 32)]
+    [InlineData(19456, 1, 1, 16, 32)]
+    [InlineData(19456, 11, 1, 16, 32)]
+    [InlineData(19456, 2, 0, 16, 32)]
+    [InlineData(19456, 2, 2, 16, 32)]
+    [InlineData(19456, 2, 1, 15, 32)]
+    [InlineData(19456, 2, 1, 17, 32)]
+    [InlineData(19456, 2, 1, 16, 31)]
+    [InlineData(19456, 2, 1, 16, 33)]
+    public void PhcValidation_WhenParameterOrSizeIsOutsideBoundaries_RejectsInConstructorAndVerifier(int memory, int iterations, int parallelism, int saltSize, int digestSize)
+    {
+        string hash = CreatePhc(memory, iterations, parallelism, saltSize, digestSize);
+
+        Assert.Throws<InvalidOperationException>(() => new DevelopmentIdentityProvisioner(new SqliteConnectionFactory("Data Source=:memory:"), new DevelopmentIdentityOptions { PasswordHash = hash }));
+        Assert.False(Argon2idPhcVerifier.Verify(TestVectorPassword, hash));
+    }
+
+    [Theory]
+    [InlineData("$argon2id$v=16$m=19456,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$yA5x3tCrHbeWOAFDR8GQq4W9o7J+yo/NcCn/b/vtcyI")]
+    [InlineData("$argon2i$v=19$m=19456,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$yA5x3tCrHbeWOAFDR8GQq4W9o7J+yo/NcCn/b/vtcyI")]
+    [InlineData("$argon2id$v=19$t=2,m=19456,p=1$AAECAwQFBgcICQoLDA0ODw$yA5x3tCrHbeWOAFDR8GQq4W9o7J+yo/NcCn/b/vtcyI")]
+    [InlineData("$argon2id$v=19$m=19456,t=2,p=1$A$yA5x3tCrHbeWOAFDR8GQq4W9o7J+yo/NcCn/b/vtcyI")]
+    [InlineData("$argon2id$v=19$m=19456,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$A")]
+    public void PhcValidation_WhenVersionFormatOrBase64IsInvalid_RejectsInConstructorAndVerifier(string hash)
+    {
+        Assert.Throws<InvalidOperationException>(() => new DevelopmentIdentityProvisioner(new SqliteConnectionFactory("Data Source=:memory:"), new DevelopmentIdentityOptions { PasswordHash = hash }));
+        Assert.False(Argon2idPhcVerifier.Verify(TestVectorPassword, hash));
+    }
+
+    private static string CreatePhc(int memory, int iterations, int parallelism, int saltSize, int digestSize)
+        => $"$argon2id$v=19$m={memory},t={iterations},p={parallelism}${Convert.ToBase64String(new byte[saltSize]).TrimEnd('=')}${Convert.ToBase64String(new byte[digestSize]).TrimEnd('=')}";
+
     [Fact]
     public void ProvisioningSqlResource_IsEmbeddedOutsideVersionedMigrationCatalog()
     {
-        string[] resources = typeof(DevelopmentIdentityProvisioner).Assembly.GetManifestResourceNames();
-        string[] migrationVersions = SqliteMigrationCatalog.Load().Select(script => script.Version).ToArray();
+        const string resourceName = "Linkubator.Infrastructure.DevelopmentIdentity.Sql.ProvisionDevelopmentIdentity.sql";
+        var assembly = typeof(DevelopmentIdentityProvisioner).Assembly;
+        Assert.Contains(resourceName, assembly.GetManifestResourceNames());
+        using Stream stream = assembly.GetManifestResourceStream(resourceName)!;
+        using StreamReader reader = new(stream);
+        string provisioningSql = reader.ReadToEnd();
 
-        Assert.Contains("Linkubator.Infrastructure.DevelopmentIdentity.Sql.ProvisionDevelopmentIdentity.sql", resources);
-        Assert.Equal(new[] { "V004", "V005", "V006", "V007" }, migrationVersions);
+        Assert.DoesNotContain(SqliteMigrationCatalog.Load(), migration => migration.Sql == provisioningSql);
     }
+
+    private sealed record UserSnapshot(long Id, string Email, string? Name, string? Alias, string? Password, string? EmailConfirmedAt, string SecurityStamp, long FailedLoginAttempts, string? LockoutEnd, string? LastEmailSentAt, string? LastExistingAccountNoticeAt, string CreatedAt);
+
+    private sealed record CollectionSnapshot(long Id, long UserId, string Name, string Slug, string? Description, long IsPublic, string CreatedAt);
+
+    private sealed record ProjectionSnapshot(long Id, long UserId, string Name, string? Description);
 
     private sealed class DevelopmentIdentityTestDatabase : IAsyncDisposable
     {

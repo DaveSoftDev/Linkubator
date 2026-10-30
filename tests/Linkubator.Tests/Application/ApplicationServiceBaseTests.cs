@@ -95,6 +95,7 @@ public class ApplicationServiceBaseTests
         Assert.Equal("request", result.Value);
         Assert.Equal(1, factory.UnitOfWork.BeginCalls);
         Assert.Equal(1, factory.UnitOfWork.CommitCalls);
+        Assert.Equal(new[] { "Begin", "Commit", "Dispose" }, factory.UnitOfWork.Events);
     }
 
     [Fact]
@@ -110,8 +111,10 @@ public class ApplicationServiceBaseTests
             "failure");
 
         Assert.False(result.IsSuccess);
+        Assert.Equal("ERR", Assert.Single(result.Errors).Code);
         Assert.Equal(1, factory.UnitOfWork.BeginCalls);
         Assert.Equal(0, factory.UnitOfWork.CommitCalls);
+        Assert.Equal(new[] { "Begin", "Dispose" }, factory.UnitOfWork.Events);
     }
 
     [Fact]
@@ -142,6 +145,7 @@ public class ApplicationServiceBaseTests
             default,
             (_, _, _) => throw new InvalidOperationException("boom"),
             "failure"));
+        Assert.Equal(new[] { "Begin", "Dispose" }, factory.UnitOfWork.Events);
     }
 
     [Fact]
@@ -261,6 +265,72 @@ public class ApplicationServiceBaseTests
         Assert.Equal("ERR", result.Errors[0].Code);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ExecuteInTransactionNonGeneric_WhenOperationCompletes_DisposesAndCommitsOnlySuccess(bool success)
+    {
+        TrackingUnitOfWorkFactory factory = new();
+        TestApplicationService service = new(NullLogger.Instance, new CurrentUser(7), factory);
+
+        Result result = await service.RunExecuteInTransaction("request", default,
+            (_, _, _) => Task.FromResult(success ? Result.Success() : Result.Failure(ApplicationError.Validation("ERR"))), "failure");
+
+        Assert.Equal(success, result.IsSuccess);
+        Assert.Equal(success ? new[] { "Begin", "Commit", "Dispose" } : new[] { "Begin", "Dispose" }, factory.UnitOfWork.Events);
+        if (!success)
+        {
+            Assert.Equal("ERR", Assert.Single(result.Errors).Code);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteInTransactionNonGeneric_WhenOperationThrows_DisposesWithoutCommit()
+    {
+        TrackingUnitOfWorkFactory factory = new();
+        TestApplicationService service = new(NullLogger.Instance, new CurrentUser(7), factory);
+        InvalidOperationException expected = new("boom");
+
+        InvalidOperationException actual = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.RunExecuteInTransaction("request", default, (_, _, _) => throw expected, "failure"));
+
+        Assert.Same(expected, actual);
+        Assert.Equal(new[] { "Begin", "Dispose" }, factory.UnitOfWork.Events);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ExecuteWithUnitOfWork_WhenOperationCompletes_DisposesWithoutTransaction(bool success)
+    {
+        TrackingUnitOfWorkFactory factory = new();
+        TestApplicationService service = new(NullLogger.Instance, new CurrentUser(7), factory);
+
+        Result<string> result = await service.RunExecuteWithUnitOfWork("request", default,
+            (request, _, _) => Task.FromResult(success ? Result<string>.Success(request) : Result<string>.Failure(ApplicationError.Validation("ERR"))), "failure");
+
+        Assert.Equal(success, result.IsSuccess);
+        Assert.Equal(new[] { "Dispose" }, factory.UnitOfWork.Events);
+        if (!success)
+        {
+            Assert.Equal("ERR", Assert.Single(result.Errors).Code);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteWithUnitOfWork_WhenOperationThrows_DisposesAndPropagates()
+    {
+        TrackingUnitOfWorkFactory factory = new();
+        TestApplicationService service = new(NullLogger.Instance, new CurrentUser(7), factory);
+        InvalidOperationException expected = new("boom");
+
+        InvalidOperationException actual = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.RunExecuteWithUnitOfWork<string, string>("request", default, (_, _, _) => throw expected, "failure"));
+
+        Assert.Same(expected, actual);
+        Assert.Equal(new[] { "Dispose" }, factory.UnitOfWork.Events);
+    }
+
     private sealed class TestApplicationService : ApplicationServiceBase
     {
         public TestApplicationService(ILogger logger)
@@ -299,6 +369,13 @@ public class ApplicationServiceBaseTests
             Func<TRequest, IUnitOfWork, CancellationToken, Task<Result>> operation,
             string failureMessage)
             => ExecuteInTransaction(request, cancellationToken, operation, failureMessage);
+
+        public Task<Result<TResponse>> RunExecuteWithUnitOfWork<TRequest, TResponse>(
+            TRequest request,
+            CancellationToken cancellationToken,
+            Func<TRequest, IUnitOfWork, CancellationToken, Task<Result<TResponse>>> operation,
+            string failureMessage)
+            => Execute(request, cancellationToken, operation, failureMessage);
 
         public Task<Result<TResponse>> RunExecute<TRequest, TResponse>(
             TRequest request,
@@ -340,6 +417,7 @@ public class ApplicationServiceBaseTests
         public int BeginCalls { get; private set; }
         public int CommitCalls { get; private set; }
         public int RollbackCalls { get; private set; }
+        public List<string> Events { get; } = [];
 
         public TRepository GetRepository<TRepository>() where TRepository : class
             => throw new NotSupportedException();
@@ -347,12 +425,14 @@ public class ApplicationServiceBaseTests
         public Task Begin(CancellationToken cancellationToken = default)
         {
             BeginCalls++;
+            Events.Add("Begin");
             return Task.CompletedTask;
         }
 
         public Task Commit(CancellationToken cancellationToken = default)
         {
             CommitCalls++;
+            Events.Add("Commit");
             return Task.CompletedTask;
         }
 
@@ -362,9 +442,13 @@ public class ApplicationServiceBaseTests
             return Task.CompletedTask;
         }
 
-        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+        public ValueTask DisposeAsync()
+        {
+            Events.Add("Dispose");
+            return ValueTask.CompletedTask;
+        }
 
-        public void Dispose() { }
+        public void Dispose() => Events.Add("Dispose");
     }
 
     private sealed class TestDomainException : DomainException

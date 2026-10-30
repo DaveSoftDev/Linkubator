@@ -397,6 +397,9 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(expectedPage == 1 ? 16 : 2, CardTitles(html).Length);
         Assert.Equal(CardTitles(baseline), CardTitles(html));
+        Assert.Equal(expectedPage == 1
+            ? Enumerable.Range(3, 16).Reverse().Select(index => $"Lectura {index:00}")
+            : new[] { "Lectura 02", "Lectura 01" }, CardTitles(html));
         Assert.Contains("value=\"Lectura\"", html, StringComparison.Ordinal);
         Assert.Contains($"name=\"c\" value=\"{_collectionId}\"", html, StringComparison.Ordinal);
         Assert.Contains($"aria-current=\"page\">{expectedPage}</span>", html, StringComparison.Ordinal);
@@ -422,11 +425,17 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task GetLinks_WithOversizedSearch_ShowsErrorWithoutResults()
     {
+        await AddLinks(_userId, _collectionId, 1, "Control");
+        using HttpResponseMessage control = await _client.GetAsync("/app/enlaces");
+        Assert.Single(CardTitles(await control.Content.ReadAsStringAsync()));
+
         using HttpResponseMessage response = await _client.GetAsync("/app/enlaces?p=abc&q=" + new string('a', 101));
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
         Assert.Contains("El texto de búsqueda supera la longitud máxima permitida.", html, StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Empty(CardTitles(html));
+        Assert.DoesNotContain("data-link-view-switch", html, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -495,6 +504,27 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal(0, await _keeper.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Link;"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("&q=%20%20")]
+    [InlineData("&q=---%2A%22")]
+    public async Task GetLinks_WithNoSearchTerms_PreservesCollectionAndPagination(string query)
+    {
+        await AddLinks(_userId, _collectionId, 17, "Control");
+        await AddLinks(_userId, _otherCollectionId, 1, "Excluded");
+
+        using HttpResponseMessage response = await _client.GetAsync($"/app/enlaces?c={_collectionId}{query}");
+        string html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(Enumerable.Range(2, 16).Reverse().Select(index => $"Control {index:00}"), CardTitles(html));
+        Assert.Contains($"name=\"c\" value=\"{_collectionId}\"", html, StringComparison.Ordinal);
+        string href = Regex.Match(html, "<a[^>]*href=\"([^\"]+)\"[^>]*>2</a>").Groups[1].Value;
+        Assert.NotEmpty(href);
+        using HttpResponseMessage second = await _client.GetAsync(WebUtility.HtmlDecode(href));
+        Assert.Equal(new[] { "Control 01" }, CardTitles(await second.Content.ReadAsStringAsync()));
     }
 
     private Task<long> AddCollection(long userId, string name)

@@ -13,7 +13,6 @@ namespace Linkubator.Application.UseCases.Collections;
 public sealed class CollectionService : ApplicationServiceBase, ICollectionService
 {
     private readonly ICollectionRepository _collectionRepository;
-    private readonly IUnitOfWorkFactory _collectionUnitOfWorkFactory;
     private readonly IValidator<CollectionGetRequest> _getCollectionValidator;
     private readonly IValidator<CollectionCreateRequest> _createCollectionValidator;
     private readonly IValidator<CollectionUpdateRequest> _collectionUpdateValidator;
@@ -31,7 +30,6 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         ArgumentNullException.ThrowIfNull(unitOfWorkFactory);
         CollectionServiceValidators resolvedValidators = validators ?? new CollectionServiceValidators();
         _collectionRepository = collectionRepository;
-        _collectionUnitOfWorkFactory = unitOfWorkFactory;
         _getCollectionValidator = resolvedValidators.CollectionGetValidator;
         _createCollectionValidator = resolvedValidators.CollectionCreateValidator;
         _collectionUpdateValidator = resolvedValidators.CollectionUpdateValidator;
@@ -44,7 +42,7 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Collection lookup validation failed for user", UserContext, request);
-            return Result<CollectionDto>.Failure(validation.Errors);
+            return validation.IsSuccess ? Result<CollectionDto>.Failure(CommonErrors.RequestRequired()) : Result<CollectionDto>.Failure(validation.Errors);
         }
 
         CollectionGetRequest validRequest = request;
@@ -56,9 +54,8 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         return await Execute(
             validRequest,
             cancellationToken,
-            async (getRequest, token) =>
+            async (getRequest, unitOfWork, token) =>
             {
-                await using IUnitOfWork unitOfWork = _collectionUnitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
                 ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
                 ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
                 DomainEntities.Collection? collection = await collectionRepository.GetById(getRequest.CollectionId, CurrentUser.UserId, token);
@@ -80,7 +77,7 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Collection creation validation failed for user", UserContext, request);
-            return Result<CollectionDto>.Failure(validation.Errors);
+            return validation.IsSuccess ? Result<CollectionDto>.Failure(CommonErrors.RequestRequired()) : Result<CollectionDto>.Failure(validation.Errors);
         }
 
         CollectionCreateRequest validRequest = request;
@@ -119,7 +116,7 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Collection update validation failed for user", UserContext, new { CollectionId = request?.CollectionId, Name = request?.Name });
-            return Result<CollectionDto>.Failure(validation.Errors);
+            return validation.IsSuccess ? Result<CollectionDto>.Failure(CommonErrors.RequestRequired()) : Result<CollectionDto>.Failure(validation.Errors);
         }
 
         CollectionUpdateRequest validRequest = request;
@@ -184,7 +181,7 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Collection deletion validation failed for user", UserContext, new { CollectionId = request?.CollectionId });
-            return Result.Failure(validation.Errors);
+            return validation.IsSuccess ? Result.Failure(CommonErrors.RequestRequired()) : validation;
         }
 
         CollectionDeleteRequest? validRequest = request;
@@ -212,14 +209,14 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
                 }
 
                 DomainEntities.Collection ownedCollection = collection!;
-                IReadOnlyCollection<DomainEntities.Link> links = await linkRepository.GetAllByCollection(CurrentUser.UserId, ownedCollection.Id, token);
-                if (links.Count > 0)
+                bool hasLinks = await linkRepository.ExistsByCollection(CurrentUser.UserId, ownedCollection.Id, token);
+                if (hasLinks)
                 {
                     return Failure(CollectionErrors.HasLinks(), "Collection deletion rejected for user; collection still has links", deleteRequest);
                 }
 
-                IReadOnlyCollection<DomainEntities.Collection> allCollections = await collectionRepository.GetAllByUser(CurrentUser.UserId, token);
-                if (allCollections.Count == 1)
+                bool isLastCollection = await collectionRepository.ExistsOtherCollectionByUser(CurrentUser.UserId, ownedCollection.Id, token);
+                if (!isLastCollection)
                 {
                     return Failure(CollectionErrors.LastCollectionCannotBeDeleted(), "Collection deletion rejected for user; last collection cannot be deleted", deleteRequest);
                 }

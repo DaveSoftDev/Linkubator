@@ -9,20 +9,18 @@ public class EntityPublicSurfaceTests
     [Fact]
     public void EntityPropertiesDoNotExposePublicSettersForSensitiveMembers()
     {
-        string[] sensitiveProperties = ["UrlOriginal", "UrlNormalized", "IsPublic", "CollectionId", "UserId"];
+        AssertSensitiveProperties(typeof(DomainEntities.User), ["Id", "Email", "Alias", "Password", "SecurityStamp"]);
+        AssertSensitiveProperties(typeof(DomainEntities.Collection), ["Id", "UserId", "IsPublic"]);
+        AssertSensitiveProperties(typeof(DomainEntities.Link), ["Id", "UserId", "CollectionId", "UrlOriginal", "UrlNormalized", "IsPublic"]);
+    }
 
-        foreach (Type entityType in new[] { typeof(DomainEntities.User), typeof(DomainEntities.Collection), typeof(DomainEntities.Link) })
+    private static void AssertSensitiveProperties(Type entityType, string[] names)
+    {
+        foreach (string name in names)
         {
-            foreach (string propertyName in sensitiveProperties)
-            {
-                System.Reflection.PropertyInfo? property = entityType.GetProperty(
-                    propertyName,
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-                if (property is not null)
-                {
-                    Assert.False(HasPublicSetter(property), $"{entityType.Name}.{propertyName} must not expose a public setter.");
-                }
-            }
+            PropertyInfo? property = entityType.GetProperty(name, BindingFlags.Instance | BindingFlags.Public);
+            Assert.NotNull(property);
+            Assert.False(HasPublicSetter(property), $"{entityType.Name}.{name} must not expose a public setter.");
         }
     }
 

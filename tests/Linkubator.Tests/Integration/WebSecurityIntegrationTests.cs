@@ -1,6 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
+using Dapper;
 using Linkubator.Web.Models.PrivateListing;
+using Microsoft.Data.Sqlite;
+using SqliteConnectionFactory = Linkubator.Infrastructure.Sqlite.SqliteConnectionFactory;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,6 +23,8 @@ namespace Linkubator.Tests.Integration;
 public sealed class WebSecurityIntegrationTests
 {
     private const string ValidArgon2idHash = "$argon2id$v=19$m=65536,t=3,p=1$42xS9y5nNCo8mABa9Y0KQw$w2hDMTrLZgBZ0Iqk7Q1m5J0C2U0xHgpiA62b0mXkVQ4";
+    private const string CreateCollectionRoute = "/app/colecciones/nueva";
+    private const string TokenField = "__RequestVerificationToken";
 
     [Fact]
     public async Task HttpRequest_RedirectsToHttps()
@@ -35,6 +41,7 @@ public sealed class WebSecurityIntegrationTests
 
             Assert.Equal(HttpStatusCode.TemporaryRedirect, response.StatusCode);
             Assert.Equal("https://localhost/", response.Headers.Location?.ToString());
+            AssertSecurityHeaders(response);
         }
         finally
         {
@@ -61,6 +68,7 @@ public sealed class WebSecurityIntegrationTests
 
             Assert.Equal(HttpStatusCode.OK, allowedResponse.StatusCode);
             Assert.Equal(HttpStatusCode.BadRequest, rejectedResponse.StatusCode);
+            AssertSecurityHeaders(rejectedResponse);
         }
         finally
         {
@@ -69,7 +77,7 @@ public sealed class WebSecurityIntegrationTests
     }
 
     [Fact]
-    public async Task Antiforgery_RejectsPostWithoutTokenAndAllowsIssuedToken()
+    public async Task ExplicitAntiforgeryValidationMiddleware_RejectsPostWithoutTokenAndAllowsIssuedToken()
     {
         string databasePath = CreateDatabasePath();
         try
@@ -104,7 +112,7 @@ public sealed class WebSecurityIntegrationTests
     }
 
     [Fact]
-    public async Task Antiforgery_WithAlteredTokenOrAnotherClientsToken_RejectsWithoutExecutingPost()
+    public async Task ExplicitAntiforgeryValidationMiddleware_WithAlteredTokenOrAnotherClientsToken_RejectsWithoutExecutingPost()
     {
         string databasePath = CreateDatabasePath();
         try
@@ -121,7 +129,7 @@ public sealed class WebSecurityIntegrationTests
             {
                 Content = new FormUrlEncodedContent([]),
             };
-            alteredRequest.Headers.Add("RequestVerificationToken", "invalid-" + issued!.RequestToken);
+            alteredRequest.Headers.Add("RequestVerificationToken", "invalid-" + issued.RequestToken);
             using HttpRequestMessage mismatchedRequest = new(HttpMethod.Post, "/__tests/antiforgery")
             {
                 Content = new FormUrlEncodedContent([]),
@@ -142,7 +150,45 @@ public sealed class WebSecurityIntegrationTests
     }
 
     [Fact]
-    public async Task PrivateListingQueryEndpoint_UsesProductionAnalyzer()
+    public async Task RazorCollectionForm_WithAlteredOrCrossedToken_RejectsWithoutPersistingAndAcceptsValidToken()
+    {
+        string databasePath = CreateDatabasePath();
+        try
+        {
+            await using SecurityIntegrationWebApplicationFactory factory = new(databasePath);
+            WebApplicationFactoryClientOptions options = new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false };
+            using HttpClient issuingClient = factory.CreateClient(options);
+            using HttpClient otherClient = factory.CreateClient(options);
+            string issuedToken = await GetFormToken(issuingClient);
+            string otherToken = await GetFormToken(otherClient);
+            Assert.NotEqual(issuedToken, otherToken);
+            string before = await CollectionSnapshot(databasePath);
+            await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+            int initialCount = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection;");
+
+            using HttpResponseMessage alteredResponse = await PostCollection(issuingClient, "invalid-" + issuedToken);
+            Assert.Equal(HttpStatusCode.BadRequest, alteredResponse.StatusCode);
+            Assert.Equal(before, await CollectionSnapshot(databasePath));
+
+            using HttpResponseMessage crossedResponse = await PostCollection(otherClient, issuedToken);
+            Assert.Equal(HttpStatusCode.BadRequest, crossedResponse.StatusCode);
+            Assert.Equal(before, await CollectionSnapshot(databasePath));
+
+            using HttpResponseMessage validResponse = await PostCollection(otherClient, otherToken);
+            Assert.Equal(HttpStatusCode.Redirect, validResponse.StatusCode);
+            Assert.Equal("/app/colecciones", validResponse.Headers.Location?.OriginalString);
+            Assert.Equal(initialCount + 1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection;"));
+            Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection c JOIN User u ON u.Id = c.UserId JOIN CollectionSearch s ON s.rowid = c.Id WHERE u.Email = @Email AND c.Name = @Name AND c.Description = @Description AND c.IsPublic = 0 AND s.Name = c.Name AND s.Description = c.Description;", new { Email = "user@linkubator.test", Name = "Antiforgery control", Description = "Valid form" }));
+            Assert.NotEqual(before, await CollectionSnapshot(databasePath));
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task TestEndpoint_PrivateListingQuery_InvokesProductionAnalyzer()
     {
         string databasePath = CreateDatabasePath();
         try
@@ -174,6 +220,43 @@ public sealed class WebSecurityIntegrationTests
         {
             DeleteDatabaseFiles(databasePath);
         }
+    }
+
+    private static void AssertSecurityHeaders(HttpResponseMessage response)
+    {
+        Assert.Equal("nosniff", Assert.Single(response.Headers.GetValues("X-Content-Type-Options")));
+        Assert.Equal("frame-ancestors 'none'", Assert.Single(response.Headers.GetValues("Content-Security-Policy")));
+        Assert.Equal("strict-origin-when-cross-origin", Assert.Single(response.Headers.GetValues("Referrer-Policy")));
+    }
+
+    private static async Task<string> GetFormToken(HttpClient client)
+    {
+        using HttpResponseMessage response = await client.GetAsync(CreateCollectionRoute);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        string html = await response.Content.ReadAsStringAsync();
+        string input = Regex.Match(html, "<input\\b(?=[^>]*name=\"__RequestVerificationToken\")[^>]*>").Value;
+        string token = WebUtility.HtmlDecode(Regex.Match(input, "value=\"([^\"]+)\"").Groups[1].Value);
+        Assert.False(string.IsNullOrWhiteSpace(token));
+        return token;
+    }
+
+    private static Task<HttpResponseMessage> PostCollection(HttpClient client, string token)
+        => client.PostAsync(CreateCollectionRoute, new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["Input.Name"] = "Antiforgery control",
+            ["Input.Description"] = "Valid form",
+            ["Input.IsPublic"] = "false",
+            [TokenField] = token,
+        }));
+
+    private static async Task<string> CollectionSnapshot(string databasePath)
+    {
+        await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+        string[] collections = (await connection.QueryAsync<string>(
+            "SELECT json_object('Id', Id, 'UserId', UserId, 'Name', Name, 'Slug', Slug, 'Description', Description, 'IsPublic', IsPublic, 'CreatedAt', CreatedAt) FROM Collection ORDER BY Id;")).ToArray();
+        string[] projections = (await connection.QueryAsync<string>(
+            "SELECT json_object('Id', rowid, 'UserId', UserId, 'Name', Name, 'Description', Description) FROM CollectionSearch ORDER BY rowid;")).ToArray();
+        return string.Join("\n", collections.Concat(projections));
     }
 
     private static string CreateDatabasePath()

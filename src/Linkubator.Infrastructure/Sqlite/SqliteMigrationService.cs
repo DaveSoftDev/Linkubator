@@ -25,9 +25,7 @@ public sealed class SqliteMigrationService : ISqliteMigrationService
         ArgumentNullException.ThrowIfNull(scripts);
 
         _connectionFactory = connectionFactory;
-        _scripts = scripts
-            .OrderBy(script => ParseVersion(script.Version))
-            .ToArray();
+        _scripts = scripts.ToArray();
 
         if (_scripts.Count == 0)
         {
@@ -46,6 +44,8 @@ public sealed class SqliteMigrationService : ISqliteMigrationService
                 throw new InvalidOperationException($"Migration '{script.Version}' has no SQL content.");
             }
         }
+
+        _scripts = _scripts.OrderBy(script => ParseVersion(script.Version)).ToArray();
     }
 
     public async Task ApplyPendingMigrations()

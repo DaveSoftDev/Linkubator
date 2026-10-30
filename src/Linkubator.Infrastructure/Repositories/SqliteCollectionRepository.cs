@@ -36,18 +36,14 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
             cancellationToken: cancellationToken));
     }
 
-    public async Task<IReadOnlyCollection<Entities.Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
-    {
-        IEnumerable<Entities.Collection> collections = await _connection.QueryAsync<Entities.Collection>(new CommandDefinition(
-            @"SELECT Id, Name, Slug, IsPublic
-              FROM Collection
-              WHERE UserId = @UserId
-              ORDER BY Name COLLATE LINKUBATOR_ES_ES ASC, Id ASC;",
-            new { UserId = userId },
+    public Task<bool> ExistsOtherCollectionByUser(long userId, long excludedCollectionId, CancellationToken cancellationToken = default)
+        => _connection.ExecuteScalarAsync<bool>(new CommandDefinition(
+            @"SELECT EXISTS (
+                  SELECT 1 FROM Collection
+                  WHERE UserId = @UserId AND Id <> @ExcludedCollectionId
+              );",
+            new { UserId = userId, ExcludedCollectionId = excludedCollectionId },
             cancellationToken: cancellationToken));
-
-        return collections.ToList();
-    }
 
     public async Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
     {

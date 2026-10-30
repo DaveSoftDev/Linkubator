@@ -1,4 +1,3 @@
-using System.Collections;
 using Linkubator.Application.Contracts;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Dtos.Requests;
@@ -355,43 +354,15 @@ public sealed class LoggingTests
     }
 
     [Fact]
-    public void SafeLogger_SafeLogState_ExposesCountAndEnumerable()
+    public void SafeLogger_Log_WithUserAndRequest_EmitsBothStructuredValues()
     {
-        Type stateType = typeof(SafeLogger).Assembly
-            .GetType("Linkubator.Application.Logging.SafeLogger+SafeLogState", throwOnError: true)!;
+        TestLogger<LinkService> logger = new();
 
-        object state = Activator.CreateInstance(stateType, "state-message", new Dictionary<string, object?>
-        {
-            ["UserId"] = 7L,
-            ["TraceId"] = "trace-42"
-        })!;
+        SafeLogger.Log(logger, LogLevel.Information, null, "Operation", new { UserId = 7L }, new { TraceId = "trace-42" });
 
-        int count = (int)stateType.GetProperty("Count", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)!
-            .GetValue(state)!;
-        IEnumerator genericEnumerator = (System.Collections.IEnumerator)stateType
-            .GetMethod("GetEnumerator", Type.EmptyTypes)!
-            .Invoke(state, null)!;
-        IEnumerator explicitEnumerator = (System.Collections.IEnumerator)((System.Collections.IEnumerable)state).GetEnumerator();
-
-        Assert.Equal(2, count);
-        Assert.True(genericEnumerator.MoveNext());
-        Assert.True(explicitEnumerator.MoveNext());
-        Assert.Contains(new KeyValuePair<string, object?>("UserId", 7L), (IEnumerable<KeyValuePair<string, object?>>)state);
-    }
-
-    [Fact]
-    public void SafeLogger_BuildContext_WithAdditionalContext_UsesAllSources()
-    {
-        Type buildContextType = typeof(SafeLogger).GetMethod("BuildContext", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
-            .DeclaringType!;
-
-        Dictionary<string, object?> result = (Dictionary<string, object?>)buildContextType
-            .GetMethod("BuildContext", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null,
-                new[] { typeof(object), typeof(object), typeof(object) }, null)!
-            .Invoke(null, new object?[] { new { UserId = 7L }, null, new { TraceId = "trace-42" } })!;
-
-        Assert.Equal(7L, result["UserId"]);
-        Assert.Equal("trace-42", result["TraceId"]);
+        LogEntry entry = Assert.Single(logger.Entries);
+        Assert.Equal(7L, entry.Values["UserId"]);
+        Assert.Equal("trace-42", entry.Values["TraceId"]);
     }
 
     [Fact]
@@ -502,8 +473,8 @@ public sealed class LoggingTests
         public Task<Collection?> GetBySlug(long userId, string slug, CancellationToken cancellationToken = default)
             => Task.FromResult(Items.FirstOrDefault(item => item.UserId == userId && item.Slug == slug));
 
-        public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyCollection<Collection>>(Items.Where(item => item.UserId == userId).ToList());
+        public Task<bool> ExistsOtherCollectionByUser(long userId, long excludedCollectionId, CancellationToken cancellationToken = default)
+            => Task.FromResult(Items.Any(item => item.UserId == userId && item.Id != excludedCollectionId));
 
         public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<CollectionDto>>(Items
@@ -542,7 +513,7 @@ public sealed class LoggingTests
         {
             foreach (Link link in Items.Where(item => item.UserId == userId && item.CollectionId == collectionId && item.IsPublic))
             {
-                link.ChangePrivacy(false, link.Collection);
+                link.ChangePrivacy(false, link.Collection ?? throw new InvalidOperationException("The collection must be loaded."));
             }
 
             return Task.CompletedTask;
@@ -557,8 +528,8 @@ public sealed class LoggingTests
         public Task<IReadOnlyCollection<Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<Link>>(Items.Where(item => item.UserId == userId).ToList());
 
-        public Task<IReadOnlyCollection<Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyCollection<Link>>(Items.Where(item => item.UserId == userId && item.CollectionId == collectionId).ToList());
+        public Task<bool> ExistsByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+            => Task.FromResult(Items.Any(item => item.UserId == userId && item.CollectionId == collectionId));
 
         public Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
         {
@@ -643,7 +614,5 @@ public sealed class LoggingTests
         public Task<PublicCollectionDto?> GetCollectionPage(string alias, string slug, int page, CancellationToken cancellationToken = default)
             => Task.FromResult<PublicCollectionDto?>(null);
 
-        public Task<int> GetCollectionPageCount(string alias, string slug, CancellationToken cancellationToken = default)
-            => Task.FromResult(0);
     }
 }

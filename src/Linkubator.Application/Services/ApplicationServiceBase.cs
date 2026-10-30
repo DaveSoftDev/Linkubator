@@ -138,6 +138,31 @@ public abstract class ApplicationServiceBase
         }
     }
 
+    protected async Task<Result<TResponse>> Execute<TRequest, TResponse>(
+        TRequest request,
+        CancellationToken cancellationToken,
+        Func<TRequest, IUnitOfWork,CancellationToken, Task<Result<TResponse>>> operation,
+        string failureMessage,
+        bool handleDomainExceptions = true,
+        object? logContext = null)
+    {
+        try
+        {
+            await using IUnitOfWork unitOfWork = UnitOfWorkFactory.Get(UnitOfWorkContexts.Linkubator);
+            return await operation(request, unitOfWork, cancellationToken);
+        }
+        catch (DomainExceptions.DomainException exception) when (handleDomainExceptions)
+        {
+            SafeLogger.Log(Logger, LogLevel.Warning, exception, failureMessage, UserContext, logContext);
+            return exception.FailDomain<TResponse>();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            SafeLogger.Log(Logger, LogLevel.Error, exception, failureMessage, UserContext, logContext);
+            throw;
+        }
+    }
+
     protected async Task<Result> Execute<TRequest>(
         TRequest request,
         CancellationToken cancellationToken,

@@ -38,6 +38,8 @@ public sealed class MoveModel : LinkManagementPageModel
 
     public string LinkLabel { get; private set; } = string.Empty;
 
+    public bool HasLoadedLink { get; private set; }
+
     public Presentation.PageErrorSummaryViewModel ErrorSummary { get; private set; } = new();
 
     public Presentation.PageAlertViewModel Alert { get; private set; } = new();
@@ -124,6 +126,7 @@ public sealed class MoveModel : LinkManagementPageModel
             await LoadSidebarCollections(SidebarSelectionKind, cancellationToken);
             if (!LoadCollections())
             {
+                HasLoadedLink = false;
                 return Page();
             }
         }
@@ -158,14 +161,18 @@ public sealed class MoveModel : LinkManagementPageModel
     }
 
     private void SetLinkLabel(ApplicationDtos.LinkDto link)
-        => LinkLabel = string.IsNullOrWhiteSpace(link.Title) ? link.UrlOriginal : link.Title;
+    {
+        LinkLabel = string.IsNullOrWhiteSpace(link.Title) ? link.UrlOriginal : link.Title;
+        HasLoadedLink = true;
+    }
 
     private bool TryGetLinkId(out long linkId)
     {
         linkId = 0;
-        return !string.IsNullOrWhiteSpace(RouteId)
-            && RouteId.All(char.IsAsciiDigit)
-            && long.TryParse(RouteId, NumberStyles.None, CultureInfo.InvariantCulture, out linkId)
+        string? canonicalId = RouteData.Values["id"]?.ToString();
+        return !string.IsNullOrWhiteSpace(canonicalId)
+            && canonicalId.All(char.IsAsciiDigit)
+            && long.TryParse(canonicalId, NumberStyles.None, CultureInfo.InvariantCulture, out linkId)
             && linkId > 0;
     }
 

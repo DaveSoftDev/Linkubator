@@ -42,6 +42,8 @@ public sealed class EditModel : PrivatePageModel
     [BindProperty]
     public CollectionInput Input { get; set; } = new();
 
+    public bool HasLoadedCollection { get; private set; }
+
     public PageErrorSummaryViewModel ErrorSummary { get; private set; } = new();
 
     public PageAlertViewModel Alert { get; private set; } = new();
@@ -66,6 +68,7 @@ public sealed class EditModel : PrivatePageModel
             return Page();
         }
 
+        HasLoadedCollection = true;
         Input.Name = result.Value.Name;
         Input.Description = result.Value.Description;
         Input.IsPublic = result.Value.IsPublic;
@@ -94,6 +97,7 @@ public sealed class EditModel : PrivatePageModel
             return Page();
         }
 
+        HasLoadedCollection = true;
         if (!ModelState.IsValid)
         {
             string privacyField = $"{nameof(Input)}.{nameof(CollectionInput.IsPublic)}";
@@ -142,9 +146,10 @@ public sealed class EditModel : PrivatePageModel
     {
         collectionId = 0;
 
-        if (!string.IsNullOrWhiteSpace(RouteId))
+        string? canonicalId = RouteData.Values["id"]?.ToString();
+        if (!string.IsNullOrWhiteSpace(canonicalId))
         {
-            string value = RouteId.Trim();
+            string value = canonicalId;
             return value.Length > 0 && value.All(char.IsAsciiDigit) && long.TryParse(value, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out collectionId) && collectionId > 0;
         }
 

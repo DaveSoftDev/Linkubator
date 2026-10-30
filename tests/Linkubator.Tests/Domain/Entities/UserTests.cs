@@ -20,8 +20,7 @@ public class UserTests
 
         Assert.Equal("ana+tag@example.com", user.Email);
         Assert.Equal("Ana María", user.Name);
-        Assert.NotNull(user.Alias);
-        Assert.NotEmpty(user.Alias);
+        Assert.Equal("anamaria2026", user.Alias);
         Assert.Equal("hashed-password", user.Password);
         Assert.Equal(confirmedAt, user.EmailConfirmedAt);
         Assert.Equal(0, user.FailedLoginAttempts);
@@ -42,21 +41,23 @@ public class UserTests
     }
 
     [Theory]
-    [InlineData(null, "Ana", "Ana 1", "hash")]
-    [InlineData("", "Ana", "Ana 1", "hash")]
-    [InlineData("   ", "Ana", "Ana 1", "hash")]
-    [InlineData("user@example.com", null, "Ana 1", "hash")]
-    [InlineData("user@example.com", "", "Ana 1", "hash")]
-    [InlineData("user@example.com", "Ana", "", "hash")]
-    [InlineData("user@example.com", "Ana", "  ", "hash")]
-    [InlineData("user@example.com", "Ana", "Ana 1", "")]
-    [InlineData("user@example.com", "Ana", "Ana 1", "   ")]
-    public void Create_WhenRequiredDataIsMissing_Throws(string? email, string? name, string? aliasCandidate, string? passwordHash)
+    [InlineData(null, "Ana", "AnaMaria2026", "hash", "NotValidInput")]
+    [InlineData("", "Ana", "AnaMaria2026", "hash", "NotValidInput")]
+    [InlineData("   ", "Ana", "AnaMaria2026", "hash", "NotValidInput")]
+    [InlineData("user@example.com", null, "AnaMaria2026", "hash", "NotValidInput")]
+    [InlineData("user@example.com", "", "AnaMaria2026", "hash", "NotValidInput")]
+    [InlineData("user@example.com", "Ana", "", "hash", "NotValidInput")]
+    [InlineData("user@example.com", "Ana", "  ", "hash", "NotValidInput")]
+    [InlineData("user@example.com", "Ana", "AnaMaria2026", "", "NotValidInput")]
+    [InlineData("user@example.com", "Ana", "AnaMaria2026", "   ", "NotValidInput")]
+    public void Create_WhenRequiredDataIsMissing_Throws(string? email, string? name, string? aliasCandidate, string? passwordHash, string expectedCode)
     {
         DateTime confirmedAt = new(2026, 10, 6, 8, 30, 0, DateTimeKind.Utc);
 
-        Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
+        DomainExceptions.DomainException exception = Assert.ThrowsAny<DomainExceptions.DomainException>(() =>
             DomainEntities.User.Create(email!, name!, aliasCandidate!, passwordHash!, confirmedAt));
+
+        Assert.Equal(expectedCode, exception.Code);
     }
 
     [Fact]
@@ -88,7 +89,7 @@ public class UserTests
             DomainEntities.User.Create(
                 "user@example.com",
                 new string('n', 101),
-                "Ana 1",
+                "AnaMaria2026",
                 "hash",
                 new DateTime(2026, 10, 6, 8, 30, 0, DateTimeKind.Utc)));
     }
@@ -127,15 +128,18 @@ public class UserTests
     {
         DomainEntities.User user = DomainEntities.User.CreateIncompleteRegistration("user@example.com");
 
+        string stamp = user.SecurityStamp;
+        string email = user.Email;
         DateTime confirmedAt = new(2026, 10, 6, 8, 30, 0, DateTimeKind.Utc);
 
         user.CompleteRegistration("  Ana María  ", "AnaMaria2026", "hashed-password", confirmedAt);
 
         Assert.Equal("Ana María", user.Name);
-        Assert.NotNull(user.Alias);
-        Assert.NotEmpty(user.Alias);
+        Assert.Equal("anamaria2026", user.Alias);
         Assert.Equal("hashed-password", user.Password);
         Assert.Equal(confirmedAt, user.EmailConfirmedAt);
+        Assert.Equal(stamp, user.SecurityStamp);
+        Assert.Equal(email, user.Email);
     }
 
     [Fact]

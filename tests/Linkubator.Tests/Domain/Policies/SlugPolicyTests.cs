@@ -36,7 +36,7 @@ public class SlugPolicyTests
     }
 
     [Fact]
-    public void GenerateProducesTheSameSlugForTheSameNameUsedAsCollectionOrTag()
+    public void GenerateIsDeterministicForTheSameName()
     {
         string asCollection = DomainPolicies.SlugPolicy.Generate("Node.js");
         string asTag = DomainPolicies.SlugPolicy.Generate("Node.js");
@@ -67,7 +67,7 @@ public class SlugPolicyTests
         string withinLimit = new('+', 30);
         string aboveLimit = new('+', 31);
 
-        Assert.Equal(149, DomainPolicies.SlugPolicy.Generate(withinLimit).Length);
+        Assert.Equal(string.Join("-", Enumerable.Repeat("plus", 30)), DomainPolicies.SlugPolicy.Generate(withinLimit));
         Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() => DomainPolicies.SlugPolicy.Generate(aboveLimit));
     }
 

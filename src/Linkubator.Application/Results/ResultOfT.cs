@@ -16,7 +16,11 @@ public class Result<T> : Result
         return IsSuccess;
     }
 
-    public static Result<T> Success(T value) => new(true, value, Array.Empty<ApplicationError>());
+    public static Result<T> Success(T value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return new(true, value, Array.Empty<ApplicationError>());
+    }
 
     public new static Result<T> Failure(params ApplicationError[] errors) => new(false, default, errors);
 

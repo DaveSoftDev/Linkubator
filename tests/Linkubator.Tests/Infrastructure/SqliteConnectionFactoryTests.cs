@@ -1,4 +1,3 @@
-using System.Reflection;
 using Dapper;
 using Linkubator.Infrastructure.Sqlite;
 using Microsoft.Data.Sqlite;
@@ -161,14 +160,14 @@ public sealed class SqliteConnectionFactoryTests
     }
 
     [Fact]
-    public void CompareSpanish_CoversNullEqualityAndOrderingBranches()
+    public void CreateOpenConnection_SpanishCollation_OrdersDistinctWordsAndPreservesEquality()
     {
-        MethodInfo compareMethod = typeof(SqliteConnectionFactory).GetMethod("CompareSpanish", BindingFlags.NonPublic | BindingFlags.Static)!;
+        SqliteConnectionFactory factory = new("Data Source=:memory:");
+        using SqliteConnection connection = factory.CreateOpenConnection();
 
-        Assert.Equal(0, (int)compareMethod.Invoke(null, new object?[] { "Árbol", "Árbol"})!);
-        Assert.True((int)compareMethod.Invoke(null, new object?[] { null, "Árbol"})! < 0);
-        Assert.True((int)compareMethod.Invoke(null, new object?[] { "Árbol", null})! > 0);
-        Assert.True((int)compareMethod.Invoke(null, new object?[] { "Árbol", "Barranco"})! < 0);
+        Assert.Equal(1, connection.QuerySingle<int>("SELECT 'Árbol' COLLATE LINKUBATOR_ES_ES = 'Árbol';"));
+        Assert.Equal(1, connection.QuerySingle<int>("SELECT 'Árbol' COLLATE LINKUBATOR_ES_ES < 'Barranco';"));
+        Assert.Equal(1, connection.QuerySingle<int>("SELECT 'Barranco' COLLATE LINKUBATOR_ES_ES > 'Árbol';"));
     }
 
     private static void DeleteDirectoryIfExists(string directoryPath)

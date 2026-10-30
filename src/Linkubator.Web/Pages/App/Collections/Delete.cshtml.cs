@@ -39,6 +39,8 @@ public sealed class DeleteModel : PrivatePageModel
 
     public string CollectionName { get; private set; } = string.Empty;
 
+    public bool HasLoadedCollection { get; private set; }
+
     public PageErrorSummaryViewModel ErrorSummary { get; private set; } = new();
 
     public PageAlertViewModel Alert { get; private set; } = new();
@@ -65,6 +67,7 @@ public sealed class DeleteModel : PrivatePageModel
         }
 
         CollectionName = result.Value.Name;
+        HasLoadedCollection = true;
         return Page();
     }
 
@@ -94,6 +97,7 @@ public sealed class DeleteModel : PrivatePageModel
             if (collectionResult.IsSuccess && collectionResult.Value is not null)
             {
                 CollectionName = collectionResult.Value.Name;
+                HasLoadedCollection = true;
             }
 
             ApplyErrors(result.Errors);

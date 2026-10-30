@@ -26,11 +26,11 @@ public class CollectionServiceTests
         Assert.Throws<ArgumentNullException>(() => new CollectionService(null!, currentUser, repository, unitOfWorkFactory));
         Assert.Throws<ArgumentNullException>(() => new CollectionService(NullLogger<CollectionService>.Instance, currentUser, null!, unitOfWorkFactory));
         Assert.Throws<ArgumentNullException>(() => new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, null!));
-        Assert.Throws<ArgumentNullException>(() => new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, null!));
+        Assert.Equal("currentUser", Assert.Throws<ArgumentNullException>(() => new CollectionService(NullLogger<CollectionService>.Instance, null!, repository, unitOfWorkFactory)).ParamName);
     }
 
     [Fact]
-    public void Constructor_WhenValidatorIsNull_UsesDefaultValidator()
+    public async Task Constructor_WhenValidatorIsNull_UsesDefaultValidator()
     {
         CurrentUser currentUser = new CurrentUser(7);
         InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
@@ -39,7 +39,11 @@ public class CollectionServiceTests
 
         CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
 
-        Assert.NotNull(service);
+        Result<CollectionDto> result = await service.CreateCollection(new CollectionCreateRequest("   "));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("COLLECTION_NAME_REQUIRED", Assert.Single(result.Errors).Code);
+        Assert.Empty(repository.Items);
     }
 
     [Fact]
@@ -93,7 +97,7 @@ public class CollectionServiceTests
         Assert.Equal("Updated", result.Value.Description);
         Assert.Equal(expectedLinkIsPublic, link.IsPublic);
         Assert.False(privateLink.IsPublic);
-        Assert.Equal(0, linkRepository.GetAllByCollectionCalls);
+        Assert.Equal(0, linkRepository.ExistsByCollectionCalls);
         Assert.Equal(0, linkRepository.UpdateCalls);
         Assert.Equal(expectedPrivacyUpdates, linkRepository.UpdatePrivateByCollectionCalls);
     }
@@ -159,6 +163,34 @@ public class CollectionServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal("REQUEST_REQUIRED", Assert.Single(result.Errors).Code);
+    }
+
+    [Fact]
+    public async Task Operations_WhenCustomValidatorsAcceptNull_ReturnRequestRequired()
+    {
+        InMemoryCollectionRepository collectionRepository = new();
+        InMemoryLinkRepository linkRepository = new();
+        CollectionServiceValidators validators = new(
+            new AcceptAllGetCollectionValidator(),
+            new AcceptAllCreateCollectionValidator(),
+            new AcceptAllUpdateCollectionValidator(),
+            new AcceptAllDeleteCollectionValidator());
+        CollectionService service = new(
+            NullLogger<CollectionService>.Instance,
+            new CurrentUser(7),
+            collectionRepository,
+            new FakeUnitOfWorkFactory(collectionRepository, linkRepository),
+            validators);
+
+        Result<CollectionDto> get = await service.GetCollection(null);
+        Result<CollectionDto> create = await service.CreateCollection(null);
+        Result<CollectionDto> update = await service.UpdateCollection(null);
+        Result delete = await service.DeleteCollection(null);
+
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(get.Errors).Code);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(create.Errors).Code);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(update.Errors).Code);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(delete.Errors).Code);
     }
 
     [Fact]
@@ -256,7 +288,15 @@ public class CollectionServiceTests
         Assert.Equal("My Collection", value.Name);
         Assert.Equal("my-collection", value.Slug);
         Assert.True(value.IsPublic);
-        Assert.Single(repository.Items);
+        Collection created = Assert.Single(repository.Items);
+        Assert.Equal("Desc", created.Description);
+        Assert.Equal(created.Id, value.Id);
+        Assert.Equal(created.Name, value.Name);
+        Assert.Equal(created.Slug, value.Slug);
+        Assert.Equal(created.Description, value.Description);
+        Assert.Equal(created.IsPublic, value.IsPublic);
+        Assert.Equal(created.CreatedAt, value.CreatedAt);
+        Assert.Equal(0, value.LinkCount);
     }
 
     [Fact]
@@ -615,7 +655,8 @@ public class CollectionServiceTests
         Assert.True(result.IsSuccess);
         Assert.Equal(1, result.Value!.Page);
         Assert.Equal(1, result.Value.PageCount);
-        Assert.Equal(2, result.Value.Items.Count);
+        Assert.Equal(repository.Items.Select(item => new CollectionDto(item.Id, item.Name, item.Slug, item.Description, item.IsPublic, 0, item.CreatedAt)), result.Value.Items);
+        Assert.Equal(currentUser.UserId, repository.LastUserId);
     }
 
     [Fact]
@@ -664,6 +705,7 @@ public class CollectionServiceTests
         Assert.False(result.IsSuccess);
         Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
         Assert.Equal("COLLECTION_NAME_REQUIRED", result.Errors[0].Code);
+        Assert.Empty(repository.Items);
     }
 
     [Fact]
@@ -678,6 +720,8 @@ public class CollectionServiceTests
         Result<CollectionDto> result = await service.CreateCollection(new CollectionCreateRequest("💫"));
 
         Assert.False(result.IsSuccess);
+        Assert.Equal(ApplicationErrorCategory.DomainRule, Assert.Single(result.Errors).Category);
+        Assert.Equal("TextBelowMinimumLength", result.Errors[0].Code);
         Assert.Empty(repository.Items);
     }
     [Fact]
@@ -697,37 +741,6 @@ public class CollectionServiceTests
         Assert.False(result.IsSuccess);
         Assert.Single(repository.Items);
         Assert.Same(existing, repository.Items[0]);
-    }
-
-    [Fact]
-    public async Task CreateCollection_WhenNameIsBlank_DoesNotInsertCollection()
-    {
-        CurrentUser currentUser = new CurrentUser(7);
-        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
-        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
-        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
-        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
-
-        Result<CollectionDto> result = await service.CreateCollection(new CollectionCreateRequest("   "));
-
-        Assert.False(result.IsSuccess);
-        Assert.Empty(repository.Items);
-    }
-
-    [Fact]
-    public async Task DeleteCollection_WhenCollectionIdIsInvalid_ReturnsValidationError()
-    {
-        CurrentUser currentUser = new CurrentUser(7);
-        InMemoryCollectionRepository repository = new InMemoryCollectionRepository();
-        InMemoryLinkRepository linkRepository = new InMemoryLinkRepository();
-        FakeUnitOfWorkFactory unitOfWorkFactory = new FakeUnitOfWorkFactory(repository, linkRepository);
-        CollectionService service = new CollectionService(NullLogger<CollectionService>.Instance, currentUser, repository, unitOfWorkFactory);
-
-        Result result = await service.DeleteCollection(new CollectionDeleteRequest(0));
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.Validation, result.Errors[0].Category);
-        Assert.Equal("COLLECTION_ID_INVALID", result.Errors[0].Code);
     }
 
     [Fact]
@@ -868,6 +881,8 @@ public class CollectionServiceTests
         rehydrated.ChangePrivacy(false, [first, second]);
 
         Assert.Equal(2, rehydrated.Links.Count);
+        Assert.All(rehydrated.Links, link => Assert.Same(rehydrated, link.Collection));
+        Assert.Empty(collection.Links);
         Assert.All(rehydrated.Links, link => Assert.False(link.IsPublic));
     }
 
@@ -882,7 +897,7 @@ public class CollectionServiceTests
     }
 
     [Fact]
-    public void CollectionErrors_AllFactoryMethods_ReturnExpectedMetadata()
+    public void CollectionErrors_SelectedFactoryMethods_ReturnExpectedMetadata()
     {
         Assert.Equal("REQUEST_REQUIRED", CollectionErrors.RequestRequired().Code);
         Assert.Equal(ApplicationErrorCategory.Validation, CollectionErrors.RequestRequired().Category);
@@ -892,21 +907,25 @@ public class CollectionServiceTests
         Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
         Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
 
-        Assert.Equal("NOT_AUTHENTICATED", CommonErrors.NotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
-        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
+        Assert.Equal("COLLECTION_ID_INVALID", CollectionErrors.CollectionIdInvalid().Code);
+        Assert.Equal(ApplicationErrorCategory.Validation, CollectionErrors.CollectionIdInvalid().Category);
+        Assert.Equal("CollectionId", CollectionErrors.CollectionIdInvalid().Field);
 
-        Assert.Equal("NOT_AUTHENTICATED", CommonErrors.NotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
-        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
+        Assert.Equal("COLLECTION_NAME_TOO_LONG", CollectionErrors.NameTooLong().Code);
+        Assert.Equal(ApplicationErrorCategory.Validation, CollectionErrors.NameTooLong().Category);
+        Assert.Equal("Name", CollectionErrors.NameTooLong().Field);
 
-        Assert.Equal("NOT_AUTHENTICATED", CommonErrors.NotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
-        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
+        Assert.Equal("COLLECTION_DESCRIPTION_TOO_LONG", CollectionErrors.DescriptionTooLong().Code);
+        Assert.Equal(ApplicationErrorCategory.Validation, CollectionErrors.DescriptionTooLong().Category);
+        Assert.Equal("Description", CollectionErrors.DescriptionTooLong().Field);
 
-        Assert.Equal("NOT_AUTHENTICATED", CommonErrors.NotAuthenticated().Code);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CommonErrors.NotAuthenticated().Category);
-        Assert.Equal("UserId", CommonErrors.NotAuthenticated().Field);
+        Assert.Equal("COLLECTION_GET_NOT_ACCESSIBLE", CollectionErrors.GetNotAccessible().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CollectionErrors.GetNotAccessible().Category);
+        Assert.Equal("CollectionId", CollectionErrors.GetNotAccessible().Field);
+
+        Assert.Equal("COLLECTION_UPDATE_NOT_ACCESSIBLE", CollectionErrors.UpdateNotAccessible().Code);
+        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, CollectionErrors.UpdateNotAccessible().Category);
+        Assert.Equal("CollectionId", CollectionErrors.UpdateNotAccessible().Field);
 
         Assert.Equal("COLLECTION_NAME_REQUIRED", CollectionErrors.NameRequired().Code);
         Assert.Equal(ApplicationErrorCategory.Validation, CollectionErrors.NameRequired().Category);
@@ -949,8 +968,8 @@ public class CollectionServiceTests
         public Task<Collection?> GetBySlug(long userId, string slug, CancellationToken cancellationToken = default)
             => Task.FromException<Collection?>(new InvalidOperationException("boom"));
 
-        public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
-            => Task.FromException<IReadOnlyCollection<Collection>>(new InvalidOperationException("boom"));
+        public Task<bool> ExistsOtherCollectionByUser(long userId, long excludedCollectionId, CancellationToken cancellationToken = default)
+            => Task.FromException<bool>(new InvalidOperationException("boom"));
 
         public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<CollectionDto>>(new InvalidOperationException("boom"));
@@ -1019,6 +1038,11 @@ public class CollectionServiceTests
         public Result Validate(CollectionCreateRequest? request) => Result.Success();
     }
 
+    private sealed class AcceptAllUpdateCollectionValidator : IValidator<CollectionUpdateRequest>
+    {
+        public Result Validate(CollectionUpdateRequest? request) => Result.Success();
+    }
+
     private sealed class AcceptAllDeleteCollectionValidator : IValidator<CollectionDeleteRequest>
     {
         public Result Validate(CollectionDeleteRequest? request) => Result.Success();
@@ -1038,8 +1062,8 @@ public class CollectionServiceTests
         public Task<Collection?> GetBySlug(long userId, string slug, CancellationToken cancellationToken = default)
             => Task.FromException<Collection?>(new DomainExceptions.NotValidInputException());
 
-        public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
-            => Task.FromException<IReadOnlyCollection<Collection>>(new DomainExceptions.NotValidInputException());
+        public Task<bool> ExistsOtherCollectionByUser(long userId, long excludedCollectionId, CancellationToken cancellationToken = default)
+            => Task.FromException<bool>(new DomainExceptions.NotValidInputException());
 
         public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
             => Task.FromException<IReadOnlyCollection<CollectionDto>>(new DomainExceptions.NotValidInputException());
@@ -1120,8 +1144,8 @@ public class CollectionServiceTests
         public Task<Collection?> GetBySlug(long userId, string slug, CancellationToken cancellationToken = default)
             => Task.FromResult(Items.FirstOrDefault(item => item.UserId == userId && item.Slug == slug));
 
-        public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyCollection<Collection>>(Items.Where(item => item.UserId == userId).ToList());
+        public Task<bool> ExistsOtherCollectionByUser(long userId, long excludedCollectionId, CancellationToken cancellationToken = default)
+            => Task.FromResult(Items.Any(item => item.UserId == userId && item.Id != excludedCollectionId));
 
         public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<CollectionDto>>(
@@ -1191,7 +1215,7 @@ public class CollectionServiceTests
         public List<Link> Links { get; } = [];
         public List<Link> UpdatedLinks { get; } = [];
         public int UpdateCalls { get; private set; }
-        public int GetAllByCollectionCalls { get; private set; }
+        public int ExistsByCollectionCalls { get; private set; }
         public int UpdatePrivateByCollectionCalls { get; private set; }
 
         public Task<Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
@@ -1203,13 +1227,10 @@ public class CollectionServiceTests
         public Task<IReadOnlyCollection<Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<Link>>(Array.Empty<Link>());
 
-        public Task<IReadOnlyCollection<Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+        public Task<bool> ExistsByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
         {
-            GetAllByCollectionCalls++;
-            return Task.FromResult<IReadOnlyCollection<Link>>(
-                Links
-                    .Where(item => item.UserId == userId && item.CollectionId == collectionId)
-                    .ToList());
+            ExistsByCollectionCalls++;
+            return Task.FromResult(Links.Any(item => item.UserId == userId && item.CollectionId == collectionId));
         }
 
         public Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
@@ -1239,7 +1260,7 @@ public class CollectionServiceTests
             UpdatePrivateByCollectionCalls++;
             foreach (Link link in Links.Where(item => item.UserId == userId && item.CollectionId == collectionId && item.IsPublic))
             {
-                link.ChangePrivacy(false, link.Collection);
+                link.ChangePrivacy(false, link.Collection ?? throw new InvalidOperationException("The collection must be loaded."));
             }
 
             return Task.CompletedTask;
@@ -1262,8 +1283,8 @@ public class CollectionServiceTests
             throw new InvalidOperationException("GetBySlug was called outside the transaction.");
         }
 
-        public Task<IReadOnlyCollection<Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyCollection<Collection>>(Array.Empty<Collection>());
+        public Task<bool> ExistsOtherCollectionByUser(long userId, long excludedCollectionId, CancellationToken cancellationToken = default)
+            => Task.FromResult(false);
 
         public Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyCollection<CollectionDto>>(Array.Empty<CollectionDto>());

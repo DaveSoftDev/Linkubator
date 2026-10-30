@@ -44,7 +44,7 @@ public sealed class SqlitePublicReadRepositoryTests
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         DateTime baseDate = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        long oldestId = await database.SeedCollection(42, "Oldest", "oldest", true, createdAt: baseDate);
+        long oldestId = await database.SeedCollection(42, "Oldest", "oldest", true, createdAt: baseDate.AddDays(10));
         long oldestIncludedId = await database.SeedCollection(42, "Oldest included", "oldest-included", true, createdAt: baseDate.AddDays(1));
         long firstTieId = await database.SeedCollection(42, "First tie", "first-tie", true, createdAt: baseDate.AddDays(2));
         long secondTieId = await database.SeedCollection(42, "Second tie", "second-tie", true, createdAt: baseDate.AddDays(2));
@@ -63,7 +63,7 @@ public sealed class SqlitePublicReadRepositoryTests
 
         Assert.NotNull(result);
         Assert.Equal(
-            new[] { "newest", "newer", "second-tie", "first-tie", "oldest-included" },
+            new[] { "oldest", "newest", "newer", "second-tie", "first-tie" },
             result.PublicCollections.Select(collection => collection.Slug));
     }
 
@@ -73,7 +73,7 @@ public sealed class SqlitePublicReadRepositoryTests
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(42, "Public", "public", true);
         DateTime baseDate = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        await database.SeedLink(42, collectionId, "https://example.test/excluded", "https://example.test/excluded", "Excluded", true, new SqliteTestLinkOptions(CreatedAt: baseDate.AddDays(-1)));
+        await database.SeedLink(42, collectionId, "https://example.test/excluded", "https://example.test/excluded", "Excluded", true, new SqliteTestLinkOptions(CreatedAt: baseDate.AddDays(10)));
         await database.SeedLink(42, collectionId, "https://example.test/oldest", "https://example.test/oldest", "Oldest", true, new SqliteTestLinkOptions(CreatedAt: baseDate));
         await database.SeedLink(42, collectionId, "https://example.test/oldest-included", "https://example.test/oldest-included", "Oldest included", true, new SqliteTestLinkOptions(CreatedAt: baseDate.AddDays(1)));
         await database.SeedLink(42, collectionId, "https://example.test/first-tie", "https://example.test/first-tie", "First tie", true, new SqliteTestLinkOptions(CreatedAt: baseDate.AddDays(2)));
@@ -89,12 +89,12 @@ public sealed class SqlitePublicReadRepositoryTests
         Assert.Equal(
             new[]
             {
+                "https://example.test/excluded",
                 "https://example.test/newest",
                 "https://example.test/newer",
                 "https://example.test/second-tie",
                 "https://example.test/first-tie",
                 "https://example.test/oldest-included",
-                "https://example.test/oldest",
             },
             result.RecentLinks.Select(link => link.UrlOriginal));
     }
@@ -224,16 +224,17 @@ public sealed class SqlitePublicReadRepositoryTests
     }
 
     [Fact]
-    public async Task GetCollectionPageCount_WhenCollectionHasPublicAndPrivateLinks_CountsOnlyPublicLinks()
+    public async Task GetCollectionPage_WhenCollectionHasPublicAndPrivateLinks_CountsOnlyPublicLinks()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(42, "Public", "public", true);
-        await database.SeedLink(42, collectionId, "https://example.test/public", "https://example.test/public", "Public", true);
+        await database.SeedLinkRange(42, collectionId, 16, isPublic: true);
         await database.SeedLink(42, collectionId, "https://example.test/private", "https://example.test/private", "Private", false);
         await using SqliteConnection connection = database.OpenConnection();
         IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
 
-        int result = await repository.GetCollectionPageCount("owner", "public");
+        var page = await repository.GetCollectionPage("owner", "public", 1);
+        int result = page!.PageCount;
 
         Assert.Equal(1, result);
     }
@@ -261,7 +262,7 @@ public sealed class SqlitePublicReadRepositoryTests
     [InlineData(17, 2)]
     [InlineData(32, 2)]
     [InlineData(33, 3)]
-    public async Task GetCollectionPageCount_WithDifferentPublicLinkCounts_UsesExactPageBoundaries(int count, int expectedPages)
+    public async Task GetCollectionPage_WithDifferentPublicLinkCounts_UsesExactPageBoundaries(int count, int expectedPages)
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(42, "Public", "public", true);
@@ -270,9 +271,73 @@ public sealed class SqlitePublicReadRepositoryTests
         await using SqliteConnection connection = database.OpenConnection();
         IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
 
-        int result = await repository.GetCollectionPageCount("owner", "public");
+        var page = await repository.GetCollectionPage("owner", "public", 1);
+        int result = page!.PageCount;
 
         Assert.Equal(expectedPages, result);
+    }
+
+    [Fact]
+    public async Task GetCollectionPage_WhenDataChangesAfterRead_ReturnsCurrentMetadataAndPublicContentTogether()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Public", "public", true);
+        await database.SeedLinkRange(42, collectionId, 17, isPublic: true);
+        await using SqliteConnection reader = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(reader);
+
+        var before = await repository.GetCollectionPage("owner", "public", 2);
+        Assert.Equal((2, 2), (before!.Page, before.PageCount));
+        Assert.Equal("https://example.test/16", Assert.Single(before.Links).UrlOriginal);
+
+        await using SqliteConnection writer = database.OpenConnection();
+        await Dapper.SqlMapper.ExecuteAsync(writer,
+            "UPDATE Link SET IsPublic = 0 WHERE UserId = 42 AND CollectionId = @Id AND UrlOriginal = @Url;",
+            new { Id = collectionId, Url = "https://example.test/16" });
+
+        var after = await repository.GetCollectionPage("owner", "public", 2);
+        Assert.NotNull(after);
+        Assert.Equal((1, 1), (after.Page, after.PageCount));
+        Assert.Equal(Enumerable.Range(0, 16).Select(index => $"https://example.test/{index:D2}"), after.Links.Select(link => link.UrlOriginal));
+        Assert.Equal((2, 2), (before.Page, before.PageCount));
+        Assert.Equal("https://example.test/16", Assert.Single(before.Links).UrlOriginal);
+
+        await Dapper.SqlMapper.ExecuteAsync(writer, "UPDATE Collection SET IsPublic = 0 WHERE Id = @Id;", new { Id = collectionId });
+        Assert.Null(await repository.GetCollectionPage("owner", "public", 1));
+    }
+
+    [Fact]
+    public async Task GetCollectionPage_WhenCollectionHasNoPublicLinks_ReturnsEmptyPageMetadata()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Public", "public", true);
+        await database.SeedLink(42, collectionId, "https://example.test/private", "https://example.test/private", "Private", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
+
+        var result = await repository.GetCollectionPage("owner", "public", 100);
+
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Page);
+        Assert.Equal(0, result.PageCount);
+        Assert.Empty(result.Links);
+    }
+
+    [Fact]
+    public async Task GetCollectionPage_WhenPageExceedsLast_ReturnsLastPageAndItsMetadata()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Public", "public", true);
+        await database.SeedLinkRange(42, collectionId, 17, isPublic: true);
+        await using SqliteConnection connection = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
+
+        var result = await repository.GetCollectionPage("owner", "public", int.MaxValue);
+
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Page);
+        Assert.Equal(2, result.PageCount);
+        Assert.Equal("https://example.test/16", Assert.Single(result.Links).UrlOriginal);
     }
 
     [Fact]
@@ -292,14 +357,55 @@ public sealed class SqlitePublicReadRepositoryTests
     }
 
     [Fact]
-    public async Task GetCollectionPageCount_WhenCollectionDoesNotExist_ReturnsZero()
+    public async Task GetCollectionsPage_WithManyCollections_ReturnsAllPublicNonemptyCollections()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long[] ids = new long[17];
+        for (int index = 0; index < ids.Length; index++)
+        {
+            ids[index] = await database.SeedCollection(42, $"Published {index:D2}", $"published-{index:D2}", true);
+            await database.SeedLink(42, ids[index], $"https://example.test/{index}", $"https://example.test/{index}", "Link", true);
+        }
+        await database.SeedCollection(42, "Empty", "empty", true);
+        long privateId = await database.SeedCollection(42, "Private", "private", false);
+        await database.SeedLink(42, privateId, "https://example.test/hidden", "https://example.test/hidden", "Hidden", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
+
+        var result = await repository.GetCollectionsPage("owner");
+
+        Assert.NotNull(result);
+        Assert.Equal(Enumerable.Range(0, 17).Select(index => $"published-{index:D2}"), result.Select(item => item.Slug));
+    }
+
+    [Theory]
+    [InlineData("owner", 1)]
+    [InlineData("other", 2)]
+    public async Task GetCollectionPage_WithSharedSlug_CountsOnlyRequestedUsersLinks(string alias, int expectedPages)
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long ownerId = await database.SeedCollection(42, "Owner", "shared", true);
+        long otherId = await database.SeedCollection(99, "Other", "shared", true);
+        await database.SeedLinkRange(42, ownerId, 1, isPublic: true);
+        await database.SeedLinkRange(99, otherId, 17, isPublic: true);
+        await using SqliteConnection connection = database.OpenConnection();
+        IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
+
+        var page = await repository.GetCollectionPage(alias, "shared", 1);
+        int count = page!.PageCount;
+
+        Assert.Equal(expectedPages, count);
+    }
+
+    [Fact]
+    public async Task GetCollectionPage_WhenCollectionDoesNotExist_ReturnsNull()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         await using SqliteConnection connection = database.OpenConnection();
         IPublicReadRepository repository = new SqlitePublicReadRepository(connection);
 
-        int result = await repository.GetCollectionPageCount("owner", "missing");
+        var result = await repository.GetCollectionPage("owner", "missing", 1);
 
-        Assert.Equal(0, result);
+        Assert.Null(result);
     }
 }

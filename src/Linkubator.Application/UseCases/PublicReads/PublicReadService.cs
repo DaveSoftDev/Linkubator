@@ -129,43 +129,4 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
         return result;
     }
 
-    public async Task<Result<int>> GetCollectionPageCount(string alias, string slug, CancellationToken cancellationToken = default)
-    {
-        string trimmedAlias = TrimOrEmpty(alias);
-        string trimmedSlug = TrimOrEmpty(slug);
-        if (string.IsNullOrWhiteSpace(trimmedAlias))
-        {
-            SafeLogger.Log(Logger, LogLevel.Warning, null, "Public collection count lookup rejected; alias missing", UserContext, new { Alias = alias });
-            return Result<int>.Failure(PublicReadErrors.AliasInvalid());
-        }
-
-        if (string.IsNullOrWhiteSpace(trimmedSlug))
-        {
-            SafeLogger.Log(Logger, LogLevel.Warning, null, "Public collection count lookup rejected; slug missing", UserContext, new { Alias = alias, Slug = slug });
-            return Result<int>.Failure(PublicReadErrors.SlugInvalid());
-        }
-
-        Result<int> result = await Execute(
-            new { Alias = alias, Slug = slug, TrimmedAlias = trimmedAlias, TrimmedSlug = trimmedSlug },
-            cancellationToken,
-            async (request, token) =>
-            {
-                PublicCollectionDto? collection = await _publicReadRepository.GetCollectionPage(request.TrimmedAlias, request.TrimmedSlug, 1, token);
-                if (collection is null)
-                {
-                    return Failure<int>(PublicReadErrors.CollectionNotAccessible(), "Public collection count lookup rejected; collection not accessible", new { request.Alias, request.Slug });
-                }
-
-                int count = await _publicReadRepository.GetCollectionPageCount(request.TrimmedAlias, request.TrimmedSlug, token);
-                return Result<int>.Success(count);
-            },
-            "Public collection count lookup failed",
-            logContext: new { Alias = alias, Slug = slug, TrimmedAlias = trimmedAlias, TrimmedSlug = trimmedSlug });
-        if (result.IsSuccess)
-        {
-            SafeLogger.Log(Logger, LogLevel.Information, null, "Public collection count loaded", UserContext);
-        }
-
-        return result;
-    }
 }

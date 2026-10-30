@@ -136,7 +136,7 @@ El scraping está confirmado para MVP1. Quedan pendientes decisiones de diseño 
 
 ### Pendiente de hidratación de la relación inversa de enlaces
 
-Al cargar un enlace junto con su colección, `Collection.Links` solo contiene los enlaces incluidos en esa consulta; no debe asumirse que la lista representa todos los enlaces de la colección. Los flujos que necesitan la lista completa deben cargarla explícitamente con `GetAllByCollection` y rehidratarla. Se aplaza decidir si el modelo distinguirá entre relación no cargada y relación completa, o si se eliminará la navegación inversa, porque no es necesario resolverlo para los flujos actuales y ampliar ahora el modelo añadiría complejidad.
+Al cargar un enlace junto con su colección, `Collection.Links` solo contiene los enlaces incluidos en esa consulta; no debe asumirse que la lista representa todos los enlaces de la colección. Los flujos que necesitan la lista completa deben cargarla explícitamente con `ExistsByCollection` y rehidratarla. Se aplaza decidir si el modelo distinguirá entre relación no cargada y relación completa, o si se eliminará la navegación inversa, porque no es necesario resolverlo para los flujos actuales y ampliar ahora el modelo añadiría complejidad.
 
 ### Pendiente de limpieza de tokens
 

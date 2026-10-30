@@ -61,7 +61,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Link lookup validation failed for user", UserContext, new { LinkId = request?.LinkId });
-            return Result<LinkDto>.Failure(validation.Errors);
+            return validation.IsSuccess ? Result<LinkDto>.Failure(CommonErrors.RequestRequired()) : Result<LinkDto>.Failure(validation.Errors);
         }
 
         LinkGetRequest validRequest = request;
@@ -94,7 +94,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Link creation validation failed for user", UserContext, request);
-            return Result<LinkDto>.Failure(validation.Errors);
+            return validation.IsSuccess ? Result<LinkDto>.Failure(CommonErrors.RequestRequired()) : Result<LinkDto>.Failure(validation.Errors);
         }
 
         LinkCreateRequest validRequest = request;
@@ -150,7 +150,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Link update validation failed for user", UserContext, request);
-            return Result<LinkDto>.Failure(validation.Errors);
+            return validation.IsSuccess ? Result<LinkDto>.Failure(CommonErrors.RequestRequired()) : Result<LinkDto>.Failure(validation.Errors);
         }
 
         LinkUpdateRequest validRequest = request;
@@ -167,58 +167,21 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
             {
                 ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
                 ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
+
                 DomainEntities.Link? link = await linkRepository.GetById(updateRequest.LinkId, CurrentUser.UserId, token);
                 if (link is null)
                 {
                     return Failure<LinkDto>(LinkErrors.LinkNotAccessible(), "Link update rejected for user; link not accessible", new { LinkId = updateRequest.LinkId });
                 }
 
-                DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, CurrentUser.UserId, token);
-                if (collection is null)
-                {
-                    return Failure<LinkDto>(LinkErrors.CollectionNotAccessible(), "Link update rejected for user; collection not accessible", new { LinkId = updateRequest.LinkId, CollectionId = link.CollectionId });
-                }
-
                 bool collectionChanged = updateRequest.CollectionId != link.CollectionId;
-                DomainEntities.Collection? destinationCollection = collectionChanged
-                    ? await collectionRepository.GetById(updateRequest.CollectionId, CurrentUser.UserId, token)
-                    : collection;
-                if (destinationCollection is null)
+                Result<DomainEntities.Collection> destinationCollection = await GetDestinationCollection(updateRequest, collectionRepository, link, collectionChanged, token);
+                if (!destinationCollection.IsSuccess)
                 {
-                    return Failure<LinkDto>(
-                        LinkErrors.CollectionSelectionInvalid(),
-                        "Link update rejected for user; selected collection is not accessible",
-                        new { LinkId = updateRequest.LinkId, CollectionId = updateRequest.CollectionId });
+                    return Result<LinkDto>.Failure(destinationCollection.Errors);
                 }
 
-                if (!collectionChanged && updateRequest.IsPublic == true && !destinationCollection.IsPublic)
-                {
-                    return Failure<LinkDto>(LinkErrors.PublicLinkInPrivateCollection(), "Link update rejected for user; public link in private collection", updateRequest);
-                }
-
-                Result metadataValidation = LinkMetadataValidator.Validate(new LinkMetadataValidationRequest(
-                    updateRequest.Title,
-                    updateRequest.Description,
-                    updateRequest.Image,
-                    link.UrlOriginal));
-                if (!metadataValidation.IsSuccess)
-                {
-                    SafeLogger.Log(Logger, LogLevel.Warning, null, "Link update content validation failed for user", UserContext, new { LinkId = updateRequest.LinkId });
-                    return Result<LinkDto>.Failure(metadataValidation.Errors);
-                }
-
-                link.Edit(updateRequest.Title, updateRequest.Description, updateRequest.Image);
-                if (collectionChanged)
-                {
-                    link.MoveToCollection(destinationCollection);
-                }
-                else if (updateRequest.IsPublic is bool requestedVisibility)
-                {
-                    link.ChangePrivacy(requestedVisibility, destinationCollection);
-                }
-
-                await linkRepository.Update(link, token);
-                return Result<LinkDto>.Success(Map(link));
+                return await ApplyUpdateLink(updateRequest, linkRepository, link, collectionChanged, destinationCollection.Value!, token);
             },
             "Link update failed for user",
             logContext: new { validRequest.LinkId, validRequest.CollectionId, validRequest.Title, validRequest.Description, validRequest.Image, validRequest.IsPublic });
@@ -230,13 +193,67 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return result;
     }
 
+    private async Task<Result<DomainEntities.Collection>> GetDestinationCollection(LinkUpdateRequest updateRequest, ICollectionRepository collectionRepository, DomainEntities.Link link, bool collectionChanged, CancellationToken token)
+    {
+        DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, CurrentUser.UserId, token);
+        if (collection is null)
+        {
+            return Failure<DomainEntities.Collection>(LinkErrors.CollectionNotAccessible(), "Link update rejected for user; collection not accessible", new { LinkId = updateRequest.LinkId, CollectionId = link.CollectionId });
+        }
+
+        DomainEntities.Collection? destinationCollection = collectionChanged
+            ? await collectionRepository.GetById(updateRequest.CollectionId, CurrentUser.UserId, token)
+            : collection;
+        if (destinationCollection is null)
+        {
+            return Failure<DomainEntities.Collection>(
+                LinkErrors.CollectionSelectionInvalid(),
+                "Link update rejected for user; selected collection is not accessible",
+                new { LinkId = updateRequest.LinkId, CollectionId = updateRequest.CollectionId });
+        }
+
+        return Result<DomainEntities.Collection>.Success(destinationCollection);
+    }
+
+    private async Task<Result<LinkDto>> ApplyUpdateLink(LinkUpdateRequest updateRequest, ILinkRepository linkRepository, DomainEntities.Link link, bool collectionChanged, DomainEntities.Collection destinationCollection, CancellationToken token)
+    {
+        if (!collectionChanged && updateRequest.IsPublic == true && !destinationCollection.IsPublic)
+        {
+            return Failure<LinkDto>(LinkErrors.PublicLinkInPrivateCollection(), "Link update rejected for user; public link in private collection", updateRequest);
+        }
+
+        Result metadataValidation = LinkMetadataValidator.Validate(new LinkMetadataValidationRequest(
+            updateRequest.Title,
+            updateRequest.Description,
+            updateRequest.Image,
+            link.UrlOriginal));
+        if (!metadataValidation.IsSuccess)
+        {
+            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link update content validation failed for user", UserContext, new { LinkId = updateRequest.LinkId });
+            return Result<LinkDto>.Failure(metadataValidation.Errors);
+        }
+
+        link.Edit(updateRequest.Title, updateRequest.Description, updateRequest.Image);
+        if (collectionChanged)
+        {
+            link.MoveToCollection(destinationCollection);
+        }
+        else if (updateRequest.IsPublic is bool requestedVisibility)
+        {
+            link.ChangePrivacy(requestedVisibility, destinationCollection);
+        }
+
+        await linkRepository.Update(link, token);
+        return Result<LinkDto>.Success(Map(link));
+    }
+
     public async Task<Result<LinkDto>> MoveLink(LinkMoveRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _moveLinkValidator.Validate(request);
         if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Link move validation failed for user", UserContext, request);
-            return Result<LinkDto>.Failure(validation.Errors);
+            return validation.IsSuccess ? Result<LinkDto>.Failure(CommonErrors.RequestRequired()) : Result<LinkDto>.Failure(validation.Errors);
         }
 
         LinkMoveRequest validRequest = request;
@@ -285,7 +302,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Link deletion validation failed for user", UserContext, request);
-            return Result.Failure(validation.Errors);
+            return validation.IsSuccess ? Result.Failure(CommonErrors.RequestRequired()) : validation;
         }
 
         LinkDeleteRequest validRequest = request;

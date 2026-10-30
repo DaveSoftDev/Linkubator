@@ -159,9 +159,11 @@ public sealed class CollectionsListingIntegrationTests
             await using ConfiguredWebApplicationFactory factory = new(databasePath);
             using HttpClient client = factory.CreateClient();
             await SeedCollections(databasePath, DemoEmail, ["Owned collection"]);
-            await SeedOtherUsersCollection(databasePath);
+            long foreignId = await SeedOtherUsersCollection(databasePath);
+            await using SqliteConnection ownerConnection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+            long foreignUserId = await ownerConnection.ExecuteScalarAsync<long>("SELECT UserId FROM Collection WHERE Id = @Id;", new { Id = foreignId });
 
-            using HttpResponseMessage response = await client.GetAsync("/app/colecciones?userId=2&c=not-a-collection-id");
+            using HttpResponseMessage response = await client.GetAsync($"/app/colecciones?userId={foreignUserId}&c=not-a-collection-id");
             string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
             string listingHtml = GetCollectionListHtml(html);
 
@@ -202,6 +204,8 @@ public sealed class CollectionsListingIntegrationTests
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Equal(expectedPage == 1 ? 16 : 2, System.Text.RegularExpressions.Regex.Matches(listingHtml, "<li class=\"link-card\">").Count);
             Assert.Equal(GetCollectionListHtml(baseline), listingHtml);
+            Assert.Equal(expectedPage == 1 ? Enumerable.Range(1, 16).Select(index => $"Collection {index:D2}") : new[] { "Collection 17", "Collection 18" },
+                System.Text.RegularExpressions.Regex.Matches(listingHtml, "aria-label=\"Colecci\u00f3n: (Collection [0-9]{2})\"").Select(match => match.Groups[1].Value));
             Assert.Contains("value=\"Collection\"", html, StringComparison.Ordinal);
             Assert.Contains($"aria-current=\"page\">{expectedPage}</span>", html, StringComparison.Ordinal);
             Assert.Contains("/app/colecciones?q=Collection", html, StringComparison.Ordinal);
@@ -256,6 +260,10 @@ public sealed class CollectionsListingIntegrationTests
             Assert.Equal(System.Net.HttpStatusCode.OK, deleteResponse.StatusCode);
             Assert.Contains("La colección es obligatoria.", editHtml, StringComparison.Ordinal);
             Assert.Contains("La colección es obligatoria.", deleteHtml, StringComparison.Ordinal);
+            Assert.Contains("href=\"/app/colecciones\">Volver al listado</a>", editHtml, StringComparison.Ordinal);
+            Assert.Contains("href=\"/app/colecciones\">Volver al listado</a>", deleteHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("name=\"Input.Name\"", editHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("class=\"collection-form collection-form--danger\"", deleteHtml, StringComparison.Ordinal);
             Assert.DoesNotContain("Owned collection", editHtml, StringComparison.Ordinal);
             Assert.DoesNotContain("Owned collection", deleteHtml, StringComparison.Ordinal);
         }
@@ -320,6 +328,8 @@ public sealed class CollectionsListingIntegrationTests
             long initialCount = await GetCollectionCount(databasePath, DemoEmail);
             string token = await GetAntiforgeryToken(client, ownedCollectionId);
 
+            string before = await CollectionSnapshot(databasePath);
+
             using HttpResponseMessage response = await client.PostAsync(
                 "/app/colecciones/not-an-id/eliminar",
                 new FormUrlEncodedContent(new Dictionary<string, string>
@@ -330,8 +340,11 @@ public sealed class CollectionsListingIntegrationTests
             string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
             long finalCount = await GetCollectionCount(databasePath, DemoEmail);
 
+            Assert.Equal(before, await CollectionSnapshot(databasePath));
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Contains("La colección es obligatoria.", html, StringComparison.Ordinal);
+            Assert.Contains("href=\"/app/colecciones\">Volver al listado</a>", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("class=\"collection-form collection-form--danger\"", html, StringComparison.Ordinal);
             Assert.Equal(initialCount, finalCount);
         }
         finally
@@ -401,7 +414,7 @@ public sealed class CollectionsListingIntegrationTests
     }
 
     [Fact]
-    public async Task PostCreateCollection_WhenNameIsRequired_RendersFieldErrorAndFirstInvalidFocus()
+    public async Task PostCreateCollection_WhenNameIsRequired_AssociatesErrorWithoutWriting()
     {
         string databasePath = NewDatabasePath();
         try
@@ -409,6 +422,8 @@ public sealed class CollectionsListingIntegrationTests
             await using ConfiguredWebApplicationFactory factory = new(databasePath);
             using HttpClient client = factory.CreateClient();
             string token = await GetAntiforgeryToken(client, "/app/colecciones/nueva");
+
+            string before = await CollectionSnapshot(databasePath);
 
             using HttpResponseMessage response = await client.PostAsync(
                 "/app/colecciones/nueva",
@@ -425,7 +440,9 @@ public sealed class CollectionsListingIntegrationTests
             Assert.Contains("El nombre es obligatorio.", html, StringComparison.Ordinal);
             Assert.Contains("class=\"input-validation-error\"", html, StringComparison.Ordinal);
             Assert.Contains("aria-invalid=\"true\"", html, StringComparison.Ordinal);
-            Assert.Contains("querySelectorAll", html, StringComparison.Ordinal);
+            Assert.Matches("<input(?=[^>]*id=\"collection-name\")(?=[^>]*class=\"[^\"]*input-validation-error)[^>]*>", html);
+            Assert.Contains("data-valmsg-for=\"Input.Name\"", html, StringComparison.Ordinal);
+            Assert.Equal(before, await CollectionSnapshot(databasePath));
         }
         finally
         {
@@ -460,6 +477,8 @@ public sealed class CollectionsListingIntegrationTests
 
             string token = await GetAntiforgeryToken(client, $"/app/colecciones/{collectionId}/eliminar");
             long initialCount = await GetCollectionCount(databasePath, DemoEmail);
+            await using SqliteConnection observer = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+            string originalLink = await observer.QuerySingleAsync<string>("SELECT json_object('Id', Id, 'CollectionId', CollectionId, 'Title', Title, 'IsPublic', IsPublic) FROM Link WHERE CollectionId = @Id;", new { Id = collectionId });
 
             using HttpResponseMessage response = await client.PostAsync(
                 $"/app/colecciones/{collectionId}/eliminar",
@@ -475,6 +494,7 @@ public sealed class CollectionsListingIntegrationTests
             Assert.Contains("No se puede eliminar una colección con enlaces.", html, StringComparison.Ordinal);
             Assert.Contains("¿Seguro que quieres eliminar la colección <strong>Owned collection</strong>?", html, StringComparison.Ordinal);
             Assert.Equal(initialCount, finalCount);
+            Assert.Equal(originalLink, await observer.QuerySingleAsync<string>("SELECT json_object('Id', Id, 'CollectionId', CollectionId, 'Title', Title, 'IsPublic', IsPublic) FROM Link WHERE CollectionId = @Id;", new { Id = collectionId }));
         }
         finally
         {
@@ -542,7 +562,11 @@ public sealed class CollectionsListingIntegrationTests
             Assert.Equal("/app/colecciones", response.Headers.Location?.OriginalString);
             Assert.Equal(initialCount + 1, finalCount);
             Assert.Equal("Created over HTTP", await GetCollectionName(databasePath, createdCollectionId));
-            Assert.Equal(expectedIsPublic, (await GetCollectionState(databasePath, createdCollectionId)).IsPublic);
+            Assert.Equal(new PersistedCollectionState("Created over HTTP", "created-over-http", "Created by integration test", expectedIsPublic),
+                await GetCollectionState(databasePath, createdCollectionId));
+            await using SqliteConnection observer = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+            Assert.Equal("Created over HTTP|Created by integration test", await observer.QuerySingleAsync<string>(
+                "SELECT Name || '|' || Description FROM CollectionSearch WHERE rowid = @Id;", new { Id = createdCollectionId }));
         }
         finally
         {
@@ -618,6 +642,8 @@ public sealed class CollectionsListingIntegrationTests
 
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Contains("La colección es obligatoria.", html, StringComparison.Ordinal);
+            Assert.Contains("href=\"/app/colecciones\">Volver al listado</a>", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("name=\"Input.Name\"", html, StringComparison.Ordinal);
             Assert.Equal(original, await GetCollectionState(databasePath, ownedId));
         }
         finally
@@ -637,16 +663,19 @@ public sealed class CollectionsListingIntegrationTests
             await SeedCollections(databasePath, DemoEmail, ["Collection before edit"]);
             long collectionId = await GetCollectionId(databasePath, DemoEmail, "Collection before edit");
 
+            string before = await CollectionSnapshot(databasePath);
+
             using HttpResponseMessage response = await client.PostAsync(
                 $"/app/colecciones/{collectionId}/editar",
                 new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     ["id"] = collectionId.ToString(System.Globalization.CultureInfo.InvariantCulture),
                     ["Input.Name"] = "Tampered collection",
-                    ["Input.Description"] = "",
-                    ["Input.IsPublic"] = "false",
+                    ["Input.Description"] = "Must not persist",
+                    ["Input.IsPublic"] = "true",
                 }));
 
+            Assert.Equal(before, await CollectionSnapshot(databasePath));
             Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Equal("Collection before edit", await GetCollectionName(databasePath, collectionId));
         }
@@ -871,7 +900,7 @@ public sealed class CollectionsListingIntegrationTests
                 new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     ["id"] = collectionId.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                    ["Input.Name"] = "Already taken",
+                    ["Input.Name"] = "ALREADY TAKEN!",
                     ["Input.Description"] = "Tampered description",
                     ["Input.IsPublic"] = "false",
                     ["__RequestVerificationToken"] = token,
@@ -903,10 +932,13 @@ public sealed class CollectionsListingIntegrationTests
             long collectionId = await GetCollectionId(databasePath, DemoEmail, "Collection awaiting confirmation");
             long initialCount = await GetCollectionCount(databasePath, DemoEmail);
 
+            string before = await CollectionSnapshot(databasePath);
+
             using HttpResponseMessage response = await client.GetAsync($"/app/colecciones/{collectionId}/eliminar");
             long finalCount = await GetCollectionCount(databasePath, DemoEmail);
             string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
+            Assert.Equal(before, await CollectionSnapshot(databasePath));
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             Assert.Contains("Collection awaiting confirmation", html, StringComparison.Ordinal);
             Assert.Equal(initialCount, finalCount);
@@ -1014,6 +1046,257 @@ public sealed class CollectionsListingIntegrationTests
         {
             DeleteDatabaseFiles(databasePath);
         }
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task PostEditCollection_WhenPrivacyIsPreservedOrMadePublic_KeepsPrivateLinksPrivate(bool wasPublic, bool isPublic)
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            await SeedCollections(databasePath, DemoEmail, ["Privacy matrix"]);
+            long collectionId = await GetCollectionId(databasePath, DemoEmail, "Privacy matrix");
+            await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+            await connection.ExecuteAsync("UPDATE Collection SET IsPublic = @Public WHERE Id = @Id;", new { Public = wasPublic, Id = collectionId });
+            await connection.ExecuteAsync(
+                @"INSERT INTO Link (UserId, CollectionId, UrlOriginal, UrlNormalized, Title, IsPublic, CreatedAt)
+                  SELECT UserId, Id, @Url, @Url, @Title, @Public, CreatedAt FROM Collection WHERE Id = @Id;",
+                new[]
+                {
+                    new { Id = collectionId, Url = "https://example.test/private", Title = "Private", Public = false },
+                    new { Id = collectionId, Url = "https://example.test/conditional", Title = "Conditional", Public = wasPublic },
+                });
+            string route = $"/app/colecciones/{collectionId}/editar";
+            string token = await GetAntiforgeryToken(client, route);
+
+            using HttpResponseMessage response = await client.PostAsync(route, new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["id"] = collectionId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["Input.Name"] = "Privacy matrix",
+                ["Input.IsPublic"] = isPublic.ToString(),
+                ["__RequestVerificationToken"] = token,
+            }));
+
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal(isPublic ? 1L : 0L, (await GetCollectionState(databasePath, collectionId)).IsPublic);
+            Assert.Equal(new[] { wasPublic ? 1L : 0L, 0L }, (await connection.QueryAsync<long>(
+                "SELECT IsPublic FROM Link WHERE CollectionId = @Id ORDER BY Title;", new { Id = collectionId })).ToArray());
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task CollectionForms_WithTextAtMaximum_AcceptAndPersist(bool edit, bool description)
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            long id = await GetCollectionId(databasePath, DemoEmail, "Bandeja de entrada");
+            string route = edit ? $"/app/colecciones/{id}/editar" : "/app/colecciones/nueva";
+            string name = description ? "Boundary collection" : new string('n', 50);
+            string text = description ? new string('d', 250) : "Description";
+            string token = await GetAntiforgeryToken(client, route);
+
+            using HttpResponseMessage response = await client.PostAsync(route, new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["Input.Name"] = name,
+                ["Input.Description"] = text,
+                ["Input.IsPublic"] = "false",
+                ["__RequestVerificationToken"] = token,
+            }));
+
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+            long persistedId = await GetCollectionId(databasePath, DemoEmail, name);
+            PersistedCollectionState result = await GetCollectionState(databasePath, persistedId);
+            Assert.Equal(name, result.Name);
+            Assert.Equal(text, result.Description);
+        }
+        finally { DeleteDatabaseFiles(databasePath); }
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task CollectionForms_WithTextAboveMaximum_AssociateErrorAndPreserveState(bool edit, bool description)
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            long id = await GetCollectionId(databasePath, DemoEmail, "Bandeja de entrada");
+            string route = edit ? $"/app/colecciones/{id}/editar" : "/app/colecciones/nueva";
+            string name = description ? "Boundary collection" : new string('n', 51);
+            string text = description ? new string('d', 251) : "Description";
+            string token = await GetAntiforgeryToken(client, route);
+            string before = await CollectionSnapshot(databasePath);
+
+            using HttpResponseMessage response = await client.PostAsync(route, new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["Input.Name"] = name,
+                ["Input.Description"] = text,
+                ["Input.IsPublic"] = "true",
+                ["__RequestVerificationToken"] = token,
+            }));
+            string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+            string field = description ? "Description" : "Name";
+            Assert.Matches($"<span[^>]*data-valmsg-for=\"Input.{field}\"[^>]*>[^<]+</span>", html);
+            Assert.Contains(name, html, StringComparison.Ordinal);
+            Assert.Contains(text, html, StringComparison.Ordinal);
+            Assert.Equal(before, await CollectionSnapshot(databasePath));
+        }
+        finally { DeleteDatabaseFiles(databasePath); }
+    }
+
+    [Theory]
+    [InlineData("nueva")]
+    [InlineData("editar")]
+    [InlineData("eliminar")]
+    public async Task CollectionForms_WithUnsupportedMethod_ReturnNotFoundWithoutChanges(string operation)
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            long id = await GetCollectionId(databasePath, DemoEmail, "Bandeja de entrada");
+            string before = await CollectionSnapshot(databasePath);
+            string route = operation == "nueva" ? "/app/colecciones/nueva" : $"/app/colecciones/{id}/{operation}";
+            using HttpRequestMessage request = new(HttpMethod.Put, route);
+
+            using HttpResponseMessage response = await client.SendAsync(request);
+
+            Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Equal(before, await CollectionSnapshot(databasePath));
+        }
+        finally { DeleteDatabaseFiles(databasePath); }
+    }
+
+    [Fact]
+    public async Task PostEditCollection_WithDifferentHiddenId_UpdatesOnlyCanonicalRouteCollection()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            await SeedCollections(databasePath, DemoEmail, ["Target", "Untouched"]);
+            long targetId = await GetCollectionId(databasePath, DemoEmail, "Target");
+            long otherId = await GetCollectionId(databasePath, DemoEmail, "Untouched");
+            PersistedCollectionState other = await GetCollectionState(databasePath, otherId);
+            string route = $"/app/colecciones/{targetId}/editar";
+            string token = await GetAntiforgeryToken(client, route);
+
+            using HttpResponseMessage response = await client.PostAsync(route, new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["id"] = otherId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["Input.Name"] = "Canonical target",
+                ["Input.IsPublic"] = "false",
+                ["__RequestVerificationToken"] = token,
+            }));
+
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal("Canonical target", await GetCollectionName(databasePath, targetId));
+            Assert.Equal(other, await GetCollectionState(databasePath, otherId));
+        }
+        finally { DeleteDatabaseFiles(databasePath); }
+    }
+
+    [Fact]
+    public async Task PostCreateCollection_WithDifferentNameAndSameOwnedSlug_RejectsWithoutWriting()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            await SeedCollections(databasePath, DemoEmail, ["Existing"]);
+            long id = await GetCollectionId(databasePath, DemoEmail, "Existing");
+            await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+            await connection.ExecuteAsync("UPDATE Collection SET Slug = 'existing' WHERE Id = @Id;", new { Id = id });
+            string token = await GetAntiforgeryToken(client, "/app/colecciones/nueva");
+            string before = await CollectionSnapshot(databasePath);
+
+            using HttpResponseMessage response = await client.PostAsync("/app/colecciones/nueva", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["Input.Name"] = "EXISTING!",
+                ["Input.IsPublic"] = "false",
+                ["__RequestVerificationToken"] = token,
+            }));
+            string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+            Assert.Matches("<span[^>]*id=\"collection-name-error\"[^>]*>[^<]*Existing[^<]*</span>", html);
+            Assert.Equal(before, await CollectionSnapshot(databasePath));
+        }
+        finally { DeleteDatabaseFiles(databasePath); }
+    }
+
+    [Fact]
+    public async Task CollectionForms_WithForeignSharedSlug_AllowOwnCreationAndUnchangedSlugEdit()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath);
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            long foreignId = await SeedOtherUsersCollection(databasePath);
+            await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+            await connection.ExecuteAsync("UPDATE Collection SET Slug = 'shared' WHERE Id = @Id;", new { Id = foreignId });
+            PersistedCollectionState foreign = await GetCollectionState(databasePath, foreignId);
+            string token = await GetAntiforgeryToken(client, "/app/colecciones/nueva");
+
+            using HttpResponseMessage created = await client.PostAsync("/app/colecciones/nueva", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["Input.Name"] = "Shared",
+                ["Input.IsPublic"] = "false",
+                ["__RequestVerificationToken"] = token,
+            }));
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, created.StatusCode);
+            long ownId = await GetCollectionId(databasePath, DemoEmail, "Shared");
+            string route = $"/app/colecciones/{ownId}/editar";
+            string editToken = await GetAntiforgeryToken(client, route);
+            using HttpResponseMessage edited = await client.PostAsync(route, new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["Input.Name"] = "SHARED!",
+                ["Input.Description"] = "Updated",
+                ["Input.IsPublic"] = "false",
+                ["__RequestVerificationToken"] = editToken,
+            }));
+
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, edited.StatusCode);
+            Assert.Equal(new PersistedCollectionState("SHARED!", "shared", "Updated", 0), await GetCollectionState(databasePath, ownId));
+            Assert.Equal(foreign, await GetCollectionState(databasePath, foreignId));
+        }
+        finally { DeleteDatabaseFiles(databasePath); }
+    }
+
+    private static async Task<string> CollectionSnapshot(string databasePath)
+    {
+        await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+        string[] collections = (await connection.QueryAsync<string>(
+            "SELECT json_object('Id', Id, 'UserId', UserId, 'Name', Name, 'Slug', Slug, 'Description', Description, 'IsPublic', IsPublic, 'CreatedAt', CreatedAt) FROM Collection ORDER BY Id;")).ToArray();
+        string[] projections = (await connection.QueryAsync<string>(
+            "SELECT json_object('Id', rowid, 'UserId', UserId, 'Name', Name, 'Description', Description) FROM CollectionSearch ORDER BY rowid;")).ToArray();
+        return string.Join("\n", collections.Concat(projections));
     }
 
     private static string GetCollectionListHtml(string html)

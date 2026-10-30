@@ -21,19 +21,21 @@ Clasificación por caso: **vigente**, **a reforzar**, **obsoleto**, **duplicado 
 
 ## Grupos
 
+**Estado tras la reconciliación:** se revisaron los 31 casos añadidos después de las revisiones y se aplicaron los cuatro refuerzos. La [revisión de impacto](test-audit-impact-review.md) documenta el repaso focalizado y la resolución de la lectura pública en una sentencia. Suite global actual: **1.834/1.834**. Los cierres de cada lote son históricos y no sustituyen S12 ni certifican individualmente cada cambio concurrente.
+
 Los archivos indicados son puntos de entrada, no una asignación exclusiva. El inventario por métodos y casos determinará el alcance exacto; cualquier test que no encaje en estos grupos deberá asignarse explícitamente antes de cerrar la revisión.
 
 | Grupo | Funcionalidad y puntos de entrada | Estado |
 |---|---|---|
-| 1. Área pública y SEO | Lecturas públicas, perfiles, colecciones públicas, paginación, canonical y redirecciones. `PublicReadServiceTests`, `SqlitePublicReadRepositoryTests` y tests públicos de `WebStartupTests`. | **En curso**: cinco hallazgos iniciales resueltos; clasificación exhaustiva pendiente. |
-| 2. Propiedad, privacidad e invariantes de entidades | `User`, `Collection`, `Link`, propiedad entre usuarios, transiciones públicas/privadas y restricciones entre entidades; tests de Domain, casos de uso, SQLite y HTTP correspondientes. | **En curso**: tres hallazgos adicionales resueltos; 122/122 casos focalizados y 1.654/1.654 de la suite global superados; clasificación exhaustiva pendiente. |
-| 3. Gestión privada de colecciones | Crear, editar, eliminar, listado, formularios, errores y acceso a recursos; `CollectionServiceTests`, `SqliteCollectionRepositoryTests` y `CollectionsListingIntegrationTests` por caso. | **En curso:** cuatro hallazgos iniciales resueltos; 92/92 tests focalizados y 1.656/1.656 globales superados; clasificación exhaustiva pendiente. |
-| 4. Gestión privada de enlaces | Crear, editar, mover, eliminar, validación, formularios y errores; `LinkServiceTests`, `SqliteLinkRepositoryTests`, `LinkCreationIntegrationTests` y `LinkManagementIntegrationTests` por caso. | **Primera ronda resuelta:** cuatro hallazgos corregidos; 189/189 focalizados y 1.659/1.659 globales superados. Revisión individual pendiente. |
-| 5. Búsqueda, filtros y listados | Normalización de búsqueda, FTS5, proyecciones, orden, filtros y paginación privada; tests de `Search*`, `SqliteFts5IntegratedSearchTests`, `SqliteSearchProjection*Tests`, `LinkListingIntegrationTests` y los casos de búsqueda de colecciones. | **Primera ronda resuelta:** cuatro hallazgos corregidos; 5/5 focalizados y 1.660/1.660 globales superados. Revisión individual pendiente. |
-| 6. Reglas de entrada | Textos, alias, slug, email, URL, imagen y normalización de duplicados; tests de `Domain/Policies/`, `ValidationCoverageTests`, `LinkCreateValidatorTests` y validación Web relacionada. | **Primera ronda resuelta:** tres hallazgos corregidos; 42/42 focalizados y 1.663/1.663 globales superados. Revisión individual pendiente. |
-| 7. Identidad de desarrollo y seguridad Web | Aprovisionamiento, identidad inyectada, cabeceras, HTTPS, antiforgery y acceso HTTP; tests de `DevelopmentIdentity*`, `WebSecurityIntegrationTests` y los casos correspondientes de `WebStartupTests`. | **Primera ronda resuelta:** tres hallazgos corregidos; 13/13 focalizados y 1.669/1.669 globales superados. Revisión individual pendiente. |
-| 8. Persistencia y transacciones | Migraciones, conexiones, unidad de trabajo, claves foráneas, atomicidad y carreras; `SqliteMigrationServiceTests`, `SqliteConnectionFactoryTests`, `SqliteUnitOfWorkTests` y `SqlitePersistenceIntegrationTests` por caso. | **Primera ronda resuelta:** cuatro hallazgos corregidos; 32/32 focalizados y 1.669/1.669 globales superados en Debug. Revisión individual pendiente. |
-| 9. Base de aplicación, presentación y observabilidad | Resultados, errores, dashboard, componentes Web, logs y límites de arquitectura; `ResultTests`, `DashboardServiceTests`, `SqliteDashboardRepositoryTests`, `LoggingTests`, tests de `Web/`, `Architecture/` y `Structure/`, y los casos restantes de integración. | **Primera ronda resuelta:** cuatro hallazgos adicionales corregidos; 43/43 focalizados y 1.670/1.670 globales en Debug. Logging intermitente resuelto previamente; revisión individual pendiente. |
+| 1. Área pública y SEO | Lecturas públicas, perfiles, colecciones públicas, paginación, canonical y redirecciones. `PublicReadServiceTests`, `SqlitePublicReadRepositoryTests` y tests públicos de `WebStartupTests`. | **Revisión individual automatizada cerrada:** refuerzos y cinco huecos resueltos, duplicado retirado; 129 casos actuales clasificados. Suite global 1.708/1.708 en Debug. Revisión humana visual en S12. |
+| 2. Propiedad, privacidad e invariantes de entidades | `User`, `Collection`, `Link`, propiedad entre usuarios, transiciones públicas/privadas y restricciones entre entidades; tests de Domain, casos de uso, SQLite y HTTP correspondientes. | **Revisión individual automatizada cerrada:** refuerzos y cuatro huecos resueltos, duplicado retirado; 232 casos vigentes actuales. Suite global 1.725/1.725 en Debug. |
+| 3. Gestión privada de colecciones | Crear, editar, eliminar, listado, formularios, errores y acceso a recursos; `CollectionServiceTests`, `SqliteCollectionRepositoryTests` y `CollectionsListingIntegrationTests` por caso. | **Revisión individual automatizada cerrada:** refuerzos y cuatro huecos resueltos; 65 casos vigentes. Corregida precedencia del id de ruta en edición. Suite global 1.740/1.740 en Debug. |
+| 4. Gestión privada de enlaces | Crear, editar, mover, eliminar, validación, formularios y errores; `LinkServiceTests`, `SqliteLinkRepositoryTests`, `LinkCreationIntegrationTests` y `LinkManagementIntegrationTests` por caso. | **Revisión individual automatizada cerrada:** 197 casos vigentes; refuerzos y cuatro huecos resueltos, duplicado retirado. Corregida precedencia de ruta en editar/mover/eliminar enlaces. Suite global Debug 1.743/1.743. |
+| 5. Búsqueda, filtros y listados | Normalización de búsqueda, FTS5, proyecciones, orden, filtros y paginación privada; tests de `Search*`, `SqliteFts5IntegratedSearchTests`, `SqliteSearchProjection*Tests`, `LinkListingIntegrationTests` y los casos de búsqueda de colecciones. | **Revisión individual automatizada cerrada:** ocho refuerzos y cinco huecos resueltos; duplicado retirado. 193/193 casos vigentes y suite global Debug 1.757/1.757. |
+| 6. Reglas de entrada | Textos, alias, slug, email, URL, imagen y normalización de duplicados; tests de `Domain/Policies/`, `ValidationCoverageTests`, `LinkCreateValidatorTests` y validación Web relacionada. | **Revisión individual automatizada cerrada:** siete refuerzos y cuatro huecos resueltos; retiradas 22 variantes duplicadas. Inventario de 651 casos coincidente con el runner; 651/651 focalizados y suite global Debug 1.784/1.784. |
+| 7. Identidad de desarrollo y seguridad Web | Aprovisionamiento, identidad inyectada, cabeceras, HTTPS, antiforgery y acceso HTTP; tests de `DevelopmentIdentity*`, `WebSecurityIntegrationTests` y los casos correspondientes de `WebStartupTests`. | **Revisión individual automatizada cerrada:** refuerzos y seis huecos aplicados; 82/82 focalizados y suite global 1.827/1.827. Corregidas cabeceras en rechazo de host. |
+| 8. Persistencia y transacciones | Migraciones, conexiones, unidad de trabajo, claves foráneas, atomicidad y carreras; `SqliteMigrationServiceTests`, `SqliteConnectionFactoryTests`, `SqliteUnitOfWorkTests` y `SqlitePersistenceIntegrationTests` por caso. | **Revisión individual automatizada cerrada:** siete refuerzos y cinco huecos aplicados; 48 casos inventariados, 61/61 relacionados y suite global 1.827/1.827 superados. |
+| 9. Base de aplicación, presentación y observabilidad | Resultados, errores, dashboard, componentes Web, logs y límites de arquitectura; `ResultTests`, `DashboardServiceTests`, `SqliteDashboardRepositoryTests`, `LoggingTests`, tests de `Web/`, `Architecture/` y `Structure/`, y los casos restantes de integración. | **Segunda ronda corregida:** refuerzos y huecos aplicados; inventario actual 222 casos. Revisados los 31 casos posteriores y aplicados cuatro refuerzos; resuelta la lectura pública mediante una sentencia. S12 sigue pendiente. |
 
 Orden acordado: completar primero la ronda de diagnóstico inicial de los nueve grupos y resolver sus hallazgos aprobados; después volver al grupo 1 y recorrerlos para la revisión individual exhaustiva. Resolver una tabla inicial no cierra el grupo. Los tests transversales se asignarán a un único grupo principal en el inventario, pero se podrán ejecutar en varios lotes como regresión.
 
@@ -42,6 +44,8 @@ Orden acordado: completar primero la ronda de diagnóstico inicial de los nueve 
 Cada grupo mantiene la misma tabla. «Pendiente de diagnóstico» no indica ausencia de problemas. Tras la revisión con el usuario, actualizar la acción y el estado del grupo en la tabla anterior; no marcar un hallazgo como resuelto sin su verificación.
 
 ### Grupo 1. Área pública y SEO
+
+Segunda ronda del 2026-10-30: [informe individual, trazabilidad y cierre](test-audit-group-1.md) e [inventario actualizado de 129 casos](test-audit-group-1.csv). Diagnóstico inicial: 87 vigentes, 30 a reforzar y 1 duplicado, más cinco huecos. Tras aprobación se aplicaron todos los refuerzos, se retiró el duplicado y se cubrieron los huecos: **129 casos actuales clasificados como vigentes**. Validación Debug: **119/119** del núcleo y **1.708/1.708** en suite global, sin omitidos. Solo se modificaron tests y documentación de este lote. **Cerrada la revisión individual automatizada del grupo**; revisión humana visual y accesible reservada a S12.
 
 Diagnóstico inicial del 2026-10-29: 99 casos focalizados, distribuidos entre aplicación (25), repositorio público (19), integración HTTP (53) y ordenación en persistencia (2). Resultado: 99/99 pasan en Release. Comando utilizado:
 
@@ -62,6 +66,8 @@ Las correcciones puntuales previas de navegación y paginación no cierran el gr
 Tras las correcciones de los cinco hallazgos, se repitió el comando focalizado indicado arriba: **105/105 casos superados** en Release. La línea base de 99 casos anterior a estas correcciones sigue registrada arriba; la clasificación exhaustiva y el cierre del grupo siguen pendientes.
 
 ### Grupo 2. Propiedad, privacidad e invariantes de entidades
+
+Segunda ronda del 2026-10-30: [informe individual y cierre](test-audit-group-2.md) e [inventario actualizado de 232 casos vigentes](test-audit-group-2.csv). Resueltos los refuerzos y cuatro huecos, retirado un duplicado. Validación Debug: **232/232** asignados al grupo y **1.725/1.725** globales, sin omitidos. Solo se modificaron tests y documentación de este lote. **Cerrada la revisión individual automatizada del grupo**. El informe conserva los resultados del diagnóstico y los registros históricos siguientes.
 
 | Prioridad | Hallazgo | Acción propuesta |
 |---|---|---|
@@ -99,6 +105,8 @@ Verificación de las tres correcciones adicionales: **122/122** casos de `Collec
 
 ### Grupo 3. Gestión privada de colecciones
 
+Segunda ronda del 2026-10-30: [informe individual y cierre](test-audit-group-3.md) e [inventario final de 65 casos vigentes](test-audit-group-3.csv), sin reasignar casos incluidos en grupos 1 y 2. Refuerzos y cuatro huecos resueltos; dos casos eliminados/consolidados. La regresión de identificador oculto detectó y corrigió la precedencia incorrecta sobre el id canónico de ruta en el handler de edición. Validación Debug **65/65** exactos y **1.740/1.740** globales, sin omitidos. **Cerrada la revisión individual automatizada del grupo**; comprobaciones humanas en S12. Los registros siguientes conservan la evidencia histórica.
+
 Diagnóstico inicial del 2026-10-29, sin cambios en tests ni producción. Línea base: **137/137** casos en Release con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~CollectionServiceTests|FullyQualifiedName~SqliteCollectionRepositoryTests|FullyQualifiedName~CollectionsListingIntegrationTests' -v minimal`. El filtro incluye pruebas de privacidad ya tratadas en el grupo 2 y de búsqueda correspondientes al grupo 5; no representa 137 casos clasificados individualmente para este grupo.
 
 | Prioridad | Hallazgo | Acción propuesta |
@@ -112,6 +120,8 @@ Las cuatro acciones aprobadas están resueltas. Verificación: **92/92** casos d
 
 ### Grupo 4. Gestión privada de enlaces
 
+Segunda ronda del 2026-10-30: [informe individual y cierre](test-audit-group-4.md) e [inventario final de 197 casos vigentes](test-audit-group-4.csv), sin reasignación de grupos 1–3. Resueltos once refuerzos y cuatro huecos; retirado un duplicado. Las nuevas regresiones detectaron precedencia incorrecta del id enviado sobre la ruta en editar, mover y eliminar enlaces: corregidos los tres handlers. Validación exacta Debug **197/197** y suite global **1.743/1.743**, sin omitidos. **Cerrada la revisión individual automatizada del grupo**. Los registros siguientes conservan la primera ronda.
+
 Diagnóstico inicial del 2026-10-29, sin modificar tests ni producción. Línea base relacionada: **299/299** casos en Release mediante `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~Application.LinkServiceTests|FullyQualifiedName~SqliteLinkRepositoryTests|FullyQualifiedName~LinkCreationIntegrationTests|FullyQualifiedName~LinkManagementIntegrationTests' -v minimal`. El filtro incluye clases completas con casos de otros grupos; no representa una clasificación individual terminada.
 
 | Prioridad | Hallazgo | Acción propuesta |
@@ -124,6 +134,8 @@ Diagnóstico inicial del 2026-10-29, sin modificar tests ni producción. Línea 
 Las cuatro acciones iniciales están resueltas. Validación Release: **189/189** casos de `LinkServiceTests`, `SqliteLinkRepositoryTests` y `LinkManagementIntegrationTests`; suite global con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-build --no-restore -v minimal`: **1.659/1.659**, sin omitidos. Solo se modificaron tests y este registro. La revisión individual se realizará en la segunda ronda acordada.
 
 ### Grupo 5. Búsqueda, filtros y listados
+
+Segunda ronda del 2026-10-30: [informe individual y cierre](test-audit-group-5.md) e [inventario final de 193 casos vigentes](test-audit-group-5.csv), sin reasignar casos de grupos 1–4. Aplicados ocho refuerzos, retirado un duplicado y cubiertos cinco huecos. Validación exacta Debug **193/193** y suite global **1.757/1.757**, sin omitidos. Solo se modificaron tests y documentación de este lote. **Cerrada la revisión individual automatizada del grupo**. Los registros siguientes conservan la primera ronda.
 
 Diagnóstico inicial del 2026-10-29, sin cambios en tests ni producción. Línea base relacionada: **245/245** casos superados en Release. Se incluyeron clases completas con casos de otros grupos, sin atribuirles clasificación individual terminada.
 
@@ -141,6 +153,8 @@ dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Relea
 Las cuatro acciones iniciales están resueltas. Verificación Release: **5/5** casos directamente afectados y suite global con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-build --no-restore -v minimal`: **1.660/1.660**, sin omitidos. Solo se modificaron tests y este registro; no se eliminaron pruebas ni se cambiaron reglas de búsqueda. La revisión individual corresponde a la segunda ronda.
 
 ### Grupo 6. Reglas de entrada
+
+Segunda ronda del 2026-10-30: [informe individual y verificación](test-audit-group-6.md) e [inventario definitivo de 651 casos de 184 métodos](test-audit-group-6.csv), sin solapamientos con grupos 1–5. Correcciones aprobadas aplicadas: siete refuerzos, cuatro huecos y retirada de 22 variantes duplicadas; 49 casos nuevos. Revalidación tras los cambios concurrentes: **651/651 focalizados y 1.784/1.784 globales**, con código recompilado; los identificadores del runner coinciden con el inventario. Resueltos los bloqueos anteriores. Los registros siguientes son históricos.
 
 Diagnóstico inicial del 2026-10-29, sin modificar tests ni producción. Línea base relacionada: **611/611** casos en Release mediante `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~Domain.Policies|FullyQualifiedName~LinkCreateValidatorTests|FullyQualifiedName~ValidationCoverageTests' -v minimal`. Incluye políticas de email y alias, cuya disponibilidad funcional depende de su etapa; el diagnóstico no exige implementar funciones de cuenta futuras.
 
@@ -162,6 +176,8 @@ El usuario declaró prescindible la base local: se eliminaron la base de desarro
 
 ### Grupo 7. Identidad de desarrollo y seguridad Web
 
+Segunda ronda del 2026-10-30: [informe individual](test-audit-group-7.md) e [inventario actualizado de 82 casos de 45 métodos](test-audit-group-7.csv). Acciones aprobadas aplicadas: refuerzos y seis huecos; selección focalizada 82/82. Corregidas las cabeceras al rechazar un host. Tras resolver dos fallos externos de validación de solicitudes nulas, suite global **1.827/1.827**. Los registros siguientes son históricos.
+
 Diagnóstico inicial del 2026-10-29, sin modificar tests ni producción. Línea base relacionada: **50/50** casos superados en Release mediante `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-restore --filter 'FullyQualifiedName~DevelopmentIdentity|FullyQualifiedName~WebSecurityIntegrationTests|FullyQualifiedName~HomePage_IncludesSecurityHeaders|FullyQualifiedName~AnonymousPages_DoNotResolvePrivateIdentity|FullyQualifiedName~AppDashboard_UsesResolvedIdentity|FullyQualifiedName~WebStartupTests.Startup_' -v minimal`. Es una revisión de cobertura de tests, no una auditoría de vulnerabilidades ni una validación de funciones de autenticación aún no implementadas.
 
 | Prioridad | Hallazgo | Acción propuesta |
@@ -173,6 +189,8 @@ Diagnóstico inicial del 2026-10-29, sin modificar tests ni producción. Línea 
 Las tres acciones iniciales están resueltas. Verificación Release: **13/13** casos directamente relacionados y suite global con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Release --no-build --no-restore -v minimal`: **1.669/1.669**, sin omitidos. Solo se modificaron tests y este registro. La clasificación individual y el cierre quedan para la segunda ronda.
 
 ### Grupo 8. Persistencia y transacciones
+
+Segunda ronda del 2026-10-30: [informe individual](test-audit-group-8.md) e [inventario actualizado de 48 casos de 39 métodos](test-audit-group-8.csv). Aplicados siete refuerzos y cinco huecos; corregido el orden de validación de versiones de migración. Selección relacionada **61/61** en Debug con código recompilado, incluyendo 13 casos asignados a grupos anteriores. Tras resolver los dos fallos externos ya observados en el grupo 7, suite global **1.827/1.827**. Los registros siguientes son históricos.
 
 Diagnóstico inicial del 2026-10-29, sin cambios en tests ni producción. Línea base relacionada **43/43** superados en Debug: `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Debug --no-restore --filter 'FullyQualifiedName~SqliteUnitOfWorkTests|FullyQualifiedName~SqliteMigrationServiceTests|FullyQualifiedName~SqliteConnectionFactoryTests|FullyQualifiedName~SqlitePersistenceIntegrationTests' -v minimal`. El intento Release quedó bloqueado al compilar por DLL en uso por otro `testhost`; no fue un fallo de tests y no se detuvo ese proceso.
 
@@ -186,6 +204,8 @@ Diagnóstico inicial del 2026-10-29, sin cambios en tests ni producción. Línea
 Las cuatro acciones iniciales están resueltas. Verificación Debug: **32/32** casos de migraciones, unidad de trabajo y persistencia; suite global con `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Debug --no-build --no-restore -v minimal`: **1.669/1.669**, sin omitidos. Solo se modificaron tests y este registro. La revisión individual queda para la segunda ronda; sigue el grupo 9 antes de terminar la primera.
 
 ### Grupo 9. Base de aplicación, presentación y observabilidad
+
+Segunda ronda del 2026-10-30: [informe individual](test-audit-group-9.md) e [inventario actualizado de 222 casos](test-audit-group-9.csv). Refuerzos y huecos aprobados aplicados; suite global anterior **1.833/1.833**. La [revisión de impacto](test-audit-impact-review.md) clasificó los 31 casos posteriores, resolvió los cuatro refuerzos y documenta la lectura pública mediante una sentencia. S12 sigue pendiente. Los registros siguientes son históricos.
 
 Diagnóstico inicial adicional del 2026-10-29, sin cambios en tests ni producción. Línea base relacionada **70/70** en Debug: `dotnet test tests\Linkubator.Tests\Linkubator.Tests.csproj --configuration Debug --no-restore --filter 'FullyQualifiedName~DashboardServiceTests|FullyQualifiedName~SqliteDashboardRepositoryTests|FullyQualifiedName~ResultTests|FullyQualifiedName~ApplicationServiceBaseTests|FullyQualifiedName~LoggingTests|FullyQualifiedName~AppSidebarViewModelFactoryTests|FullyQualifiedName~LayerDependencyTests|FullyQualifiedName~ProjectReferenceMatrixTests' -v minimal`. No incluye todos los casos mixtos de presentación y logs de integración, ni acredita clasificación individual completa.
 

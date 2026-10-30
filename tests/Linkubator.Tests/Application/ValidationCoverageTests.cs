@@ -9,6 +9,39 @@ namespace Linkubator.Tests.Application;
 public class ValidationCoverageTests
 {
     [Fact]
+    public void CollectionUpdateValidator_WithNullRequest_ReturnsRequestRequired()
+    {
+        Result result = new CollectionUpdateValidator().Validate(null);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("REQUEST_REQUIRED", Assert.Single(result.Errors).Code);
+        Assert.Equal("request", result.Errors[0].Field);
+        Assert.Equal(Linkubator.Application.Enums.ApplicationErrorCategory.Validation, result.Errors[0].Category);
+    }
+
+    [Theory]
+    [InlineData(0, "Valid", "COLLECTION_ID_INVALID", "CollectionId")]
+    [InlineData(1, "", "COLLECTION_NAME_REQUIRED", "Name")]
+    public void CollectionUpdateValidator_WithInvalidField_ReturnsSpecificError(long id, string name, string code, string field)
+    {
+        Result result = new CollectionUpdateValidator().Validate(new CollectionUpdateRequest(id, name, "Description", false));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(code, Assert.Single(result.Errors).Code);
+        Assert.Equal(field, result.Errors[0].Field);
+        Assert.Equal(Linkubator.Application.Enums.ApplicationErrorCategory.Validation, result.Errors[0].Category);
+    }
+
+    [Fact]
+    public void CollectionUpdateValidator_WithValidRequest_Succeeds()
+    {
+        Result result = new CollectionUpdateValidator().Validate(new CollectionUpdateRequest(1, "Valid", "Description", true));
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
     public void LinkCreateValidator_CoversNullInvalidAndValidCases()
     {
         LinkCreateValidator validator = new();

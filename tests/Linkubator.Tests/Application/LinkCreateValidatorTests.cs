@@ -50,6 +50,7 @@ public sealed class LinkCreateValidatorTests
         Assert.False(result.IsSuccess);
         Assert.Equal(title ? "Title" : "Description", Assert.Single(result.Errors).Field);
         Assert.Equal("TextExceedsMaximumLength", result.Errors[0].Code);
+        Assert.Equal(Linkubator.Application.Enums.ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
     }
 
     [Theory]
@@ -67,5 +68,6 @@ public sealed class LinkCreateValidatorTests
         Assert.False(result.IsSuccess);
         Assert.Equal(title ? "Title" : "Description", Assert.Single(result.Errors).Field);
         Assert.Equal("TextExceedsMaximumLength", result.Errors[0].Code);
+        Assert.Equal(Linkubator.Application.Enums.ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
     }
 }

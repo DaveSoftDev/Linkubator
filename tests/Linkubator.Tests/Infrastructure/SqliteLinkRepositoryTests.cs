@@ -44,6 +44,27 @@ public sealed class SqliteLinkRepositoryTests
     }
 
     [Fact]
+    public async Task ExistsByCollection_WhenLinksBelongToDifferentCollectionsOrUsers_ChecksOnlyOwnedCollection()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", true);
+        long emptyCollectionId = await database.SeedCollection(42, "Empty", "empty", false);
+        long otherCollectionId = await database.SeedCollection(99, "Other", "other", true);
+        await database.SeedLink(42, collectionId, "https://example.test/one", "https://example.test/one", "One", false);
+        await database.SeedLink(99, otherCollectionId, "https://example.test/other", "https://example.test/other", "Other", true);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        bool own = await repository.ExistsByCollection(42, collectionId);
+        bool empty = await repository.ExistsByCollection(42, emptyCollectionId);
+        bool foreign = await repository.ExistsByCollection(42, otherCollectionId);
+
+        Assert.True(own);
+        Assert.False(empty);
+        Assert.False(foreign);
+    }
+
+    [Fact]
     public async Task GetCountByCollection_WhenLinksBelongToDifferentCollectionsOrUsers_CountsOnlyOwnedCollection()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
@@ -129,7 +150,7 @@ public sealed class SqliteLinkRepositoryTests
         Assert.Equal(linkId, result.Id);
         Assert.Equal(42, result.UserId);
         Assert.Equal(collectionId, result.CollectionId);
-        Assert.Same(result, Assert.Single(result.Collection.Links));
+        Assert.Same(result, Assert.Single(Assert.IsType<Collection>(result.Collection).Links));
         Assert.Equal("https://example.test/path", result.UrlOriginal);
         Assert.Equal("https://example.test/normalized", result.UrlNormalized);
         Assert.Equal("Stored title", result.Title);
@@ -158,8 +179,9 @@ public sealed class SqliteLinkRepositoryTests
         Assert.Equal(link.Id, result.Id);
         Assert.Equal(42, result.UserId);
         Assert.Equal(collectionId, result.CollectionId);
-        Assert.Equal("Private", result.Collection.Name);
-        Assert.Same(result, Assert.Single(result.Collection.Links));
+        Collection loadedCollection = Assert.IsType<Collection>(result.Collection);
+        Assert.Equal("Private", loadedCollection.Name);
+        Assert.Same(result, Assert.Single(loadedCollection.Links));
         Assert.Equal("https://example.test/path", result.UrlOriginal);
         Assert.Equal(link.UrlNormalized, result.UrlNormalized);
         Assert.Equal("Title", result.Title);
@@ -220,10 +242,15 @@ public sealed class SqliteLinkRepositoryTests
         await using SqliteConnection connection = database.OpenConnection();
         ILinkRepository repository = new SqliteLinkRepository(connection);
 
+        string original = await connection.QuerySingleAsync<string>("SELECT json_object('Id', Id, 'UserId', UserId, 'Name', Title) FROM Link WHERE Id = @Id;", new { Id = linkId });
+        string projection = await connection.QuerySingleAsync<string>("SELECT Title FROM LinkSearch WHERE rowid = @Id AND UserId = 99;", new { Id = linkId });
+
         await repository.Delete(linkId, 42);
         Link? result = await repository.GetById(linkId, 99);
 
         Assert.NotNull(result);
+        Assert.Equal(original, await connection.QuerySingleAsync<string>("SELECT json_object('Id', Id, 'UserId', UserId, 'Name', Title) FROM Link WHERE Id = @Id;", new { Id = linkId }));
+        Assert.Equal(projection, await connection.QuerySingleAsync<string>("SELECT Title FROM LinkSearch WHERE rowid = @Id AND UserId = 99;", new { Id = linkId }));
         Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
             new { Id = linkId, UserId = 42 }));
@@ -307,11 +334,41 @@ public sealed class SqliteLinkRepositoryTests
         Link link = Link.Create(42, collection, "https://example.test/path", "Title", null, null);
         await repository.Insert(link);
 
+        long survivor = await database.SeedLink(42, collectionId, "https://example.test/survivor", "survivor", "Survivor", false);
+
         await repository.Delete(link.Id, 42);
+
+        Assert.Null(await repository.GetById(link.Id, 42));
+        Assert.Equal("Survivor", (await repository.GetById(survivor, 42))!.Title);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM LinkSearch WHERE rowid = @Id;", new { Id = survivor }));
 
         Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
             new { Id = link.Id, UserId = 42 }));
+    }
+
+    [Fact]
+    public async Task Update_WhenCollectionIsNotLoaded_UpdatesSearchProjection()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Colección", "coleccion", false);
+        long linkId = await database.SeedLink(42, collectionId, "https://example.test/a", "https://example.test/a", "Original", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository repository = new SqliteLinkRepository(connection);
+        Link link = (await repository.GetById(linkId, 42))!;
+        Collection collection = Assert.IsType<Collection>(link.Collection);
+        collection.RehydrateLinks(Array.Empty<Link>());
+        link.Edit("Actualizado", null, null);
+
+        await repository.Update(link);
+
+        Assert.Null(link.Collection);
+        Assert.Equal("Actualizado", await connection.QuerySingleAsync<string>(
+            "SELECT Title FROM Link WHERE Id = @Id;", new { Id = linkId }));
+        Assert.Equal("Colección", await connection.QuerySingleAsync<string>(
+            "SELECT CollectionName FROM LinkSearch WHERE rowid = @Id;", new { Id = linkId }));
+        Assert.Equal("Actualizado", await connection.QuerySingleAsync<string>(
+            "SELECT Title FROM LinkSearch WHERE rowid = @Id;", new { Id = linkId }));
     }
 
     [Fact]
@@ -332,10 +389,11 @@ public sealed class SqliteLinkRepositoryTests
         await repository.Update(link);
         Link? result = await repository.GetById(link.Id, 42);
 
-        Assert.Equal("Target", link.Collection.Name);
+        Assert.Equal("Target", Assert.IsType<Collection>(link.Collection).Name);
         Assert.Equal(targetCollectionId, result!.CollectionId);
-        Assert.Equal("Target", result.Collection.Name);
-        Assert.Same(result, Assert.Single(result.Collection.Links));
+        Collection loadedCollection = Assert.IsType<Collection>(result.Collection);
+        Assert.Equal("Target", loadedCollection.Name);
+        Assert.Same(result, Assert.Single(loadedCollection.Links));
         Assert.False(result.IsPublic);
         Assert.Equal(
             "Target",
@@ -383,11 +441,14 @@ public sealed class SqliteLinkRepositoryTests
     public async Task GetPageByUser_WhenPageIsIntMaxValue_ReturnsEmptyPageWithoutOverflow()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Control", "control", false);
+        await database.SeedLink(42, collectionId, "https://example.test/control", "control", "Control", false);
         await using SqliteConnection connection = database.OpenConnection();
         ILinkRepository repository = new SqliteLinkRepository(connection);
 
         IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, null, null, int.MaxValue);
 
+        Assert.Single(await repository.GetPageByUser(42, null, null, 1));
         Assert.Empty(result);
     }
 
@@ -465,6 +526,8 @@ public sealed class SqliteLinkRepositoryTests
         await database.SeedLink(42, ownCollectionId, "https://example.test/other", "https://example.test/other", "query", false);
         await database.SeedLink(99, otherCollectionId, "https://example.test/foreign", "https://example.test/foreign", "query query query", false);
         await using SqliteConnection connection = database.OpenConnection();
+        await connection.ExecuteAsync("UPDATE Link SET CreatedAt = @Date WHERE UrlOriginal = 'https://example.test/query';", new { Date = DateTime.UnixEpoch });
+        await connection.ExecuteAsync("UPDATE Link SET CreatedAt = @Date WHERE UrlOriginal = 'https://example.test/other';", new { Date = DateTime.UnixEpoch.AddDays(10) });
         ILinkRepository repository = new SqliteLinkRepository(connection);
 
         IReadOnlyCollection<Linkubator.Application.Dtos.Models.LinkDto> result = await repository.GetPageByUser(42, "query", null, 1);
@@ -548,6 +611,7 @@ public sealed class SqliteLinkRepositoryTests
         long secondCollectionId = await database.SeedCollection(42, "Second", "second", false);
         await database.SeedLink(42, firstCollectionId, "https://example.test/one", "https://example.test/one", "One", false);
         await database.SeedLink(42, secondCollectionId, "https://example.test/two", "https://example.test/two", "Two", false);
+        await database.SeedLinkRange(42, secondCollectionId, 17);
         await using SqliteConnection connection = database.OpenConnection();
         ILinkRepository repository = new SqliteLinkRepository(connection);
 
@@ -600,12 +664,26 @@ public sealed class SqliteLinkRepositoryTests
         await database.SeedLink(42, collectionId, "https://example.test/no-match", "https://example.test/no-match", "different", false);
         await database.SeedLink(42, otherCollectionId, "https://example.test/other-collection", "https://example.test/other-collection", "needle", false);
         await database.SeedLink(99, foreignCollectionId, "https://example.test/foreign-match", "https://example.test/foreign-match", "needle", false);
+        await database.SeedLinkRange(42, collectionId, 17);
+        await SeedMatchingLinksInOtherCollection(database, otherCollectionId);
+        await database.SeedLinkRange(99, foreignCollectionId, 17);
         await using SqliteConnection connection = database.OpenConnection();
         ILinkRepository repository = new SqliteLinkRepository(connection);
+
+        await connection.ExecuteAsync("UPDATE LinkSearch SET Title = 'needle' WHERE rowid IN (SELECT Id FROM Link WHERE CollectionId IN (@Other, @Foreign));", new { Other = otherCollectionId, Foreign = foreignCollectionId });
 
         int result = await repository.GetPageCountByUser(42, "needle", collectionId);
 
         Assert.Equal(1, result);
+    }
+
+    private static async Task SeedMatchingLinksInOtherCollection(SqliteRepositoryTestDatabase database, long collectionId)
+    {
+        for (int index = 0; index < 17; index++)
+        {
+            string url = $"https://example.test/other-extra-{index}";
+            await database.SeedLink(42, collectionId, url, url, "needle", false);
+        }
     }
 
     [Theory]
@@ -629,3 +707,4 @@ public sealed class SqliteLinkRepositoryTests
         Assert.Equal(expectedPages, result);
     }
 }
+

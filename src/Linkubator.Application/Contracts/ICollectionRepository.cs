@@ -9,15 +9,11 @@ public interface ICollectionRepository
 
     Task<Entities.Collection?> GetBySlug(long userId, string slug, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyCollection<Entities.Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsOtherCollectionByUser(long userId, long excludedCollectionId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(
-        long userId,
-        string? query,
-        int page,
-        CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default);
 
     Task<int> GetPageCountByUser(long userId, string? query, CancellationToken cancellationToken = default);
 

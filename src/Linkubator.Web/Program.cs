@@ -17,6 +17,15 @@ string[] allowedHosts = builder.Configuration.GetValue<string>("AllowedHosts")?
     .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
     ?? ["localhost", "127.0.0.1", "[::1]"];
 
+// The default startup filter otherwise rejects hosts before the security-header middleware runs.
+ServiceDescriptor? defaultHostFilter = builder.Services.FirstOrDefault(descriptor =>
+    descriptor.ServiceType == typeof(IStartupFilter)
+    && descriptor.ImplementationType?.FullName == "Microsoft.AspNetCore.HostFilteringStartupFilter");
+if (defaultHostFilter is not null)
+{
+    builder.Services.Remove(defaultHostFilter);
+}
+
 builder.Services.Configure<HostFilteringOptions>(options => options.AllowedHosts = allowedHosts);
 builder.Services.Configure<WebOptions.PublicOriginOptions>(options =>
     options.Origin = builder.Configuration[WebOptions.PublicOriginOptions.ConfigurationKey] ?? string.Empty);
@@ -60,7 +69,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHostFiltering();
 app.Use(async (context, next) =>
 {
     context.Response.OnStarting(() =>
@@ -73,6 +81,7 @@ app.Use(async (context, next) =>
 
     await next();
 });
+app.UseHostFiltering();
 app.UseStatusCodePages(async ctx =>
 {
     HttpContext httpContext = ctx.HttpContext;

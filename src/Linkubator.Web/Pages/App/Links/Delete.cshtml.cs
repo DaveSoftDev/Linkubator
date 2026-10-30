@@ -34,6 +34,8 @@ public sealed class DeleteModel : LinkManagementPageModel
 
     public string LinkLabel { get; private set; } = string.Empty;
 
+    public bool HasLoadedLink { get; private set; }
+
     public Presentation.PageErrorSummaryViewModel ErrorSummary { get; private set; } = new();
 
     public Presentation.PageAlertViewModel Alert { get; private set; } = new();
@@ -61,6 +63,7 @@ public sealed class DeleteModel : LinkManagementPageModel
         }
 
         LinkLabel = string.IsNullOrWhiteSpace(result.Value.Title) ? result.Value.UrlOriginal : result.Value.Title;
+        HasLoadedLink = true;
         return Page();
     }
 
@@ -94,6 +97,7 @@ public sealed class DeleteModel : LinkManagementPageModel
             LinkLabel = string.IsNullOrWhiteSpace(linkResult.Value.Title)
                 ? linkResult.Value.UrlOriginal
                 : linkResult.Value.Title;
+            HasLoadedLink = true;
         }
 
         ApplyErrors(result.Errors);
@@ -103,9 +107,10 @@ public sealed class DeleteModel : LinkManagementPageModel
     private bool TryGetLinkId(out long linkId)
     {
         linkId = 0;
-        return !string.IsNullOrWhiteSpace(RouteId)
-            && RouteId.All(char.IsAsciiDigit)
-            && long.TryParse(RouteId, NumberStyles.None, CultureInfo.InvariantCulture, out linkId)
+        string? canonicalId = RouteData.Values["id"]?.ToString();
+        return !string.IsNullOrWhiteSpace(canonicalId)
+            && canonicalId.All(char.IsAsciiDigit)
+            && long.TryParse(canonicalId, NumberStyles.None, CultureInfo.InvariantCulture, out linkId)
             && linkId > 0;
     }
 

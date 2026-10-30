@@ -11,7 +11,7 @@ public interface ILinkRepository
 
     Task<IReadOnlyCollection<Entities.Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyCollection<Entities.Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsByCollection(long userId, long collectionId, CancellationToken cancellationToken = default);
 
     Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default);
 

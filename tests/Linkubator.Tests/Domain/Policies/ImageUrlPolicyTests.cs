@@ -7,6 +7,18 @@ namespace Linkubator.Tests.Domain.Policies;
 [Trait("Category", "URLs")]
 public class ImageUrlPolicyTests
 {
+    [Fact]
+    public void Adjust_WithRelativeUnicodeExpansion_CrossesFinalLengthBoundary()
+    {
+        const string prefix = "https://example.com/";
+        string within = new string('a', 2048 - prefix.Length - 12) + "\U0001F600";
+        string expected = prefix + new string('a', 2048 - prefix.Length - 12) + "%F0%9F%98%80";
+
+        Assert.Equal(expected, DomainPolicies.ImageUrlPolicy.Adjust(within, prefix));
+        Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() => DomainPolicies.ImageUrlPolicy.Adjust("a" + within, prefix));
+        Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() => DomainPolicies.ImageUrlPolicy.Adjust(prefix + new string('a', 2048 - prefix.Length) + "\U0001F600", prefix));
+    }
+
     [Theory]
     [InlineData("https://cdn.example.com/img.jpg", "https://cdn.example.com/img.jpg")]
     [InlineData("http://cdn.example.com/img.jpg", "https://cdn.example.com/img.jpg")]
@@ -153,6 +165,7 @@ public class ImageUrlPolicyTests
 
         string adjusted = DomainPolicies.ImageUrlPolicy.Adjust(input, "https://example.com/a/b/post");
 
+        Assert.Equal(input, adjusted);
         Assert.Equal(2048, DomainPolicies.UserTextPolicy.CountCodePoints(adjusted));
     }
 

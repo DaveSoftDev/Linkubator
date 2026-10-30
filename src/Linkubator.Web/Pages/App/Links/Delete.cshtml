@@ -16,6 +16,12 @@
     {
         @await Html.PartialAsync("~/Pages/Shared/_PrivateResourceUnavailable.cshtml", Model.ResourceUnavailable)
     }
+    else if (!Model.HasLoadedLink)
+    {
+        @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
+        @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
+        <p><a href="@Model.ReturnRoute">Volver al listado</a></p>
+    }
     else
     {
         <form method="post" class="collection-form collection-form--danger">
@@ -30,22 +36,16 @@
                 @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
                 @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
             </div>
-            @if (Model.LinkLabel.Length > 0)
-            {
-                <div class="collection-form__fields">
-                    <p class="collection-form__confirmation">¿Seguro que quieres eliminar el enlace <strong>@Model.LinkLabel</strong>?</p>
-                    <p class="collection-form__warning">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 3 10 18H2L12 3Z" /><path d="M12 9v4m0 4h.01" /></svg>
-                        Esta acción no se puede deshacer.
-                    </p>
-                </div>
-            }
+            <div class="collection-form__fields">
+                <p class="collection-form__confirmation">¿Seguro que quieres eliminar el enlace <strong>@Model.LinkLabel</strong>?</p>
+                <p class="collection-form__warning">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 3 10 18H2L12 3Z" /><path d="M12 9v4m0 4h.01" /></svg>
+                    Esta acción no se puede deshacer.
+                </p>
+            </div>
             <div class="collection-form__actions">
                 <a class="collection-form__cancel" href="@Model.ReturnRoute" autofocus>Cancelar</a>
-                @if (Model.LinkLabel.Length > 0)
-                {
-                    <button class="primary-button collection-form__delete" type="submit">Eliminar</button>
-                }
+                <button class="primary-button collection-form__delete" type="submit">Eliminar</button>
             </div>
         </form>
     }

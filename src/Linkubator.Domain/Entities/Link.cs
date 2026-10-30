@@ -25,9 +25,9 @@ public sealed class Link : Bases.BaseEntity
     public long CollectionId { get; private set; }
 
     /// <summary>
-    /// Colección a la que pertenece el enlace.
+    /// Colección cargada a la que pertenece el enlace, o <c>null</c> si no está cargada.
     /// </summary>
-    public Collection Collection { get; private set; } = null!;
+    public Collection? Collection { get; private set; }
 
     /// <summary>
     /// URL original ajustada y validada.
@@ -157,6 +157,14 @@ public sealed class Link : Bases.BaseEntity
 
         Collection = collection;
         collection.AddLink(this);
+    }
+
+    internal void DetachCollection(Collection collection)
+    {
+        if (ReferenceEquals(Collection, collection))
+        {
+            Collection = null;
+        }
     }
 
     /// <summary>
