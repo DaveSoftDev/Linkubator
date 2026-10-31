@@ -7,6 +7,9 @@ namespace Linkubator.Domain.Policies;
 /// </summary>
 internal static partial class UriAuthoritySyntax
 {
+    /// <summary>
+    /// Proporciona la expresión regular generada que valida la sintaxis de un nombre de esquema URI.
+    /// </summary>
     [GeneratedRegex(@"^[a-zA-Z][a-zA-Z0-9+\.\-]*$", RegexOptions.CultureInvariant)]
     private static partial Regex SchemeNameRegex();
 

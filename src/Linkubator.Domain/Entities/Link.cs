@@ -159,6 +159,10 @@ public sealed class Link : Bases.BaseEntity
         collection.AddLink(this);
     }
 
+    /// <summary>
+    /// Desvincula el enlace de la colección indicada si es su colección cargada actualmente.
+    /// </summary>
+    /// <param name="collection">Colección de la que se desvincula el enlace.</param>
     internal void DetachCollection(Collection collection)
     {
         if (ReferenceEquals(Collection, collection))

@@ -10,6 +10,11 @@ namespace Linkubator.Domain.Policies;
 /// </summary>
 internal static class UriPortFormat
 {
+    /// <summary>
+    /// Determina si el puerto está ausente o tiene un valor numérico válido.
+    /// </summary>
+    /// <param name="port">Puerto que se va a validar, o <c>null</c> si está ausente.</param>
+    /// <returns><c>true</c> si el puerto es válido; de lo contrario, <c>false</c>.</returns>
     internal static bool IsValid(string? port)
     {
         if (port is null)
