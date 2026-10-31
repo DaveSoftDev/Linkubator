@@ -21,6 +21,9 @@ public sealed class DevelopmentIdentityProvider : ApplicationContracts.IDevelopm
 
     private readonly InfrastructureContracts.ISqliteConnectionFactory _connectionFactory;
 
+    /// <summary>
+    /// Crea un proveedor de la identidad de desarrollo usando la fábrica de conexiones indicada.
+    /// </summary>
     public DevelopmentIdentityProvider(InfrastructureContracts.ISqliteConnectionFactory connectionFactory)
     {
         ArgumentNullException.ThrowIfNull(connectionFactory);
@@ -28,6 +31,9 @@ public sealed class DevelopmentIdentityProvider : ApplicationContracts.IDevelopm
         _connectionFactory = connectionFactory;
     }
 
+    /// <summary>
+    /// Obtiene el perfil de la identidad de desarrollo configurada.
+    /// </summary>
     public async Task<ApplicationModels.DevelopmentIdentityProfile> GetProfile(CancellationToken cancellationToken = default)
     {
         using SqliteConnection connection = _connectionFactory.CreateOpenConnection();

@@ -10,11 +10,17 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
     private const int PageSize = 16;
     private readonly SqliteConnection _connection;
 
+    /// <summary>
+    /// Crea el repositorio de lecturas públicas asociado a la conexión SQLite indicada.
+    /// </summary>
     public SqlitePublicReadRepository(SqliteConnection connection)
     {
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
     }
 
+    /// <summary>
+    /// Obtiene la página pública del usuario, incluidas sus colecciones y enlaces públicos recientes.
+    /// </summary>
     public async Task<PublicUserDto?> GetUserPage(string alias, CancellationToken cancellationToken = default)
     {
         UserRow? user = await GetUserByAlias(alias, cancellationToken);
@@ -57,6 +63,9 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
         return new PublicUserDto(alias, collections, recentLinks);
     }
 
+    /// <summary>
+    /// Obtiene las colecciones públicas con enlaces públicos del usuario indicado.
+    /// </summary>
     public async Task<IReadOnlyCollection<PublicCollectionSummaryDto>?> GetCollectionsPage(string alias, CancellationToken cancellationToken = default)
     {
         UserRow? user = await GetUserByAlias(alias, cancellationToken);
@@ -84,6 +93,9 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
             .ToList();
     }
 
+    /// <summary>
+    /// Obtiene una página de enlaces públicos de la colección identificada por alias y slug.
+    /// </summary>
     public async Task<PublicCollectionDto?> GetCollectionPage(string alias, string slug, int page, CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
@@ -131,6 +143,9 @@ public sealed class SqlitePublicReadRepository : IPublicReadRepository
         return new PublicCollectionDto(alias, collection.Name, collection.Slug, links, collection.Page, collection.PageCount);
     }
 
+    /// <summary>
+    /// Busca el identificador y el alias del usuario por su alias público.
+    /// </summary>
     private Task<UserRow?> GetUserByAlias(string alias, CancellationToken cancellationToken)
         => _connection.QuerySingleOrDefaultAsync<UserRow>(new CommandDefinition(
             "SELECT Id, Alias FROM User WHERE Alias = @Alias;",

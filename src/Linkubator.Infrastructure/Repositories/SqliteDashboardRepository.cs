@@ -9,11 +9,17 @@ public sealed class SqliteDashboardRepository : IDashboardRepository
 {
     private readonly SqliteConnection _connection;
 
+    /// <summary>
+    /// Crea el repositorio del panel asociado a la conexión SQLite indicada.
+    /// </summary>
     public SqliteDashboardRepository(SqliteConnection connection)
     {
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
     }
 
+    /// <summary>
+    /// Obtiene los datos recientes del panel del usuario.
+    /// </summary>
     public async Task<DashboardDto> GetByUser(long userId, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<LinkDto> recentLinks = (await _connection.QueryAsync<LinkDto>(new CommandDefinition(

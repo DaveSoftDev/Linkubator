@@ -14,12 +14,18 @@ public sealed class SqliteConnectionFactory : ISqliteConnectionFactory
 
     private readonly string _connectionString;
 
+    /// <summary>
+    /// Crea una fábrica de conexiones SQLite con la cadena de conexión indicada.
+    /// </summary>
     public SqliteConnectionFactory(string connectionString)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
         _connectionString = connectionString;
     }
 
+    /// <summary>
+    /// Abre una conexión SQLite y configura sus opciones y colación.
+    /// </summary>
     public SqliteConnection CreateOpenConnection()
     {
         EnsureParentDirectoryExists();
@@ -35,6 +41,9 @@ public sealed class SqliteConnectionFactory : ISqliteConnectionFactory
         return connection;
     }
 
+    /// <summary>
+    /// Crea el directorio contenedor de la base de datos cuando corresponde.
+    /// </summary>
     private void EnsureParentDirectoryExists()
     {
         SqliteConnectionStringBuilder builder = new();
@@ -53,6 +62,9 @@ public sealed class SqliteConnectionFactory : ISqliteConnectionFactory
         }
     }
 
+    /// <summary>
+    /// Compara dos cadenas con las reglas de cultura española, ignorando mayúsculas y diacríticos.
+    /// </summary>
     private static int CompareSpanish(string? left, string? right)
     {
         if (ReferenceEquals(left, right))

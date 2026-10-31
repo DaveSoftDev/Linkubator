@@ -20,6 +20,9 @@ public sealed class DevelopmentIdentityProvisioner
     private readonly ISqliteConnectionFactory _connectionFactory;
     private readonly DevelopmentIdentityOptions _options;
 
+    /// <summary>
+    /// Crea el aprovisionador de identidad de desarrollo y valida su configuración.
+    /// </summary>
     public DevelopmentIdentityProvisioner(ISqliteConnectionFactory connectionFactory, DevelopmentIdentityOptions options)
     {
         ArgumentNullException.ThrowIfNull(connectionFactory);
@@ -30,6 +33,9 @@ public sealed class DevelopmentIdentityProvisioner
         ValidateOptions(_options);
     }
 
+    /// <summary>
+    /// Crea o actualiza en la base de datos la identidad de desarrollo y su colección inicial.
+    /// </summary>
     public async Task Provision()
     {
         using SqliteConnection connection = _connectionFactory.CreateOpenConnection();
@@ -56,6 +62,9 @@ public sealed class DevelopmentIdentityProvisioner
         }
     }
 
+    /// <summary>
+    /// Valida que la configuración de la identidad de desarrollo contenga un hash Argon2id admitido.
+    /// </summary>
     private static void ValidateOptions(DevelopmentIdentityOptions options)
     {
         Match hashMatch = string.IsNullOrWhiteSpace(options.PasswordHash)
@@ -81,6 +90,9 @@ public sealed class DevelopmentIdentityProvisioner
         }
     }
 
+    /// <summary>
+    /// Decodifica una cadena Base64 segura para URL; devuelve un arreglo vacío si el formato no es válido.
+    /// </summary>
     private static byte[] DecodeBase64(string value)
     {
         string standardBase64 = value.Replace('-', '+').Replace('_', '/');
@@ -95,6 +107,9 @@ public sealed class DevelopmentIdentityProvisioner
         }
     }
 
+    /// <summary>
+    /// Carga el script SQL incrustado para aprovisionar la identidad de desarrollo.
+    /// </summary>
     private static string LoadProvisioningSql()
     {
         Assembly assembly = typeof(DevelopmentIdentityProvisioner).Assembly;

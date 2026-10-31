@@ -13,6 +13,9 @@ public sealed class SqliteUnitOfWork : IUnitOfWork
     private bool _disposed;
     private bool _transactionActive;
 
+    /// <summary>
+    /// Crea una unidad de trabajo y sus repositorios sobre la conexión SQLite indicada.
+    /// </summary>
     public SqliteUnitOfWork(SqliteConnection connection)
     {
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
@@ -25,6 +28,9 @@ public sealed class SqliteUnitOfWork : IUnitOfWork
         };
     }
 
+    /// <summary>
+    /// Obtiene el repositorio registrado del tipo solicitado.
+    /// </summary>
     public TRepository GetRepository<TRepository>() where TRepository : class
     {
         if (_disposed)
@@ -41,6 +47,9 @@ public sealed class SqliteUnitOfWork : IUnitOfWork
         return (TRepository)repository;
     }
 
+    /// <summary>
+    /// Inicia una transacción de escritura si no hay otra activa.
+    /// </summary>
     public async Task Begin(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -64,6 +73,9 @@ public sealed class SqliteUnitOfWork : IUnitOfWork
         _transactionActive = true;
     }
 
+    /// <summary>
+    /// Confirma la transacción activa, si existe.
+    /// </summary>
     public async Task Commit(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -82,6 +94,9 @@ public sealed class SqliteUnitOfWork : IUnitOfWork
         _transactionActive = false;
     }
 
+    /// <summary>
+    /// Revierte la transacción activa, si existe.
+    /// </summary>
     public async Task Rollback(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -100,6 +115,9 @@ public sealed class SqliteUnitOfWork : IUnitOfWork
         _transactionActive = false;
     }
 
+    /// <summary>
+    /// Revierte cualquier transacción activa y libera sincrónicamente la conexión.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed)
@@ -128,6 +146,9 @@ public sealed class SqliteUnitOfWork : IUnitOfWork
         _disposed = true;
     }
 
+    /// <summary>
+    /// Revierte cualquier transacción activa y libera asincrónicamente la conexión.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
         if (_disposed)

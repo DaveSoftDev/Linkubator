@@ -29,12 +29,18 @@ public sealed class SqliteSearchProjectionRebuilder : ISqliteSearchProjectionReb
 
     private readonly ISqliteConnectionFactory _connectionFactory;
 
+    /// <summary>
+    /// Crea el servicio que reconstruye las proyecciones de búsqueda.
+    /// </summary>
     public SqliteSearchProjectionRebuilder(ISqliteConnectionFactory connectionFactory)
     {
         ArgumentNullException.ThrowIfNull(connectionFactory);
         _connectionFactory = connectionFactory;
     }
 
+    /// <summary>
+    /// Reconstruye de forma transaccional las proyecciones de búsqueda de colecciones y enlaces.
+    /// </summary>
     public async Task Rebuild(CancellationToken cancellationToken = default)
     {
         await using SqliteConnection connection = _connectionFactory.CreateOpenConnection();
