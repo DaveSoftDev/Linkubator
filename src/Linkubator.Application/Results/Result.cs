@@ -2,6 +2,9 @@ namespace Linkubator.Application.Results;
 
 public class Result
 {
+    /// <summary>
+    /// Inicializa Result con las dependencias necesarias.
+    /// </summary>
     protected Result(bool isSuccess, IEnumerable<ApplicationError>? errors = null)
     {
         ApplicationError[] materializedErrors = (errors ?? Array.Empty<ApplicationError>())
@@ -26,9 +29,18 @@ public class Result
 
     public IReadOnlyList<ApplicationError> Errors { get; }
 
+    /// <summary>
+    /// Crea un resultado satisfactorio.
+    /// </summary>
     public static Result Success() => new(true, Array.Empty<ApplicationError>());
 
+    /// <summary>
+    /// Registra el rechazo de la operación y crea un resultado fallido con el error indicado.
+    /// </summary>
     public static Result Failure(params ApplicationError[] errors) => new(false, errors);
 
+    /// <summary>
+    /// Registra el rechazo de la operación y crea un resultado fallido con el error indicado.
+    /// </summary>
     public static Result Failure(IEnumerable<ApplicationError> errors) => new(false, errors);
 }

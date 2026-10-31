@@ -30,21 +30,39 @@ public static class CollectionErrors
     private const string HasLinksCode = "COLLECTION_HAS_LINKS";
     private const string LastCollectionCannotBeDeletedCode = "LAST_COLLECTION_CANNOT_BE_DELETED";
 
+    /// <summary>
+    /// Crea el error que indica que la solicitud es obligatoria.
+    /// </summary>
     public static ApplicationError RequestRequired()
         => CommonErrors.RequestRequired();
 
+    /// <summary>
+    /// Crea el error que indica que el identificador de la colección no es válido.
+    /// </summary>
     public static ApplicationError CollectionIdInvalid()
         => ApplicationError.Validation(CollectionIdInvalidCode, CollectionIdField, CollectionIdInvalidMessage);
 
+    /// <summary>
+    /// Crea el error que indica que el nombre de la colección es obligatorio.
+    /// </summary>
     public static ApplicationError NameRequired()
         => ApplicationError.Validation(NameRequiredCode, NameField, NameRequiredMessage);
 
+    /// <summary>
+    /// Crea el error que indica que el nombre de la colección supera la longitud permitida.
+    /// </summary>
     public static ApplicationError NameTooLong()
         => ApplicationError.Validation(NameTooLongCode, NameField, NameTooLongMessage);
 
+    /// <summary>
+    /// Crea el error que indica que la descripción de la colección supera la longitud permitida.
+    /// </summary>
     public static ApplicationError DescriptionTooLong()
         => ApplicationError.Validation(DescriptionTooLongCode, DescriptionField, DescriptionTooLongMessage);
 
+    /// <summary>
+    /// Crea el error que indica que el nombre de la colección ya está en uso.
+    /// </summary>
     public static ApplicationError NameInUse(string? conflictingCollectionName = null)
     {
         string message = $"{NameInUseMessage}.";
@@ -55,27 +73,51 @@ public static class CollectionErrors
         return ApplicationError.Domain(NameInUseCode, NameField, message);
     }
 
+    /// <summary>
+    /// Crea el error que indica que la colección solicitada no es accesible.
+    /// </summary>
     public static ApplicationError GetNotAccessible()
         => ApplicationError.ResourceNotAccessible(GetNotAccessibleCode, CollectionIdField, CollectionNotAccessibleMessage);
 
+    /// <summary>
+    /// Crea el error que indica que la colección que se quiere actualizar no es accesible.
+    /// </summary>
     public static ApplicationError UpdateNotAccessible()
         => ApplicationError.ResourceNotAccessible(UpdateNotAccessibleCode, CollectionIdField, CollectionNotAccessibleMessage);
 
+    /// <summary>
+    /// Crea el error que indica que no se puede cambiar el nombre de la colección.
+    /// </summary>
     public static ApplicationError RenameNotAccessible()
         => ApplicationError.ResourceNotAccessible(RenameNotAccessibleCode, CollectionIdField, RenameNotAccessibleMessage);
 
+    /// <summary>
+    /// Crea el error que indica que no se puede cambiar la privacidad de la colección.
+    /// </summary>
     public static ApplicationError VisibilityNotAccessible()
         => ApplicationError.ResourceNotAccessible(VisibilityNotAccessibleCode, CollectionIdField, VisibilityNotAccessibleMessage);
 
+    /// <summary>
+    /// Crea el error que indica que el enlace no se puede eliminar.
+    /// </summary>
     public static ApplicationError DeleteNotAccessible()
         => ApplicationError.ResourceNotAccessible(DeleteNotAccessibleCode, CollectionIdField, CollectionNotAccessibleMessage);
 
+    /// <summary>
+    /// Crea el error que indica que no se puede eliminar una colección que contiene enlaces.
+    /// </summary>
     public static ApplicationError HasLinks()
         => ApplicationError.Domain(HasLinksCode, CollectionIdField, CollectionHasLinksMessage);
 
+    /// <summary>
+    /// Crea el error que indica que no se puede eliminar la última colección del usuario.
+    /// </summary>
     public static ApplicationError LastCollectionCannotBeDeleted()
         => ApplicationError.Domain(LastCollectionCannotBeDeletedCode, CollectionIdField, LastCollectionCannotBeDeletedMessage);
 
+    /// <summary>
+    /// Crea el error que indica que el número de página no es válido.
+    /// </summary>
     public static ApplicationError PageInvalid()
         => CommonErrors.PageInvalid(CommonErrors.PageInvalidCode, CommonErrors.PageField, CommonErrors.PageInvalidMessage);
 }

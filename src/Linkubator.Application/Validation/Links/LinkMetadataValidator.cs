@@ -8,6 +8,9 @@ namespace Linkubator.Application.Validation.Links;
 
 internal static class LinkMetadataValidator
 {
+    /// <summary>
+    /// Valida la solicitud indicada y devuelve los errores detectados.
+    /// </summary>
     public static Result Validate(LinkMetadataValidationRequest request)
     {
         Result titleResult = ValidateField(nameof(LinkUpdateRequest.Title), () => DomainPolicies.UserTextPolicy.EnsureOptionalMaximumLength(request.Title, LengthLimits.LinkTitle));
@@ -32,6 +35,9 @@ internal static class LinkMetadataValidator
         });
     }
 
+    /// <summary>
+    /// Ejecuta la validación del campo y convierte las excepciones de dominio en errores de validación.
+    /// </summary>
     private static Result ValidateField(string field, Action validate)
     {
         try

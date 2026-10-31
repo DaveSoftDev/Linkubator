@@ -18,6 +18,9 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
     private readonly IValidator<CollectionUpdateRequest> _collectionUpdateValidator;
     private readonly IValidator<CollectionDeleteRequest> _deleteCollectionValidator;
 
+    /// <summary>
+    /// Inicializa CollectionService con las dependencias necesarias.
+    /// </summary>
     public CollectionService(
         ILogger<CollectionService> logger,
         ICurrentUser currentUser,
@@ -36,6 +39,9 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         _deleteCollectionValidator = resolvedValidators.CollectionDeleteValidator;
     }
 
+    /// <summary>
+    /// Obtiene una colección perteneciente al usuario actual.
+    /// </summary>
     public async Task<Result<CollectionDto>> GetCollection(CollectionGetRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _getCollectionValidator.Validate(request);
@@ -71,6 +77,9 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
             logContext: new { validRequest.CollectionId });
     }
 
+    /// <summary>
+    /// Crea una colección para el usuario actual.
+    /// </summary>
     public async Task<Result<CollectionDto>> CreateCollection(CollectionCreateRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _createCollectionValidator.Validate(request);
@@ -110,6 +119,9 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         }
         return result;
     }
+    /// <summary>
+    /// Actualiza una colección perteneciente al usuario actual.
+    /// </summary>
     public async Task<Result<CollectionDto>> UpdateCollection(CollectionUpdateRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _collectionUpdateValidator.Validate(request);
@@ -175,6 +187,9 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         return result;
     }
 
+    /// <summary>
+    /// Elimina una colección perteneciente al usuario actual.
+    /// </summary>
     public async Task<Result> DeleteCollection(CollectionDeleteRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _deleteCollectionValidator.Validate(request);
@@ -232,6 +247,9 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         }
         return result;
     }
+    /// <summary>
+    /// Obtiene una página de colecciones del usuario actual aplicando los filtros indicados.
+    /// </summary>
     public async Task<Result<CollectionPageDto>> ListCollectionsPage(string? query = null, int page = 1, CancellationToken cancellationToken = default)
     {
         Result authentication = EnsureAuthenticated();
@@ -271,6 +289,9 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         return result;
     }
 
+    /// <summary>
+    /// Obtiene todas las colecciones del usuario actual.
+    /// </summary>
     public async Task<Result<IReadOnlyCollection<CollectionDto>>> ListAllCollections(CancellationToken cancellationToken = default)
     {
         Result authentication = EnsureAuthenticated();
@@ -294,6 +315,9 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         return result;
     }
 
+    /// <summary>
+    /// Obtiene una colección del usuario actual o devuelve el error de inaccesibilidad indicado.
+    /// </summary>
     private async Task<(DomainEntities.Collection? Collection, Result? Failure)> GetCollectionForCurrentUserOrFailure(long collectionId, Func<ApplicationError> notAccessibleFactory, string logMessage, CancellationToken cancellationToken, ICollectionRepository repository)
     {
         DomainEntities.Collection? collection = await repository.GetById(collectionId, CurrentUser.UserId, cancellationToken);
@@ -304,6 +328,9 @@ public sealed class CollectionService : ApplicationServiceBase, ICollectionServi
         return (collection, null);
     }
 
+    /// <summary>
+    /// Convierte la entidad de colección en su modelo de salida.
+    /// </summary>
     private static CollectionDto Map(DomainEntities.Collection collection)
         => new(collection.Id, collection.Name, collection.Slug, collection.Description, collection.IsPublic, collection.Links.Count, collection.CreatedAt);
 

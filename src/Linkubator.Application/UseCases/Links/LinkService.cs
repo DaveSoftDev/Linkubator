@@ -1,4 +1,4 @@
-﻿using Linkubator.Application.Constants;
+using Linkubator.Application.Constants;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Dtos.Requests;
 using Linkubator.Application.Logging;
@@ -20,6 +20,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
     private readonly IValidator<LinkMoveRequest> _moveLinkValidator;
     private readonly IValidator<LinkDeleteRequest> _deleteLinkValidator;
 
+    /// <summary>
+    /// Convierte la entidad de colección en su modelo de salida.
+    /// </summary>
     private static LinkDto Map(DomainEntities.Link link)
         => new(
             link.Id,
@@ -32,6 +35,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
             link.IsPublic,
             link.CreatedAt);
 
+    /// <summary>
+    /// Inicializa LinkService con las dependencias necesarias.
+    /// </summary>
     public LinkService(
         ILogger<LinkService> logger,
         ICurrentUser currentUser,
@@ -55,6 +61,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         _deleteLinkValidator = resolvedValidators.DeleteLinkValidator;
     }
 
+    /// <summary>
+    /// Obtiene un enlace accesible para el usuario actual.
+    /// </summary>
     public async Task<Result<LinkDto>> GetLink(LinkGetRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _getLinkValidator.Validate(request);
@@ -88,6 +97,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
             logContext: new { validRequest.LinkId });
     }
 
+    /// <summary>
+    /// Crea un enlace en una colección del usuario actual.
+    /// </summary>
     public async Task<Result<LinkDto>> CreateLink(LinkCreateRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _createLinkValidator.Validate(request);
@@ -144,6 +156,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return result;
     }
 
+    /// <summary>
+    /// Actualiza un enlace perteneciente al usuario actual.
+    /// </summary>
     public async Task<Result<LinkDto>> UpdateLink(LinkUpdateRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _updateLinkValidator.Validate(request);
@@ -193,6 +208,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return result;
     }
 
+    /// <summary>
+    /// Obtiene la colección de destino del usuario o devuelve el error indicado.
+    /// </summary>
     private async Task<Result<DomainEntities.Collection>> GetDestinationCollection(LinkUpdateRequest updateRequest, ICollectionRepository collectionRepository, DomainEntities.Link link, bool collectionChanged, CancellationToken token)
     {
         DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, CurrentUser.UserId, token);
@@ -215,6 +233,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return Result<DomainEntities.Collection>.Success(destinationCollection);
     }
 
+    /// <summary>
+    /// Aplica a la entidad los cambios solicitados para el enlace.
+    /// </summary>
     private async Task<Result<LinkDto>> ApplyUpdateLink(LinkUpdateRequest updateRequest, ILinkRepository linkRepository, DomainEntities.Link link, bool collectionChanged, DomainEntities.Collection destinationCollection, CancellationToken token)
     {
         if (!collectionChanged && updateRequest.IsPublic == true && !destinationCollection.IsPublic)
@@ -247,6 +268,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return Result<LinkDto>.Success(Map(link));
     }
 
+    /// <summary>
+    /// Mueve un enlace a otra colección del usuario actual.
+    /// </summary>
     public async Task<Result<LinkDto>> MoveLink(LinkMoveRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _moveLinkValidator.Validate(request);
@@ -296,6 +320,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return result;
     }
 
+    /// <summary>
+    /// Elimina un enlace perteneciente al usuario actual.
+    /// </summary>
     public async Task<Result> DeleteLink(LinkDeleteRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _deleteLinkValidator.Validate(request);
@@ -337,6 +364,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return result;
     }
 
+    /// <summary>
+    /// Obtiene una página de enlaces del usuario actual aplicando los filtros indicados.
+    /// </summary>
     public async Task<Result<LinkPageDto>> ListLinksPage(string? query = null, long? collectionId = null, int page = 1, CancellationToken cancellationToken = default)
     {
         Result<IReadOnlyList<LinkDto>> links = await ListLinks(query, collectionId, page, cancellationToken);
@@ -371,6 +401,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
             logContext: new { Query = query, Page = page, CollectionId = collectionId });
     }
 
+    /// <summary>
+    /// Obtiene los enlaces del usuario actual.
+    /// </summary>
     public async Task<Result<IReadOnlyList<LinkDto>>> ListLinks(string? query = null, long? collectionId = null, int page = 1, CancellationToken cancellationToken = default)
     {
         Result authentication = EnsureAuthenticated();

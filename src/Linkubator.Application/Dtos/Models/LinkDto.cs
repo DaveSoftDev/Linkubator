@@ -4,6 +4,9 @@ public sealed record LinkDto(long Id, long CollectionId, string UrlOriginal, str
 {
     public string? CollectionName { get; init; }
 
+    /// <summary>
+    /// Inicializa LinkDto con las dependencias necesarias.
+    /// </summary>
     private LinkDto()
         : this(default, default, string.Empty, string.Empty, null, null, null, default, default)
     {

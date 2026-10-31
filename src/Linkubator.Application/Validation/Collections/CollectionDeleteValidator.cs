@@ -5,6 +5,9 @@ namespace Linkubator.Application.Validation.Collections;
 
 public sealed class CollectionDeleteValidator : IValidator<CollectionDeleteRequest>
 {
+    /// <summary>
+    /// Valida la solicitud indicada y devuelve los errores detectados.
+    /// </summary>
     public Result Validate(CollectionDeleteRequest? request)
     {
         if (request is null)

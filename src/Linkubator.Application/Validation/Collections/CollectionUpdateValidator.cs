@@ -5,6 +5,9 @@ namespace Linkubator.Application.Validation.Collections;
 
 public sealed class CollectionUpdateValidator : IValidator<CollectionUpdateRequest>
 {
+    /// <summary>
+    /// Valida la solicitud indicada y devuelve los errores detectados.
+    /// </summary>
     public Result Validate(CollectionUpdateRequest? request)
     {
         if (request is null)

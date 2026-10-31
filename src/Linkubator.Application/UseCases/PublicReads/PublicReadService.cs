@@ -1,4 +1,4 @@
-﻿using Linkubator.Application.Constants;
+using Linkubator.Application.Constants;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Logging;
 using Linkubator.Application.Services;
@@ -10,9 +10,15 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
 {
     private readonly IPublicReadRepository _publicReadRepository;
 
+    /// <summary>
+    /// Recorta el texto y devuelve una cadena vacía cuando el valor es nulo o solo contiene espacios.
+    /// </summary>
     private static string TrimOrEmpty(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
 
+    /// <summary>
+    /// Inicializa PublicReadService con las dependencias necesarias.
+    /// </summary>
     public PublicReadService(ILogger<PublicReadService> logger, IPublicReadRepository publicReadRepository)
         : base(logger)
     {
@@ -20,6 +26,9 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
         _publicReadRepository = publicReadRepository;
     }
 
+    /// <summary>
+    /// Obtiene el perfil público y sus datos recientes mediante el alias indicado.
+    /// </summary>
     public async Task<Result<PublicUserDto>> GetUserPage(string alias, CancellationToken cancellationToken = default)
     {
         string trimmedAlias = TrimOrEmpty(alias);
@@ -52,6 +61,9 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
         return result;
     }
 
+    /// <summary>
+    /// Obtiene las colecciones públicas disponibles para el alias indicado.
+    /// </summary>
     public async Task<Result<IReadOnlyList<PublicCollectionSummaryDto>>> GetCollectionsPage(string alias, CancellationToken cancellationToken = default)
     {
         string trimmedAlias = TrimOrEmpty(alias);
@@ -84,6 +96,9 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
         return result;
     }
 
+    /// <summary>
+    /// Obtiene una página de una colección pública identificada por alias y slug.
+    /// </summary>
     public async Task<Result<PublicCollectionDto>> GetCollectionPage(string alias, string slug, int page = 1, CancellationToken cancellationToken = default)
     {
         string trimmedAlias = TrimOrEmpty(alias);

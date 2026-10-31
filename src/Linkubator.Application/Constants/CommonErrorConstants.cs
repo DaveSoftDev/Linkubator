@@ -16,12 +16,21 @@ public static class CommonErrors
     public const string NotAuthenticatedCode = "NOT_AUTHENTICATED";
     public const string PageInvalidCode = "PAGE_INVALID";
 
+    /// <summary>
+    /// Crea el error que indica que la solicitud es obligatoria.
+    /// </summary>
     public static ApplicationError RequestRequired(string? field = RequestField, string? message = RequestRequiredMessage)
         => ApplicationError.Validation(RequestRequiredCode, field, message);
 
+    /// <summary>
+    /// Crea el error que indica que el usuario no está autenticado.
+    /// </summary>
     public static ApplicationError NotAuthenticated(string code = NotAuthenticatedCode, string field = UserIdField, string? message = NotAuthenticatedMessage)
         => ApplicationError.ResourceNotAccessible(code, field, message);
 
+    /// <summary>
+    /// Crea el error que indica que el número de página no es válido.
+    /// </summary>
     public static ApplicationError PageInvalid(string code = PageInvalidCode, string field = PageField, string? message = PageInvalidMessage)
         => ApplicationError.Validation(code, field, message);
 }
