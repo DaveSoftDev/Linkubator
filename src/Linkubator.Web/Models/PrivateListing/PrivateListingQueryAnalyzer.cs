@@ -12,6 +12,9 @@ public static class PrivateListingQueryAnalyzer
     public const int MaxSearchTextLength = 100;
     public const long MaxIdentifierValue = long.MaxValue;
 
+    /// <summary>
+    /// Analiza los parámetros de consulta de un listado privado y devuelve los filtros y errores interpretados.
+    /// </summary>
     public static PrivateListingQueryAnalysisResult Analyze(
         IQueryCollection query,
         PrivateListingKind kind,
@@ -89,6 +92,9 @@ public static class PrivateListingQueryAnalyzer
             searchErrorMessage);
     }
 
+    /// <summary>
+    /// Intenta analizar un número de página formado únicamente por dígitos ASCII.
+    /// </summary>
     private static bool TryParsePage(string value, out int page)
     {
         page = 0;
@@ -106,6 +112,9 @@ public static class PrivateListingQueryAnalyzer
         return page > 0;
     }
 
+    /// <summary>
+    /// Valida y analiza un entero positivo formado únicamente por dígitos ASCII y dentro del máximo indicado.
+    /// </summary>
     private static bool IsPositiveAsciiInteger(string value, long maximum, out long parsed)
     {
         parsed = 0;
@@ -127,6 +136,9 @@ public static class PrivateListingQueryAnalyzer
             && parsed <= maximum;
     }
 
+    /// <summary>
+    /// Cuenta los puntos de código Unicode de la cadena indicada.
+    /// </summary>
     private static int CountCodePoints(string value)
     {
         int count = 0;
@@ -138,6 +150,9 @@ public static class PrivateListingQueryAnalyzer
         return count;
     }
 
+    /// <summary>
+    /// Obtiene el primer valor asociado a una clave de la consulta o <c>null</c> si no existe.
+    /// </summary>
     private static string? GetFirstValue(IQueryCollection query, string key)
     {
         if (!query.TryGetValue(key, out StringValues values) || values.Count == 0)

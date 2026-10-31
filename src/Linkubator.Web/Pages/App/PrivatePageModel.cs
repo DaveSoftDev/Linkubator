@@ -15,6 +15,9 @@ public abstract class PrivatePageModel : PageModel
 {
     private readonly ApplicationContracts.ICollectionService _collectionService;
 
+    /// <summary>
+    /// Inicializa el modelo base de páginas privadas con el perfil y servicio de colecciones.
+    /// </summary>
     protected PrivatePageModel(WebDevelopmentIdentity.IWebUserProfile userProfile, ApplicationContracts.ICollectionService collectionService)
     {
         UserProfile = userProfile ?? throw new ArgumentNullException(nameof(userProfile));
@@ -37,12 +40,18 @@ public abstract class PrivatePageModel : PageModel
         Email = UserProfile.Email,
     };
 
+    /// <summary>
+    /// Carga los datos comunes de la página privada antes de ejecutar el controlador de página.
+    /// </summary>
     public override async Task OnPageHandlerExecutionAsync(PageHandlerExecutingContext context, PageHandlerExecutionDelegate next)
     {
         await LoadSidebarCollections(SidebarSelectionKind, context.HttpContext.RequestAborted);
         await next();
     }
 
+    /// <summary>
+    /// Carga las colecciones necesarias para construir la barra lateral privada.
+    /// </summary>
     protected async Task LoadSidebarCollections(AppSidebarSelectionKind selectionKind = AppSidebarSelectionKind.Home, CancellationToken cancellationToken = default)
     {
         ApplicationResults.Result<IReadOnlyCollection<CollectionDto>> result = await _collectionService.ListAllCollections(cancellationToken: cancellationToken);
@@ -57,6 +66,9 @@ public abstract class PrivatePageModel : PageModel
         Sidebar = CreateSidebar(selectionKind, result.Value);
     }
 
+    /// <summary>
+    /// Construye la barra lateral con las colecciones y selección actuales.
+    /// </summary>
     protected AppSidebarViewModel CreateSidebar(
         AppSidebarSelectionKind selectionKind,
         IEnumerable<CollectionDto>? collections = null)

@@ -6,6 +6,9 @@ namespace Linkubator.Web.Logging;
 
 public static class RequestLoggingDiagnosticContext
 {
+    /// <summary>
+    /// Añade al contexto de diagnóstico los datos seguros de la solicitud HTTP.
+    /// </summary>
     public static void Enrich(IDiagnosticContext diagnosticContext, HttpContext httpContext)
     {
         string requestPath = httpContext.Request.Path.Value ?? string.Empty;
@@ -25,6 +28,9 @@ public static class RequestLoggingDiagnosticContext
         diagnosticContext.Set("RequestQueryString", loggedQueryString);
     }
 
+    /// <summary>
+    /// Determina si la ruta corresponde a un listado privado.
+    /// </summary>
     private static bool IsPrivateList(string requestPath)
         => string.Equals(requestPath.TrimEnd('/'), Linkubator.Web.Constants.AppRoutes.Links, StringComparison.OrdinalIgnoreCase)
             || string.Equals(requestPath.TrimEnd('/'), Linkubator.Web.Constants.AppRoutes.Collections, StringComparison.OrdinalIgnoreCase);

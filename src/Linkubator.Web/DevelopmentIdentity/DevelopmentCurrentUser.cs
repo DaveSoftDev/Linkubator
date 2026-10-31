@@ -13,6 +13,9 @@ public sealed class DevelopmentCurrentUser : ApplicationContracts.ICurrentUser, 
 
     public bool IsAuthenticated => UserId > 0;
 
+    /// <summary>
+    /// Establece el identificador del usuario autenticado y rechaza valores no positivos.
+    /// </summary>
     internal void SetUserId(long userId)
     {
         if (userId <= 0)
@@ -23,6 +26,9 @@ public sealed class DevelopmentCurrentUser : ApplicationContracts.ICurrentUser, 
         UserId = userId;
     }
 
+    /// <summary>
+    /// Establece el perfil del usuario después de recortar sus datos de texto.
+    /// </summary>
     internal void SetProfile(string name, string alias, string email)
     {
         Name = name.Trim();

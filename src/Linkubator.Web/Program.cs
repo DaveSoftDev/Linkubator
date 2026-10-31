@@ -130,6 +130,9 @@ await app.RunAsync();
 
 public partial class Program
 {
+    /// <summary>
+    /// Inicializa el punto de entrada de la aplicación Web.
+    /// </summary>
     protected Program()
     {
     }

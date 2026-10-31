@@ -9,6 +9,9 @@ namespace Linkubator.Web.Pages.App.Links;
 
 public abstract class LinkManagementPageModel : PrivatePageModel
 {
+    /// <summary>
+    /// Inicializa el modelo base de gestión de enlaces con el perfil y servicio de colecciones.
+    /// </summary>
     protected LinkManagementPageModel(
         WebDevelopmentIdentity.IWebUserProfile userProfile,
         ApplicationContracts.ICollectionService collectionService)
@@ -23,6 +26,9 @@ public abstract class LinkManagementPageModel : PrivatePageModel
 
     protected virtual bool AllowCollectionsReturn => false;
 
+    /// <summary>
+    /// Redirige al listado cuando el enlace solicitado no está disponible.
+    /// </summary>
     protected IActionResult RedirectUnavailableLink()
     {
         TempData[nameof(LinksModel.LinkManagementError)] = PrivateResourceUnavailablePresenter.GenericMessage;
