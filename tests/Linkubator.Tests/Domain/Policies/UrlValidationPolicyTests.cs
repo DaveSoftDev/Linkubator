@@ -72,20 +72,17 @@ public class UrlValidationPolicyTests
 
     [Trait("Category", "Validation")]
     [Fact]
-    public void ValidateDoesNotTransformTheAcceptedUrl()
+    public void ValidateAcceptsMixedCaseHostAndExplicitPort()
     {
         string input = "https://EXAMPLE.com:8443/a/b?c=1";
-        string actual = input;
-
-        Exception exception = Record.Exception(() => DomainPolicies.UrlValidationPolicy.Validate(actual));
+        Exception exception = Record.Exception(() => DomainPolicies.UrlValidationPolicy.Validate(input));
 
         Assert.Null(exception);
-        Assert.Equal(input, actual);
     }
 
     [Trait("Category", "Validation")]
     [Fact]
-    public void ValidateRejectsNullAsArgumentNull()
+    public void ValidateRejectsMissingInputWithDomainException()
     {
         Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.UrlValidationPolicy.Validate(null!));
         Assert.Throws<DomainExceptions.NotValidInputException>(() => DomainPolicies.UrlValidationPolicy.Validate(string.Empty));

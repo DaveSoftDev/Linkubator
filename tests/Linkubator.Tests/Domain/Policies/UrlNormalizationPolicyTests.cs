@@ -7,6 +7,38 @@ namespace Linkubator.Tests.Domain.Policies;
 [Trait("Category", "Normalization")]
 public class UrlNormalizationPolicyTests
 {
+    [Theory]
+    [InlineData("utm_source") ]
+    [InlineData("utm_medium") ]
+    [InlineData("utm_campaign") ]
+    [InlineData("utm_term") ]
+    [InlineData("utm_content") ]
+    [InlineData("gclsrc") ]
+    [InlineData("gclid") ]
+    [InlineData("wbraid") ]
+    [InlineData("gbraid") ]
+    [InlineData("fbclid") ]
+    [InlineData("msclkid") ]
+    [InlineData("ttclid") ]
+    [InlineData("epik") ]
+    [InlineData("gad_source") ]
+    [InlineData("gad_campaignid") ]
+    [InlineData("srsltid") ]
+    [InlineData("gcs") ]
+    [InlineData("gcd") ]
+    [InlineData("at_medium") ]
+    [InlineData("at_campaign") ]
+    [InlineData("at_platform") ]
+    [InlineData("at_creation") ]
+    [InlineData("at_term") ]
+    public void Normalize_WithMarketingParameter_RemovesOnlyExactName(string parameter)
+    {
+        string input = $"https://example.com/path?{parameter.ToUpperInvariant()}=tracking&{parameter}x=keep&zzz=1";
+        string expected = "examplecompath" + parameter.Replace("_", "") + "xkeepzzz1";
+
+        Assert.Equal(expected, UrlNormalizationPolicy.Normalize(input));
+    }
+
     [Trait("Category", "Validation")]
     [Fact]
     public void NormalizeRejectsNullEmptyAndWhiteSpace()
@@ -121,26 +153,66 @@ public class UrlNormalizationPolicyTests
         Assert.Equal(expected, UrlNormalizationPolicy.Normalize(unicodePath));
     }
 
+    [Theory]
+    [InlineData("²", "²")]
+    [InlineData("Ⅷ", "ⅷ")]
+    [InlineData("\U00020000", "\U00020000")]
+    [InlineData("\U00010400", "\U00010428")]
+    [InlineData("\U0001D7D8", "\U0001D7D8")]
+    [InlineData("\U00010107", "\U00010107")]
+    public void Normalize_WhenUnicodeIsLetterOrNumber_PreservesLiteralAndEncodedForms(string value, string normalizedValue)
+    {
+        string encoded = Uri.EscapeDataString(value);
+        string expectedPath = $"examplecom{normalizedValue}";
+        string expectedQuery = $"examplecomq{normalizedValue}";
+
+        Assert.Equal(expectedPath, UrlNormalizationPolicy.Normalize($"https://example.com/{value}"));
+        Assert.Equal(expectedPath, UrlNormalizationPolicy.Normalize($"https://example.com/{encoded}"));
+        Assert.Equal(expectedQuery, UrlNormalizationPolicy.Normalize($"https://example.com/?q={value}"));
+        Assert.Equal(expectedQuery, UrlNormalizationPolicy.Normalize($"https://example.com/?q={encoded}"));
+    }
+
+    [Theory]
+    [InlineData("²")]
+    [InlineData("\U00020000")]
+    public void Normalize_WhenUrlsDifferByUnicodeLetterOrNumber_DoesNotCollapseTheirKeys(string value)
+    {
+        string withCharacter = UrlNormalizationPolicy.Normalize($"https://example.com/?q=x{value}");
+        string withoutCharacter = UrlNormalizationPolicy.Normalize("https://example.com/?q=x");
+
+        Assert.NotEqual(withoutCharacter, withCharacter);
+    }
+
+    [Theory]
+    [InlineData("\U0001F600")]
+    [InlineData("€")]
+    public void Normalize_WhenUnicodeIsSymbol_RemovesLiteralAndEncodedForms(string symbol)
+    {
+        const string expected = "examplecomabqxy";
+        string encoded = Uri.EscapeDataString(symbol);
+
+        Assert.Equal(expected, UrlNormalizationPolicy.Normalize($"https://example.com/a{symbol}b?q=x{symbol}y"));
+        Assert.Equal(expected, UrlNormalizationPolicy.Normalize($"https://example.com/a{encoded}b?q=x{encoded}y"));
+    }
+
     [Trait("Category", "Validation")]
     [Fact]
-    public void NormalizeDoesNotRevalidateAnAlreadyAdjustedUrl()
+    public void NormalizeRejectsTextThatCannotBeParsedAsAbsoluteUrl()
     {
         Assert.Throws<DomainExceptions.UrlNotAbsoluteException>(() => UrlNormalizationPolicy.Normalize("not a url"));
     }
 
     /// <summary>
-    /// El escapado de la ruta y el tratamiento de la consulta convierten un sustituto suelto
-    /// en texto válido antes de canonicalizar, así que <see cref="UrlNormalizationPolicy.Normalize"/>
-    /// no propaga la <see cref="ArgumentException"/> del proveedor subyacente. Si un cambio
-    /// hiciera llegar el suelto intacto a la canonicalización, este test lo detecta.
+    /// Entrada artificial fuera de la precondición de URL ajustada y validada.
+    /// Comprueba la clave técnica resultante, no la aceptación de esta entrada por el producto.
     /// </summary>
     [Trait("Category", "Validation")]
     [Theory]
-    [InlineData("https://example.com/path?q=\uD800")]
-    [InlineData("https://example.com/\uD800")]
-    public void NormalizeDoesNotLeakAProviderExceptionForALoneSurrogate(string input)
+    [InlineData("https://example.com/path?q=\uD800", "examplecompathq")]
+    [InlineData("https://example.com/\uD800", "examplecom")]
+    public void NormalizeWithArtificialLoneSurrogate_ReturnsStableKey(string input, string expected)
     {
-        Assert.Null(Record.Exception(() => UrlNormalizationPolicy.Normalize(input)));
+        Assert.Equal(expected, UrlNormalizationPolicy.Normalize(input));
     }
 
     [Fact]
@@ -170,13 +242,39 @@ public class UrlNormalizationPolicyTests
             PrivatePolicyInvoker.InvokeStatic(typeof(UrlNormalizationPolicy), "EscapePathUnicode", new object?[] { string.Empty }) as string);
     }
 
+    [Fact]
+    public void CultureScope_WhenInitialCulturesDiffer_RestoresBoth()
+    {
+        CultureInfo original = CultureInfo.CurrentCulture;
+        CultureInfo originalUi = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("es-ES");
+            using (new CultureScope("tr-TR"))
+            {
+                Assert.Equal("tr-TR", CultureInfo.CurrentCulture.Name);
+                Assert.Equal("tr-TR", CultureInfo.CurrentUICulture.Name);
+            }
+            Assert.Equal("en-US", CultureInfo.CurrentCulture.Name);
+            Assert.Equal("es-ES", CultureInfo.CurrentUICulture.Name);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = original;
+            CultureInfo.CurrentUICulture = originalUi;
+        }
+    }
+
     private sealed class CultureScope : IDisposable
     {
         private readonly CultureInfo _previous;
+        private readonly CultureInfo _previousUi;
 
         public CultureScope(string cultureName)
         {
             _previous = CultureInfo.CurrentCulture;
+            _previousUi = CultureInfo.CurrentUICulture;
             CultureInfo.CurrentCulture = new CultureInfo(cultureName);
             CultureInfo.CurrentUICulture = new CultureInfo(cultureName);
         }
@@ -184,7 +282,7 @@ public class UrlNormalizationPolicyTests
         public void Dispose()
         {
             CultureInfo.CurrentCulture = _previous;
-            CultureInfo.CurrentUICulture = _previous;
+            CultureInfo.CurrentUICulture = _previousUi;
         }
     }
 }

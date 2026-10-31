@@ -1,5 +1,7 @@
 # Plan técnico: S0.4 — Serilog y observabilidad base
 
+> Este plan conserva el diseño aprobado originalmente. La regla vigente de registro es [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos); la exclusión general de contenido privado descrita aquí no es una exigencia vigente.
+
 ## Estado y aprobación del plan
 
 - Estado: aprobado.

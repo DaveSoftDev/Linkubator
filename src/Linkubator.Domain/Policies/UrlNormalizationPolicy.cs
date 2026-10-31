@@ -119,7 +119,11 @@ public static class UrlNormalizationPolicy
                 continue;
             }
 
-            escapedPath.Append(Uri.EscapeDataString(character.ToString()));
+            Rune rune = Rune.TryGetRuneAt(path, index, out Rune decodedRune)
+                ? decodedRune
+                : Rune.ReplacementChar;
+            escapedPath.Append(Uri.EscapeDataString(rune.ToString()));
+            index += rune.Utf16SequenceLength - 1;
         }
 
         return authority + escapedPath + postSeparator;
@@ -261,22 +265,25 @@ public static class UrlNormalizationPolicy
         normalized = normalized.Normalize(NormalizationForm.FormD);
 
         StringBuilder builder = new(normalized.Length);
-        foreach (char character in normalized)
+        foreach (Rune character in normalized.EnumerateRunes())
         {
-            if (CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.NonSpacingMark)
+            UnicodeCategory category = Rune.GetUnicodeCategory(character);
+            if (category == UnicodeCategory.NonSpacingMark)
             {
                 continue;
             }
 
-            if (char.IsWhiteSpace(character))
+            if (Rune.IsWhiteSpace(character))
             {
                 builder.Append('-');
                 continue;
             }
 
-            if (char.IsLetterOrDigit(character) || character == '-')
+            if (Rune.IsLetterOrDigit(character)
+                || category is UnicodeCategory.LetterNumber or UnicodeCategory.OtherNumber
+                || character.Value == '-')
             {
-                builder.Append(character);
+                builder.Append(character.ToString());
             }
         }
 

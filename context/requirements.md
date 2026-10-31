@@ -42,7 +42,7 @@ La colección «Bandeja de entrada» es una colección normal como cualquier otr
 
 No puede haber dos colecciones del mismo usuario cuyos nombres Linkubator considere equivalentes según [specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs). Si el nombre no es válido o equivale al de otra colección suya, se rechaza indicándole con cuál coincide, y debe elegir otro.
 
-Una colección pública con al menos un enlace público tiene su propia página pública y aparece en la página de colecciones del usuario. Una colección pública sin enlaces públicos no se muestra en ninguna página pública hasta que tenga uno. Si se renombra la colección, su dirección pública anterior deja de existir.
+Una colección pública con al menos un enlace público tiene su propia página pública y aparece en la página de colecciones del usuario. Una colección pública sin enlaces públicos no se muestra en ninguna página pública hasta que tenga uno. Al renombrar una colección se regenera su slug. Si el slug cambia, la dirección pública anterior deja de existir; si el slug generado es el mismo, la dirección se conserva (ver [specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs)).
 
 ## Etiquetas
 
@@ -51,6 +51,7 @@ El usuario podrá:
 - Crear, editar y eliminar etiquetas. Solo se pueden eliminar las etiquetas sin enlaces.
 - Buscar etiquetas.
 - Asociar varias etiquetas a un enlace, eligiendo las existentes o creando una nueva desde el propio formulario del enlace.
+- Añadir o quitar etiquetas asignadas desde la edición del enlace, incluida la posibilidad de dejarlo sin etiquetas. Quitar una etiqueta de un enlace no elimina la etiqueta ni cambia su asignación a otros enlaces.
 
 No puede haber dos etiquetas del mismo usuario cuyos nombres Linkubator considere equivalentes según [specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs). Si al crear una etiqueta desde el formulario de un enlace ya existe una equivalente, se asocia la existente y se indica cuál.
 
@@ -84,7 +85,7 @@ El usuario podrá:
 
 - Buscar texto en sus propios enlaces: URL, título, descripción, nombre de la colección y etiquetas.
 - Filtrar sus enlaces por colección, por etiquetas o combinar esos filtros con la búsqueda.
-- Buscar sus colecciones por nombre desde el listado de colecciones.
+- Buscar sus colecciones por nombre o descripción desde el listado de colecciones.
 - Buscar sus etiquetas por nombre desde el listado de etiquetas.
 
 Cada listado busca únicamente su propia entidad: buscar en el listado de enlaces solo devuelve enlaces, en el de colecciones solo colecciones y en el de etiquetas solo etiquetas, sin mezclarlos. Una búsqueda nunca devuelve elementos de otro usuario. Las reglas exactas, el orden y la paginación están en [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros) y [«Listados»](specifications.md#listados).
@@ -110,7 +111,7 @@ El contenido de cada página, sus rutas y sus respuestas están en [specificatio
 
 Cualquier usuario registrado e identificado tendrá acceso a la zona privada y podrá:
 
-- Acceder a su dashboard; sus rutas se definen en [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas).
+- Acceder a su dashboard para consultar sus enlaces recientes, tanto públicos como privados, crear un enlace rápidamente o abrir su formulario completo, buscar enlaces y acceder a sus acciones de edición, movimiento y eliminación. El contenido, las rutas y el comportamiento se definen en [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas).
 - Abrir su página pública desde el alias que aparece en el menú lateral.
 - Gestionar sus enlaces, colecciones, etiquetas y su usuario.
 - Las páginas privadas siguen una ruta común; sus detalles se definen en [specifications.md → «Rutas privadas»](specifications.md#rutas-privadas).
@@ -140,5 +141,5 @@ La aplicación será usable con teclado y con tecnologías de asistencia:
 
 ## Operación
 
-- La aplicación registra desde el inicio los eventos relevantes, sin datos sensibles (ver [specifications.md → «Registro de eventos»](specifications.md#registro-de-eventos)).
+- La aplicación registra desde el inicio los eventos relevantes, respetando la protección de los datos propios de Linkubator definida en [specifications.md → «Registro de eventos»](specifications.md#registro-de-eventos).
 - La aplicación responde sin quedarse bloqueada esperando al usuario ni a servicios externos (ver [architecture.md → «Persistencia»](architecture.md#persistencia)).

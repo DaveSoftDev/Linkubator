@@ -10,5 +10,4 @@ public interface IPublicReadService
 
     Task<Result<PublicCollectionDto>> GetCollectionPage(string alias, string slug, int page = 1, CancellationToken cancellationToken = default);
 
-    Task<Result<int>> GetCollectionPageCount(string alias, string slug, CancellationToken cancellationToken = default);
 }

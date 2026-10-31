@@ -33,7 +33,7 @@ public class ProjectReferenceMatrixTests
         };
 
     [Fact]
-    public void ProjectReferencesMatchTheAllowedMatrix()
+    public void KnownProjects_ProjectReferencesMatchTheAllowedMatrix()
     {
         string repositoryRoot = FindRepositoryRoot();
 

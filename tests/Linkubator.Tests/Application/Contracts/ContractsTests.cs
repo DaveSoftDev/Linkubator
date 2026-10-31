@@ -18,12 +18,12 @@ public class ContractsTests
     }
 
     [Fact]
-    public void DevelopmentIdentityProviderProvidesAsyncResolvedUserId()
+    public void DevelopmentIdentityProviderProvidesAsyncResolvedProfile()
     {
-        MethodInfo? method = typeof(IDevelopmentIdentityProvider).GetMethod(nameof(IDevelopmentIdentityProvider.GetUserId));
+        MethodInfo? method = typeof(IDevelopmentIdentityProvider).GetMethod(nameof(IDevelopmentIdentityProvider.GetProfile));
 
         Assert.NotNull(method);
-        Assert.Equal(typeof(Task<long>), method.ReturnType);
+        Assert.Equal(typeof(Task<DevelopmentIdentityProfile>), method.ReturnType);
         Assert.Equal(typeof(CancellationToken), Assert.Single(method.GetParameters()).ParameterType);
     }
 

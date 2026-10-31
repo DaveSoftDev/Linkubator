@@ -1,4 +1,4 @@
-﻿using Linkubator.Application.Constants;
+using Linkubator.Application.Constants;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Logging;
 using Linkubator.Application.Services;
@@ -10,9 +10,15 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
 {
     private readonly IPublicReadRepository _publicReadRepository;
 
+    /// <summary>
+    /// Recorta el texto y devuelve una cadena vacía cuando el valor es nulo o solo contiene espacios.
+    /// </summary>
     private static string TrimOrEmpty(string? value)
         => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
 
+    /// <summary>
+    /// Inicializa PublicReadService con las dependencias necesarias.
+    /// </summary>
     public PublicReadService(ILogger<PublicReadService> logger, IPublicReadRepository publicReadRepository)
         : base(logger)
     {
@@ -20,6 +26,9 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
         _publicReadRepository = publicReadRepository;
     }
 
+    /// <summary>
+    /// Obtiene el perfil público y sus datos recientes mediante el alias indicado.
+    /// </summary>
     public async Task<Result<PublicUserDto>> GetUserPage(string alias, CancellationToken cancellationToken = default)
     {
         string trimmedAlias = TrimOrEmpty(alias);
@@ -42,7 +51,8 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
 
                 return Result<PublicUserDto>.Success(user);
             },
-            "Public user page lookup failed");
+            "Public user page lookup failed",
+            logContext: new { Alias = alias, TrimmedAlias = trimmedAlias });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Public user page loaded", UserContext);
@@ -51,6 +61,9 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
         return result;
     }
 
+    /// <summary>
+    /// Obtiene las colecciones públicas disponibles para el alias indicado.
+    /// </summary>
     public async Task<Result<IReadOnlyList<PublicCollectionSummaryDto>>> GetCollectionsPage(string alias, CancellationToken cancellationToken = default)
     {
         string trimmedAlias = TrimOrEmpty(alias);
@@ -73,7 +86,8 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
 
                 return Result<IReadOnlyList<PublicCollectionSummaryDto>>.Success(collections.ToList());
             },
-            "Public collections lookup failed");
+            "Public collections lookup failed",
+            logContext: new { Alias = alias, TrimmedAlias = trimmedAlias });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Public collections page loaded", UserContext, new { Alias = alias });
@@ -82,6 +96,9 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
         return result;
     }
 
+    /// <summary>
+    /// Obtiene una página de una colección pública identificada por alias y slug.
+    /// </summary>
     public async Task<Result<PublicCollectionDto>> GetCollectionPage(string alias, string slug, int page = 1, CancellationToken cancellationToken = default)
     {
         string trimmedAlias = TrimOrEmpty(alias);
@@ -117,7 +134,8 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
 
                 return Result<PublicCollectionDto>.Success(collection);
             },
-            "Public collection page lookup failed");
+            "Public collection page lookup failed",
+            logContext: new { Alias = alias, Slug = slug, TrimmedAlias = trimmedAlias, TrimmedSlug = trimmedSlug, Page = page });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Public collection page loaded", UserContext, new { Alias = alias, Slug = slug, Page = page });
@@ -126,42 +144,4 @@ public sealed class PublicReadService : ApplicationServiceBase, IPublicReadServi
         return result;
     }
 
-    public async Task<Result<int>> GetCollectionPageCount(string alias, string slug, CancellationToken cancellationToken = default)
-    {
-        string trimmedAlias = TrimOrEmpty(alias);
-        string trimmedSlug = TrimOrEmpty(slug);
-        if (string.IsNullOrWhiteSpace(trimmedAlias))
-        {
-            SafeLogger.Log(Logger, LogLevel.Warning, null, "Public collection count lookup rejected; alias missing", UserContext, new { Alias = alias });
-            return Result<int>.Failure(PublicReadErrors.AliasInvalid());
-        }
-
-        if (string.IsNullOrWhiteSpace(trimmedSlug))
-        {
-            SafeLogger.Log(Logger, LogLevel.Warning, null, "Public collection count lookup rejected; slug missing", UserContext, new { Alias = alias, Slug = slug });
-            return Result<int>.Failure(PublicReadErrors.SlugInvalid());
-        }
-
-        Result<int> result = await Execute(
-            new { Alias = alias, Slug = slug, TrimmedAlias = trimmedAlias, TrimmedSlug = trimmedSlug },
-            cancellationToken,
-            async (request, token) =>
-            {
-                PublicCollectionDto? collection = await _publicReadRepository.GetCollectionPage(request.TrimmedAlias, request.TrimmedSlug, 1, token);
-                if (collection is null)
-                {
-                    return Failure<int>(PublicReadErrors.CollectionNotAccessible(), "Public collection count lookup rejected; collection not accessible", new { request.Alias, request.Slug });
-                }
-
-                int count = await _publicReadRepository.GetCollectionPageCount(request.TrimmedAlias, request.TrimmedSlug, token);
-                return Result<int>.Success(count);
-            },
-            "Public collection count lookup failed");
-        if (result.IsSuccess)
-        {
-            SafeLogger.Log(Logger, LogLevel.Information, null, "Public collection count loaded", UserContext);
-        }
-
-        return result;
-    }
 }

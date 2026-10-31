@@ -12,6 +12,9 @@ public static class PrivateListingQueryAnalyzer
     public const int MaxSearchTextLength = 100;
     public const long MaxIdentifierValue = long.MaxValue;
 
+    /// <summary>
+    /// Analiza los parámetros de consulta de un listado privado y devuelve los filtros y errores interpretados.
+    /// </summary>
     public static PrivateListingQueryAnalysisResult Analyze(
         IQueryCollection query,
         PrivateListingKind kind,
@@ -22,10 +25,8 @@ public static class PrivateListingQueryAnalyzer
         int pageNumber = DefaultPageNumber;
         long? collectionId = null;
         string? searchText = null;
-        bool hasPageError = false;
         bool hasCollectionError = false;
         bool hasSearchError = false;
-        string? pageErrorMessage = null;
         string? collectionErrorMessage = null;
         string? searchErrorMessage = null;
 
@@ -37,18 +38,9 @@ public static class PrivateListingQueryAnalyzer
         }
 
         string? pageValue = GetFirstValue(query, "p");
-        if (!string.IsNullOrEmpty(pageValue))
+        if (!string.IsNullOrEmpty(pageValue) && TryParsePage(pageValue, out int parsedPage))
         {
-            if (IsPositiveAsciiInteger(pageValue, int.MaxValue, out long parsedPage))
-            {
-                pageNumber = (int)parsedPage;
-            }
-            else
-            {
-                hasPageError = true;
-                pageNumber = DefaultPageNumber;
-                pageErrorMessage = CommonErrors.ListingValuesInvalidMessage;
-            }
+            pageNumber = parsedPage;
         }
 
         if (supportsCollection)
@@ -94,14 +86,35 @@ public static class PrivateListingQueryAnalyzer
             pageNumber,
             collectionId,
             searchText,
-            hasPageError,
             hasCollectionError,
             hasSearchError,
-            pageErrorMessage,
             collectionErrorMessage,
             searchErrorMessage);
     }
 
+    /// <summary>
+    /// Intenta analizar un número de página formado únicamente por dígitos ASCII.
+    /// </summary>
+    private static bool TryParsePage(string value, out int page)
+    {
+        page = 0;
+        foreach (char character in value)
+        {
+            if (character is < '0' or > '9')
+            {
+                return false;
+            }
+
+            int digit = character - '0';
+            page = page > (int.MaxValue - digit) / 10 ? int.MaxValue : (page * 10) + digit;
+        }
+
+        return page > 0;
+    }
+
+    /// <summary>
+    /// Valida y analiza un entero positivo formado únicamente por dígitos ASCII y dentro del máximo indicado.
+    /// </summary>
     private static bool IsPositiveAsciiInteger(string value, long maximum, out long parsed)
     {
         parsed = 0;
@@ -123,6 +136,9 @@ public static class PrivateListingQueryAnalyzer
             && parsed <= maximum;
     }
 
+    /// <summary>
+    /// Cuenta los puntos de código Unicode de la cadena indicada.
+    /// </summary>
     private static int CountCodePoints(string value)
     {
         int count = 0;
@@ -134,6 +150,9 @@ public static class PrivateListingQueryAnalyzer
         return count;
     }
 
+    /// <summary>
+    /// Obtiene el primer valor asociado a una clave de la consulta o <c>null</c> si no existe.
+    /// </summary>
     private static string? GetFirstValue(IQueryCollection query, string key)
     {
         if (!query.TryGetValue(key, out StringValues values) || values.Count == 0)

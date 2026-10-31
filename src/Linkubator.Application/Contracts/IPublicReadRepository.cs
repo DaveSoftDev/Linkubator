@@ -16,5 +16,4 @@ public interface IPublicReadRepository
         int page,
         CancellationToken cancellationToken = default);
 
-    Task<int> GetCollectionPageCount(string alias, string slug, CancellationToken cancellationToken = default);
 }

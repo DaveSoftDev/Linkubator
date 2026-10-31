@@ -5,7 +5,10 @@ namespace Linkubator.Application.Validation.Collections;
 
 public sealed class CollectionCreateValidator : IValidator<CollectionCreateRequest>
 {
-    public Result Validate(CollectionCreateRequest request)
+    /// <summary>
+    /// Valida la solicitud indicada y devuelve los errores detectados.
+    /// </summary>
+    public Result Validate(CollectionCreateRequest? request)
     {
         if (request is null)
         {
@@ -16,6 +19,12 @@ public sealed class CollectionCreateValidator : IValidator<CollectionCreateReque
         if (!result.IsSuccess)
         {
             return Result.Failure(CollectionErrors.NameRequired());
+        }
+
+        result = CollectionValidations.ValidateNameLength(request.Name);
+        if (!result.IsSuccess)
+        {
+            return Result.Failure(CollectionErrors.NameTooLong());
         }
 
         result = CollectionValidations.ValidateDescription(request.Description);

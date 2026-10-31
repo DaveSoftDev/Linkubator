@@ -39,6 +39,8 @@ public sealed class DeleteModel : PrivatePageModel
 
     public string CollectionName { get; private set; } = string.Empty;
 
+    public bool HasLoadedCollection { get; private set; }
+
     public PageErrorSummaryViewModel ErrorSummary { get; private set; } = new();
 
     public PageAlertViewModel Alert { get; private set; } = new();
@@ -65,6 +67,7 @@ public sealed class DeleteModel : PrivatePageModel
         }
 
         CollectionName = result.Value.Name;
+        HasLoadedCollection = true;
         return Page();
     }
 
@@ -84,8 +87,17 @@ public sealed class DeleteModel : PrivatePageModel
         {
             if (result.Errors.Any(error => error.Category == ApplicationEnums.ApplicationErrorCategory.ResourceNotAccessible))
             {
-                TempData[nameof(CollectionsModel.CollectionDeleteError)] = DeleteNotAccessibleMessage;
+                TempData[nameof(CollectionsModel.CollectionManagementError)] = DeleteNotAccessibleMessage;
                 return Redirect(CollectionListRoute);
+            }
+
+            ApplicationResults.Result<ApplicationModelDtos.CollectionDto> collectionResult = await _collectionService.GetCollection(
+                new ApplicationRequestDtos.CollectionGetRequest(collectionId),
+                cancellationToken);
+            if (collectionResult.IsSuccess && collectionResult.Value is not null)
+            {
+                CollectionName = collectionResult.Value.Name;
+                HasLoadedCollection = true;
             }
 
             ApplyErrors(result.Errors);

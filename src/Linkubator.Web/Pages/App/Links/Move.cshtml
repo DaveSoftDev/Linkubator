@@ -16,6 +16,12 @@
     {
         @await Html.PartialAsync("~/Pages/Shared/_PrivateResourceUnavailable.cshtml", Model.ResourceUnavailable)
     }
+    else if (!Model.HasLoadedLink)
+    {
+        @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
+        @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
+        <p><a href="@Model.ReturnRoute">Volver al listado</a></p>
+    }
     else
     {
         <form method="post" class="collection-form">
@@ -30,7 +36,7 @@
                 @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
                 @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
             </div>
-            @if (Model.LinkLabel.Length > 0)
+            @if (Model.HasLoadedLink)
             {
                 <div class="collection-form__fields">
                     <p class="collection-form__confirmation">Mover <strong>@Model.LinkLabel</strong> a:</p>
@@ -49,7 +55,7 @@
             }
             <div class="collection-form__actions">
                 <a class="collection-form__cancel" href="@Model.ReturnRoute">Cancelar</a>
-                @if (Model.LinkLabel.Length > 0)
+                @if (Model.HasLoadedLink)
                 {
                     <button class="primary-button" type="submit">Mover enlace</button>
                 }

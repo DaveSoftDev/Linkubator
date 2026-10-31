@@ -2,6 +2,9 @@ namespace Linkubator.Application.Services;
 
 public static class UnitOfWorkFactoryExtensions
 {
+    /// <summary>
+    /// Ejecuta la acción dentro de una unidad de trabajo transaccional.
+    /// </summary>
     public static async Task<TResult> ExecuteInTransaction<TResult>(this IUnitOfWorkFactory factory, string contextName, Func<IUnitOfWork, CancellationToken, Task<TResult>> action, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(factory);
@@ -32,6 +35,9 @@ public static class UnitOfWorkFactoryExtensions
         }
     }
 
+    /// <summary>
+    /// Ejecuta la acción dentro de una unidad de trabajo transaccional.
+    /// </summary>
     public static async Task ExecuteInTransaction(this IUnitOfWorkFactory factory, string contextName, Func<IUnitOfWork, CancellationToken, Task> action, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(factory);

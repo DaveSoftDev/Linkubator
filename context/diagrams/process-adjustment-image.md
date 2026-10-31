@@ -8,7 +8,7 @@ flowchart TD
     trim[Recortar espacios del principio y del final]
     empty{¿Quedó vacía?}
     emptyResult[Continuar sin `Image`]
-    controls{¿Contiene controles o saltos de línea?}
+    controls{¿Contiene controles, saltos de línea<br/>o espacios interiores?}
     reject[Rechazar ajuste]
     formError[Para entrada manual, mostrar error y no guardar]
     scraperDiscard[El scraper descarta la imagen y continúa sin ella]

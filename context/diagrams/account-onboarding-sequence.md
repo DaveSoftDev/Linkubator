@@ -66,5 +66,5 @@ sequenceDiagram
     App->>Hasher: Verificar contraseña
     Hasher-->>App: Contraseña válida
     App->>DB: Volver a leer SecurityStamp y LockoutEnd
-    App-->>Browser: Si coinciden y no hay bloqueo, emitir cookie con el SecurityStamp comprobado y abrir /app/dashboard
+    App-->>Browser: Si coinciden y no hay bloqueo, emitir cookie con el SecurityStamp comprobado y abrir el dashboard en /app
 ```

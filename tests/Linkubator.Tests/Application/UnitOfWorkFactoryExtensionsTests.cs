@@ -87,6 +87,37 @@ public sealed class UnitOfWorkFactoryExtensionsTests
         Assert.Equal(0, factory.UnitOfWork.RollbackCount);
     }
 
+    [Fact]
+    public async Task ExecuteInTransaction_WhenVoidActionThrows_RollsBackAndDisposes()
+    {
+        RecordingUnitOfWorkFactory factory = new();
+        InvalidOperationException expected = new("boom");
+
+        InvalidOperationException actual = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            factory.ExecuteInTransaction("context", (_, _) => Task.FromException(expected)));
+
+        Assert.Same(expected, actual);
+        Assert.Equal(1, factory.UnitOfWork.RollbackCount);
+        Assert.Equal(0, factory.UnitOfWork.CommitCount);
+        Assert.Equal(1, factory.UnitOfWork.DisposeCount);
+    }
+
+    [Fact]
+    public async Task ExecuteInTransaction_WhenActionIsCancelled_DisposesWithoutCommit()
+    {
+        RecordingUnitOfWorkFactory factory = new();
+        using CancellationTokenSource cancellation = new();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => factory.ExecuteInTransaction("context", (_, token) =>
+        {
+            cancellation.Cancel();
+            return Task.FromCanceled(token);
+        }, cancellation.Token));
+
+        Assert.Equal(0, factory.UnitOfWork.CommitCount);
+        Assert.Equal(1, factory.UnitOfWork.DisposeCount);
+    }
+
     private sealed class RecordingUnitOfWorkFactory : IUnitOfWorkFactory
     {
         public RecordingUnitOfWork UnitOfWork { get; } = new();
@@ -105,6 +136,7 @@ public sealed class UnitOfWorkFactoryExtensionsTests
         public int BeginCount { get; private set; }
         public int CommitCount { get; private set; }
         public int RollbackCount { get; private set; }
+        public int DisposeCount { get; private set; }
 
         public TRepository GetRepository<TRepository>() where TRepository : class
             => throw new NotSupportedException();
@@ -132,6 +164,9 @@ public sealed class UnitOfWorkFactoryExtensionsTests
         }
 
         public ValueTask DisposeAsync()
-            => ValueTask.CompletedTask;
+        {
+            DisposeCount++;
+            return ValueTask.CompletedTask;
+        }
     }
 }

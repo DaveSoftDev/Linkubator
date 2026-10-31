@@ -9,6 +9,9 @@ public sealed class DashboardService : ApplicationServiceBase, IDashboardService
 {
     private readonly IDashboardRepository _dashboardRepository;
 
+    /// <summary>
+    /// Inicializa DashboardService con las dependencias necesarias.
+    /// </summary>
     public DashboardService(ILogger<DashboardService> logger, ICurrentUser currentUser, IDashboardRepository dashboardRepository)
         : base(logger, currentUser)
     {
@@ -16,6 +19,9 @@ public sealed class DashboardService : ApplicationServiceBase, IDashboardService
         _dashboardRepository = dashboardRepository;
     }
 
+    /// <summary>
+    /// Obtiene los datos del panel del usuario actual.
+    /// </summary>
     public async Task<Result<DashboardDto>> GetDashboard(CancellationToken cancellationToken = default)
     {
         Result authentication = EnsureAuthenticated();

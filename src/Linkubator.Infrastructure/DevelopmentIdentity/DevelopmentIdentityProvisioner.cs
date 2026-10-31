@@ -1,11 +1,10 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Dapper;
-using Linkubator.Domain.Constants;
-using Linkubator.Domain.Policies;
 using Linkubator.Infrastructure.Contracts;
 using Linkubator.Infrastructure.Options;
 using Microsoft.Data.Sqlite;
+using InfrastructureConstants = Linkubator.Infrastructure.Constants;
 
 namespace Linkubator.Infrastructure.DevelopmentIdentity;
 
@@ -21,6 +20,9 @@ public sealed class DevelopmentIdentityProvisioner
     private readonly ISqliteConnectionFactory _connectionFactory;
     private readonly DevelopmentIdentityOptions _options;
 
+    /// <summary>
+    /// Crea el aprovisionador de identidad de desarrollo y valida su configuración.
+    /// </summary>
     public DevelopmentIdentityProvisioner(ISqliteConnectionFactory connectionFactory, DevelopmentIdentityOptions options)
     {
         ArgumentNullException.ThrowIfNull(connectionFactory);
@@ -31,6 +33,9 @@ public sealed class DevelopmentIdentityProvisioner
         ValidateOptions(_options);
     }
 
+    /// <summary>
+    /// Crea o actualiza en la base de datos la identidad de desarrollo y su colección inicial.
+    /// </summary>
     public async Task Provision()
     {
         using SqliteConnection connection = _connectionFactory.CreateOpenConnection();
@@ -41,9 +46,7 @@ public sealed class DevelopmentIdentityProvisioner
             string sql = LoadProvisioningSql();
             await connection.ExecuteAsync(sql, new
             {
-                Email = _options.Email,
-                Name = _options.Name,
-                Alias = _options.Alias,
+                Email = InfrastructureConstants.DevelopmentIdentityDefaults.Email,
                 PasswordHash = _options.PasswordHash,
                 EmailConfirmedAt = DateTime.UtcNow,
                 SecurityStamp = Guid.NewGuid().ToString("N"),
@@ -59,12 +62,11 @@ public sealed class DevelopmentIdentityProvisioner
         }
     }
 
+    /// <summary>
+    /// Valida que la configuración de la identidad de desarrollo contenga un hash Argon2id admitido.
+    /// </summary>
     private static void ValidateOptions(DevelopmentIdentityOptions options)
     {
-        options.Email = EmailPolicy.Normalize(options.Email);
-        options.Name = UserTextPolicy.EnsureRequiredText(options.Name, LengthLimitsConstants.UserName);
-        options.Alias = AliasPolicy.Generate(options.Alias);
-
         Match hashMatch = string.IsNullOrWhiteSpace(options.PasswordHash)
             ? Match.Empty
             : _argon2idHashPattern.Match(options.PasswordHash);
@@ -88,6 +90,9 @@ public sealed class DevelopmentIdentityProvisioner
         }
     }
 
+    /// <summary>
+    /// Decodifica una cadena Base64 segura para URL; devuelve un arreglo vacío si el formato no es válido.
+    /// </summary>
     private static byte[] DecodeBase64(string value)
     {
         string standardBase64 = value.Replace('-', '+').Replace('_', '/');
@@ -102,6 +107,9 @@ public sealed class DevelopmentIdentityProvisioner
         }
     }
 
+    /// <summary>
+    /// Carga el script SQL incrustado para aprovisionar la identidad de desarrollo.
+    /// </summary>
     private static string LoadProvisioningSql()
     {
         Assembly assembly = typeof(DevelopmentIdentityProvisioner).Assembly;

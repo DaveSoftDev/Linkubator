@@ -37,7 +37,7 @@ sequenceDiagram
     App->>DB: Buscar hash de token y comprobar validez
     App->>DB: BEGIN IMMEDIATE
     App->>DB: Volver a validar el token y confirmar que NewEmail sigue disponible
-    App->>DB: Aplicar nuevo email, regenerar SecurityStamp y consumir token
+    App->>DB: Aplicar nuevo email, actualizar EmailConfirmedAt, regenerar SecurityStamp y consumir token
     App->>DB: Invalidar tokens pendientes según specifications.md → «Tokens»
     App->>DB: COMMIT
     App-->>Browser: Si la sesión actual es del dueño del token, reemitir cookie con el nuevo SecurityStamp

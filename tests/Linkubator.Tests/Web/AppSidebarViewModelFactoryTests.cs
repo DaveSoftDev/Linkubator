@@ -29,9 +29,14 @@ public sealed class AppSidebarViewModelFactoryTests
             1, "Collection", "collection", null, false, 0, DateTime.UnixEpoch);
 
         AppSidebarViewModel sidebar = AppSidebarViewModelFactory.CreateSidebar(
-            AppSidebarSelectionKind.Collection, [collection], selectedCollectionId: selectedId);
+            AppSidebarSelectionKind.Collection,
+            [collection, new(2, "Other", "other", null, false, 0, DateTime.UnixEpoch)],
+            selectedCollectionId: selectedId);
 
-        Assert.Equal(isActive, Assert.Single(sidebar.Collections).IsActive);
+        Assert.Equal(isActive, sidebar.Collections.Single(item => item.Route == "/app/enlaces?c=1").IsActive);
+        Assert.False(sidebar.Collections.Single(item => item.Route == "/app/enlaces?c=2").IsActive);
+        Assert.Equal(isActive ? new[] { "/app/enlaces?c=1" } : Array.Empty<string>(),
+            sidebar.Collections.Where(item => item.IsActive).Select(item => item.Route));
         Assert.Equal(itemId, sidebar.Selection.ItemId);
         Assert.Equal(isActive ? (long?)selectedId : null, sidebar.Selection.CollectionId);
         Assert.DoesNotContain(sidebar.Navigation, item => item.IsActive);
@@ -50,43 +55,19 @@ public sealed class AppSidebarViewModelFactoryTests
     }
 
     [Fact]
-    public void CreateSidebar_WhenUserProvided_UsesDevelopmentIdentityData()
-    {
-        // Arrange
-        AppSidebarUserViewModel user = new()
-        {
-            Name = "Demo User",
-            Alias = "my-demo-user",
-        };
-
-        // Act
-        AppSidebarViewModel sidebar = AppSidebarViewModelFactory.CreateSidebar(
-            AppSidebarSelectionKind.Home,
-            [],
-            user);
-
-        // Assert
-        Assert.Equal("Demo User", sidebar.User.Name);
-        Assert.Equal("my-demo-user", sidebar.User.Alias);
-    }
-
-    [Fact]
     public void CreateSidebar_WithEmptyCollections_UsesDevelopmentIdentityData()
     {
-        // Arrange
         AppSidebarUserViewModel user = new()
         {
             Name = "Demo User",
             Alias = "my-demo-user",
         };
 
-        // Act
         AppSidebarViewModel sidebar = AppSidebarViewModelFactory.CreateSidebar(
             AppSidebarSelectionKind.Home,
             [],
             user);
 
-        // Assert
         Assert.Equal("Demo User", sidebar.User.Name);
         Assert.Equal("my-demo-user", sidebar.User.Alias);
         Assert.Empty(sidebar.Collections);

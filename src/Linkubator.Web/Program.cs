@@ -1,7 +1,6 @@
 using Linkubator.Infrastructure;
 using Microsoft.AspNetCore.HostFiltering;
 using Serilog;
-using Serilog.Events;
 using ApplicationContracts = Linkubator.Application.Contracts;
 using CollectionService = Linkubator.Application.UseCases.Collections.CollectionService;
 using DashboardService = Linkubator.Application.UseCases.Dashboard.DashboardService;
@@ -17,6 +16,15 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 string[] allowedHosts = builder.Configuration.GetValue<string>("AllowedHosts")?
     .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
     ?? ["localhost", "127.0.0.1", "[::1]"];
+
+// The default startup filter otherwise rejects hosts before the security-header middleware runs.
+ServiceDescriptor? defaultHostFilter = builder.Services.FirstOrDefault(descriptor =>
+    descriptor.ServiceType == typeof(IStartupFilter)
+    && descriptor.ImplementationType?.FullName == "Microsoft.AspNetCore.HostFilteringStartupFilter");
+if (defaultHostFilter is not null)
+{
+    builder.Services.Remove(defaultHostFilter);
+}
 
 builder.Services.Configure<HostFilteringOptions>(options => options.AllowedHosts = allowedHosts);
 builder.Services.Configure<WebOptions.PublicOriginOptions>(options =>
@@ -52,7 +60,7 @@ using (AsyncServiceScope scope = app.Services.CreateAsyncScope())
 
     ApplicationContracts.IDevelopmentIdentityProvider identityProvider =
         scope.ServiceProvider.GetRequiredService<ApplicationContracts.IDevelopmentIdentityProvider>();
-    await identityProvider.GetUserId();
+    await identityProvider.GetProfile();
 }
 
 if (!app.Environment.IsDevelopment())
@@ -61,7 +69,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHostFiltering();
 app.Use(async (context, next) =>
 {
     context.Response.OnStarting(() =>
@@ -74,6 +81,7 @@ app.Use(async (context, next) =>
 
     await next();
 });
+app.UseHostFiltering();
 app.UseStatusCodePages(async ctx =>
 {
     HttpContext httpContext = ctx.HttpContext;
@@ -106,15 +114,6 @@ app.UseStatusCodePages(async ctx =>
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging(options =>
 {
-    Func<HttpContext, string, double, int, IEnumerable<LogEventProperty>> getMessageTemplateProperties =
-        options.GetMessageTemplateProperties;
-    options.GetMessageTemplateProperties = (httpContext, requestPath, elapsedMilliseconds, statusCode) =>
-    {
-        string safeRequestPath = WebLogging.RequestLoggingDiagnosticContext.GetSafeRequestPath(
-            requestPath,
-            httpContext.Request.QueryString.Value ?? string.Empty);
-        return getMessageTemplateProperties(httpContext, safeRequestPath, elapsedMilliseconds, statusCode);
-    };
     options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
         WebLogging.RequestLoggingDiagnosticContext.Enrich(diagnosticContext, httpContext);
@@ -131,6 +130,9 @@ await app.RunAsync();
 
 public partial class Program
 {
+    /// <summary>
+    /// Inicializa el punto de entrada de la aplicación Web.
+    /// </summary>
     protected Program()
     {
     }

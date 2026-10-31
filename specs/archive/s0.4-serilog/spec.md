@@ -1,5 +1,7 @@
 # Especificación: S0.4 — Serilog y observabilidad base
 
+> Los criterios conservan el alcance aprobado originalmente. La regla vigente de registro es [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos); la exclusión general de contenido privado indicada en CA03 no es una exigencia vigente.
+
 ## Estado y aprobación
 
 - Estado: Aprobado por DLG el 7-X-2026.

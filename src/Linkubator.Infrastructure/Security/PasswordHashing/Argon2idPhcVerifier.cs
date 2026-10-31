@@ -11,6 +11,9 @@ public static class Argon2idPhcVerifier
         @"^\$argon2id\$v=19\$m=(\d+),t=(\d+),p=(\d+)\$([A-Za-z0-9+/_-]+)\$([A-Za-z0-9+/_-]+)$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    /// <summary>
+    /// Verifica una contraseña frente a un hash Argon2id en formato PHC.
+    /// </summary>
     public static bool Verify(string password, string phcHash)
     {
         ArgumentNullException.ThrowIfNull(password);
@@ -63,6 +66,9 @@ public static class Argon2idPhcVerifier
         }
     }
 
+    /// <summary>
+    /// Decodifica una cadena Base64 segura para URL; devuelve un arreglo vacío si el formato no es válido.
+    /// </summary>
     private static byte[] DecodeBase64(string value)
     {
         string standardBase64 = value.Replace('-', '+').Replace('_', '/');

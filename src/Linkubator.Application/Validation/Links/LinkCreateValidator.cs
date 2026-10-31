@@ -7,7 +7,10 @@ namespace Linkubator.Application.Validation.Links;
 
 public sealed class LinkCreateValidator : IValidator<LinkCreateRequest>
 {
-    public Result Validate(LinkCreateRequest request)
+    /// <summary>
+    /// Valida la solicitud indicada y devuelve los errores detectados.
+    /// </summary>
+    public Result Validate(LinkCreateRequest? request)
     {
         if (request is null)
         {
@@ -37,9 +40,16 @@ public sealed class LinkCreateValidator : IValidator<LinkCreateRequest>
             return urlResult;
         }
 
-        return LinkMetadataValidator.Validate(request.Title, request.Description, request.Image, adjustedUrl);
+        return LinkMetadataValidator.Validate(new LinkMetadataValidationRequest(
+            request.Title,
+            request.Description,
+            request.Image,
+            adjustedUrl));
     }
 
+    /// <summary>
+    /// Ejecuta la validación del campo y convierte las excepciones de dominio en errores de validación.
+    /// </summary>
     private static Result ValidateField(string field, Action validate)
     {
         try

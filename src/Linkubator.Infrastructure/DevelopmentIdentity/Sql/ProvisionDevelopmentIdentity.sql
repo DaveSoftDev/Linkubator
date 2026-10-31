@@ -1,5 +1,5 @@
 INSERT INTO User (Email, Name, Alias, Password, EmailConfirmedAt, SecurityStamp)
-SELECT @Email, @Name, @Alias, @PasswordHash, @EmailConfirmedAt, @SecurityStamp
+SELECT @Email, 'Demo User', 'my-demo-user', @PasswordHash, @EmailConfirmedAt, @SecurityStamp
 WHERE NOT EXISTS (
     SELECT 1
     FROM User
@@ -7,8 +7,8 @@ WHERE NOT EXISTS (
 );
 
 UPDATE User
-SET Name = COALESCE(Name, @Name),
-    Alias = COALESCE(Alias, @Alias),
+SET Name = COALESCE(Name, 'Demo User'),
+    Alias = COALESCE(Alias, 'my-demo-user'),
     Password = COALESCE(Password, @PasswordHash),
     EmailConfirmedAt = COALESCE(EmailConfirmedAt, @EmailConfirmedAt)
 WHERE Email = @Email

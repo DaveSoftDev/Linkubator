@@ -11,11 +11,17 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
     private const int PageSize = 16;
     private readonly SqliteConnection _connection;
 
+    /// <summary>
+    /// Crea el repositorio de colecciones asociado a la conexión SQLite indicada.
+    /// </summary>
     public SqliteCollectionRepository(SqliteConnection connection)
     {
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
     }
 
+    /// <summary>
+    /// Obtiene una colección por identificador y propietario.
+    /// </summary>
     public async Task<Entities.Collection?> GetById(long id, long userId, CancellationToken cancellationToken = default)
     {
         return await _connection.QuerySingleOrDefaultAsync<Entities.Collection>(new CommandDefinition(
@@ -26,6 +32,9 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
             cancellationToken: cancellationToken));
     }
 
+    /// <summary>
+    /// Obtiene una colección del usuario por su slug.
+    /// </summary>
     public async Task<Entities.Collection?> GetBySlug(long userId, string slug, CancellationToken cancellationToken = default)
     {
         return await _connection.QuerySingleOrDefaultAsync<Entities.Collection>(new CommandDefinition(
@@ -36,19 +45,21 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
             cancellationToken: cancellationToken));
     }
 
-    public async Task<IReadOnlyCollection<Entities.Collection>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
-    {
-        IEnumerable<Entities.Collection> collections = await _connection.QueryAsync<Entities.Collection>(new CommandDefinition(
-            @"SELECT Id, Name, Slug, IsPublic
-              FROM Collection
-              WHERE UserId = @UserId
-              ORDER BY Name COLLATE LINKUBATOR_ES_ES ASC, Id ASC;",
-            new { UserId = userId },
+    /// <summary>
+    /// Indica si el usuario tiene otra colección distinta de la excluida.
+    /// </summary>
+    public Task<bool> ExistsOtherCollectionByUser(long userId, long excludedCollectionId, CancellationToken cancellationToken = default)
+        => _connection.ExecuteScalarAsync<bool>(new CommandDefinition(
+            @"SELECT EXISTS (
+                  SELECT 1 FROM Collection
+                  WHERE UserId = @UserId AND Id <> @ExcludedCollectionId
+              );",
+            new { UserId = userId, ExcludedCollectionId = excludedCollectionId },
             cancellationToken: cancellationToken));
 
-        return collections.ToList();
-    }
-
+    /// <summary>
+    /// Obtiene las colecciones del usuario junto con el número de enlaces de cada una.
+    /// </summary>
     public async Task<IReadOnlyCollection<CollectionDto>> GetAllByUserWithLinkCounts(long userId, CancellationToken cancellationToken = default)
     {
         IEnumerable<CollectionDto> collections = await _connection.QueryAsync<CollectionDto>(new CommandDefinition(
@@ -65,6 +76,9 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
         return collections.ToList();
     }
 
+    /// <summary>
+    /// Obtiene una página de enlaces del usuario, opcionalmente filtrada por búsqueda y colección.
+    /// </summary>
     public async Task<IReadOnlyCollection<CollectionDto>> GetPageByUser(long userId, string? query, int page, CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
@@ -99,6 +113,9 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
         return collections.ToList();
     }
 
+    /// <summary>
+    /// Obtiene el número de páginas de enlaces del usuario para los filtros indicados.
+    /// </summary>
     public async Task<int> GetPageCountByUser(long userId, string? query, CancellationToken cancellationToken = default)
     {
         string? searchQuery = Search.SearchQueryBuilder.Build(Search.SearchTextNormalizer.Normalize(query));
@@ -123,6 +140,9 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
         return (int)Math.Ceiling(total / (double)PageSize);
     }
 
+    /// <summary>
+    /// Guarda la entidad y actualiza su proyección de búsqueda.
+    /// </summary>
     public async Task Insert(Entities.Collection collection, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(collection);
@@ -158,6 +178,9 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
             cancellationToken: cancellationToken));
     }
 
+    /// <summary>
+    /// Actualiza la entidad del usuario y sincroniza las proyecciones de búsqueda afectadas.
+    /// </summary>
     public async Task Update(Entities.Collection collection, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(collection);
@@ -203,6 +226,7 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
                 @"UPDATE LinkSearch
                   SET CollectionName = @CollectionName
                   WHERE UserId = @UserId
+                    AND CollectionName IS NOT @CollectionName
                     AND rowid IN (SELECT Id FROM Link WHERE UserId = @UserId AND CollectionId = @CollectionId);",
                 new
                 {
@@ -215,6 +239,9 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
         }
     }
 
+    /// <summary>
+    /// Elimina la entidad del usuario y su proyección de búsqueda.
+    /// </summary>
     public async Task Delete(long id, long userId, CancellationToken cancellationToken = default)
     {
         await _connection.ExecuteAsync(new CommandDefinition(

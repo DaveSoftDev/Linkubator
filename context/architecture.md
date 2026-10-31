@@ -19,16 +19,15 @@ Este documento describe cómo se construirá Linkubator: tecnologías, arquitect
 
 ## Arquitectura
 
-**Clean Architecture** con las siguientes capas:
+**Clean Architecture** con las siguientes capas. Las carpetas indicadas reflejan la organización actual del código de aplicación; se omiten las carpetas generadas, de herramientas y de metadatos del proyecto. Las capacidades previstas para etapas posteriores se describen como tales y no implican que ya estén implementadas:
 
 > Diagrama de capas: [Capas y dependencias](diagrams/architecture-layers.md).
 
 ### Domain
 
 - Entidades del dominio. Las que tienen `Id` propio heredan de `BaseEntity`, que reúne las propiedades `Id` y `CreatedAt`. `LinkTag` no hereda de ella: es una relación identificada por la pareja `LinkId + TagId` (ver [domain-model.md → «LinkTag»](domain-model.md#linktag) y [decisions.md → «Tecnología»](decisions.md#tecnología)).
-- DTOs de entrada y salida.
-- POCOs / ViewModels.
-- Enumeraciones.
+- Organización actual: `Entities/` para las entidades y su base, `Policies/` para las políticas y transformaciones, `Exceptions/` para las excepciones, `Enums/` para las enumeraciones y `Constants/` para las constantes de dominio.
+- Domain no contiene DTOs de aplicación ni modelos de presentación; estos pertenecen a Application y Web, respectivamente.
 - Excepciones de dominio, y solo excepciones de dominio: todo lo que Domain rechaza se lanza como una excepción derivada de `DomainException`, nunca como una excepción genérica, para que quien captura en la frontera de la capa solo necesite conocer `DomainException` y su `Code` (ver [decisions.md → «Tecnología»](decisions.md#tecnología)).
 - Independiente de frameworks externos.
 - Transformaciones de texto sin dependencias de infraestructura.
@@ -41,13 +40,12 @@ Este documento describe cómo se construirá Linkubator: tecnologías, arquitect
 
 ### Application
 
-- Casos de uso, DTOs, validadores.
-- Servicios de aplicación — casos de uso orquestados.
-- Service Layer: `I*Service` → `*Service`.
-- Contratos, servicios.
-- Interfaces de repositorios y de Unit of Work.
-- Constantes, Options, Records.
-- Patrón `Result`.
+- `UseCases/`: casos de uso organizados por responsabilidad, con el patrón `I*Service` → `*Service`; `Services/` contiene la base compartida de los servicios de aplicación.
+- `Contracts/`: interfaces de servicios, repositorios, Unit of Work y demás dependencias de la capa.
+- `Dtos/Requests/`: DTOs de entrada; `Dtos/Models/`: DTOs de salida; `Models/`: modelos auxiliares de aplicación, no de presentación.
+- `Validation/`: validadores de las peticiones.
+- `Results/`: `Result` y tipos de resultado y error; `Enums/`: enumeraciones de aplicación; `Constants/`: constantes y fábricas de error.
+- `Logging/`: soporte de registro mediante las abstracciones de logging.
 - Application valida el formato y rango del identificador antes de acceder al recurso; un identificador inválido produce un error de categoría `Validation`. Un identificador válido que no corresponde a un recurso del usuario identificado produce `ResourceNotAccessible`, tanto si el recurso no existe como si pertenece a otro usuario. En las operaciones de eliminación, ese resultado usa además un código estable específico de la operación. No se representa la falta de acceso como una excepción de Domain. Web consume categoría y código para seleccionar el mensaje y el tratamiento HTTP definidos en [specifications.md → «Rutas privadas»](specifications.md#rutas-privadas), sin recibir detalles que revelen la existencia o propiedad del recurso.
 - Abstracciones del usuario identificado. 
 - Abstracciones del scraper.
@@ -55,11 +53,11 @@ Este documento describe cómo se construirá Linkubator: tecnologías, arquitect
 
 ### Infrastructure
 
-- Repositorios con Dapper y SQL explícito.
-- Conexiones SQLite.
-- Transacciones.
-- Unit of Work ligero.
-- Scripts SQL versionados, índices y restricciones.
+- `Repositories/`: repositorios con Dapper y SQL explícito.
+- `Sqlite/`: conexiones, transacciones, Unit of Work ligero, migraciones y scripts SQL versionados, índices y restricciones.
+- `Search/`: construcción de consultas y soporte de las proyecciones FTS5.
+- `DevelopmentIdentity/`: aprovisionamiento y resolución de la identidad de desarrollo.
+- `Contracts/`, `Options/` y `Constants/`: contratos internos, configuración y constantes de infraestructura.
 - Índice de búsqueda con SQLite FTS5, con una proyección propia por entidad buscable: enlaces, colecciones y los nombres de las etiquetas.
 - Implementación de `IPasswordHasher` con Argon2id y de `IEmailSender` con MailKit. `Konscious.Security.Cryptography.Argon2` solo calcula el hash: la generación de la sal, el formato PHC y la comparación en tiempo constante los hace esta implementación (valores en [specifications.md → «Hash de la contraseña»](specifications.md#hash-de-la-contraseña)).
 - `IPasswordHasher` limitará el número de hashes que se calculan a la vez; los demás esperan en cola. El valor del límite se fija al implementar (motivo en [decisions.md → «Seguridad»](decisions.md#seguridad)). Un límite por IP queda fuera del alcance definido.
@@ -67,10 +65,11 @@ Este documento describe cómo se construirá Linkubator: tecnologías, arquitect
 
 ### Web
 
-- Razor Pages.
-- TailwindCSS
-- Panel de gestión.
-- Páginas públicas.
+- `Pages/`: Razor Pages del panel de gestión y del área pública, con sus PageModels y vistas compartidas.
+- `Models/`: modelos de presentación de Web; no pertenecen a Domain.
+- `wwwroot/`: recursos estáticos, incluidos estilos de Tailwind CSS y JavaScript.
+- `Constants/`, `Options/`, `Extensions/` y `Navigation/`: constantes, configuración, extensiones y navegación de la capa.
+- `DevelopmentIdentity/` y `Logging/`: adaptación de la identidad de desarrollo y registro de peticiones.
 - Enrutamiento y seguridad web; la autenticación por cookies y la autorización de cuenta.
 - Resolución del usuario identificado desde una sesión autenticada. Los casos de uso no reciben un identificador de usuario del cliente.
 - Presentación de errores y estados accesibles.
@@ -119,7 +118,7 @@ El comportamiento exacto está en [specifications.md](specifications.md) y las i
 
 - Para verificar una contraseña se leen juntos `User.Password` y `User.SecurityStamp`, y Argon2id se calcula fuera de la transacción. Antes de aplicar cualquier resultado, las operaciones de escritura comprueban dentro de su transacción `BEGIN IMMEDIATE` que el sello siga vigente y que la cuenta no esté bloqueada; si no, revierten sin ejecutar la operación ni incrementar intentos sobre un estado nuevo. El login vuelve a leer el sello y el bloqueo antes de emitir la cookie, que incluye el sello comprobado. Las reglas de comportamiento están en [specifications.md → «Verificación concurrente de contraseña»](specifications.md#verificación-concurrente-de-contraseña).
 - La aplicación ejecuta el aprovisionamiento de identidad de desarrollo después de las migraciones versionadas, siguiendo [specifications.md → «Identidad de desarrollo»](specifications.md#identidad-de-desarrollo).
-- El email y el perfil de desarrollo se obtienen de la configuración definida para esa identidad. El hash inicial corresponde a una contraseña aleatoria descartada. El proveedor de identidad resuelve esa cuenta después del aprovisionamiento y en cada petición a `/app` entrega su `UserId`, sin aceptar que la petición lo elija. Hasta LoginV0 no hay identidad autenticada alternativa.
+- El script de aprovisionamiento establece el perfil inicial y utiliza el mismo email fijo que el proveedor. Este lee el identificador y el perfil actuales de la cuenta después del aprovisionamiento y en cada petición a `/app`, sin aceptar que la petición elija la identidad. El hash inicial corresponde a una contraseña aleatoria descartada.
 - La cookie de autenticación usa el prefijo `__Host-`, `Path=/`, `HttpOnly`, `Secure` y `SameSite=Lax`, y solo contiene un ticket cifrado sin datos personales en claro.
 - En cada petición autenticada se comprueba el `SecurityStamp` del ticket contra el del usuario; si no coincide, la sesión deja de ser válida. Al cambiar la contraseña y al confirmar un cambio de email con sesión abierta, se vuelve a emitir la cookie de la sesión actual con el nuevo sello, copiando del ticket anterior su fecha de caducidad y su persistencia. En la confirmación del cambio de email solo se reemite si la sesión pertenece al dueño del token; si no, no se crea ni se modifica ninguna sesión.
 - El ticket de autenticación lleva una caducidad absoluta calculada en el login y el deslizamiento de la caducidad (`SlidingExpiration`) está desactivado. La persistencia de la cookie (`Expires`) se decide en cada login según «Recordarme»; el ticket caduca igual en ambos casos (valores en [specifications.md → «Sesión»](specifications.md#sesión)).
@@ -137,14 +136,15 @@ El comportamiento exacto está en [specifications.md](specifications.md) y las i
 ## Correo
 
 - Los correos se envían con MailKit por SMTP. En local los captura smtp4dev, que los muestra en una interfaz web sin entregarlos a nadie.
-- Los correos se encolan en memoria después de confirmar la transacción, y los envía un `BackgroundService` fuera de la petición (motivo en [decisions.md → «Seguridad»](decisions.md#seguridad)).
+- La comprobación del límite de correo y la actualización de la marca correspondiente se ejecutan dentro de la misma transacción de escritura que acepta la solicitud y aplica sus cambios, incluida la emisión e invalidación de tokens cuando corresponda. Se utiliza `BEGIN IMMEDIATE`, según [«Persistencia»](#persistencia), para que las peticiones concurrentes comprueben el estado confirmado. La semántica del límite está en [specifications.md → «Correo»](specifications.md#correo).
+- Los correos se encolan en memoria después de confirmar la transacción, y los envía un `BackgroundService` fuera de la petición (motivo en [decisions.md → «Seguridad»](decisions.md#seguridad)). El proceso de encolado y envío no actualiza las marcas de los límites.
 - Si la aplicación se detiene con correos en cola, se pierden (riesgo aceptado, ver [decisions.md → «Riesgos aceptados»](decisions.md#riesgos-aceptados)).
 - Los enlaces de los correos se construyen con el origen público configurado de la aplicación, nunca con la cabecera `Host` de la petición (motivo en [decisions.md → «Seguridad»](decisions.md#seguridad)).
 
 ## Enrutamiento
 
 - Todo lo que no es público cuelga de `/app`: el dashboard y la gestión, registro, completar registro, login, recuperación y restablecimiento de contraseña (páginas anónimas), configuración, cambio de contraseña y eliminación de cuenta.
-- `/app` redirige al dashboard. Las rutas privadas y sus parámetros están en [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas).
+- La página Razor del dashboard atiende directamente la entrada del área privada, sin una redirección intermedia. Las rutas privadas y sus parámetros están en [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas).
 - Cada formulario privado tiene una página Razor canónica. En la gestión de enlaces y colecciones, los diálogos son la presentación de esos mismos formularios y no una ruta ni un caso de uso distinto (ver [specifications.md → «Páginas privadas»](specifications.md#páginas-privadas)).
 - La raíz queda reservada a las rutas públicas de [specifications.md → «Páginas públicas»](specifications.md#páginas-públicas) y a los recursos estáticos.
 - Las URL canonical usan el origen público configurado de la aplicación, nunca la cabecera `Host` de la petición (motivo en [decisions.md → «Seguridad»](decisions.md#seguridad)). En local, se configura el origen correspondiente al entorno de desarrollo.
@@ -175,14 +175,15 @@ Reglas obligatorias:
   - La validez y los cambios de estado de los tokens (`UserToken`): las operaciones que los emiten, consumen o invalidan actualizan su estado dentro de la misma transacción. Al completar el registro, restablecer la contraseña, confirmar un cambio de email o confirmar la eliminación de cuenta, el token presentado se vuelve a validar dentro de la transacción y, si ya no es válido, se revierte sin aplicar nada. La comprobación previa a la transacción solo evita trabajo inútil (por ejemplo, calcular un hash).
   - Los límites de correo (`User.LastEmailSentAt` y `User.LastExistingAccountNoticeAt`) y el contador de intentos fallidos (`User.FailedLoginAttempts`).
   - La propiedad de las relaciones ([domain-model.md → «Propiedad de los datos»](domain-model.md#propiedad-de-los-datos)): al crear o mover un enlace, que la colección sea del usuario; al asociar etiquetas, que cada etiqueta sea del usuario.
-  - Las invariantes de [domain-model.md → «Público y privado»](domain-model.md#público-y-privado): al guardar la edición de un enlace como público, su colección debe ser pública en ese momento; al guardar la edición de una colección como privada, sus enlaces pasan a privados en la misma transacción.
+  - Las invariantes de [domain-model.md → «Público y privado»](domain-model.md#público-y-privado): al guardar la edición de un enlace como público, su colección debe ser pública en ese momento; al cambiar una colección de pública a privada, sus enlaces pasan a privados en la misma transacción.
+- Al cambiar una colección de pública a privada, la aplicación persiste su cambio y el de sus enlaces en la misma transacción, conforme a [domain-model.md → «Público y privado»](domain-model.md#público-y-privado). Al cambiarla de privada a pública, no se ejecutan `UPDATE` sobre sus enlaces ni se reescriben sus estados: la transición solo requiere actualizar la colección. Si la edición conserva el estado público o privado de la colección, tampoco se actualizan sus enlaces por privacidad. Esto no excluye la sincronización de las proyecciones FTS5 que requieran otros campos editados.
 - Las actualizaciones de datos relacionados los hace la aplicación de forma explícita, nunca la base de datos de forma automática (sin `ON UPDATE CASCADE`). Tampoco se usan triggers: la lógica vive en la aplicación.
 - Los borrados de datos relacionados los hace la aplicación de forma explícita, nunca la base de datos de forma automática (sin `ON DELETE CASCADE`). Tampoco se usan triggers: la lógica vive en la aplicación.
 
 Operaciones que van en una sola transacción:
 
 - Completar el registro: fijar nombre, alias, contraseña y `EmailConfirmedAt`, crear la «Bandeja de entrada» y consumir el token.
-- El restablecimiento de contraseña, la confirmación del cambio de email, la confirmación de eliminación de cuenta, con sus efectos sobre los tokens, el bloqueo y el `SecurityStamp`.
+- El restablecimiento de contraseña, la confirmación del cambio de email, la confirmación de eliminación de cuenta, con sus efectos sobre los tokens, el bloqueo y el `SecurityStamp`. Al confirmar el cambio de email, la sustitución de `Email` y la actualización de `EmailConfirmedAt` forman parte de esa misma transacción (ver [specifications.md → «Cambio de email»](specifications.md#cambio-de-email)).
 - La eliminación de una cuenta y de todos sus datos.
 - Cualquier escritura o borrado de enlaces, colecciones y etiquetas, junto con las proyecciones FTS5 afectadas. Las operaciones de etiquetas incluyen sus relaciones `LinkTag` y actualizan las proyecciones FTS5 afectadas, y guardar el resultado de un intento de scraping (metadatos, estado e intentos) actualiza también la proyección de enlaces en la misma transacción; la descarga se hace antes, fuera de ella.
 
@@ -212,14 +213,14 @@ Restricciones e índices previstos:
 - El índice de búsqueda son proyecciones FTS5 desnormalizadas, una por entidad buscable: enlaces, colecciones y etiquetas. No hay una tabla única con tipos de entrada, de modo que los identificadores de entidades distintas no colisionan y la relevancia `bm25` nunca se mezcla entre entidades.
 - En cada proyección el `rowid` es el `Id` de su entidad. Además se guarda el `UserId`, que sirve para filtrar y no forma parte del texto buscable.
   - Proyección de enlaces: la URL original, el título, la descripción, el nombre de la colección y los nombres de sus etiquetas.
-  - Proyección de colecciones: su `Name`.
+  - Proyección de colecciones: su `Name` y su `Description`.
   - Proyección de etiquetas: su `Name`.
   - Renombrar una colección o una etiqueta, actualiza su propia proyección y las filas de la proyección de enlaces que la contienen, en la misma transacción.
 - Cada consulta de texto usa solo la proyección de la entidad del listado y combina siempre `MATCH` con el `UserId` del usuario identificado; la relación con la tabla de la entidad también comprueba que esta pertenece a ese usuario. Así no se puede devolver un resultado de otro usuario ni de otra entidad.
 - FTS5 se reserva para el texto libre. Los filtros del listado de enlaces (colección y etiqueta) usan SQL e índices convencionales.
 - Antes de tokenizar, se aplica a `q` y al texto que se incorpora a las proyecciones la normalización Unicode NFC definida en [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros). Los valores originales de las entidades no se modifican.
-- Tokenizador `unicode61` con `remove_diacritics 2` y categorías `L* N*` iguala «canción» y «cancion», trata la `ñ` como `n` igual que los slugs, y tokeniza solo letras y números, conforme a [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros). FTS5 no incluye stemming para castellano.
-- La consulta se construye con los términos que define [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros). Cada término se escribe entre comillas dobles, para que FTS5 no interprete como operador palabras como `AND`, `OR`, `NOT` o `NEAR`, y los términos se combinan con el AND implícito de FTS5. No se usa la búsqueda por prefijo (`*`). Si no hay términos, no se consulta FTS5.
+- Tokenizador `unicode61` con `remove_diacritics 2` y categorías `L* N*`: elimina los diacríticos de los caracteres latinos que cubre el tokenizador y tokeniza letras y números de cualquier alfabeto, conforme al alcance de [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros). No se añade un preprocesamiento de eliminación de diacríticos para otros alfabetos. La normalización NFC se mantiene como paso independiente. FTS5 no incluye stemming para castellano.
+- La consulta se construye con los términos que define [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros). Cada término se escribe entre comillas dobles, para que FTS5 no interprete como operador palabras como `AND`, `OR`, `NOT` o `NEAR`, seguido del operador de prefijo `*` fuera de las comillas; los términos se combinan con el AND implícito de FTS5. Si no hay términos, no se consulta FTS5.
 - La relevancia solo se calcula en la proyección de enlaces, con `ORDER BY rank` ascendente: en FTS5, `rank` (`bm25()`) es más bajo cuanto mejor es la coincidencia, así que `ORDER BY rank DESC` devolvería primero los menos relevantes. Las consultas sobre las proyecciones de colecciones y de etiquetas solo obtienen los `Id` coincidentes y no usan `rank`; el orden de cada listado es el de [specifications.md → «Listados»](specifications.md#listados) (la colación está en [«Persistencia»](#persistencia)).
 - La reconstrucción del índice es un comando de mantenimiento que se ejecuta a mano: vacía todas las proyecciones (las de enlaces, colecciones y las de etiquetas) y las regenera desde las tablas, en una transacción.
 
@@ -243,4 +244,5 @@ Su diseño técnico no está cerrado hasta resolver los pendientes de [decisions
 - Serilog implementa el registro estructurado detrás de `ILogger`; Domain no conoce el registro y las demás capas dependen de la abstracción.
 - Se escriben logs por consola y en un archivo rotativo. El nivel mínimo y las salidas se pueden configurar sin cambiar los casos de uso.
 - Qué se registra y qué nunca se registra está en [specifications.md → «Registro de eventos»](specifications.md#registro-de-eventos).
-- El registro de peticiones del framework también cumple esa regla: no incluye la cadena de consulta de las URL que llevan un token ni la de los listados privados, que puede contener `q`.
+- El registro de peticiones del framework, incluidos sus mensajes, propiedades y excepciones, cumple las mismas reglas.
+- Al implementar las rutas de cuenta que puedan transportar tokens, el registro de peticiones debe identificarlas por su estructura y omitir toda la cadena de consulta, con independencia de los nombres de sus parámetros. Si el token viaja en la ruta, se registra una representación sin el segmento que lo contiene. La protección se aplica también a peticiones inválidas y a las que no lleguen a resolverse como endpoint; no debe depender únicamente del endpoint resuelto. La selección se aplica antes de construir los mensajes y las propiedades del evento y se comprueba también en las excepciones. Las rutas y el transporte del token están pendientes de definición en [decisions.md → «Pendiente de rutas de cuenta»](decisions.md#pendiente-de-rutas-de-cuenta).

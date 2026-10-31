@@ -7,6 +7,9 @@ internal static partial class SqliteMigrationCatalog
 {
     private static readonly Regex _versionRegex = VersionPattern();
 
+    /// <summary>
+    /// Carga y ordena los scripts de migración SQL incrustados en el ensamblado.
+    /// </summary>
     public static IReadOnlyList<SqliteMigrationScript> Load()
     {
         TypeInfo typeInfo = typeof(SqliteMigrationService).GetTypeInfo();
@@ -36,6 +39,9 @@ internal static partial class SqliteMigrationCatalog
             .ToArray();
     }
 
+    /// <summary>
+    /// Proporciona la expresión regular generada para extraer versiones de migración.
+    /// </summary>
     [GeneratedRegex("(?i)V\\d+")]
     private static partial Regex VersionPattern();
 }

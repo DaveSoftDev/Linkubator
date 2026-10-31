@@ -4,6 +4,9 @@ namespace Linkubator.Web.Models.Presentation;
 
 public static class PaginationViewModelFactory
 {
+    /// <summary>
+    /// Crea un modelo para presentar de forma genérica que un recurso privado no está disponible.
+    /// </summary>
     public static PaginationViewModel Create(int currentPage, int pageCount, Func<int?, string> buildPageUrl)
     {
         if (pageCount <= 1)

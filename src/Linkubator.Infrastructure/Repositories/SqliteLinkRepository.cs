@@ -15,8 +15,26 @@ public sealed class SqliteLinkRepository : ILinkRepository
               INNER JOIN Collection c ON c.Id = l.CollectionId AND c.UserId = l.UserId";
     private readonly SqliteConnection _connection;
 
-    private Task InsertSearchProjection(long id, Entities.Link link, CancellationToken cancellationToken)
-        => _connection.ExecuteAsync(new CommandDefinition(
+    /// <summary>
+    /// Inserta la proyección de búsqueda del enlace.
+    /// </summary>
+    private async Task InsertSearchProjection(long id, Entities.Link link, CancellationToken cancellationToken)
+    {
+        string? collectionName = link.Collection?.Name;
+        if (collectionName is null)
+        {
+            collectionName = await _connection.QuerySingleOrDefaultAsync<string>(new CommandDefinition(
+                "SELECT Name FROM Collection WHERE Id = @CollectionId AND UserId = @UserId;",
+                new { link.CollectionId, link.UserId },
+                cancellationToken: cancellationToken));
+        }
+
+        if (collectionName is null)
+        {
+            throw new InvalidOperationException("The link's collection could not be found for its search projection.");
+        }
+
+        await _connection.ExecuteAsync(new CommandDefinition(
             @"INSERT INTO LinkSearch (rowid, UserId, UrlOriginal, Title, Description, CollectionName)
               VALUES (@Id, @UserId, @UrlOriginal, @Title, @Description, @CollectionName);",
             new
@@ -26,21 +44,31 @@ public sealed class SqliteLinkRepository : ILinkRepository
                 UrlOriginal = Search.SearchTextNormalizer.Normalize(link.UrlOriginal),
                 Title = Search.SearchTextNormalizer.Normalize(link.Title),
                 Description = Search.SearchTextNormalizer.Normalize(link.Description),
-                CollectionName = Search.SearchTextNormalizer.Normalize(link.Collection.Name),
+                CollectionName = Search.SearchTextNormalizer.Normalize(collectionName),
             },
             cancellationToken: cancellationToken));
+    }
 
+    /// <summary>
+    /// Elimina la proyección de búsqueda del enlace indicado.
+    /// </summary>
     private Task DeleteSearchProjection(long id, long userId, CancellationToken cancellationToken)
         => _connection.ExecuteAsync(new CommandDefinition(
             "DELETE FROM LinkSearch WHERE rowid = @Id AND UserId = @UserId;",
             new { Id = id, UserId = userId },
             cancellationToken: cancellationToken));
 
+    /// <summary>
+    /// Crea el repositorio de enlaces asociado a la conexión SQLite indicada.
+    /// </summary>
     public SqliteLinkRepository(SqliteConnection connection)
     {
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
     }
 
+    /// <summary>
+    /// Obtiene una colección por identificador y propietario.
+    /// </summary>
     public async Task<Entities.Link?> GetById(long id, long userId, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<Entities.Link> links = await GetLinks(
@@ -51,6 +79,9 @@ public sealed class SqliteLinkRepository : ILinkRepository
         return links.SingleOrDefault();
     }
 
+    /// <summary>
+    /// Obtiene un enlace del usuario por su URL normalizada.
+    /// </summary>
     public async Task<Entities.Link?> GetByNormalizedUrl(long userId, string normalizedUrl, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<Entities.Link> links = await GetLinks(
@@ -61,6 +92,9 @@ public sealed class SqliteLinkRepository : ILinkRepository
         return links.SingleOrDefault();
     }
 
+    /// <summary>
+    /// Obtiene todos los enlaces del usuario.
+    /// </summary>
     public async Task<IReadOnlyCollection<Entities.Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default)
     {
         return await GetLinks(
@@ -71,16 +105,30 @@ public sealed class SqliteLinkRepository : ILinkRepository
             cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<Entities.Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
-    {
-        return await GetLinks(
-            $@"{LinkAndCollectionSelect}
-              WHERE l.UserId = @UserId AND l.CollectionId = @CollectionId
-              ORDER BY l.CreatedAt DESC, l.Id DESC;",
+    /// <summary>
+    /// Indica si la colección del usuario contiene enlaces.
+    /// </summary>
+    public Task<bool> ExistsByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+        => _connection.ExecuteScalarAsync<bool>(new CommandDefinition(
+            @"SELECT EXISTS (
+                  SELECT 1 FROM Link
+                  WHERE UserId = @UserId AND CollectionId = @CollectionId
+              );",
             new { UserId = userId, CollectionId = collectionId },
-            cancellationToken);
-    }
+            cancellationToken: cancellationToken));
 
+    /// <summary>
+    /// Obtiene el número de enlaces de la colección del usuario.
+    /// </summary>
+    public Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+        => _connection.ExecuteScalarAsync<int>(new CommandDefinition(
+            "SELECT COUNT(*) FROM Link WHERE UserId = @UserId AND CollectionId = @CollectionId;",
+            new { UserId = userId, CollectionId = collectionId },
+            cancellationToken: cancellationToken));
+
+    /// <summary>
+    /// Obtiene una página de enlaces del usuario, opcionalmente filtrada por búsqueda y colección.
+    /// </summary>
     public async Task<IReadOnlyCollection<LinkDto>> GetPageByUser(long userId, string? query, long? collectionId, int page, CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
@@ -111,6 +159,9 @@ public sealed class SqliteLinkRepository : ILinkRepository
         return links.ToList();
     }
 
+    /// <summary>
+    /// Obtiene el número de páginas de enlaces del usuario para los filtros indicados.
+    /// </summary>
     public async Task<int> GetPageCountByUser(long userId, string? query, long? collectionId, CancellationToken cancellationToken = default)
     {
         string? searchQuery = Search.SearchQueryBuilder.Build(Search.SearchTextNormalizer.Normalize(query));
@@ -139,6 +190,9 @@ public sealed class SqliteLinkRepository : ILinkRepository
         return (int)Math.Ceiling(total / (double)PageSize);
     }
 
+    /// <summary>
+    /// Guarda la entidad y actualiza su proyección de búsqueda.
+    /// </summary>
     public async Task Insert(Entities.Link link, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(link);
@@ -167,6 +221,9 @@ public sealed class SqliteLinkRepository : ILinkRepository
         link.SetId(id);
     }
 
+    /// <summary>
+    /// Actualiza la entidad del usuario y sincroniza las proyecciones de búsqueda afectadas.
+    /// </summary>
     public async Task Update(Entities.Link link, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(link);
@@ -204,6 +261,19 @@ public sealed class SqliteLinkRepository : ILinkRepository
         }
     }
 
+    /// <summary>
+    /// Hace privados los enlaces públicos de la colección indicada del usuario.
+    /// </summary>
+    public Task UpdatePrivateByCollection(long userId, long collectionId, CancellationToken cancellationToken = default)
+        => _connection.ExecuteAsync(new CommandDefinition(
+            @"UPDATE Link SET IsPublic = 0
+              WHERE UserId = @UserId AND CollectionId = @CollectionId AND IsPublic = 1;",
+            new { UserId = userId, CollectionId = collectionId },
+            cancellationToken: cancellationToken));
+
+    /// <summary>
+    /// Elimina la entidad del usuario y su proyección de búsqueda.
+    /// </summary>
     public async Task Delete(long id, long userId, CancellationToken cancellationToken = default)
     {
         await DeleteSearchProjection(id, userId, cancellationToken);
@@ -213,6 +283,9 @@ public sealed class SqliteLinkRepository : ILinkRepository
             cancellationToken: cancellationToken));
     }
 
+    /// <summary>
+    /// Ejecuta la consulta de enlaces y rehidrata las asociaciones con sus colecciones.
+    /// </summary>
     private async Task<IReadOnlyList<Entities.Link>> GetLinks(string sql, object parameters, CancellationToken cancellationToken)
     {
         List<Entities.Link> links = new();

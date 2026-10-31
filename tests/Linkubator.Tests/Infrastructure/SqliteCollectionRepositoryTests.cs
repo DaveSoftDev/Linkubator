@@ -50,17 +50,22 @@ public sealed class SqliteCollectionRepositoryTests
     }
 
     [Fact]
-    public async Task GetAllByUser_ReturnsOnlyCollectionsOwnedByRequestedUser()
+    public async Task ExistsOtherByUser_WhenOtherCollectionsExist_CountsOnlyOwnedCollections()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
-        await database.SeedCollection(42, "Mine", "mine", false);
+        long collectionId = await database.SeedCollection(42, "Mine", "mine", false);
         await database.SeedCollection(99, "Other", "other", false);
         await using SqliteConnection connection = database.OpenConnection();
         ICollectionRepository repository = new SqliteCollectionRepository(connection);
 
-        IReadOnlyCollection<Collection> result = await repository.GetAllByUser(42);
+        bool foreignOnly = await repository.ExistsOtherCollectionByUser(42, collectionId);
+        long otherId = await database.SeedCollection(42, "Another", "another", false);
+        bool ownedOther = await repository.ExistsOtherCollectionByUser(42, collectionId);
+        bool excludedOther = await repository.ExistsOtherCollectionByUser(99, otherId);
 
-        Assert.Equal(new[] { "Mine" }, result.Select(collection => collection.Name));
+        Assert.False(foreignOnly);
+        Assert.True(ownedOther);
+        Assert.True(excludedOther);
     }
 
     [Fact]
@@ -110,7 +115,7 @@ public sealed class SqliteCollectionRepositoryTests
     }
 
     [Fact]
-    public async Task Update_WhenCollectionBelongsToAnotherUser_DoesNotChangeIt()
+    public async Task Update_WhenEntityHasItsActualOwner_PersistsChangesWithoutMakingItAccessibleToOtherUsers()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
         long collectionId = await database.SeedCollection(99, "Original", "original", false);
@@ -125,6 +130,30 @@ public sealed class SqliteCollectionRepositoryTests
 
         Assert.Null(resultForOwner);
         Assert.Equal("Changed", resultForUser!.Name);
+    }
+
+    [Fact]
+    public async Task Update_WhenEntityOwnerDoesNotMatchPersistedOwner_LeavesCollectionAndProjectionUnchanged()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(99, "Original", "original", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+        Collection mismatched = await connection.QuerySingleAsync<Collection>(
+            "SELECT Id, 42 AS UserId, Name, Slug, Description, IsPublic, CreatedAt FROM Collection WHERE Id = @Id;",
+            new { Id = collectionId });
+        mismatched.Rename("Changed");
+
+        await repository.Update(mismatched);
+
+        Collection? persisted = await repository.GetById(collectionId, 99);
+        Assert.NotNull(persisted);
+        Assert.Equal("Original", persisted.Name);
+        Assert.Equal("original", persisted.Slug);
+        Assert.Equal("Original", await connection.QuerySingleAsync<string>(
+            "SELECT Name FROM CollectionSearch WHERE rowid = @Id AND UserId = 99;", new { Id = collectionId }));
+        Assert.Equal(0, await connection.ExecuteScalarAsync<long>(
+            "SELECT COUNT(*) FROM CollectionSearch WHERE rowid = @Id AND UserId = 42;", new { Id = collectionId }));
     }
 
     [Fact]
@@ -216,10 +245,15 @@ public sealed class SqliteCollectionRepositoryTests
         await using SqliteConnection connection = database.OpenConnection();
         ICollectionRepository repository = new SqliteCollectionRepository(connection);
 
+        string original = await connection.QuerySingleAsync<string>("SELECT json_object('Id', Id, 'UserId', UserId, 'Name', Name) FROM Collection WHERE Id = @Id;", new { Id = collectionId });
+        string projection = await connection.QuerySingleAsync<string>("SELECT Name FROM CollectionSearch WHERE rowid = @Id AND UserId = 99;", new { Id = collectionId });
+
         await repository.Delete(collectionId, 42);
         Collection? result = await repository.GetById(collectionId, 99);
 
         Assert.NotNull(result);
+        Assert.Equal(original, await connection.QuerySingleAsync<string>("SELECT json_object('Id', Id, 'UserId', UserId, 'Name', Name) FROM Collection WHERE Id = @Id;", new { Id = collectionId }));
+        Assert.Equal(projection, await connection.QuerySingleAsync<string>("SELECT Name FROM CollectionSearch WHERE rowid = @Id AND UserId = 99;", new { Id = collectionId }));
     }
 
     [Fact]
@@ -272,11 +306,13 @@ public sealed class SqliteCollectionRepositoryTests
     public async Task GetPageByUser_WhenPageIsIntMaxValue_ReturnsEmptyPageWithoutOverflow()
     {
         await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Control", "control", false);
         await using SqliteConnection connection = database.OpenConnection();
         ICollectionRepository repository = new SqliteCollectionRepository(connection);
 
         IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, null, int.MaxValue);
 
+        Assert.Single(await repository.GetPageByUser(42, null, 1));
         Assert.Empty(result);
     }
 
@@ -307,6 +343,97 @@ public sealed class SqliteCollectionRepositoryTests
         IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "tree public", 1);
 
         Assert.Equal(new[] { matchingId }, result.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenDescriptionMatchesPrefix_ReturnsOnlyOwnedCollections()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long matchingId = await database.SeedCollection(42, "Recipes", "recipes", false, "Canción favorita");
+        await database.SeedCollection(42, "Unrelated", "unrelated", false, "Different text");
+        await database.SeedCollection(99, "Foreign", "foreign", false, "Canción favorita");
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "CANC", 1);
+
+        Assert.Equal(new[] { matchingId }, result.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenDescriptionMatchesOnlyInsideWord_ReturnsNoResults()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await database.SeedCollection(42, "Recipes", "recipes", false, "Canción favorita");
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "cion", 1);
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task Insert_WhenDescriptionUsesDecomposedUnicode_SearchFindsNormalizedText()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+        Collection collection = Collection.Create(42, "Recipes", "\u1100\u1161", false);
+
+        await repository.Insert(collection);
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "\uAC00", 1);
+
+        Assert.Equal(new[] { collection.Id }, result.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task GetPageByUser_WhenTermsMatchNameAndDescription_RequiresBothTerms()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long matchingId = await database.SeedCollection(42, "Music", "music", false, "Canción favorita");
+        await database.SeedCollection(42, "Music other", "music-other", false, "Different text");
+        await database.SeedCollection(42, "Books", "books", false, "Canción favorita");
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        IReadOnlyCollection<Linkubator.Application.Dtos.Models.CollectionDto> result = await repository.GetPageByUser(42, "mus cancion", 1);
+
+        Assert.Equal(new[] { matchingId }, result.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task Update_WhenDescriptionChanges_RefreshesSearchResults()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+        Collection collection = Collection.Create(42, "Recipes", "Oldword", false);
+        await repository.Insert(collection);
+        collection.ChangeDescription("Newword");
+
+        await repository.Update(collection);
+
+        Assert.Empty(await repository.GetPageByUser(42, "oldword", 1));
+        Assert.Equal(new[] { collection.Id }, (await repository.GetPageByUser(42, "newword", 1)).Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task GetPageCountByUser_WhenDescriptionMatches_CountsOnlyOwnedCollections()
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        await database.SeedCollection(42, "Recipes", "recipes", false, "Searchable");
+        await database.SeedCollection(99, "Foreign", "foreign", false, "Searchable foreignexclusive");
+        await using SqliteConnection connection = database.OpenConnection();
+        ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        int ownerPages = await repository.GetPageCountByUser(42, "search");
+        int unrelatedPages = await repository.GetPageCountByUser(42, "missing");
+        int foreignPages = await repository.GetPageCountByUser(42, "foreignexclusive");
+
+        Assert.Equal(1, ownerPages);
+        Assert.Equal(0, unrelatedPages);
+        Assert.Equal(0, foreignPages);
     }
 
     [Fact]
@@ -436,8 +563,12 @@ public sealed class SqliteCollectionRepositoryTests
         await database.SeedCollection(42, "Another tree", "another-tree", false);
         await database.SeedCollection(42, "Unrelated", "unrelated", false);
         await database.SeedCollection(99, "Foreign tree", "foreign-tree", false);
+        await database.SeedCollectionRange(42, 17);
+        await database.SeedCollectionRange(99, 17);
         await using SqliteConnection connection = database.OpenConnection();
         ICollectionRepository repository = new SqliteCollectionRepository(connection);
+
+        await connection.ExecuteAsync("UPDATE CollectionSearch SET Name = 'Foreign tree' WHERE UserId = 99;");
 
         int result = await repository.GetPageCountByUser(42, "tree");
 

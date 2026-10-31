@@ -16,6 +16,12 @@
     {
         @await Html.PartialAsync("~/Pages/Shared/_PrivateResourceUnavailable.cshtml", Model.ResourceUnavailable)
     }
+    else if (!Model.HasLoadedCollection)
+    {
+        @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
+        @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
+        <p><a href="@Linkubator.Web.Constants.AppRoutes.Collections">Volver al listado</a></p>
+    }
     else
     {
         <form method="post" class="collection-form collection-form--danger">

@@ -11,7 +11,9 @@ public interface ILinkRepository
 
     Task<IReadOnlyCollection<Entities.Link>> GetAllByUser(long userId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyCollection<Entities.Link>> GetAllByCollection(long userId, long collectionId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsByCollection(long userId, long collectionId, CancellationToken cancellationToken = default);
+
+    Task<int> GetCountByCollection(long userId, long collectionId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<LinkDto>> GetPageByUser(
         long userId,
@@ -29,6 +31,8 @@ public interface ILinkRepository
     Task Insert(Entities.Link link, CancellationToken cancellationToken = default);
 
     Task Update(Entities.Link link, CancellationToken cancellationToken = default);
+
+    Task UpdatePrivateByCollection(long userId, long collectionId, CancellationToken cancellationToken = default);
 
     Task Delete(long id, long userId, CancellationToken cancellationToken = default);
 }

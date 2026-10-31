@@ -5,6 +5,9 @@ namespace Linkubator.Infrastructure.Search;
 
 public static class SearchQueryBuilder
 {
+    /// <summary>
+    /// Convierte el texto de búsqueda en una consulta compatible con la búsqueda de texto completo.
+    /// </summary>
     public static string? Build(string? text)
     {
         if (string.IsNullOrEmpty(text))
@@ -41,6 +44,9 @@ public static class SearchQueryBuilder
             : string.Join(' ', terms.Select(static term => $"\"{term}\"*"));
     }
 
+    /// <summary>
+    /// Añade el término acumulado a la lista y vacía el búfer.
+    /// </summary>
     private static void AddCurrentTerm(List<string> terms, StringBuilder currentTerm)
     {
         if (currentTerm.Length == 0)

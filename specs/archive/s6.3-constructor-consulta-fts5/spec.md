@@ -5,6 +5,8 @@
 - Estado: aprobada.
 - Aprobación: DLG, 20-X-2026 («Siguiente»), instrucción explícita en esta conversación.
 
+Esta especificación conserva el alcance aprobado en su cierre. La semántica vigente de búsqueda se encuentra en [specifications.md → «Búsqueda y filtros»](../../../context/specifications.md#búsqueda-y-filtros).
+
 ## Objetivo
 
 Proporcionar y verificar un componente reutilizable que convierta el texto de búsqueda ya normalizado en una expresión segura para FTS5, preservando los términos resultantes y señalando cuándo no hay texto que buscar.

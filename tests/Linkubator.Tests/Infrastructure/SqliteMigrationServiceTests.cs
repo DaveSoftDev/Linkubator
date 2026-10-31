@@ -13,17 +13,17 @@ public sealed class SqliteMigrationServiceTests
         SqliteConnectionFactory factory = new($"Data Source={databasePath}");
         SqliteMigrationService service = new(factory, new[]
         {
-            new SqliteMigrationScript("V001", "CREATE TABLE sample_data (id INTEGER PRIMARY KEY, value TEXT);"),
-            new SqliteMigrationScript("V002", "INSERT INTO sample_data (value) VALUES ('after-v002');"),
-            new SqliteMigrationScript("V003", "UPDATE sample_data SET value = 'after-v003' WHERE value = 'after-v002';")
+            new SqliteMigrationScript("V10", "UPDATE sample_data SET value = 'after-v10' WHERE value = 'after-v2';"),
+            new SqliteMigrationScript("V2", "INSERT INTO sample_data (value) VALUES ('after-v2');"),
+            new SqliteMigrationScript("V1", "CREATE TABLE sample_data (id INTEGER PRIMARY KEY, value TEXT);")
         });
 
         await service.ApplyPendingMigrations();
 
         using SqliteConnection connection = factory.CreateOpenConnection();
-        Assert.Equal(new[] { "V001", "V002", "V003" }, connection.Query<string>("SELECT version FROM schema_migrations ORDER BY version").ToArray());
-        Assert.Equal(1, connection.QuerySingle<int>("SELECT COUNT(*) FROM sample_data;"));
-        Assert.Equal("after-v003", connection.QuerySingle<string>("SELECT value FROM sample_data WHERE id = 1;"));
+        Assert.Equal(new[] { "V1", "V2", "V10" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY CAST(SUBSTR(version, 2) AS INTEGER)")).ToArray());
+        Assert.Equal(1, await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM sample_data;"));
+        Assert.Equal("after-v10", await connection.QuerySingleAsync<string>("SELECT value FROM sample_data WHERE id = 1;"));
 
         DeleteDatabaseFiles(databasePath);
     }
@@ -44,9 +44,9 @@ public sealed class SqliteMigrationServiceTests
         await service.ApplyPendingMigrations();
 
         using SqliteConnection connection = factory.CreateOpenConnection();
-        Assert.Equal(3, connection.QuerySingle<int>("SELECT COUNT(*) FROM schema_migrations;"));
-        Assert.Equal(1, connection.QuerySingle<int>("SELECT COUNT(*) FROM sample_data;"));
-        Assert.Equal("after-v003", connection.QuerySingle<string>("SELECT value FROM sample_data WHERE id = 1;"));
+        Assert.Equal(3, await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM schema_migrations;"));
+        Assert.Equal(1, await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM sample_data;"));
+        Assert.Equal("after-v003", await connection.QuerySingleAsync<string>("SELECT value FROM sample_data WHERE id = 1;"));
 
         DeleteDatabaseFiles(databasePath);
     }
@@ -58,16 +58,17 @@ public sealed class SqliteMigrationServiceTests
         SqliteConnectionFactory factory = new($"Data Source={databasePath}");
         SqliteMigrationService service = new(factory, new[]
         {
-            new SqliteMigrationScript("V001", "CREATE TABLE sample_data (id INTEGER PRIMARY KEY, value TEXT);"),
-            new SqliteMigrationScript("V002", "INSERT INTO missing_table (value) VALUES ('should fail');"),
+            new SqliteMigrationScript("V001", "CREATE TABLE sample_data (id INTEGER PRIMARY KEY, value TEXT); INSERT INTO sample_data (value) VALUES ('keep');"),
+            new SqliteMigrationScript("V002", "INSERT INTO sample_data (value) VALUES ('rollback'); INSERT INTO missing_table (value) VALUES ('should fail');"),
             new SqliteMigrationScript("V003", "CREATE TABLE should_not_be_created (id INTEGER PRIMARY KEY);")
         });
 
         await Assert.ThrowsAsync<SqliteException>(async () => await service.ApplyPendingMigrations());
 
         using SqliteConnection connection = factory.CreateOpenConnection();
-        Assert.Equal(new[] { "V001" }, connection.Query<string>("SELECT version FROM schema_migrations ORDER BY version").ToArray());
-        Assert.Equal(0, connection.QuerySingle<int>("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'should_not_be_created';"));
+        Assert.Equal(new[] { "V001" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version")).ToArray());
+        Assert.Equal(new[] { "keep" }, (await connection.QueryAsync<string>("SELECT value FROM sample_data ORDER BY id;")).ToArray());
+        Assert.Equal(0, await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'should_not_be_created';"));
 
         DeleteDatabaseFiles(databasePath);
     }
@@ -82,7 +83,7 @@ public sealed class SqliteMigrationServiceTests
         await service.ApplyPendingMigrations();
 
         using SqliteConnection connection = factory.CreateOpenConnection();
-        string[] tableNames = connection.Query<string>("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'LinkSearch_%' AND name NOT LIKE 'CollectionSearch_%' AND name <> 'schema_migrations' ORDER BY name").ToArray();
+        string[] tableNames = (await connection.QueryAsync<string>("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'LinkSearch_%' AND name NOT LIKE 'CollectionSearch_%' AND name <> 'schema_migrations' ORDER BY name")).ToArray();
         Assert.Equal(new[] { "Collection", "CollectionSearch", "Link", "LinkSearch", "User" }, tableNames);
 
         AssertSchemaColumns(connection);
@@ -94,7 +95,7 @@ public sealed class SqliteMigrationServiceTests
     }
 
     [Fact]
-    public async Task ApplyPendingMigrations_WhenLegacyVersionsAreRecorded_PreservesHistoryAndSampleData()
+    public async Task ApplyPendingMigrations_WhenUnknownHistoryExists_PreservesHistoryAndSampleData()
     {
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
         SqliteConnectionFactory factory = new($"Data Source={databasePath}");
@@ -118,11 +119,66 @@ public sealed class SqliteMigrationServiceTests
 
         using (SqliteConnection connection = factory.CreateOpenConnection())
         {
-            Assert.Equal(new[] { "V001", "V002", "V003", "V004", "V005", "V006" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version")).ToArray());
+            Assert.Equal(new[] { "V001", "V002", "V003", "V004", "V005", "V006", "V007" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version")).ToArray());
             Assert.Equal("legacy-seed", await connection.QuerySingleAsync<string>("SELECT value FROM sample_data WHERE id = 1;"));
+            Assert.Equal(new[] { "2026-10-01T00:00:00Z", "2026-10-01T00:00:00Z", "2026-10-01T00:00:00Z" },
+                (await connection.QueryAsync<string>("SELECT applied_at_utc FROM schema_migrations WHERE version IN ('V001', 'V002', 'V003') ORDER BY version;")).ToArray());
         }
 
         DeleteDatabaseFiles(databasePath);
+    }
+
+    [Fact]
+    public async Task ApplyPendingMigrations_WhenFailedScriptIsCorrected_ResumesWithoutRepeatingCommittedScripts()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory factory = new($"Data Source={databasePath}");
+        SqliteMigrationScript first = new("V1", "CREATE TABLE sample_data (value TEXT); INSERT INTO sample_data VALUES ('first');");
+        SqliteMigrationScript last = new("V3", "INSERT INTO sample_data VALUES ('third');");
+        SqliteMigrationService failing = new(factory, new[] { first, new SqliteMigrationScript("V2", "INSERT INTO sample_data VALUES ('rolled-back'); INSERT INTO missing_table VALUES (1);"), last });
+
+        await Assert.ThrowsAsync<SqliteException>(() => failing.ApplyPendingMigrations());
+        using SqliteConnection connection = factory.CreateOpenConnection();
+        Assert.Equal(new[] { "first" }, (await connection.QueryAsync<string>("SELECT value FROM sample_data ORDER BY rowid;")).ToArray());
+        Assert.Equal(new[] { "V1" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version;")).ToArray());
+
+        SqliteMigrationService corrected = new(factory, new[] { first, new SqliteMigrationScript("V2", "INSERT INTO sample_data VALUES ('second');"), last });
+        await corrected.ApplyPendingMigrations();
+
+        Assert.Equal(new[] { "first", "second", "third" }, (await connection.QueryAsync<string>("SELECT value FROM sample_data ORDER BY rowid;")).ToArray());
+        Assert.Equal(new[] { "V1", "V2", "V3" }, (await connection.QueryAsync<string>("SELECT version FROM schema_migrations ORDER BY version;")).ToArray());
+        DeleteDatabaseFiles(databasePath);
+    }
+
+    [Fact]
+    public void Constructor_WhenScriptsAreEmpty_RejectsCatalog()
+    {
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
+            new SqliteMigrationService(new SqliteConnectionFactory("Data Source=:memory:"), Array.Empty<SqliteMigrationScript>()));
+        Assert.Equal("At least one migration script is required.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("invalid")]
+    [InlineData("Vx")]
+    public void Constructor_WhenVersionIsInvalid_RejectsCatalog(string? version)
+    {
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
+            new SqliteMigrationService(new SqliteConnectionFactory("Data Source=:memory:"), new[] { new SqliteMigrationScript(version!, "SELECT 1;") }));
+        Assert.Contains("is invalid", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void Constructor_WhenSqlIsMissing_RejectsCatalog(string? sql)
+    {
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
+            new SqliteMigrationService(new SqliteConnectionFactory("Data Source=:memory:"), new[] { new SqliteMigrationScript("V1", sql!) }));
+        Assert.Equal("Migration 'V1' has no SQL content.", exception.Message);
     }
 
     private static void AssertSchemaColumns(SqliteConnection connection)

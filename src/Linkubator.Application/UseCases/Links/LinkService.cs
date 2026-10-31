@@ -1,4 +1,4 @@
-﻿using Linkubator.Application.Constants;
+using Linkubator.Application.Constants;
 using Linkubator.Application.Dtos.Models;
 using Linkubator.Application.Dtos.Requests;
 using Linkubator.Application.Logging;
@@ -20,6 +20,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
     private readonly IValidator<LinkMoveRequest> _moveLinkValidator;
     private readonly IValidator<LinkDeleteRequest> _deleteLinkValidator;
 
+    /// <summary>
+    /// Convierte la entidad de colección en su modelo de salida.
+    /// </summary>
     private static LinkDto Map(DomainEntities.Link link)
         => new(
             link.Id,
@@ -32,6 +35,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
             link.IsPublic,
             link.CreatedAt);
 
+    /// <summary>
+    /// Inicializa LinkService con las dependencias necesarias.
+    /// </summary>
     public LinkService(
         ILogger<LinkService> logger,
         ICurrentUser currentUser,
@@ -55,15 +61,19 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         _deleteLinkValidator = resolvedValidators.DeleteLinkValidator;
     }
 
-    public async Task<Result<LinkDto>> GetLink(LinkGetRequest request, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Obtiene un enlace accesible para el usuario actual.
+    /// </summary>
+    public async Task<Result<LinkDto>> GetLink(LinkGetRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _getLinkValidator.Validate(request);
-        if (!validation.IsSuccess)
+        if (request is null || !validation.IsSuccess)
         {
-            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link lookup validation failed for user; invalid link ID", UserContext, new { LinkId = request.LinkId });
-            return Result<LinkDto>.Failure(LinkErrors.LinkIdInvalid());
+            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link lookup validation failed for user", UserContext, new { LinkId = request?.LinkId });
+            return validation.IsSuccess ? Result<LinkDto>.Failure(CommonErrors.RequestRequired()) : Result<LinkDto>.Failure(validation.Errors);
         }
 
+        LinkGetRequest validRequest = request;
         Result authentication = EnsureAuthenticated();
         if (!authentication.IsSuccess)
         {
@@ -71,7 +81,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         }
 
         return await Execute(
-            request,
+            validRequest,
             cancellationToken,
             async (getRequest, token) =>
             {
@@ -83,18 +93,23 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
 
                 return Result<LinkDto>.Success(Map(link));
             },
-            "Link lookup failed for user");
+            "Link lookup failed for user",
+            logContext: new { validRequest.LinkId });
     }
 
-    public async Task<Result<LinkDto>> CreateLink(LinkCreateRequest request, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Crea un enlace en una colección del usuario actual.
+    /// </summary>
+    public async Task<Result<LinkDto>> CreateLink(LinkCreateRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _createLinkValidator.Validate(request);
-        if (!validation.IsSuccess)
+        if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Link creation validation failed for user", UserContext, request);
-            return Result<LinkDto>.Failure(validation.Errors);
+            return validation.IsSuccess ? Result<LinkDto>.Failure(CommonErrors.RequestRequired()) : Result<LinkDto>.Failure(validation.Errors);
         }
 
+        LinkCreateRequest validRequest = request;
         Result authentication = EnsureAuthenticated();
         if (!authentication.IsSuccess)
         {
@@ -102,7 +117,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         }
 
         Result<LinkDto> result = await ExecuteInTransaction(
-            request,
+            validRequest,
             cancellationToken,
             async (createRequest, unitOfWork, token) =>
             {
@@ -131,7 +146,8 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
                 await linkRepository.Insert(created, token);
                 return Result<LinkDto>.Success(Map(created));
             },
-            "Link creation failed for user");
+            "Link creation failed for user",
+            logContext: new { validRequest.CollectionId, validRequest.Url, validRequest.Title, validRequest.Description, validRequest.Image, validRequest.IsPublic });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Link created", UserContext);
@@ -140,15 +156,19 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return result;
     }
 
-    public async Task<Result<LinkDto>> UpdateLink(LinkUpdateRequest request, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Actualiza un enlace perteneciente al usuario actual.
+    /// </summary>
+    public async Task<Result<LinkDto>> UpdateLink(LinkUpdateRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _updateLinkValidator.Validate(request);
-        if (!validation.IsSuccess)
+        if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Link update validation failed for user", UserContext, request);
-            return Result<LinkDto>.Failure(validation.Errors);
+            return validation.IsSuccess ? Result<LinkDto>.Failure(CommonErrors.RequestRequired()) : Result<LinkDto>.Failure(validation.Errors);
         }
 
+        LinkUpdateRequest validRequest = request;
         Result authentication = EnsureAuthenticated();
         if (!authentication.IsSuccess)
         {
@@ -156,66 +176,30 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         }
 
         Result<LinkDto> result = await ExecuteInTransaction(
-            request,
+            validRequest,
             cancellationToken,
             async (updateRequest, unitOfWork, token) =>
             {
                 ILinkRepository linkRepository = unitOfWork.GetRepository<ILinkRepository>();
                 ICollectionRepository collectionRepository = unitOfWork.GetRepository<ICollectionRepository>();
+
                 DomainEntities.Link? link = await linkRepository.GetById(updateRequest.LinkId, CurrentUser.UserId, token);
                 if (link is null)
                 {
                     return Failure<LinkDto>(LinkErrors.LinkNotAccessible(), "Link update rejected for user; link not accessible", new { LinkId = updateRequest.LinkId });
                 }
 
-                DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, CurrentUser.UserId, token);
-                if (collection is null)
-                {
-                    return Failure<LinkDto>(LinkErrors.CollectionNotAccessible(), "Link update rejected for user; collection not accessible", new { LinkId = updateRequest.LinkId, CollectionId = link.CollectionId });
-                }
-
                 bool collectionChanged = updateRequest.CollectionId != link.CollectionId;
-                DomainEntities.Collection? destinationCollection = collectionChanged
-                    ? await collectionRepository.GetById(updateRequest.CollectionId, CurrentUser.UserId, token)
-                    : collection;
-                if (destinationCollection is null)
+                Result<DomainEntities.Collection> destinationCollection = await GetDestinationCollection(updateRequest, collectionRepository, link, collectionChanged, token);
+                if (!destinationCollection.IsSuccess)
                 {
-                    return Failure<LinkDto>(
-                        LinkErrors.CollectionSelectionInvalid(),
-                        "Link update rejected for user; selected collection is not accessible",
-                        new { LinkId = updateRequest.LinkId, CollectionId = updateRequest.CollectionId });
+                    return Result<LinkDto>.Failure(destinationCollection.Errors);
                 }
 
-                if (!collectionChanged && updateRequest.IsPublic == true && !destinationCollection.IsPublic)
-                {
-                    return Failure<LinkDto>(LinkErrors.PublicLinkInPrivateCollection(), "Link update rejected for user; public link in private collection", updateRequest);
-                }
-
-                Result metadataValidation = LinkMetadataValidator.Validate(
-                    updateRequest.Title,
-                    updateRequest.Description,
-                    updateRequest.Image,
-                    link.UrlOriginal);
-                if (!metadataValidation.IsSuccess)
-                {
-                    SafeLogger.Log(Logger, LogLevel.Warning, null, "Link update content validation failed for user", UserContext, new { LinkId = updateRequest.LinkId });
-                    return Result<LinkDto>.Failure(metadataValidation.Errors);
-                }
-
-                link.Edit(updateRequest.Title, updateRequest.Description, updateRequest.Image);
-                if (collectionChanged)
-                {
-                    link.MoveToCollection(destinationCollection);
-                }
-                else if (updateRequest.IsPublic is bool requestedVisibility)
-                {
-                    link.ChangePrivacy(requestedVisibility, destinationCollection);
-                }
-
-                await linkRepository.Update(link, token);
-                return Result<LinkDto>.Success(Map(link));
+                return await ApplyUpdateLink(updateRequest, linkRepository, link, collectionChanged, destinationCollection.Value!, token);
             },
-            "Link update failed for user");
+            "Link update failed for user",
+            logContext: new { validRequest.LinkId, validRequest.CollectionId, validRequest.Title, validRequest.Description, validRequest.Image, validRequest.IsPublic });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Link updated", UserContext);
@@ -224,15 +208,79 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return result;
     }
 
-    public async Task<Result<LinkDto>> MoveLink(LinkMoveRequest request, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Obtiene la colección de destino del usuario o devuelve el error indicado.
+    /// </summary>
+    private async Task<Result<DomainEntities.Collection>> GetDestinationCollection(LinkUpdateRequest updateRequest, ICollectionRepository collectionRepository, DomainEntities.Link link, bool collectionChanged, CancellationToken token)
     {
-        Result validation = _moveLinkValidator.Validate(request);
-        if (!validation.IsSuccess)
+        DomainEntities.Collection? collection = await collectionRepository.GetById(link.CollectionId, CurrentUser.UserId, token);
+        if (collection is null)
         {
-            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link move validation failed for user", UserContext, request);
-            return Result<LinkDto>.Failure(validation.Errors);
+            return Failure<DomainEntities.Collection>(LinkErrors.CollectionNotAccessible(), "Link update rejected for user; collection not accessible", new { LinkId = updateRequest.LinkId, CollectionId = link.CollectionId });
         }
 
+        DomainEntities.Collection? destinationCollection = collectionChanged
+            ? await collectionRepository.GetById(updateRequest.CollectionId, CurrentUser.UserId, token)
+            : collection;
+        if (destinationCollection is null)
+        {
+            return Failure<DomainEntities.Collection>(
+                LinkErrors.CollectionSelectionInvalid(),
+                "Link update rejected for user; selected collection is not accessible",
+                new { LinkId = updateRequest.LinkId, CollectionId = updateRequest.CollectionId });
+        }
+
+        return Result<DomainEntities.Collection>.Success(destinationCollection);
+    }
+
+    /// <summary>
+    /// Aplica a la entidad los cambios solicitados para el enlace.
+    /// </summary>
+    private async Task<Result<LinkDto>> ApplyUpdateLink(LinkUpdateRequest updateRequest, ILinkRepository linkRepository, DomainEntities.Link link, bool collectionChanged, DomainEntities.Collection destinationCollection, CancellationToken token)
+    {
+        if (!collectionChanged && updateRequest.IsPublic == true && !destinationCollection.IsPublic)
+        {
+            return Failure<LinkDto>(LinkErrors.PublicLinkInPrivateCollection(), "Link update rejected for user; public link in private collection", updateRequest);
+        }
+
+        Result metadataValidation = LinkMetadataValidator.Validate(new LinkMetadataValidationRequest(
+            updateRequest.Title,
+            updateRequest.Description,
+            updateRequest.Image,
+            link.UrlOriginal));
+        if (!metadataValidation.IsSuccess)
+        {
+            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link update content validation failed for user", UserContext, new { LinkId = updateRequest.LinkId });
+            return Result<LinkDto>.Failure(metadataValidation.Errors);
+        }
+
+        link.Edit(updateRequest.Title, updateRequest.Description, updateRequest.Image);
+        if (collectionChanged)
+        {
+            link.MoveToCollection(destinationCollection);
+        }
+        else if (updateRequest.IsPublic is bool requestedVisibility)
+        {
+            link.ChangePrivacy(requestedVisibility, destinationCollection);
+        }
+
+        await linkRepository.Update(link, token);
+        return Result<LinkDto>.Success(Map(link));
+    }
+
+    /// <summary>
+    /// Mueve un enlace a otra colección del usuario actual.
+    /// </summary>
+    public async Task<Result<LinkDto>> MoveLink(LinkMoveRequest? request, CancellationToken cancellationToken = default)
+    {
+        Result validation = _moveLinkValidator.Validate(request);
+        if (request is null || !validation.IsSuccess)
+        {
+            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link move validation failed for user", UserContext, request);
+            return validation.IsSuccess ? Result<LinkDto>.Failure(CommonErrors.RequestRequired()) : Result<LinkDto>.Failure(validation.Errors);
+        }
+
+        LinkMoveRequest validRequest = request;
         Result authentication = EnsureAuthenticated();
         if (!authentication.IsSuccess)
         {
@@ -240,7 +288,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         }
 
         Result<LinkDto> result = await ExecuteInTransaction(
-            request,
+            validRequest,
             cancellationToken,
             async (moveRequest, unitOfWork, token) =>
             {
@@ -262,7 +310,8 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
                 await linkRepository.Update(link, token);
                 return Result<LinkDto>.Success(Map(link));
             },
-            "Link move failed for user");
+            "Link move failed for user",
+            logContext: new { validRequest.LinkId, validRequest.DestinationCollectionId });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Link moved", UserContext);
@@ -271,15 +320,19 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return result;
     }
 
-    public async Task<Result> DeleteLink(LinkDeleteRequest request, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Elimina un enlace perteneciente al usuario actual.
+    /// </summary>
+    public async Task<Result> DeleteLink(LinkDeleteRequest? request, CancellationToken cancellationToken = default)
     {
         Result validation = _deleteLinkValidator.Validate(request);
-        if (!validation.IsSuccess)
+        if (request is null || !validation.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Warning, null, "Link deletion validation failed for user", UserContext, request);
-            return Result.Failure(validation.Errors);
+            return validation.IsSuccess ? Result.Failure(CommonErrors.RequestRequired()) : validation;
         }
 
+        LinkDeleteRequest validRequest = request;
         Result authentication = EnsureAuthenticated();
         if (!authentication.IsSuccess)
         {
@@ -287,7 +340,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         }
 
         Result result = await ExecuteInTransaction(
-            request,
+            validRequest,
             cancellationToken,
             async (deleteRequest, unitOfWork, token) =>
             {
@@ -301,7 +354,8 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
                 await repository.Delete(deleteRequest.LinkId, CurrentUser.UserId, token);
                 return Result.Success();
             },
-            "Link deletion failed for user");
+            "Link deletion failed for user",
+            logContext: new { validRequest.LinkId });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Link deleted", UserContext);
@@ -310,6 +364,9 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         return result;
     }
 
+    /// <summary>
+    /// Obtiene una página de enlaces del usuario actual aplicando los filtros indicados.
+    /// </summary>
     public async Task<Result<LinkPageDto>> ListLinksPage(string? query = null, long? collectionId = null, int page = 1, CancellationToken cancellationToken = default)
     {
         Result<IReadOnlyList<LinkDto>> links = await ListLinks(query, collectionId, page, cancellationToken);
@@ -324,20 +381,29 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
             async (request, token) =>
             {
                 int pageCount = await _linkRepository.GetPageCountByUser(CurrentUser.UserId, request.Query, request.CollectionId, token);
-                if (request.Page > Math.Max(1, pageCount))
+                int currentPage = Math.Min(request.Page, Math.Max(1, pageCount));
+                Result<IReadOnlyList<LinkDto>> currentLinks = links;
+                if (currentPage != request.Page)
                 {
-                    return Failure<LinkPageDto>(CommonErrors.PageInvalid(message: CommonErrors.ListingValuesInvalidMessage), "Link listing validation failed for user; page out of range", new { Page = request.Page });
+                    currentLinks = await ListLinks(request.Query, request.CollectionId, currentPage, token);
+                    if (!currentLinks.IsSuccess)
+                    {
+                        return Result<LinkPageDto>.Failure(currentLinks.Errors);
+                    }
                 }
 
-                IReadOnlyList<LinkDto> items = links.Value
+                IReadOnlyList<LinkDto> items = currentLinks.Value
                     ?? throw new InvalidOperationException("A successful link listing must contain its items.");
-                return Result<LinkPageDto>.Success(new LinkPageDto(items, request.Page, pageCount));
+                return Result<LinkPageDto>.Success(new LinkPageDto(items, currentPage, pageCount));
             },
             "Link page count failed for user",
             handleDomainExceptions: false,
-            logContext: new { Page = page, CollectionId = collectionId });
+            logContext: new { Query = query, Page = page, CollectionId = collectionId });
     }
 
+    /// <summary>
+    /// Obtiene los enlaces del usuario actual.
+    /// </summary>
     public async Task<Result<IReadOnlyList<LinkDto>>> ListLinks(string? query = null, long? collectionId = null, int page = 1, CancellationToken cancellationToken = default)
     {
         Result authentication = EnsureAuthenticated();
@@ -347,12 +413,12 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
         }
         if (page < 1)
         {
-            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link listing validation failed for user; invalid page", UserContext, new { Page = page });
+            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link listing validation failed for user; invalid page", UserContext, new { Query = query, Page = page, CollectionId = collectionId });
             return Result<IReadOnlyList<LinkDto>>.Failure(LinkErrors.PageInvalid());
         }
         if (collectionId is not null && collectionId <= 0)
         {
-            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link listing validation failed for user; invalid collection ID", UserContext, new { CollectionId = collectionId });
+            SafeLogger.Log(Logger, LogLevel.Warning, null, "Link listing validation failed for user; invalid collection ID", UserContext, new { Query = query, CollectionId = collectionId, Page = page });
             return Result<IReadOnlyList<LinkDto>>.Failure(LinkErrors.CollectionIdInvalid());
         }
 
@@ -366,7 +432,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
                     DomainEntities.Collection? collection = await _collectionRepository.GetById(request.CollectionId.Value, CurrentUser.UserId, token);
                     if (collection is null)
                     {
-                        return Failure<IReadOnlyList<LinkDto>>(LinkErrors.CollectionNotAccessible(), "Link listing rejected for user; collection not accessible", new { CollectionId = request.CollectionId });
+                        return Failure<IReadOnlyList<LinkDto>>(LinkErrors.CollectionNotAccessible(), "Link listing rejected for user; collection not accessible", new { request.Query, request.CollectionId, request.Page });
                     }
                 }
 
@@ -376,7 +442,7 @@ public sealed class LinkService : ApplicationServiceBase, ILinkService
             },
             "Link listing failed for user",
             handleDomainExceptions: false,
-            logContext: new { Page = page, CollectionId = collectionId });
+            logContext: new { Query = query, Page = page, CollectionId = collectionId });
         if (result.IsSuccess)
         {
             SafeLogger.Log(Logger, LogLevel.Information, null, "Links listed for user", UserContext);

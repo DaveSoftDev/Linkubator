@@ -42,6 +42,27 @@ public sealed class NewModel : PrivatePageModel
 
     public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            string privacyField = $"{nameof(Input)}.{nameof(CollectionInput.IsPublic)}";
+            if (ModelState.GetFieldValidationState(privacyField) == Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Invalid)
+            {
+                ModelState[privacyField]!.Errors.Clear();
+                ModelState.AddModelError(privacyField, Linkubator.Web.Constants.CollectionErrorMessages.InvalidPrivacy);
+                ModelState.SetModelValue(privacyField, false, bool.FalseString);
+            }
+
+            ErrorSummary = new PageErrorSummaryViewModel
+            {
+                Items = ModelState.SelectMany(entry => entry.Value!.Errors.Select(error => new PageErrorSummaryItemViewModel
+                {
+                    Message = error.ErrorMessage,
+                    FieldId = GetFieldId(entry.Key.StartsWith("Input.", StringComparison.Ordinal) ? entry.Key["Input.".Length..] : entry.Key),
+                })).ToArray(),
+            };
+            return Page();
+        }
+
         ApplicationRequestDtos.CollectionCreateRequest request = new(Input.Name ?? string.Empty, Input.Description, Input.IsPublic);
         ApplicationResults.Result<ApplicationModelDtos.CollectionDto> result = await _collectionService.CreateCollection(request, cancellationToken);
         if (!result.IsSuccess)
@@ -110,6 +131,7 @@ public sealed class NewModel : PrivatePageModel
         {
             NameField => NameInputId,
             DescriptionField => DescriptionInputId,
+            nameof(CollectionInput.IsPublic) => "collection-public",
             _ => null,
         };
 }

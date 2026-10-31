@@ -8,6 +8,16 @@ namespace Linkubator.Tests.Domain.Policies;
 public class LinkUrlExamplesTests
 {
     [Fact]
+    public void Adjust_WithSupplementaryCharacterOverMaximum_Rejects()
+    {
+        string prefix = "https://example.com/";
+        string value = prefix + new string('a', 2048 - prefix.Length) + "\U0001F600";
+
+        Assert.Equal(2049, DomainPolicies.UserTextPolicy.CountCodePoints(value));
+        Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() => DomainPolicies.LinkUrlPolicy.Adjust(value));
+    }
+
+    [Fact]
     public void LinkUrlExamplesMatchTheSpecificationTable()
     {
         Assert.Equal("https://otro-ejemplo.com/otra-pagina", DomainPolicies.LinkUrlPolicy.Adjust("//otro-ejemplo.com/otra-pagina"));

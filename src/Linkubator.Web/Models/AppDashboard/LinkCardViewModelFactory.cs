@@ -6,11 +6,17 @@ public static class LinkCardViewModelFactory
 {
     private static readonly string[] _accentClasses = ["blue", "violet", "green", "slate", "orange", "cyan", "rose", "amber", "yellow"];
 
+    /// <summary>
+    /// Determina la clase de acento visual asociada al nombre de colección.
+    /// </summary>
     public static string ResolveAccent(string collectionName)
     {
         return ResolveAccentClass(collectionName);
     }
 
+    /// <summary>
+    /// Crea un modelo para presentar de forma genérica que un recurso privado no está disponible.
+    /// </summary>
     public static LinkCardViewModel Create(LinkDto link)
     {
         string collectionName = link.CollectionName ?? string.Empty;
@@ -27,6 +33,9 @@ public static class LinkCardViewModelFactory
         };
     }
 
+    /// <summary>
+    /// Crea tarjetas de ejemplo para mostrar el estado de demostración.
+    /// </summary>
     public static IReadOnlyList<LinkCardViewModel> CreateDefault()
     {
         return
@@ -61,6 +70,9 @@ public static class LinkCardViewModelFactory
         ];
     }
 
+    /// <summary>
+    /// Selecciona de forma determinista una clase de acento para el nombre de colección.
+    /// </summary>
     private static string ResolveAccentClass(string collectionName)
     {
         if (string.IsNullOrWhiteSpace(collectionName))
@@ -76,6 +88,7 @@ public static class LinkCardViewModelFactory
             hash = (hash * 31) + char.ToUpperInvariant(character);
         }
 
-        return _accentClasses[Math.Abs(hash) % _accentClasses.Length];
+        int index = (int)(Math.Abs((long)hash) % _accentClasses.Length);
+        return _accentClasses[index];
     }
 }

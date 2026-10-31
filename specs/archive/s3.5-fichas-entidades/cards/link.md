@@ -45,8 +45,7 @@ La visibilidad del enlace está ligada a la colección:
 
 - Un enlace público aparece en la página pública de su colección; un enlace privado no.
 - Para que un enlace aparezca en la parte pública, tanto la colección como el enlace deben ser públicos.
-- Al hacer privada una colección, todos sus enlaces pasan a privado.
-- Al hacer pública una colección, sus enlaces se mantienen privados hasta que el usuario los publica individualmente.
+- Los efectos de editar la privacidad de su colección, con o sin cambio de estado, se rigen por [domain-model.md → «Público y privado»](../../../../context/domain-model.md#público-y-privado); las escrituras necesarias se describen en [architecture.md → «Persistencia»](../../../../context/architecture.md#persistencia).
 
 Estas condiciones están redactadas en [domain-model.md → «Público y privado»](../../../../context/domain-model.md#público-y-privado) y en [requirements.md → «Público y privado»](../../../../context/requirements.md#público-y-privado).
 

@@ -15,13 +15,10 @@ public sealed class SearchQueryBuilderTests
     [InlineData("q\u0301", "\"q\"*")]
     public void Build_WhenTextContainsTerms_ReturnsQuotedPrefixTermsCombinedImplicitly(string text, string expected)
     {
-        // Arrange
         string original = text;
 
-        // Act
         string? result = SearchQueryBuilder.Build(text);
 
-        // Assert
         Assert.Equal(expected, result);
         Assert.Equal(original, text);
     }
@@ -32,20 +29,16 @@ public sealed class SearchQueryBuilderTests
     [InlineData("- * \" +")]
     public void Build_WhenTextContainsNoTerms_ReturnsNull(string text)
     {
-        // Act
         string? result = SearchQueryBuilder.Build(text);
 
-        // Assert
         Assert.Null(result);
     }
 
     [Fact]
     public void Build_WhenTextIsNull_ReturnsNull()
     {
-        // Act
         string? result = SearchQueryBuilder.Build(null);
 
-        // Assert
         Assert.Null(result);
     }
 }

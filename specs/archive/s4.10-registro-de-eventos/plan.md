@@ -1,5 +1,7 @@
 # Plan técnico: S4.10 — Registro de eventos
 
+> Este plan conserva el diseño aprobado originalmente. La regla vigente es [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos); la exclusión de búsquedas y contenido introducido por el usuario descrita aquí no es una exigencia vigente.
+
 ## Estado y aprobación del plan
 
 - Estado: aprobado.

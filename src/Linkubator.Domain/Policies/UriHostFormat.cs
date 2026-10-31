@@ -13,6 +13,11 @@ namespace Linkubator.Domain.Policies;
 /// </summary>
 internal static class UriHostFormat
 {
+    /// <summary>
+    /// Determina si la cadena representa un host válido según los formatos admitidos.
+    /// </summary>
+    /// <param name="input">Host que se va a validar.</param>
+    /// <returns><c>true</c> si el host es válido; de lo contrario, <c>false</c>.</returns>
     internal static bool IsValid(string input)
     {
         if (string.IsNullOrWhiteSpace(input))

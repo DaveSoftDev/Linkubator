@@ -1,0 +1,12 @@
+{
+  "name": "linkubator-brand-assets",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node generate.mjs",
+    "check": "node generate.mjs --check"
+  },
+  "dependencies": {
+    "sharp": "0.35.5"
+  }
+}

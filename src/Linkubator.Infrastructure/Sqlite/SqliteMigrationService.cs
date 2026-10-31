@@ -14,20 +14,24 @@ public sealed class SqliteMigrationService : ISqliteMigrationService
     private readonly ISqliteConnectionFactory _connectionFactory;
     private readonly IReadOnlyList<SqliteMigrationScript> _scripts;
 
+    /// <summary>
+    /// Crea el servicio de migraciones con la fábrica de conexiones y los scripts indicados.
+    /// </summary>
     public SqliteMigrationService(ISqliteConnectionFactory connectionFactory)
         : this(connectionFactory, SqliteMigrationCatalog.Load())
     {
     }
 
+    /// <summary>
+    /// Crea el servicio de migraciones con la fábrica de conexiones y los scripts indicados.
+    /// </summary>
     public SqliteMigrationService(ISqliteConnectionFactory connectionFactory, IEnumerable<SqliteMigrationScript> scripts)
     {
         ArgumentNullException.ThrowIfNull(connectionFactory);
         ArgumentNullException.ThrowIfNull(scripts);
 
         _connectionFactory = connectionFactory;
-        _scripts = scripts
-            .OrderBy(script => ParseVersion(script.Version))
-            .ToArray();
+        _scripts = scripts.ToArray();
 
         if (_scripts.Count == 0)
         {
@@ -46,11 +50,17 @@ public sealed class SqliteMigrationService : ISqliteMigrationService
                 throw new InvalidOperationException($"Migration '{script.Version}' has no SQL content.");
             }
         }
+
+        _scripts = _scripts.OrderBy(script => ParseVersion(script.Version)).ToArray();
     }
 
+    /// <summary>
+    /// Aplica las migraciones pendientes y registra cada versión aplicada.
+    /// </summary>
     public async Task ApplyPendingMigrations()
     {
         using SqliteConnection connection = _connectionFactory.CreateOpenConnection();
+        connection.CreateFunction<string?, string?>("NormalizeSearchText", Linkubator.Infrastructure.Search.SearchTextNormalizer.Normalize, isDeterministic: true);
 
         await EnsureMigrationHistoryTableAsync(connection);
 
@@ -84,6 +94,9 @@ public sealed class SqliteMigrationService : ISqliteMigrationService
         }
     }
 
+    /// <summary>
+    /// Crea la tabla de historial de migraciones si todavía no existe.
+    /// </summary>
     private static async Task EnsureMigrationHistoryTableAsync(SqliteConnection connection)
     {
         await connection.ExecuteAsync($@"
@@ -94,6 +107,9 @@ public sealed class SqliteMigrationService : ISqliteMigrationService
         ");
     }
 
+    /// <summary>
+    /// Convierte la versión de migración en su valor numérico para ordenar.
+    /// </summary>
     private static long ParseVersion(string version)
     {
         string digits = version.Substring(1);

@@ -5,6 +5,9 @@ namespace Linkubator.Web.Models.Presentation;
 
 internal static class LinkValidationErrorMessagePresenter
 {
+    /// <summary>
+    /// Resuelve el mensaje de presentación correspondiente al error de validación del campo.
+    /// </summary>
     public static string ResolveFieldMessage(ApplicationError error, string fallbackMessage)
     {
         ArgumentNullException.ThrowIfNull(error);

@@ -3,6 +3,7 @@ using Linkubator.Application.Constants;
 using Linkubator.Application.Contracts;
 using Linkubator.Domain.Entities;
 using Linkubator.Infrastructure.Sqlite;
+using Linkubator.Application.Services;
 using Microsoft.Data.Sqlite;
 
 namespace Linkubator.Tests.Infrastructure;
@@ -30,9 +31,10 @@ public sealed class SqliteUnitOfWorkTests
         await linkRepository.Insert(createdLink);
 
         await using SqliteConnection observerBeforeCommit = connectionFactory.CreateOpenConnection();
-        int uncommittedCollectionCount = await observerBeforeCommit.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection WHERE UserId = 42;");
-
-        Assert.Equal(0, uncommittedCollectionCount);
+        Assert.Equal(0, await observerBeforeCommit.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection WHERE UserId = 42;"));
+        Assert.Equal(0, await observerBeforeCommit.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Link WHERE UserId = 42;"));
+        Assert.Equal(0, await observerBeforeCommit.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM CollectionSearch WHERE rowid = @Id;", new { Id = collection.Id }));
+        Assert.Equal(0, await observerBeforeCommit.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM LinkSearch WHERE rowid = @Id;", new { Id = createdLink.Id }));
 
         await unitOfWork.Commit();
 
@@ -43,6 +45,10 @@ public sealed class SqliteUnitOfWorkTests
 
         Assert.Equal(1, collectionCount);
         Assert.Equal(1, linkCount);
+        Assert.Equal(("My collection", "desc"), await connection.QuerySingleAsync<(string, string)>("SELECT Name, Description FROM Collection WHERE Id = @Id;", new { Id = collection.Id }));
+        Assert.Equal(("https://example.com/alpha", "Alpha"), await connection.QuerySingleAsync<(string, string)>("SELECT UrlOriginal, Title FROM Link WHERE Id = @Id;", new { Id = createdLink.Id }));
+        Assert.Equal(("My collection", "desc"), await connection.QuerySingleAsync<(string, string)>("SELECT Name, Description FROM CollectionSearch WHERE rowid = @Id;", new { Id = collection.Id }));
+        Assert.Equal(("https://example.com/alpha", "Alpha", "My collection"), await connection.QuerySingleAsync<(string, string, string)>("SELECT UrlOriginal, Title, CollectionName FROM LinkSearch WHERE rowid = @Id;", new { Id = createdLink.Id }));
 
         DeleteDatabaseFiles(databasePath);
     }
@@ -68,6 +74,8 @@ public sealed class SqliteUnitOfWorkTests
         int count = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection WHERE UserId = 99;");
 
         Assert.Equal(0, count);
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM CollectionSearch WHERE rowid = @Id;", new { Id = collection.Id }));
 
         DeleteDatabaseFiles(databasePath);
     }
@@ -102,13 +110,16 @@ public sealed class SqliteUnitOfWorkTests
         IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(connectionFactory).Get(UnitOfWorkContexts.Linkubator);
         await unitOfWork.Begin();
         ICollectionRepository repository = unitOfWork.GetRepository<ICollectionRepository>();
-        await repository.Insert(Linkubator.Domain.Entities.Collection.Create(99, "Temporary", null));
+        Collection collection = Collection.Create(99, "Temporary", null);
+        await repository.Insert(collection);
 
         await unitOfWork.DisposeAsync();
         await using SqliteConnection observer = connectionFactory.CreateOpenConnection();
         int count = await observer.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection WHERE UserId = 99;");
 
         Assert.Equal(0, count);
+        Assert.Equal(0, await observer.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM CollectionSearch WHERE rowid = @Id;", new { Id = collection.Id }));
         DeleteDatabaseFiles(databasePath);
     }
 
@@ -165,14 +176,19 @@ public sealed class SqliteUnitOfWorkTests
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
         SqliteConnectionFactory connectionFactory = new($"Data Source={databasePath}");
         await new SqliteMigrationService(connectionFactory).ApplyPendingMigrations();
+        await InsertUser(databasePath, 99, "owner@example.com", "owner");
 
         await using IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(connectionFactory).Get(UnitOfWorkContexts.Linkubator);
 
         await unitOfWork.Commit();
         await unitOfWork.Rollback();
+        await unitOfWork.Begin();
+        Collection collection = Collection.Create(99, "After no-op", null);
+        await unitOfWork.GetRepository<ICollectionRepository>().Insert(collection);
+        await unitOfWork.Commit();
 
         using SqliteConnection connection = connectionFactory.CreateOpenConnection();
-        Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT 1;"));
+        Assert.Equal("After no-op", await connection.QuerySingleAsync<string>("SELECT Name FROM Collection WHERE Id = @Id;", new { Id = collection.Id }));
 
         DeleteDatabaseFiles(databasePath);
     }
@@ -196,15 +212,23 @@ public sealed class SqliteUnitOfWorkTests
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
         SqliteConnectionFactory connectionFactory = new($"Data Source={databasePath}");
         await new SqliteMigrationService(connectionFactory).ApplyPendingMigrations();
+        await InsertUser(databasePath, 99, "owner@example.com", "owner");
 
         IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(connectionFactory).Get(UnitOfWorkContexts.Linkubator);
 
         await unitOfWork.Begin();
+        Collection collection = Collection.Create(99, "Pending", null);
+        await unitOfWork.GetRepository<ICollectionRepository>().Insert(collection);
         unitOfWork.Dispose();
         unitOfWork.Dispose();
 
         await unitOfWork.DisposeAsync();
         await unitOfWork.DisposeAsync();
+        await using SqliteConnection observer = connectionFactory.CreateOpenConnection();
+        await observer.ExecuteAsync("PRAGMA busy_timeout = 0;");
+        Assert.Equal(0, await observer.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection WHERE Id = @Id;", new { Id = collection.Id }));
+        Assert.Equal(0, await observer.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM CollectionSearch WHERE rowid = @Id;", new { Id = collection.Id }));
+        Assert.Equal(1, await observer.ExecuteAsync("INSERT INTO Collection (UserId, Name, Slug) VALUES (99, 'After dispose', 'after-dispose');"));
 
         DeleteDatabaseFiles(databasePath);
     }
@@ -223,6 +247,104 @@ public sealed class SqliteUnitOfWorkTests
         await Assert.ThrowsAsync<ObjectDisposedException>(() => unitOfWork.Commit());
         await unitOfWork.Rollback();
 
+        DeleteDatabaseFiles(databasePath);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task UnitOfWork_WhenTransactionFinishes_ReleasesWriteLock(bool commit)
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory factory = new($"Data Source={databasePath}");
+        await new SqliteMigrationService(factory).ApplyPendingMigrations();
+        await InsertUser(databasePath, 99, "owner@example.com", "owner");
+        await using IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(factory).Get(UnitOfWorkContexts.Linkubator);
+        await unitOfWork.Begin();
+        await using SqliteConnection competing = factory.CreateOpenConnection();
+        await competing.ExecuteAsync("PRAGMA busy_timeout = 0;");
+
+        SqliteException blocked = await Assert.ThrowsAsync<SqliteException>(() => competing.ExecuteAsync(new CommandDefinition("INSERT INTO Collection (UserId, Name, Slug) VALUES (99, 'Other', 'other');", commandTimeout: 1)));
+        Assert.Equal(5, blocked.SqliteErrorCode);
+        if (commit)
+        {
+            await unitOfWork.Commit();
+        }
+        else
+        {
+            await unitOfWork.Rollback();
+        }
+        Assert.Equal(1, await competing.ExecuteAsync("INSERT INTO Collection (UserId, Name, Slug) VALUES (99, 'Other', 'other');"));
+        DeleteDatabaseFiles(databasePath);
+    }
+
+    [Fact]
+    public async Task UnitOfWork_Begin_WhenCancellationAlreadyRequested_DoesNotStartTransaction()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory factory = new($"Data Source={databasePath}");
+        await new SqliteMigrationService(factory).ApplyPendingMigrations();
+        await InsertUser(databasePath, 99, "owner@example.com", "owner");
+        await using IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(factory).Get(UnitOfWorkContexts.Linkubator);
+        using CancellationTokenSource cancellation = new();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => unitOfWork.Begin(cancellation.Token));
+        await using SqliteConnection observer = factory.CreateOpenConnection();
+        await observer.ExecuteAsync("PRAGMA busy_timeout = 0;");
+        Assert.Equal(1, await observer.ExecuteAsync("INSERT INTO Collection (UserId, Name, Slug) VALUES (99, 'Other', 'other');"));
+        DeleteDatabaseFiles(databasePath);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task UnitOfWork_WhenFinishIsCancelled_LeavesPendingWritesUntilRollback(bool commit)
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory factory = new($"Data Source={databasePath}");
+        await new SqliteMigrationService(factory).ApplyPendingMigrations();
+        await InsertUser(databasePath, 99, "owner@example.com", "owner");
+        await using IUnitOfWork unitOfWork = new SqliteUnitOfWorkFactory(factory).Get(UnitOfWorkContexts.Linkubator);
+        await unitOfWork.Begin();
+        Collection collection = Collection.Create(99, "Pending", null);
+        await unitOfWork.GetRepository<ICollectionRepository>().Insert(collection);
+        using CancellationTokenSource cancellation = new();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => commit ? unitOfWork.Commit(cancellation.Token) : unitOfWork.Rollback(cancellation.Token));
+        await using SqliteConnection observer = factory.CreateOpenConnection();
+        await observer.ExecuteAsync("PRAGMA busy_timeout = 0;");
+        Assert.Equal(0, await observer.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection WHERE Id = @Id;", new { Id = collection.Id }));
+        SqliteException blocked = await Assert.ThrowsAsync<SqliteException>(() => observer.ExecuteAsync(new CommandDefinition("INSERT INTO Collection (UserId, Name, Slug) VALUES (99, 'Other', 'other');", commandTimeout: 1)));
+        Assert.Equal(5, blocked.SqliteErrorCode);
+        await unitOfWork.Rollback();
+        Assert.Equal(0, await observer.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM CollectionSearch WHERE rowid = @Id;", new { Id = collection.Id }));
+        DeleteDatabaseFiles(databasePath);
+    }
+
+    [Fact]
+    public async Task ExecuteInTransaction_WhenActionIsCancelled_RollsBackEntityAndProjection()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        SqliteConnectionFactory connectionFactory = new($"Data Source={databasePath}");
+        await new SqliteMigrationService(connectionFactory).ApplyPendingMigrations();
+        await InsertUser(databasePath, 99, "owner@example.com", "owner");
+        IUnitOfWorkFactory factory = new SqliteUnitOfWorkFactory(connectionFactory);
+        using CancellationTokenSource cancellation = new();
+        Collection collection = Collection.Create(99, "Cancelled", null);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => factory.ExecuteInTransaction(UnitOfWorkContexts.Linkubator,
+            async (work, token) =>
+            {
+                await work.GetRepository<ICollectionRepository>().Insert(collection, token);
+                await cancellation.CancelAsync();
+                token.ThrowIfCancellationRequested();
+            }, cancellation.Token));
+
+        await using SqliteConnection observer = connectionFactory.CreateOpenConnection();
+        Assert.Equal(0, await observer.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Collection WHERE Id = @Id;", new { Id = collection.Id }));
+        Assert.Equal(0, await observer.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM CollectionSearch WHERE rowid = @Id;", new { Id = collection.Id }));
         DeleteDatabaseFiles(databasePath);
     }
 

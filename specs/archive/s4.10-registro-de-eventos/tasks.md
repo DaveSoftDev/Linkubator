@@ -1,5 +1,7 @@
 # Tareas: S4.10 — Registro de eventos
 
+> Las tareas, pruebas y aceptación de este documento conservan el alcance y los resultados originales. La regla vigente está en [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos); esta evidencia no acredita una adaptación posterior a dicha regla.
+
 ## Referencias y autorización
 
 - Estado: aprobado.

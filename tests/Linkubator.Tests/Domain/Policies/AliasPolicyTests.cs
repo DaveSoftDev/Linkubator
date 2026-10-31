@@ -62,7 +62,7 @@ public class AliasPolicyTests
     [InlineData("mi-administrador")]
     public void GenerateAcceptsAliasesThatOnlyContainAReservedWord(string candidate)
     {
-        Assert.NotNull(DomainPolicies.AliasPolicy.Generate(candidate));
+        Assert.Equal(candidate, DomainPolicies.AliasPolicy.Generate(candidate));
     }
 
     [Theory]
@@ -98,7 +98,7 @@ public class AliasPolicyTests
     }
 
     [Fact]
-    public void GenerateDoesNotConsultTheAvailabilityOfTheAlias()
+    public void GenerateIsDeterministicForTheSameCandidate()
     {
         string first = DomainPolicies.AliasPolicy.Generate("Ana López García");
         string second = DomainPolicies.AliasPolicy.Generate("Ana López García");

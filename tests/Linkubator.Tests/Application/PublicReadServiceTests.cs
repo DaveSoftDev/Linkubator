@@ -54,6 +54,7 @@ public class PublicReadServiceTests
         Assert.Equal("alice", result.Value!.Alias);
         Assert.Single(result.Value.PublicCollections);
         Assert.Single(result.Value.RecentLinks);
+        Assert.Equal(repository.UserPage, result.Value);
     }
 
     [Fact]
@@ -137,7 +138,7 @@ public class PublicReadServiceTests
         Result<IReadOnlyList<PublicCollectionSummaryDto>> result = await service.GetCollectionsPage("alice");
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(2, result.Value!.Count);
+        Assert.Equal(repository.CollectionsPage, result.Value);
         Assert.Equal("alice", repository.LastCollectionsAlias);
     }
 
@@ -232,7 +233,9 @@ public class PublicReadServiceTests
             new[]
             {
                 new PublicLinkDto("https://example.com/post", "Post", "Preview", "https://example.com/icon.png"),
-            });
+            },
+            2,
+            3);
         PublicReadService service = CreateService(repository);
 
         Result<PublicCollectionDto> result = await service.GetCollectionPage(" alice ", " tech ", 2);
@@ -243,13 +246,17 @@ public class PublicReadServiceTests
         Assert.Equal(2, repository.LastCollectionPage);
         Assert.Equal("Tech", result.Value!.CollectionName);
         Assert.Single(result.Value.Links);
+        Assert.Equal(2, result.Value.Page);
+        Assert.Equal(3, result.Value.PageCount);
+        Assert.Equal(1, repository.CollectionPageCalls);
+        Assert.Equal(repository.CollectionPage, result.Value);
     }
 
     [Fact]
     public async Task GetCollectionPage_WhenCollectionExistsButHasNoPublicLinks_ReturnsEmptyPage()
     {
         FakePublicReadRepository repository = new();
-        repository.CollectionPage = new PublicCollectionDto("alice", "Tech", "tech", Array.Empty<PublicLinkDto>());
+        repository.CollectionPage = new PublicCollectionDto("alice", "Tech", "tech", Array.Empty<PublicLinkDto>(), 1, 0);
         PublicReadService service = CreateService(repository);
 
         Result<PublicCollectionDto> result = await service.GetCollectionPage("alice", "tech", 1);
@@ -299,76 +306,6 @@ public class PublicReadServiceTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetCollectionPage("alice", "tech"));
     }
 
-    [Fact]
-    public async Task GetCollectionPageCount_WhenAliasOrSlugAreInvalid_ReturnsValidationError()
-    {
-        PublicReadService service = CreateService(new FakePublicReadRepository());
-
-        Result<int> aliasResult = await service.GetCollectionPageCount(" ", "tech");
-        Result<int> slugResult = await service.GetCollectionPageCount("alice", " ");
-
-        Assert.False(aliasResult.IsSuccess);
-        Assert.Equal("PUBLIC_READ_ALIAS_INVALID", aliasResult.Errors[0].Code);
-        Assert.False(slugResult.IsSuccess);
-        Assert.Equal("PUBLIC_READ_COLLECTION_SLUG_INVALID", slugResult.Errors[0].Code);
-    }
-
-    [Fact]
-    public async Task GetCollectionPageCount_WhenCollectionExists_ReturnsCount()
-    {
-        FakePublicReadRepository repository = new();
-        repository.CollectionPage = new PublicCollectionDto("alice", "Tech", "tech", Array.Empty<PublicLinkDto>());
-        repository.CollectionPageCount = 7;
-        PublicReadService service = CreateService(repository);
-
-        Result<int> result = await service.GetCollectionPageCount("alice", "tech");
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal(7, result.Value);
-        Assert.Equal("alice", repository.LastCollectionAlias);
-        Assert.Equal("tech", repository.LastCollectionSlug);
-    }
-
-    [Fact]
-    public async Task GetCollectionPageCount_WhenCollectionIsNotAccessible_ReturnsResourceNotAccessible()
-    {
-        PublicReadService service = CreateService(new FakePublicReadRepository { CollectionPage = null });
-
-        Result<int> result = await service.GetCollectionPageCount("alice", "tech");
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.ResourceNotAccessible, result.Errors[0].Category);
-        Assert.Equal("PUBLIC_READ_COLLECTION_NOT_ACCESSIBLE", result.Errors[0].Code);
-    }
-
-    [Fact]
-    public async Task GetCollectionPageCount_WhenRepositoryThrowsDomainException_ReturnsDomainFailure()
-    {
-        FakePublicReadRepository repository = new()
-        {
-            CollectionPageThrow = new NotValidInputException()
-        };
-        PublicReadService service = CreateService(repository);
-
-        Result<int> result = await service.GetCollectionPageCount("alice", "tech");
-
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ApplicationErrorCategory.DomainRule, result.Errors[0].Category);
-        Assert.Equal("NotValidInput", result.Errors[0].Code);
-    }
-
-    [Fact]
-    public async Task GetCollectionPageCount_WhenRepositoryThrowsUnexpectedException_ReThrows()
-    {
-        FakePublicReadRepository repository = new()
-        {
-            CollectionPageThrow = new InvalidOperationException("boom")
-        };
-        PublicReadService service = CreateService(repository);
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetCollectionPageCount("alice", "tech"));
-    }
-
     private static PublicReadService CreateService(FakePublicReadRepository repository)
         => new(NullLogger<PublicReadService>.Instance, repository);
 
@@ -386,7 +323,7 @@ public class PublicReadServiceTests
 
         public Exception? CollectionPageThrow { get; set; }
 
-        public int CollectionPageCount { get; set; }
+        public int CollectionPageCalls { get; private set; }
 
         public string LastAlias { get; private set; } = string.Empty;
 
@@ -422,6 +359,7 @@ public class PublicReadServiceTests
 
         public Task<PublicCollectionDto?> GetCollectionPage(string alias, string slug, int page, CancellationToken cancellationToken = default)
         {
+            CollectionPageCalls++;
             LastCollectionAlias = alias;
             LastCollectionSlug = slug;
             LastCollectionPage = page;
@@ -433,11 +371,6 @@ public class PublicReadServiceTests
             return Task.FromResult(CollectionPage);
         }
 
-        public Task<int> GetCollectionPageCount(string alias, string slug, CancellationToken cancellationToken = default)
-        {
-            LastCollectionAlias = alias;
-            LastCollectionSlug = slug;
-            return Task.FromResult(CollectionPageCount);
-        }
+
     }
 }

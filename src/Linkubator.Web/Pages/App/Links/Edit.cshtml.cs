@@ -37,6 +37,8 @@ public sealed class EditModel : LinkManagementPageModel
 
     public string LinkUrl { get; private set; } = string.Empty;
 
+    public bool HasLoadedLink { get; private set; }
+
     public long? CurrentCollectionId => _currentCollectionId;
 
     public bool IsCollectionChanging => _currentCollectionId is long currentCollectionId
@@ -121,6 +123,11 @@ public sealed class EditModel : LinkManagementPageModel
             cancellationToken);
         if (!currentResult.IsSuccess || currentResult.Value is null)
         {
+            if (currentResult.Errors.Any(error => error.Category == Linkubator.Application.Enums.ApplicationErrorCategory.ResourceNotAccessible))
+            {
+                return RedirectUnavailableLink();
+            }
+
             ApplyErrors(currentResult.Errors);
             return Page();
         }
@@ -174,6 +181,11 @@ public sealed class EditModel : LinkManagementPageModel
             return LocalRedirect(ReturnRoute);
         }
 
+        if (result.Errors.Any(error => error.Code == ApplicationConstants.LinkErrors.LinkNotAccessible().Code))
+        {
+            return RedirectUnavailableLink();
+        }
+
         ApplicationResults.ApplicationError? publicInPrivateCollection = result.Errors.FirstOrDefault(
             error => error.Code == ApplicationConstants.LinkErrors.PublicLinkInPrivateCollection().Code);
         if (publicInPrivateCollection is not null)
@@ -219,6 +231,7 @@ public sealed class EditModel : LinkManagementPageModel
     {
         _currentCollectionId = link.CollectionId;
         LinkUrl = link.UrlOriginal;
+        HasLoadedLink = true;
     }
 
     private static bool TryGetCollectionId(string? value, out long collectionId)
@@ -242,9 +255,10 @@ public sealed class EditModel : LinkManagementPageModel
     private bool TryGetLinkId(out long linkId)
     {
         linkId = 0;
-        return !string.IsNullOrWhiteSpace(RouteId)
-            && RouteId.All(char.IsAsciiDigit)
-            && long.TryParse(RouteId, NumberStyles.None, CultureInfo.InvariantCulture, out linkId)
+        string? canonicalId = RouteData.Values["id"]?.ToString();
+        return !string.IsNullOrWhiteSpace(canonicalId)
+            && canonicalId.All(char.IsAsciiDigit)
+            && long.TryParse(canonicalId, NumberStyles.None, CultureInfo.InvariantCulture, out linkId)
             && linkId > 0;
     }
 

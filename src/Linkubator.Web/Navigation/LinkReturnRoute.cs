@@ -5,6 +5,9 @@ namespace Linkubator.Web.Navigation;
 
 public static class LinkReturnRoute
 {
+    /// <summary>
+    /// Resuelve una URL local de retorno admitida o utiliza la ruta predeterminada de enlaces.
+    /// </summary>
     public static string Resolve(IUrlHelper url, PathString pathBase, string? returnUrl, bool allowCollections = false)
     {
         string defaultRoute = $"{pathBase}{AppRoutes.Links}";
