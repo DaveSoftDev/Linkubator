@@ -47,6 +47,52 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
     }
 
     [Theory]
+    [InlineData("/app/colecciones/nueva")]
+    [InlineData("/app/colecciones/{0}/editar")]
+    public async Task GetCollectionForm_WithRequiredName_RendersSharedClientValidation(string routeTemplate)
+    {
+        long collectionId = await AddCollection(_userId, "Validación", false);
+        string route = string.Format(CultureInfo.InvariantCulture, routeTemplate, collectionId);
+
+        using HttpResponseMessage response = await _client.GetAsync(route);
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string form = Regex.Match(html, "<form\\b(?=[^>]*data-required-validation)[^>]*>").Value;
+        string input = Regex.Match(html, "<input\\b(?=[^>]*name=\"Input.Name\")[^>]*>").Value;
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotEmpty(form);
+        Assert.Contains("id=", form, StringComparison.Ordinal);
+        Assert.DoesNotContain("novalidate", form, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"data-required-message=\"{Linkubator.Application.Constants.CollectionErrors.NameRequiredMessage}\"", input, StringComparison.Ordinal);
+        Assert.Contains("required", input, StringComparison.Ordinal);
+        Assert.Contains("data-validation-summary-title=\"Hay errores en el formulario\"", html, StringComparison.Ordinal);
+        Assert.Matches("/js/required-validation(?:\\.[a-z0-9]+)?\\.js", html);
+    }
+
+    [Theory]
+    [InlineData("editar", "Input.CollectionId", "La colección es obligatoria.")]
+    [InlineData("mover", "Input.DestinationCollectionId", "La colección de destino no es válida.")]
+    public async Task GetLinkForm_WithRequiredCollection_RendersSharedClientValidation(string action, string field, string expectedMessage)
+    {
+        long collectionId = await AddCollection(_userId, "Validación", false);
+        long linkId = await AddLink(collectionId, "Enlace", null, null, false);
+
+        using HttpResponseMessage response = await _client.GetAsync($"/app/enlaces/{linkId}/{action}");
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string form = Regex.Match(html, "<form\\b(?=[^>]*data-required-validation)[^>]*>").Value;
+        string select = Regex.Match(html, $"<select\\b(?=[^>]*name=\"{Regex.Escape(field)}\")[^>]*>").Value;
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotEmpty(form);
+        Assert.Contains("id=", form, StringComparison.Ordinal);
+        Assert.DoesNotContain("novalidate", form, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"data-required-message=\"{expectedMessage}\"", select, StringComparison.Ordinal);
+        Assert.Contains("required", select, StringComparison.Ordinal);
+        Assert.Contains("data-validation-summary-title=\"Hay errores en el formulario\"", html, StringComparison.Ordinal);
+        Assert.Matches("/js/required-validation(?:\\.[a-z0-9]+)?\\.js", html);
+    }
+
+    [Theory]
     [InlineData("list", true)]
     [InlineData("cards", false)]
     [InlineData("invalid", false)]
@@ -522,6 +568,32 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         Assert.Equal("Nueva descripción", link?.Description);
         Assert.Equal("https://example.com/new.png", link?.Image);
         Assert.Equal("Colección destino", projection?.CollectionName);
+    }
+
+    [Fact]
+    public async Task PostEditLink_WhenChangingToPrivateCollection_IgnoresPublicRequestAndSavesPrivately()
+    {
+        long sourceCollectionId = await AddCollection(_userId, "Colección pública", true);
+        long destinationCollectionId = await AddCollection(_userId, "Colección privada", false);
+        long linkId = await AddLink(sourceCollectionId, "Anterior", "Descripción anterior", null, true);
+
+        using HttpResponseMessage response = await PostWithToken(
+            EditRoute(linkId),
+            EditRoute(linkId),
+            new("Input.CollectionId", destinationCollectionId.ToString(CultureInfo.InvariantCulture)),
+            new("Input.Title", "Título actualizado"),
+            new("Input.IsPublic", "true"));
+        LinkRow? link = await GetLink(linkId);
+        string? collectionName = await _keeper.ExecuteScalarAsync<string>(
+            "SELECT Name FROM Collection WHERE Id = @CollectionId;",
+            new { CollectionId = destinationCollectionId });
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/app/enlaces", response.Headers.Location?.OriginalString);
+        Assert.Equal(destinationCollectionId, link?.CollectionId);
+        Assert.Equal(0, link?.IsPublic);
+        Assert.Equal("Título actualizado", link?.Title);
+        Assert.Equal("Colección privada", collectionName);
     }
 
     [Fact]

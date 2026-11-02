@@ -726,7 +726,13 @@ public class WebStartupTests
     [InlineData("?p=0", "Public page link 00", "Visible link", 1, 16, "")]
     [InlineData("?p=999", "Visible link", "Public page link 00", 2, 1, "?p=2")]
     [InlineData("?p=999&p=1", "Visible link", "Public page link 00", 2, 1, "?p=2")]
-    [InlineData("?p=99999999999999999999", "Public page link 00", "Visible link", 1, 16, "")]
+    [InlineData("?p=2147483647", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=2147483648", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=99999999999999999999", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=00000000000000000002", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=00000000000000000000", "Public page link 00", "Visible link", 1, 16, "")]
+    [InlineData("?p=99999999999999999999x", "Public page link 00", "Visible link", 1, 16, "")]
+    [InlineData("?p=99999999999999999999&p=1", "Visible link", "Public page link 00", 2, 1, "?p=2")]
     [InlineData("?p=-1", "Public page link 00", "Visible link", 1, 16, "")]
     [InlineData("?p=%202%20", "Public page link 00", "Visible link", 1, 16, "")]
     [InlineData("?p=%D9%A2", "Public page link 00", "Visible link", 1, 16, "")]
@@ -1621,6 +1627,9 @@ public class WebStartupTests
                 Assert.Contains(DemoEmail, html, StringComparison.Ordinal);
                 Assert.Equal(originalUserId, await connection.ExecuteScalarAsync<long>("SELECT Id FROM User WHERE Email = @Email;", new { Email = DemoEmail }));
                 Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM User;"));
+                Assert.Equal(1L, await connection.ExecuteScalarAsync<long>(
+                    "SELECT COUNT(*) FROM Collection WHERE UserId = @UserId;",
+                    new { UserId = originalUserId }));
             }
         }
         finally

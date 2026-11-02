@@ -93,6 +93,30 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.Contains("class=\"collection-form__cancel\" href=\"/app/enlaces\"", html, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task GetNewLink_WithRequiredFields_RendersServerMessagesForClientValidation()
+    {
+        using HttpResponseMessage response = await _client.GetAsync(CreateRoute);
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        Assert.Contains($"data-required-message=\"{Linkubator.Application.Constants.LinkErrors.UrlRequired().Message}\"", GetInput(html, "Input.Url"), StringComparison.Ordinal);
+        Assert.Contains($"data-required-message=\"{Linkubator.Application.Constants.LinkErrors.CollectionIdInvalid().Message}\"", GetSelect(html), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetNewLink_WithClientValidation_KeepsNativeFallbackUntilScriptLoads()
+    {
+        using HttpResponseMessage response = await _client.GetAsync(CreateRoute);
+        string html = await response.Content.ReadAsStringAsync();
+        string form = Regex.Match(html, "<form\\b(?=[^>]*id=\"link-new-form\")[^>]*>").Value;
+
+        Assert.Contains("data-required-validation", form, StringComparison.Ordinal);
+        Assert.DoesNotContain("novalidate", form, StringComparison.OrdinalIgnoreCase);
+        Assert.Matches("/js/required-validation(?:\\.[a-z0-9]+)?\\.js", html);
+        Assert.Contains("required", GetInput(html, "Input.Url"), StringComparison.Ordinal);
+        Assert.Contains("required", GetSelect(html), StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("/app/enlaces")]
     [InlineData("/app/enlaces?q=pendiente&p=1")]
@@ -485,7 +509,9 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains($"href=\"#{fieldId}\"", html, StringComparison.Ordinal);
         Assert.Contains($"data-valmsg-for=\"{field}\"", html, StringComparison.Ordinal);
-        Assert.Equal(2, Regex.Matches(WebUtility.HtmlDecode(html), Regex.Escape(expectedMessage)).Count);
+        string fieldError = Regex.Match(html, $"<span\\b(?=[^>]*data-valmsg-for=\"{Regex.Escape(field)}\")[^>]*>(.*?)</span>", RegexOptions.Singleline).Groups[1].Value;
+        Assert.Equal(expectedMessage, WebUtility.HtmlDecode(fieldError));
+        Assert.Contains($">{expectedMessage}</a>", WebUtility.HtmlDecode(html), StringComparison.Ordinal);
         Assert.Equal(value, WebUtility.HtmlDecode(Regex.Match(GetInput(html, field), "value=\"([^\"]*)\"").Groups[1].Value));
         Assert.Contains("Texto <script>alert(1)</script>", WebUtility.HtmlDecode(html), StringComparison.Ordinal);
         Assert.DoesNotContain("<script>alert(1)</script>", html, StringComparison.Ordinal);
@@ -628,6 +654,21 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task PostNewLink_WithUnparseablePublicStateDoesNotCreateLink()
+    {
+        Dictionary<string, string> fields = NewFields(_collectionId);
+        fields["Input.IsPublic"] = "not-a-boolean";
+
+        using HttpResponseMessage response = await Post(fields);
+        string html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("href=\"#link-public\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-valmsg-for=\"Input.IsPublic\"", html, StringComparison.Ordinal);
+        Assert.Equal(0, await LinkCount());
+    }
+
+    [Fact]
     public async Task GetLinks_WithoutPrivacyError_DoesNotRenderPrivacyNotice()
     {
         using HttpResponseMessage listing = await _client.GetAsync("/app/enlaces");
@@ -658,6 +699,24 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.Contains("name=\"QuickUrl\"", html, StringComparison.Ordinal);
         Assert.Contains("type=\"submit\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetDashboard_WithQuickAdd_RendersRequiredValidationWithoutSummary()
+    {
+        using HttpResponseMessage response = await _client.GetAsync("/app");
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string form = Regex.Match(html, "<form\\b(?=[^>]*id=\"quick-new-form\")[^>]*>").Value;
+        string input = GetInput(html, "QuickUrl");
+
+        Assert.Contains("data-required-validation", form, StringComparison.Ordinal);
+        Assert.DoesNotContain("data-validation-summary", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Hay errores en el formulario", html, StringComparison.Ordinal);
+        Assert.Contains($"data-required-message=\"{Linkubator.Application.Constants.LinkErrors.UrlRequired().Message}\"", input, StringComparison.Ordinal);
+        Assert.Contains("aria-describedby=\"quick-url-error\"", input, StringComparison.Ordinal);
+        Assert.Single(Regex.Matches(input, "\\srequired(?=\\s|=|/?>)"));
+        Assert.DoesNotContain("novalidate", form, StringComparison.OrdinalIgnoreCase);
+        Assert.Matches("/js/required-validation(?:\\.[a-z0-9]+)?\\.js", html);
     }
 
     [Theory]
@@ -735,7 +794,9 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         string value = WebUtility.HtmlDecode(Regex.Match(GetInput(html, "QuickUrl"), "value=\"([^\"]*)\"").Groups[1].Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("href=\"#quick-url\"", html, StringComparison.Ordinal);
+        string fieldError = Regex.Match(html, "<span\\b(?=[^>]*id=\"quick-url-error\")[^>]*>(.*?)</span>", RegexOptions.Singleline).Groups[1].Value;
+        Assert.NotEmpty(fieldError);
+        Assert.DoesNotContain("Hay errores en el formulario", html, StringComparison.Ordinal);
         Assert.Contains("role=\"alert\"", html, StringComparison.Ordinal);
         Assert.Equal(url, value);
         Assert.Contains("Todav&#xED;a no tienes enlaces guardados.", html, StringComparison.Ordinal);
@@ -755,7 +816,8 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Redirect, created.StatusCode);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("La colección asociada es 'Destino'", html, StringComparison.Ordinal);
-        Assert.Contains("href=\"#quick-url\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Hay errores en el formulario", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("href=\"#quick-url\"", html, StringComparison.Ordinal);
         Assert.Contains("http://example.com/path#fragment", html, StringComparison.Ordinal);
         Assert.Equal(1, await LinkCount());
         Assert.Equal(before, await LinkSnapshot());

@@ -72,6 +72,39 @@ public sealed class SqliteFts5IntegratedSearchTests
         Assert.Equal(new[] { matching }, result.Select(item => item.Id));
     }
 
+    [Theory]
+    [InlineData("東京")]
+    [InlineData("Привет")]
+    public async Task Search_WithTermsFromOtherAlphabets_MatchesStoredText(string term)
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Multilingual", "multilingual", false);
+        long matching = await database.SeedLink(42, collectionId, "https://example.test/multilingual", "matching", term, false);
+        await database.SeedLink(42, collectionId, "https://example.test/other", "other", "unrelated", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository links = new SqliteLinkRepository(connection);
+
+        var result = await links.GetPageByUser(42, term, null, 1);
+
+        Assert.Equal(new[] { matching }, result.Select(item => item.Id));
+    }
+
+    [Theory]
+    [InlineData("vio")]
+    [InlineData("ion")]
+    public async Task Search_WhenQueryMatchesOnlyInsideOrAtEndOfWord_ReturnsNoResults(string query)
+    {
+        await using SqliteRepositoryTestDatabase database = await SqliteRepositoryTestDatabase.Create();
+        long collectionId = await database.SeedCollection(42, "Boundary", "boundary", false);
+        await database.SeedLink(42, collectionId, "https://example.test/word", "word", "avion", false);
+        await using SqliteConnection connection = database.OpenConnection();
+        ILinkRepository links = new SqliteLinkRepository(connection);
+
+        var result = await links.GetPageByUser(42, query, null, 1);
+
+        Assert.Empty(result);
+    }
+
     [Fact]
     public async Task Writes_WhenEntitiesChange_KeepBothSearchListingsCurrent()
     {

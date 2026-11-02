@@ -4,7 +4,6 @@ using ApplicationResults = Linkubator.Application.Results;
 using ApplicationRequests = Linkubator.Application.Dtos.Requests;
 using AppRoutes = Linkubator.Web.Constants.AppRoutes;
 using WebDevelopmentIdentity = Linkubator.Web.DevelopmentIdentity;
-using AppSidebarSelectionKind = Linkubator.Web.Models.AppSidebar.AppSidebarSelectionKind;
 using LinkCardViewModel = Linkubator.Web.Models.AppDashboard.LinkCardViewModel;
 using SearchFormViewModel = Linkubator.Web.Models.Presentation.SearchFormViewModel;
 using EmptyStateViewModel = Linkubator.Web.Models.Presentation.EmptyStateViewModel;
@@ -92,6 +91,12 @@ public class DashboardModel : PrivatePageModel
                 FieldId = error.Field == "Url" ? "quick-url" : null,
             }).ToArray(),
         };
+
+        if (QuickAddErrors.Items.Count > 0)
+        {
+            string fieldMessage = QuickAddErrors.Items[0].Message;
+            ModelState.AddModelError($"QuickUrl", fieldMessage);
+        }
         return await OnGet(cancellationToken);
     }
 

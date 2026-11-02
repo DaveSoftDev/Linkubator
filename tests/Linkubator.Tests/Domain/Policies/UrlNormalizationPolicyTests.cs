@@ -132,6 +132,14 @@ public class UrlNormalizationPolicyTests
         Assert.NotEqual(plusAsSpace, encodedPlus);
     }
 
+    [Theory]
+    [InlineData("https://example.com/a%23b", "examplecomab")]
+    [InlineData("https://example.com/path?q=a%26b", "examplecompathqab")]
+    public void NormalizeDecodesStructuralCharactersAfterSeparatingComponents(string url, string expected)
+    {
+        Assert.Equal(expected, UrlNormalizationPolicy.Normalize(url));
+    }
+
     [Trait("Category", "Validation")]
     [Fact]
     public void NormalizeTreatsUnicodeAndPercentEncodedPathFormsAsEquivalent()

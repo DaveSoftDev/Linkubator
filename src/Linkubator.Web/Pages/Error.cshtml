@@ -1,26 +1,66 @@
-﻿@page
+@page
 @model ErrorModel
 @{
-    ViewData["Title"] = "Error";
+    Layout = "_Layout";
+    ViewData["Title"] = "Error del servidor";
+    ViewData["MetaDescription"] = "Ha ocurrido un error al procesar tu solicitud. Vuelve al inicio de Linkubator e inténtalo de nuevo.";
+    ViewData["Robots"] = "noindex, follow";
+    ViewData["MainClass"] = "public-shell";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
-
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
-    </p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/public.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/not-found.css" asp-append-version="true" />
 }
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to the <strong>Development</strong> environment displays detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+<a class="public-skip" href="#error-content">Saltar al contenido</a>
+<header class="public-topbar public-container public-header">
+    <a class="public-brand" href="/" aria-label="Linkubator, inicio">
+        <span class="brand-mark" aria-hidden="true"><partial name="_BrandMark" /></span>
+        <span>linkubator<span class="public-accent">.</span></span>
+    </a>
+    <partial name="_PublicAuthLinks" />
+</header>
+
+<div id="error-content" class="not-found public-container" tabindex="-1">
+    <section class="not-found__hero" aria-labelledby="error-title">
+        <div class="not-found__copy">
+            <p class="public-eyebrow">Error 500 · Algo ha fallado</p>
+            <h1 id="error-title">Esta solicitud se ha<br /><span class="public-accent">interrumpido.</span></h1>
+            <p class="public-intro">No hemos podido procesar tu solicitud. Vuelve al inicio e inténtalo de nuevo más tarde.</p>
+            <a class="landing-button" href="/">Volver al inicio <span aria-hidden="true">↗</span></a>
+            @if (Model.ShowRequestId)
+            {
+                <p class="not-found__note public-section__note">Identificador de la solicitud: <code>@Model.RequestId</code></p>
+            }
+        </div>
+        <div class="not-found__illustration" aria-hidden="true">
+            <span class="not-found__coordinate">LINKUBATOR / CONEXIÓN INTERRUMPIDA</span>
+            <svg viewBox="0 0 360 260" focusable="false">
+                <circle class="not-found__orbit" cx="180" cy="130" r="104" />
+                <circle class="not-found__orbit" cx="180" cy="130" r="74" />
+                <path class="not-found__trail" d="M25 218 96 182M264 78l71-36" />
+                <circle class="not-found__node" cx="25" cy="218" r="5" />
+                <circle class="not-found__node" cx="335" cy="42" r="5" />
+                <g transform="translate(180 130) rotate(-35)" class="not-found__chain">
+                    <path d="M-25-30h-25a30 30 0 0 0-30 30 30 30 0 0 0 30 30h25M25-30h25A30 30 0 0 1 80 0a30 30 0 0 1-30 30H25" />
+                    <path class="not-found__break" d="m-9-13-6 13h19l-7 14" />
+                </g>
+            </svg>
+            <span class="not-found__code">500<span>Una pausa en el camino.</span></span>
+        </div>
+    </section>
+    <div class="not-found__reassurance"><span class="public-accent" aria-hidden="true">↗</span><p>A veces las conexiones necesitan un respiro.<br /><span>Vuelve al inicio para seguir explorando.</span></p></div>
+</div>
+
+<footer class="public-footer public-container">
+    <a class="public-brand" href="/" aria-label="Linkubator, inicio">
+        <span class="brand-mark" aria-hidden="true"><partial name="_BrandMark" /></span>
+        <span>linkubator<span class="public-accent">.</span></span>
+    </a>
+    <div class="footer-caption">
+        <p>Menos enlaces perdidos. Más ideas conectadas.</p>
+        <span>Copyright 2026. <a class="footer-link" asp-page="/Privacy">Privacidad</a></span>
+    </div>
+    <nav class="footer-links" aria-label="Enlaces del pie de página"><a href="/">Volver al inicio <span aria-hidden="true">↗</span></a></nav>
+</footer>

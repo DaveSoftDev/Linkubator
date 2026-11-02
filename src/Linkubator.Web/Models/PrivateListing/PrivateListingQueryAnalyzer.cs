@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using CommonErrors = Linkubator.Application.Constants.CommonErrors;
+using PageNumberParser = Linkubator.Web.Models.Pagination.PageNumberParser;
 
 namespace Linkubator.Web.Models.PrivateListing;
 
@@ -38,7 +39,7 @@ public static class PrivateListingQueryAnalyzer
         }
 
         string? pageValue = GetFirstValue(query, "p");
-        if (!string.IsNullOrEmpty(pageValue) && TryParsePage(pageValue, out int parsedPage))
+        if (!string.IsNullOrEmpty(pageValue) && PageNumberParser.TryParse(pageValue, out int parsedPage))
         {
             pageNumber = parsedPage;
         }
@@ -90,26 +91,6 @@ public static class PrivateListingQueryAnalyzer
             hasSearchError,
             collectionErrorMessage,
             searchErrorMessage);
-    }
-
-    /// <summary>
-    /// Intenta analizar un número de página formado únicamente por dígitos ASCII.
-    /// </summary>
-    private static bool TryParsePage(string value, out int page)
-    {
-        page = 0;
-        foreach (char character in value)
-        {
-            if (character is < '0' or > '9')
-            {
-                return false;
-            }
-
-            int digit = character - '0';
-            page = page > (int.MaxValue - digit) / 10 ? int.MaxValue : (page * 10) + digit;
-        }
-
-        return page > 0;
     }
 
     /// <summary>

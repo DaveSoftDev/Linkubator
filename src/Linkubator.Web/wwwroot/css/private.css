@@ -4,6 +4,10 @@
   --border-cl: #718078;
 }
 
+.private-skip { position: absolute; top: 0; left: 20px; z-index: 45; padding: 12px; background: var(--private-accent); transform: translateY(-150%); }
+.private-shell .private-skip { color: var(--main-bg); }
+.private-skip:focus { transform: translateY(0); }
+
 .private-shell .app-sidebar {
   background: #0e1413;
   box-shadow: none;

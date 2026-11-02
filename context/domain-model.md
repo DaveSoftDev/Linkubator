@@ -38,7 +38,7 @@ Invariantes:
 - `LastEmailSentAt` guarda el momento de aceptación de la última solicitud de correo con token confirmada en base de datos, y `LastExistingAccountNoticeAt` el de la última solicitud de aviso de cuenta existente confirmada en base de datos. Son marcas de aceptación de solicitudes, no de envío SMTP ni de entrega al destinatario; cada una alimenta su propio límite (ver [specifications.md → «Correo»](specifications.md#correo)).
 - `SecurityStamp` es un valor aleatorio que se genera al crear el usuario y se regenera al cambiar o restablecer la contraseña y al confirmar un cambio de email. Las sesiones emitidas con un sello anterior dejan de ser válidas.
 - `CreatedAt` es solo informativo, para auditoría; no participa en ninguna regla.
-- Un usuario con el registro completado tiene siempre al menos una colección: al completar el registro se crea su colección privada «Bandeja de entrada».
+- Un usuario con el registro completado tiene siempre al menos una colección: al completar el registro se crea su colección privada predeterminada (ver [specifications.md → «Completar el registro»](specifications.md#completar-el-registro)).
 - Eliminar un usuario elimina todos sus datos: colecciones, enlaces, etiquetas, relaciones `LinkTag`, su índice de búsqueda y sus tokens.
 
 ## UserToken

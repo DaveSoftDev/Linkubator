@@ -319,7 +319,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 - [x] El dashboard inicial de S7.7 fue aceptado por DLG; evidencia histórica: [S7.7 → tareas y evidencia](https://github.com/DaveSoftDev/Linkubator/blob/2d4915103adabf20342a8b188827630f32a8826f/specs/s7.7-dashboard-y-respuestas-privadas/tasks.md#evidencia-por-criterio). Su descripción inicial queda sustituida por la definición vigente de [specifications.md → «Rutas privadas»](../context/specifications.md#rutas-privadas); esta referencia histórica no acredita por sí sola la validación de todas las capacidades actuales.
 - [x] Registro de peticiones validado y aceptado según [S7.8 → «Revalidación de cierre»](../specs/archive/s7.8-registro-peticiones-web/tasks.md#revalidación-de-cierre).
 - [x] La revisión manual del dashboard (teclado/foco, contraste y encabezados) está aceptada por DLG; consultar [S7.10 → tareas y cierre](https://github.com/DaveSoftDev/Linkubator/blob/2d4915103adabf20342a8b188827630f32a8826f/specs/s7.10-revision-manual-dashboard/tasks.md#aceptación-y-cierre).
-- [ ] El estilo base está aceptado por el humano. S7.11 se aceptó como revisión finalizada con flecos de diseño pendientes; esto no equivale a aceptar globalmente el estilo base. Véase [S7.11 → tareas y cierre](https://github.com/DaveSoftDev/Linkubator/blob/2d4915103adabf20342a8b188827630f32a8826f/specs/s7.11-validacion-estilo-base/tasks.md#aceptación-y-cierre).
+- [x] El estilo base está aceptado por el humano. S7.11 se aceptó como revisión finalizada con flecos de diseño pendientes; esto no equivale a aceptar globalmente el estilo base. Véase [S7.11 → tareas y cierre](https://github.com/DaveSoftDev/Linkubator/blob/2d4915103adabf20342a8b188827630f32a8826f/specs/s7.11-validacion-estilo-base/tasks.md#aceptación-y-cierre).
 
 ### S8: Gestión de colecciones (L)
 
@@ -414,7 +414,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 - [x] El HTML se sirve renderizado en servidor.
 - [x] La revisión humana del HTML público está aceptada.
 
-### S11a: Área pública: refactor (M)
+### S11a: Web: refactor (M)
 
 **Objetivo:** refactorizar toda la Área pública para mejorar en rendimiento y legibilidad del código.
 
@@ -424,8 +424,8 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [ ] El Área pública sigue funcionando como hasta ahora.
-- [ ] El humano ha aprobado la nueva Área pública.
+- [x] El Área pública sigue funcionando como hasta ahora.
+- [x] El humano ha aprobado la nueva Área pública.
 
 ### S12: Cierre y hardening (M)
 
@@ -444,13 +444,15 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 
 **Definition of Done**
 
-- [ ] Cada punto de la checklist tiene un test o una revisión manual registrada.
-- [ ] Los logs están disponibles por consola y por archivo, sin datos prohibidos.
-- [ ] La reconstrucción de las proyecciones está probada.
-- [ ] La auditoría de las invariantes críticas no deja hallazgos abiertos.
-- [ ] La revisión de accesibilidad y las pruebas en navegadores están completadas y registradas.
-- [ ] La documentación es coherente con el código.
-- [ ] El roadmap refleja el cierre del MVP0.
+- [x] Cada punto de la checklist tiene un test o una revisión manual registrada.
+- [x] Los logs están disponibles por consola y por archivo, sin datos prohibidos.
+- [x] La reconstrucción de las proyecciones está probada.
+- [x] La auditoría de las invariantes críticas no deja hallazgos abiertos.
+- [x] La revisión de accesibilidad y las pruebas en navegadores están completadas y registradas.
+- [x] La documentación es coherente con el código.
+- [x] El roadmap refleja el cierre del MVP0.
+
+La evidencia de revisión y ejecución se consolida en [tareas S12.8](../specs/s12.8-cierre-mvp0/tasks.md).
 
 ## 5. Decisiones y alcance del plan
 
