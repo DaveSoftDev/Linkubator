@@ -4,7 +4,7 @@ Este índice permite localizar los trabajos documentados en `specs/`. El procedi
 
 ## Trabajos activos
 
-S12 sigue siendo la etapa actual conforme al [roadmap](../context/roadmap.md#now).
+S12.8 permanece como trabajo activo de cierre; la etapa de implementación del MVP0 ya no figura en «Now» del [roadmap](../context/roadmap.md#now).
 
 | Trabajo | Especificación | Plan técnico | Tareas y cierre |
 | --- | --- | --- | --- |
@@ -12,9 +12,9 @@ S12 sigue siendo la etapa actual conforme al [roadmap](../context/roadmap.md#now
 | S12.3 — Auditoría de invariantes críticas en código y SQL | [spec.md](s12.3-auditoria-invariantes-criticas/spec.md) — aprobada por DLG el 31-X-2026 («Siguiente») | [plan.md](s12.3-auditoria-invariantes-criticas/plan.md) — aprobado por DLG el 31-X-2026 («Siguiente») | [tasks.md](s12.3-auditoria-invariantes-criticas/tasks.md#aceptación-y-cierre) — tareas aprobadas por DLG el 31-X-2026 («Vamos»); implementada, validada y aceptada por DLG el 31-X-2026 («Acepto S12.3»); no archivada |
 | S12.4 — Revisión y sincronización de la documentación | [spec.md](s12.4-revision-sincronizacion-documentacion/spec.md) — aprobada por DLG el 31-X-2026 («Siguiente») | [plan.md](s12.4-revision-sincronizacion-documentacion/plan.md) — aprobado por DLG el 31-X-2026 («Siguiente») | [tasks.md](s12.4-revision-sincronizacion-documentacion/tasks.md#aceptación-y-cierre) — aprobadas por DLG el 31-X-2026 («Vamos»); implementada, validada y aceptada por DLG el 31-X-2026 («Acepto S12.4») |
 | S12.6 — Pruebas manuales en navegadores actuales, públicas y privadas | [spec.md](s12.6-pruebas-manuales-navegadores/spec.md) — aprobada por DLG el 31-X-2026 («Siguiente») | [plan.md](s12.6-pruebas-manuales-navegadores/plan.md) — aprobado por DLG el 31-X-2026 («Siguiente») | [tasks.md](s12.6-pruebas-manuales-navegadores/tasks.md#aceptación-y-cierre) — tareas aprobadas por DLG el 31-X-2026 («Vamos»); ejecución T01–T07 completada y aceptada con límites por DLG el 02-XI-2026 («Acepto con los límites registrados») |
-| S12.5 — Revisión manual de accesibilidad | [spec.md](s12.5-revision-accesibilidad/spec.md) — aprobada por DLG el 31-X-2026 («Siguiente») | [plan.md](s12.5-revision-accesibilidad/plan.md) — aprobado por DLG el 31-X-2026 («Siguiente») | [tasks.md](s12.5-revision-accesibilidad/tasks.md) — aprobadas por DLG el 31-X-2026 («Vamos»); implementación no iniciada |
-| S12.8 — Cierre del MVP0 | [spec.md](s12.8-cierre-mvp0/spec.md) — aprobada por DLG el 31-X-2026 («Siguiente») | [plan.md](s12.8-cierre-mvp0/plan.md) — aprobado por DLG el 31-X-2026 («Siguiente») | [tasks.md](s12.8-cierre-mvp0/tasks.md) — aprobadas por DLG el 31-X-2026 («Vamos»); implementación no iniciada |
-| S12.7 — Revisión de hallazgos de auditoría y aceptación de riesgos | [spec.md](s12.7-revision-hallazgos-riesgos/spec.md) — aprobada por DLG el 31-X-2026 («Siguiente») | [plan.md](s12.7-revision-hallazgos-riesgos/plan.md) — aprobado por DLG el 31-X-2026 («Siguiente») | [tasks.md](s12.7-revision-hallazgos-riesgos/tasks.md) — aprobadas por DLG el 31-X-2026 («Vamos»); revisión no iniciada |
+| S12.5 — Revisión manual de accesibilidad | [spec.md](s12.5-revision-accesibilidad/spec.md) — aprobada por DLG el 31-X-2026 («Siguiente») | [plan.md](s12.5-revision-accesibilidad/plan.md) — aprobado por DLG el 31-X-2026 («Siguiente») | [tasks.md](s12.5-revision-accesibilidad/tasks.md#aceptación-y-cierre) — T01–T06 completadas y aceptadas con límites por DLG el 01-XI-2026 |
+| S12.8 — Cierre del MVP0 | [spec.md](s12.8-cierre-mvp0/spec.md) — aprobada por DLG el 31-X-2026 («Siguiente») | [plan.md](s12.8-cierre-mvp0/plan.md) — secuencia revisada aprobada por DLG el 02-XI-2026 | [tasks.md](s12.8-cierre-mvp0/tasks.md) — tareas revisadas aprobadas por DLG el 02-XI-2026; T01–T03 completadas y T04–T07 pendientes |
+| S12.7 — Revisión de hallazgos de auditoría y aceptación de riesgos | [spec.md](s12.7-revision-hallazgos-riesgos/spec.md) — aprobada por DLG el 31-X-2026 («Siguiente») | [plan.md](s12.7-revision-hallazgos-riesgos/plan.md) — aprobado por DLG el 31-X-2026 («Siguiente») | [tasks.md](s12.7-revision-hallazgos-riesgos/tasks.md#aceptación-y-cierre) — T01–T05 completadas y aceptadas por DLG el 02-XI-2026 («Acepto S12.7») |
 
 ## Trabajos completados
 

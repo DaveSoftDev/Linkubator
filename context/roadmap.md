@@ -78,9 +78,9 @@ La Definition of Done de S11a está completada. Las tareas y su evidencia se man
 
 ### Cierre del MVP0 (actualizado el 02-XI-2026)
 
-La Definition of Done de S12 quedó satisfecha tras la revisión V01 y la validación de evidencias previas; sus siete puntos están marcados en [mvp0-plan.md → «S12: Cierre y hardening»](../plans/mvp0-plan.md#s12-cierre-y-hardening-m). S12 deja de figurar como etapa actual y el MVP0 se refleja en «Hecho» mediante T03/V02. La evidencia detallada de S12.1–S12.8 está en sus [tareas](../specs/s12.8-cierre-mvp0/tasks.md) y documentos enlazados.
+La Definition of Done de S12 quedó satisfecha tras la revisión V01 y la validación de evidencias previas; sus siete puntos están marcados en [mvp0-plan.md → «S12: Cierre y hardening»](../plans/mvp0-plan.md#s12-cierre-y-hardening-m). S12 deja de figurar como etapa actual y el MVP0 se refleja en «Hecho» mediante T03/V02. La evidencia de cierre está en [tareas S12.8](../specs/s12.8-cierre-mvp0/tasks.md), que enlazan la matriz y las evidencias de S12.1–S12.7.
 
-S12.8 sigue abierta: faltan T04 (acordar y verificar la etiqueta de versión), T05 (retrospectiva final) y T06 (aceptación humana explícita). Su ejecución no se considera finalizada hasta registrar esas evidencias.
+S12.8 sigue abierta: faltan T04 (retrospectiva), T05 (aceptación previa de CA01, CA02 y CA04), T06 (acordar y verificar la etiqueta sobre el commit aceptado) y T07 (aceptación final de CA01–CA04). DLG aprobó el plan y las tareas revisadas el 02-XI-2026. Su ejecución no se considera finalizada hasta registrar esas evidencias.
 
 ## Now
 
