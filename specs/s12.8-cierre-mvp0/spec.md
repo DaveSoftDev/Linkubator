@@ -47,9 +47,9 @@ Cerrar el MVP0 una vez satisfecha su Definition of Done: reflejar el cierre en e
 
 | Pregunta o contradicción | Fuente afectada | Criterio bloqueado | Decisión humana necesaria |
 | --- | --- | --- | --- |
-| ¿Qué identificador concreto se utilizará para la etiqueta de versión? | [S12.8](../../plans/mvp0-plan.md#s12-cierre-y-hardening-m) | CA03 | Acordarlo antes de crear la etiqueta. No bloquea la definición de esta especificación. |
+| ¿Qué identificador concreto se utilizará para la etiqueta de versión? | [S12.8](../../plans/mvp0-plan.md#s12-cierre-y-hardening-m) | CA03 | Resuelta el 02-XI-2026: DLG acordó el identificador; la evidencia consta en [T06 de tasks.md](tasks.md#descomposición). |
 
 ## Artefactos relacionados
 
 - [Plan técnico](plan.md) — aprobado por DLG el 31-X-2026 con la referencia «Siguiente».
-- [Tareas](tasks.md) — pendientes de aprobación.
+- [Tareas](tasks.md) — aprobadas por DLG el 31-X-2026 («Vamos»); secuencia revisada aprobada el 02-XI-2026 («Aprobar las tareas revisadas») y actualización de evidencia de retrospectiva aprobada el 02-XI-2026 («Aprobar las tareas actualizadas»).

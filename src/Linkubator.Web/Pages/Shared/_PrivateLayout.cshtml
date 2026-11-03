@@ -51,7 +51,13 @@
         </footer>
     </div>
 
-    <script src="~/js/site.js" defer asp-append-version="true"></script>
+    <environment include="Production">
+        <script src="~/js/private.js" defer asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Production">
+        <script src="~/js/site.js" defer asp-append-version="true"></script>
+        <script src="~/js/required-validation.js" defer asp-append-version="true"></script>
+    </environment>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

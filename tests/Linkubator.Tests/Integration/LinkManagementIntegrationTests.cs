@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Dapper;
 using Linkubator.Infrastructure.Search;
 using Linkubator.Infrastructure.Sqlite;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using TestHost = Microsoft.AspNetCore.Hosting;
@@ -46,6 +47,89 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         await _keeper.DisposeAsync();
     }
 
+    [Fact]
+    public async Task GetPrivateJavaScript_BundleRequested_ContainsSiteAndRequiredValidation()
+    {
+        using HttpResponseMessage response = await _client.GetAsync("/js/private.js");
+        string script = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("data-link-view-switch", script, StringComparison.Ordinal);
+        Assert.Contains("form[data-required-validation]", script, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetPrivateJavaScript_BundleRequested_IsMinified()
+    {
+        using HttpResponseMessage response = await _client.GetAsync("/js/private.js");
+        string script = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotEmpty(script);
+        Assert.DoesNotContain("\n", script.TrimEnd('\r', '\n'), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/app")]
+    [InlineData("/app/colecciones/nueva")]
+    [InlineData("/app/enlaces/nuevo")]
+    public async Task GetPrivatePage_InProduction_LoadsOnlyMinifiedBundle(string route)
+    {
+        await using WebApplicationFactory<Program> factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Production");
+            builder.UseSetting("AllowedHosts", "localhost");
+        });
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+
+        using HttpResponseMessage response = await client.GetAsync(route);
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        Match bundleReference = Regex.Match(html, "src=\"(?<url>/js/private(?:\\.[a-z0-9]+)?\\.js(?:\\?[^\"]*)?)\"");
+        Assert.True(bundleReference.Success);
+        using HttpResponseMessage bundleResponse = await client.GetAsync(bundleReference.Groups["url"].Value);
+        string bundle = await bundleResponse.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Single(Regex.Matches(html, "/js/private(?:\\.[a-z0-9]+)?\\.js"));
+        Assert.DoesNotMatch("/js/site(?:\\.[a-z0-9]+)?\\.js", html);
+        Assert.DoesNotMatch("/js/required-validation(?:\\.[a-z0-9]+)?\\.js", html);
+        Assert.Equal(HttpStatusCode.OK, bundleResponse.StatusCode);
+        Assert.Contains("form[data-required-validation]", bundle, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("Development")]
+    [InlineData("Staging")]
+    public async Task GetPrivatePage_OutsideProduction_LoadsSeparateScripts(string environment)
+    {
+        await using WebApplicationFactory<Program> factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment(environment);
+            builder.UseSetting("AllowedHosts", "localhost");
+        });
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+
+        using HttpResponseMessage response = await client.GetAsync("/app/colecciones/nueva");
+        string html = await response.Content.ReadAsStringAsync();
+        using HttpResponseMessage siteResponse = await client.GetAsync("/js/site.js");
+        using HttpResponseMessage validationResponse = await client.GetAsync("/js/required-validation.js");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Single(Regex.Matches(html, "/js/site(?:\\.[a-z0-9]+)?\\.js"));
+        Assert.Single(Regex.Matches(html, "/js/required-validation(?:\\.[a-z0-9]+)?\\.js"));
+        Assert.DoesNotMatch("/js/private(?:\\.[a-z0-9]+)?\\.js", html);
+        Assert.Equal(HttpStatusCode.OK, siteResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, validationResponse.StatusCode);
+    }
+
     [Theory]
     [InlineData("/app/colecciones/nueva")]
     [InlineData("/app/colecciones/{0}/editar")]
@@ -66,7 +150,7 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         Assert.Contains($"data-required-message=\"{Linkubator.Application.Constants.CollectionErrors.NameRequiredMessage}\"", input, StringComparison.Ordinal);
         Assert.Contains("required", input, StringComparison.Ordinal);
         Assert.Contains("data-validation-summary-title=\"Hay errores en el formulario\"", html, StringComparison.Ordinal);
-        Assert.Matches("/js/required-validation(?:\\.[a-z0-9]+)?\\.js", html);
+        Assert.Single(Regex.Matches(html, "/js/required-validation(?:\\.[a-z0-9]+)?\\.js"));
     }
 
     [Theory]
@@ -89,7 +173,7 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
         Assert.Contains($"data-required-message=\"{expectedMessage}\"", select, StringComparison.Ordinal);
         Assert.Contains("required", select, StringComparison.Ordinal);
         Assert.Contains("data-validation-summary-title=\"Hay errores en el formulario\"", html, StringComparison.Ordinal);
-        Assert.Matches("/js/required-validation(?:\\.[a-z0-9]+)?\\.js", html);
+        Assert.Single(Regex.Matches(html, "/js/required-validation(?:\\.[a-z0-9]+)?\\.js"));
     }
 
     [Theory]

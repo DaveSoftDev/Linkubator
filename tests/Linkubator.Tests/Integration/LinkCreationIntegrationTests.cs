@@ -112,7 +112,7 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
 
         Assert.Contains("data-required-validation", form, StringComparison.Ordinal);
         Assert.DoesNotContain("novalidate", form, StringComparison.OrdinalIgnoreCase);
-        Assert.Matches("/js/required-validation(?:\\.[a-z0-9]+)?\\.js", html);
+        Assert.Single(Regex.Matches(html, "/js/required-validation(?:\\.[a-z0-9]+)?\\.js"));
         Assert.Contains("required", GetInput(html, "Input.Url"), StringComparison.Ordinal);
         Assert.Contains("required", GetSelect(html), StringComparison.Ordinal);
     }
@@ -716,7 +716,7 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.Contains("aria-describedby=\"quick-url-error\"", input, StringComparison.Ordinal);
         Assert.Single(Regex.Matches(input, "\\srequired(?=\\s|=|/?>)"));
         Assert.DoesNotContain("novalidate", form, StringComparison.OrdinalIgnoreCase);
-        Assert.Matches("/js/required-validation(?:\\.[a-z0-9]+)?\\.js", html);
+        Assert.Single(Regex.Matches(html, "/js/required-validation(?:\\.[a-z0-9]+)?\\.js"));
     }
 
     [Theory]

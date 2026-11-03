@@ -80,11 +80,11 @@ La Definition of Done de S11a está completada. Las tareas y su evidencia se man
 
 La Definition of Done de S12 quedó satisfecha tras la revisión V01 y la validación de evidencias previas; sus siete puntos están marcados en [mvp0-plan.md → «S12: Cierre y hardening»](../plans/mvp0-plan.md#s12-cierre-y-hardening-m). S12 deja de figurar como etapa actual y el MVP0 se refleja en «Hecho» mediante T03/V02. La evidencia de cierre está en [tareas S12.8](../specs/s12.8-cierre-mvp0/tasks.md), que enlazan la matriz y las evidencias de S12.1–S12.7.
 
-S12.8 sigue abierta: T04 (retrospectiva) y T05 (aceptación previa de CA01, CA02 y CA04) se completaron el 02-XI-2026; faltan T06 (acordar y verificar la etiqueta sobre el commit aceptado) y T07 (aceptación final de CA01–CA04). La retrospectiva está en [retrospectiva.md](../specs/s12.8-cierre-mvp0/retrospectiva.md). DLG aprobó el plan y las tareas actualizadas el 02-XI-2026. Su ejecución no se considera finalizada hasta registrar esas evidencias.
+S12.8 quedó completada y aceptada por DLG el 02-XI-2026 («Acepto el cierre final de S12.8»). T01–T07 están completadas; la etiqueta local `MVP0` apunta al commit `de755330b625267b0b2a9d8facfc0753e2c8edc8`. La retrospectiva está en [retrospectiva.md](../specs/s12.8-cierre-mvp0/retrospectiva.md), y la trazabilidad de CA01–CA04 en [tasks.md](../specs/s12.8-cierre-mvp0/tasks.md). La etiqueta no se ha enviado al remoto.
 
 ## Now
 
-No hay una etapa de implementación activa del MVP0. Las acciones finales de cierre de S12.8 siguen pendientes y están registradas en [sus tareas](../specs/s12.8-cierre-mvp0/tasks.md).
+No hay una etapa de implementación activa del MVP0; el cierre de S12.8 está registrado en «Hecho».
 
 ## Next
 

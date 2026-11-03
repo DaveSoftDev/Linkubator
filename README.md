@@ -156,6 +156,10 @@ El target `BuildTailwindCss` de [Linkubator.Web.csproj](src/Linkubator.Web/Linku
 
 El binario no se descarga automáticamente. Para regenerar estilos, instala Tailwind CLI standalone y adapta esa ruta si es necesario. Si el ejecutable no existe, el target omite la generación: la aplicación utiliza [styles.css](src/Linkubator.Web/wwwroot/css/styles.css), que está versionado, pero los cambios en los estilos fuente no se regenerarán.
 
+### JavaScript privado
+
+[Linkubator.Web.csproj](src/Linkubator.Web/Linkubator.Web.csproj) utiliza esbuild para agrupar y minificar [site.js](src/Linkubator.Web/wwwroot/js/site.js) y [required-validation.js](src/Linkubator.Web/wwwroot/js/required-validation.js) en `js/private.js`. El bundle se genera al compilar y se copia a `wwwroot/js/private.js`, sin versionarse. La plantilla privada lo carga únicamente en el entorno `Production`; en los demás entornos carga los dos archivos fuente. El entorno de ejecución es independiente de la configuración de compilación `Debug` o `Release`.
+
 ## Arranque rápido
 
 Clona el repositorio y entra en su carpeta:
@@ -260,3 +264,11 @@ Completar el refactor del área pública y el cierre y hardening del MVP0 según
 
 Quedan mejoras de reproducibilidad en el entorno de desarrollo: eliminar la dependencia de la ubicación del ejecutable de Tailwind y alinear el origen público versionado con el perfil de ejecución. Las instrucciones anteriores permiten trabajar con la configuración actual sin presentar esas mejoras como ya implementadas.
 
+## Para Brais Moure
+
+- **Nombre**: David Lafuente Gómez
+- **email**: david.lafuente@redarbor.net
+- **GitHub**: [Linkubator](https://github.com/DaveSoftDev/Linkubator)
+- **URL Producción**: [Linkubator en MonsterASP](http://linkubator.runasp.net/)
+- **Slides**: [Linkubator-DavidLafuente.pptx](https://e.pcloud.link/publink/show?code=kZ0N6X7Zr4fXtpHBRejHOyaP7Ad0bFykeYVy)
+- **Vídeo**: [](https://e.pcloud.link/publink/show?code=kZ0N6X7Zr4fXtpHBRejHOyaP7Ad0bFykeYVy)

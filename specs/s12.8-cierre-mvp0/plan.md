@@ -46,7 +46,7 @@
 | Ejecutar el cierre como revisión humana de la Definition of Done y sus evidencias, sin cambios de producto. | Confirmado | [spec.md → «Alcance»](spec.md#alcance) | Los puntos previos incompletos bloquean el cierre; S12.8 no los repara ni los acepta en nombre de sus responsables. |
 | Registrar la evidencia de criterios en las tareas y mantener el contenido de la retrospectiva en un archivo dedicado. | Confirmado | DLG, 02-XI-2026, referencias «crear_archivo» y «Aprobar esta revisión del plan». | `tasks.md` conserva la trazabilidad; `retrospectiva.md` contiene el registro redactado por DLG. |
 | Registrar una aceptación previa del contenido antes de etiquetar su commit, y una aceptación final después de verificar CA03. | Confirmado | DLG, 02-XI-2026, «Aprobar el plan revisado». | La revisión previa queda dentro del commit etiquetado; la aceptación final incluye la verificación de la etiqueta y cierra CA01–CA04. |
-| Identificador concreto de la etiqueta de versión. | Pendiente | [spec.md → «Dependencias y prerrequisitos»](spec.md#dependencias-y-prerrequisitos) | DLG debe acordarlo antes de crear la etiqueta; mientras tanto, CA03 no puede validarse. |
+| Identificador concreto de la etiqueta de versión. | Confirmado | DLG, 02-XI-2026, identificador «MVP0». | Se creó la etiqueta y se verificó su commit de destino en V03. |
 
 ## Estrategia de validación
 
