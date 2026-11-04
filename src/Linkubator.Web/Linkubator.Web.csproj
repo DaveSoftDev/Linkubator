@@ -1,11 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <ESBuildWebRoot>wwwroot\js\</ESBuildWebRoot>
-  </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="ESBuild.MSBuild" Version="0.28.1" PrivateAssets="all" />
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
@@ -18,22 +13,16 @@
   <ItemGroup>
     <Content Remove="wwwroot\js\private.js" />
     <Content Remove="wwwroot\css\private.bundle.css;wwwroot\css\public.bundle.css" />
-    <Content Include="wwwroot\css\private.bundle.css;wwwroot\css\public.bundle.css" />
-    <ESBuild Include="wwwroot\js\site.js" Group="private.js" Minify="true" />
-    <ESBuild Include="wwwroot\js\required-validation.js" Group="private.js" Minify="true" />
+    <Content Include="wwwroot\js\private.js;wwwroot\css\private.bundle.css;wwwroot\css\public.bundle.css" />
   </ItemGroup>
-
-  <Target Name="CopyPrivateJavaScript" AfterTargets="_ESBuildTransform">
-    <Copy SourceFiles="$(IntermediateOutputPath)esbuild\private.js" DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\js\private.js" SkipUnchangedFiles="true" />
-  </Target>
 
   <Target Name="BuildTailwindCss" BeforeTargets="Build">
     <Exec Command="&quot;$(MSBuildProjectDirectory)\..\..\..\..\..\Tools\TailwindCSS\tailwindcss-windows-x64.exe&quot; -c tailwind.config.js -i ./wwwroot/css/develop.css -o ./wwwroot/css/styles.css --minify" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\Tools\TailwindCSS\tailwindcss-windows-x64.exe')" />
   </Target>
 
-  <Target Name="BuildCssBundles" BeforeTargets="AssignTargetPaths;ResolveProjectStaticWebAssets" DependsOnTargets="BuildTailwindCss">
-    <Exec Command="&quot;$(ESBuildBinaryPath)&quot; &quot;$(MSBuildProjectDirectory)\Styles\private.bundle.css&quot; --bundle --minify --outfile=&quot;$(MSBuildProjectDirectory)\wwwroot\css\private.bundle.css&quot;" />
-    <Exec Command="&quot;$(ESBuildBinaryPath)&quot; &quot;$(MSBuildProjectDirectory)\Styles\public.bundle.css&quot; --bundle --minify --outfile=&quot;$(MSBuildProjectDirectory)\wwwroot\css\public.bundle.css&quot;" />
+  <Target Name="BuildClientBundles" BeforeTargets="AssignTargetPaths;ResolveProjectStaticWebAssets" DependsOnTargets="BuildTailwindCss">
+    <Exec Command="dotnet tool restore" WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Exec Command="dotnet tool run bundle" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 
 </Project>
