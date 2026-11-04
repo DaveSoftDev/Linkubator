@@ -158,11 +158,11 @@ El binario no se descarga automáticamente. Para regenerar estilos, instala Tail
 
 ### CSS público y privado
 
-[Linkubator.Web.csproj](src/Linkubator.Web/Linkubator.Web.csproj) ejecuta Tailwind antes de usar esbuild para generar y minificar los bundles definidos en [private.bundle.css](src/Linkubator.Web/Styles/private.bundle.css) y [public.bundle.css](src/Linkubator.Web/Styles/public.bundle.css). Ambos incluyen la salida `styles.css` y se generan en `wwwroot/css/`, sin versionarse. En `Production` cada plantilla carga su bundle; en los demás entornos se mantienen las hojas originales.
+[Linkubator.Web.csproj](src/Linkubator.Web/Linkubator.Web.csproj) ejecuta Tailwind antes de usar la herramienta .NET [BundlerMinifier.Core.Tool](.config/dotnet-tools.json) para generar y minificar los bundles descritos en [bundleconfig.json](src/Linkubator.Web/bundleconfig.json). Los bundles CSS agrupan las hojas definidas en [Styles/](src/Linkubator.Web/Styles/), se generan en `wwwroot/css/` y no se versionan. En `Production` cada plantilla carga su bundle minificado; en los demás entornos se mantienen las hojas originales.
 
 ### JavaScript privado
 
-[Linkubator.Web.csproj](src/Linkubator.Web/Linkubator.Web.csproj) utiliza esbuild para agrupar y minificar [site.js](src/Linkubator.Web/wwwroot/js/site.js) y [required-validation.js](src/Linkubator.Web/wwwroot/js/required-validation.js) en `js/private.js`. El bundle se genera al compilar y se copia a `wwwroot/js/private.js`, sin versionarse. La plantilla privada lo carga únicamente en el entorno `Production`; en los demás entornos carga los dos archivos fuente. El entorno de ejecución es independiente de la configuración de compilación `Debug` o `Release`.
+[Linkubator.Web.csproj](src/Linkubator.Web/Linkubator.Web.csproj) agrupa y minifica [site.js](src/Linkubator.Web/wwwroot/js/site.js) y [required-validation.js](src/Linkubator.Web/wwwroot/js/required-validation.js) en `wwwroot/js/private.js`. El bundle se genera al compilar y no se versiona. La plantilla privada lo carga únicamente en el entorno `Production`; en los demás entornos carga los dos archivos fuente. El entorno de ejecución es independiente de la configuración de compilación `Debug` o `Release`.
 
 ## Arranque rápido
 

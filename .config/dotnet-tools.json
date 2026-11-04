@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "BundlerMinifier.Core.Tool": {
+      "version": "8.0.5",
+      "commands": [
+        "bundle"
+      ]
+    }
+  }
+}

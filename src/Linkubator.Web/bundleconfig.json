@@ -1,0 +1,41 @@
+[
+  {
+    "outputFileName": "wwwroot/css/private.bundle.css",
+    "inputFiles": [
+      "wwwroot/css/styles.css",
+      "wwwroot/css/brand.css",
+      "wwwroot/css/private.css",
+      "wwwroot/css/footer.css",
+      "wwwroot/css/collection-list.css"
+    ],
+    "minify": {
+      "enabled": true
+    }
+  },
+  {
+    "outputFileName": "wwwroot/css/public.bundle.css",
+    "inputFiles": [
+      "wwwroot/css/styles.css",
+      "wwwroot/css/brand.css",
+      "wwwroot/css/footer.css",
+      "wwwroot/css/public-actions.css",
+      "wwwroot/css/landing.css",
+      "wwwroot/css/public.css",
+      "wwwroot/css/not-found.css",
+      "wwwroot/css/privacy.css"
+    ],
+    "minify": {
+      "enabled": true
+    }
+  },
+  {
+    "outputFileName": "wwwroot/js/private.js",
+    "inputFiles": [
+      "wwwroot/js/site.js",
+      "wwwroot/js/required-validation.js"
+    ],
+    "minify": {
+      "enabled": true
+    }
+  }
+]
