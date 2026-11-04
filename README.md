@@ -158,7 +158,7 @@ El binario no se descarga automáticamente. Para regenerar estilos, instala Tail
 
 ### CSS público y privado
 
-[Linkubator.Web.csproj](src/Linkubator.Web/Linkubator.Web.csproj) ejecuta Tailwind antes de usar la herramienta .NET [BundlerMinifier.Core.Tool](.config/dotnet-tools.json) para generar y minificar los bundles descritos en [bundleconfig.json](src/Linkubator.Web/bundleconfig.json). Los bundles CSS agrupan las hojas definidas en [Styles/](src/Linkubator.Web/Styles/), se generan en `wwwroot/css/` y no se versionan. En `Production` cada plantilla carga su bundle; en los demás entornos se mantienen las hojas originales.
+[Linkubator.Web.csproj](src/Linkubator.Web/Linkubator.Web.csproj) ejecuta Tailwind antes de usar la herramienta .NET [BundlerMinifier.Core.Tool](.config/dotnet-tools.json) para generar y minificar los bundles descritos en [bundleconfig.json](src/Linkubator.Web/bundleconfig.json). Los bundles CSS agrupan las hojas definidas en [Styles/](src/Linkubator.Web/Styles/), se generan en `wwwroot/css/` y no se versionan. En `Production` cada plantilla carga su bundle minificado; en los demás entornos se mantienen las hojas originales.
 
 ### JavaScript privado
 
