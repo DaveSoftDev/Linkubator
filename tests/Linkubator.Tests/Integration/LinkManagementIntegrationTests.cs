@@ -51,7 +51,7 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task GetPrivateJavaScript_BundleRequested_ContainsSiteAndRequiredValidation()
     {
-        using HttpResponseMessage response = await _client.GetAsync("/js/private.js");
+        using HttpResponseMessage response = await _client.GetAsync("/js/private.bundle.js");
         string script = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -62,7 +62,7 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task GetPrivateJavaScript_BundleRequested_IsMinified()
     {
-        using HttpResponseMessage response = await _client.GetAsync("/js/private.js");
+        using HttpResponseMessage response = await _client.GetAsync("/js/private.bundle.js");
         string script = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -89,13 +89,13 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
 
         using HttpResponseMessage response = await client.GetAsync(route);
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
-        Match bundleReference = Regex.Match(html, "src=\"(?<url>/js/private(?:\\.[a-z0-9]+)?\\.js(?:\\?[^\"]*)?)\"");
+        Match bundleReference = Regex.Match(html, "src=\"(?<url>/js/private(?:\\.[a-z0-9]+)*\\.js(?:\\?[^\"]*)?)\"");
         Assert.True(bundleReference.Success);
         using HttpResponseMessage bundleResponse = await client.GetAsync(bundleReference.Groups["url"].Value);
         string bundle = await bundleResponse.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Single(Regex.Matches(html, "/js/private(?:\\.[a-z0-9]+)?\\.js"));
+        Assert.Single(Regex.Matches(html, "/js/private(?:\\.[a-z0-9]+)*\\.js"));
         Assert.DoesNotMatch("/js/site(?:\\.[a-z0-9]+)?\\.js", html);
         Assert.DoesNotMatch("/js/required-validation(?:\\.[a-z0-9]+)?\\.js", html);
         Assert.Equal(HttpStatusCode.OK, bundleResponse.StatusCode);
@@ -105,7 +105,7 @@ public sealed class LinkManagementIntegrationTests : IAsyncLifetime
     [Theory]
     [InlineData("/", "css/public\\.bundle", "text/css", ".landing")]
     [InlineData("/app", "css/private\\.bundle", "text/css", ".private-shell")]
-    [InlineData("/app", "js/private", "text/javascript", "data-link-view-switch")]
+    [InlineData("/app", "js/private\\.bundle", "text/javascript", "data-link-view-switch")]
     public async Task GetProductionAsset_WithGzip_ReturnsCompressedContent(string route, string asset, string contentType, string expectedContent)
     {
         await using WebApplicationFactory<Program> factory = _factory.WithWebHostBuilder(builder =>

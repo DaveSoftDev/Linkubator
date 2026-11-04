@@ -67,10 +67,7 @@ nunit-*.xml
 *.db-wal
 *.sqlite
 *.sqlite3
-/src/Linkubator.Web/wwwroot/js/private.js
-/src/Linkubator.Web/wwwroot/css/private.bundle.css
-/src/Linkubator.Web/wwwroot/css/public.bundle.css
-/src/Linkubator.Web/wwwroot/js/private.min.js
+/src/Linkubator.Web/wwwroot/js/private.bundle.min.js
 /src/Linkubator.Web/wwwroot/css/private.bundle.min.css
 /src/Linkubator.Web/wwwroot/css/public.bundle.min.css
 

@@ -11,20 +11,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\js\private.js;wwwroot\js\private.min.js;wwwroot\css\private.bundle.css;wwwroot\css\public.bundle.css;wwwroot\css\private.bundle.min.css;wwwroot\css\public.bundle.min.css" />
-    <Content Include="wwwroot\js\private.js;wwwroot\css\private.bundle.css;wwwroot\css\public.bundle.css" />
+    <Content Remove="wwwroot\js\private.bundle.js;wwwroot\css\private.bundle.css;wwwroot\css\public.bundle.css" />
+    <Content Include="wwwroot\js\private.bundle.js;wwwroot\css\private.bundle.css;wwwroot\css\public.bundle.css" />
   </ItemGroup>
 
   <Target Name="BuildTailwindCss" BeforeTargets="Build">
     <Exec Command="&quot;$(MSBuildProjectDirectory)\..\..\..\..\..\Tools\TailwindCSS\tailwindcss-windows-x64.exe&quot; -c tailwind.config.js -i ./wwwroot/css/develop.css -o ./wwwroot/css/styles.css --minify" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\Tools\TailwindCSS\tailwindcss-windows-x64.exe')" />
-  </Target>
-
-  <Target Name="BuildClientBundles" BeforeTargets="AssignTargetPaths;ResolveProjectStaticWebAssets" DependsOnTargets="BuildTailwindCss">
-    <Exec Command="dotnet tool restore" WorkingDirectory="$(MSBuildProjectDirectory)" />
-    <Exec Command="dotnet tool run bundle" WorkingDirectory="$(MSBuildProjectDirectory)" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\wwwroot\js\private.min.js" DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\js\private.js" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\wwwroot\css\private.bundle.min.css" DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\css\private.bundle.css" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\wwwroot\css\public.bundle.min.css" DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\css\public.bundle.css" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

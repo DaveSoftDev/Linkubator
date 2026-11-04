@@ -158,11 +158,24 @@ El binario no se descarga automáticamente. Para regenerar estilos, instala Tail
 
 ### CSS público y privado
 
-[Linkubator.Web.csproj](src/Linkubator.Web/Linkubator.Web.csproj) ejecuta Tailwind antes de usar la herramienta .NET [BundlerMinifier.Core.Tool](.config/dotnet-tools.json) para generar y minificar los bundles descritos en [bundleconfig.json](src/Linkubator.Web/bundleconfig.json). Los bundles CSS agrupan las hojas definidas en [Styles/](src/Linkubator.Web/Styles/), se generan en `wwwroot/css/` y no se versionan. En `Production` cada plantilla carga su bundle minificado; en los demás entornos se mantienen las hojas originales.
+[BundlerMinifier.Core.Tool](.config/dotnet-tools.json) genera y minifica localmente los bundles definidos en [bundleconfig.json](src/Linkubator.Web/bundleconfig.json). Los bundles CSS agrupan las hojas indicadas en la configuración, se guardan y versionan en `wwwroot/css/`. El build no ejecuta la herramienta: así se puede publicar en un hosting que impide iniciar procesos externos. En `Production` cada plantilla carga su bundle; en los demás entornos se mantienen las hojas originales.
 
 ### JavaScript privado
 
-[Linkubator.Web.csproj](src/Linkubator.Web/Linkubator.Web.csproj) agrupa y minifica [site.js](src/Linkubator.Web/wwwroot/js/site.js) y [required-validation.js](src/Linkubator.Web/wwwroot/js/required-validation.js) en `wwwroot/js/private.js`. El bundle se genera al compilar y no se versiona. La plantilla privada lo carga únicamente en el entorno `Production`; en los demás entornos carga los dos archivos fuente. El entorno de ejecución es independiente de la configuración de compilación `Debug` o `Release`.
+[site.js](src/Linkubator.Web/wwwroot/js/site.js) y [required-validation.js](src/Linkubator.Web/wwwroot/js/required-validation.js) se agrupan y minifican localmente en el archivo versionado `wwwroot/js/private.bundle.js`. La plantilla privada lo carga únicamente en el entorno `Production`; en los demás entornos carga los dos archivos fuente.
+
+Al modificar CSS o JavaScript, regenera los bundles desde la carpeta Web y versiona los archivos generados:
+
+```powershell
+Set-Location .\src\Linkubator.Web
+dotnet tool restore
+dotnet tool run bundle
+Copy-Item .\wwwroot\js\private.bundle.min.js .\wwwroot\js\private.bundle.js -Force
+Copy-Item .\wwwroot\css\private.bundle.min.css .\wwwroot\css\private.bundle.css -Force
+Copy-Item .\wwwroot\css\public.bundle.min.css .\wwwroot\css\public.bundle.css -Force
+```
+
+Git no actualiza MonsterASP automáticamente: después de generar y subir los archivos al repositorio, publica la aplicación localmente y despliega ese resultado en MonsterASP, o sube allí los bundles actualizados. No descargues los bundles existentes desde el hosting esperando que incorporen cambios nuevos.
 
 ## Arranque rápido
 

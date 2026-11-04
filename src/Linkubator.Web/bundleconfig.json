@@ -29,7 +29,7 @@
     }
   },
   {
-    "outputFileName": "wwwroot/js/private.js",
+    "outputFileName": "wwwroot/js/private.bundle.js",
     "inputFiles": [
       "wwwroot/js/site.js",
       "wwwroot/js/required-validation.js"
