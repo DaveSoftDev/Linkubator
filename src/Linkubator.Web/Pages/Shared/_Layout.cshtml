@@ -30,10 +30,15 @@
     }
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <partial name="_Favicons" />
-    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/brand.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/footer.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/public-actions.css" asp-append-version="true" />
+    <environment include="Production">
+        <link rel="stylesheet" href="~/css/public.bundle.css" asp-append-version="true" />
+    </environment>
+    <environment exclude="Production">
+        <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/brand.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/footer.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/public-actions.css" asp-append-version="true" />
+    </environment>
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="bg-slate-950 text-slate-100 antialiased">

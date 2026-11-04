@@ -31,12 +31,11 @@ public class DashboardModel : PrivatePageModel
     [BindProperty]
     public string? QuickUrl { get; set; }
 
-    [TempData]
-    public string? LinkManagementError { get; set; }
-
     public Presentation.PageErrorSummaryViewModel QuickAddErrors { get; private set; } = new();
 
     public Presentation.PageAlertViewModel QuickAddAlert { get; private set; } = new();
+
+    public Presentation.PageAlertViewModel RecentLinksAlert { get; private set; } = new();
 
     public IReadOnlyList<LinkCardViewModel> Cards { get; private set; } = [];
 
@@ -118,12 +117,19 @@ public class DashboardModel : PrivatePageModel
 
         ApplicationResults.Result<ApplicationDtos.DashboardDto> result = await _dashboardService.GetDashboard(cancellationToken);
 
-        if (!result.IsSuccess || result.Value is null)
+        if (!result.IsSuccess)
         {
-            return NotFound();
+            RecentLinksAlert = new Presentation.PageAlertViewModel
+            {
+                Message = "No se han podido cargar los enlaces recientes. Vuelve a intentarlo.",
+                Kind = "error",
+            };
+            Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            return Page();
         }
 
-        ApplicationDtos.DashboardDto dashboard = result.Value;
+        ApplicationDtos.DashboardDto dashboard = result.Value
+            ?? throw new InvalidOperationException("A successful dashboard result must contain its data.");
         Cards = dashboard.RecentLinks.Select(Linkubator.Web.Models.AppDashboard.LinkCardViewModelFactory.Create).ToList();
 
         return Page();

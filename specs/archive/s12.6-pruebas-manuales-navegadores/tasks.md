@@ -66,16 +66,15 @@ T01 confirma el entorno seguro y los navegadores concretos; T02 prepara los esce
 | --- | --- | --- | --- | --- | --- |
 | CA01 | T01, T02, T03, T05, T06 | V01 en [plan.md](plan.md#estrategia-de-validación) | Completado en Edge 156.0.431458, Brave 1.98.63 y Chrome 156.0.8078.80; páginas públicas y privadas recorridas, sin exposición observada de datos privados. | 02-XI-2026; entorno local `https://localhost:7263` | [Registro de ejecución manual](#registro-de-ejecución-manual) |
 | CA02 | T01, T02, T04, T05, T06 | V02 en [plan.md](plan.md#estrategia-de-validación) | Completado con límites: formularios, listados, errores y estados vacíos representativos comprobados en los tres navegadores; límites en «Límites de la ejecución». | 02-XI-2026; entorno local `https://localhost:7263` | [Registro de ejecución manual](#registro-de-ejecución-manual) |
-| CA03 | T05, T06 | V03 en [plan.md](plan.md#estrategia-de-validación) | Completado: cada resultado identifica escenario, observación y navegadores; hallazgos y límites no se presentan como satisfactorios. Aceptación humana pendiente. | 02-XI-2026; Edge 156.0.431458, Brave 1.98.63 y Chrome 156.0.8078.80 | [Registro de ejecución manual](#registro-de-ejecución-manual) |
+| CA03 | T05–T07 | V03 en [plan.md](plan.md#estrategia-de-validación) | Completado: cada resultado identifica escenario, observación y navegadores; hallazgos y límites no se presentan como satisfactorios. Aceptado con límites por DLG. | 02-XI-2026; Edge 156.0.431458, Brave 1.98.63 y Chrome 156.0.8078.80 | [Registro de ejecución manual](#registro-de-ejecución-manual) |
 
 ## Aceptación y cierre
 
-- Estado del trabajo: pendiente.
+- Estado del trabajo: implementación completada y aceptada con límites por DLG el 02-XI-2026; T01–T07 completadas.
 - Criterios sin evidencia satisfactoria: ninguno; CA02 conserva los límites explícitos de la ejecución.
-- Bloqueos y riesgos restantes: no hay bloqueos técnicos identificados; queda pendiente la aceptación humana de la evidencia y sus límites.
-- Aceptación humana: pendiente; registrar responsable, fecha, referencia y decisión cuando exista.
-- Archivado: no solicitado.
-- Ubicación archivada: pendiente.
-- Fecha efectiva de archivado y comprobación de enlaces: pendientes.
+- Bloqueos y riesgos restantes: no hay bloqueos técnicos identificados; CA02 conserva los límites documentados en la ejecución.
 - Aceptación humana: DLG aceptó con los límites registrados el 02-XI-2026 (referencia: «Acepto con los límites registrados»).
-- Siguiente paso: continuar con S12.7 según el roadmap; la Definition of Done global de S12 sigue pendiente.
+- Archivado: completado por @DaveSoftDev el 04-XI-2026 («Archiva las specs activas»).
+- Ubicación archivada: `specs/archive/s12.6-pruebas-manuales-navegadores/`.
+- Fecha efectiva de archivado y comprobación de enlaces: 04-XI-2026; carpeta, artefactos y enlaces entrantes/salientes comprobados.
+- Siguiente paso: ninguno para S12.6; las limitaciones aceptadas no reabren la revisión.

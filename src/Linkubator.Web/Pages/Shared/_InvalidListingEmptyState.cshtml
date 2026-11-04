@@ -1,0 +1,9 @@
+@model string
+
+@await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", new Linkubator.Web.Models.Presentation.EmptyStateViewModel
+{
+    Title = "No se pueden mostrar los resultados",
+    Description = "Corrige los errores indicados para ver el listado.",
+    ActionUrl = Model,
+    ActionText = "Volver al listado",
+})

@@ -48,14 +48,13 @@ public sealed class MoveModel : LinkManagementPageModel
 
     public async Task<IActionResult> OnGet(CancellationToken cancellationToken)
     {
-        if (!LoadCollections())
-        {
-            return Page();
-        }
-
         if (!TryGetLinkId(out long linkId))
         {
-            Alert = new Presentation.PageAlertViewModel { Message = ApplicationConstants.LinkErrors.LinkIdInvalid().Message ?? string.Empty, Kind = "error" };
+            return RedirectUnavailableLink();
+        }
+
+        if (!LoadCollections())
+        {
             return Page();
         }
 
@@ -64,6 +63,11 @@ public sealed class MoveModel : LinkManagementPageModel
             cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
+            if (result.Errors.Any(error => error.Code == ApplicationConstants.LinkErrors.LinkNotAccessible().Code))
+            {
+                return RedirectUnavailableLink();
+            }
+
             ApplyErrors(result.Errors);
             return Page();
         }
@@ -74,14 +78,13 @@ public sealed class MoveModel : LinkManagementPageModel
 
     public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
-        if (!LoadCollections())
-        {
-            return Page();
-        }
-
         if (!TryGetLinkId(out long linkId))
         {
-            Alert = new Presentation.PageAlertViewModel { Message = ApplicationConstants.LinkErrors.LinkIdInvalid().Message ?? string.Empty, Kind = "error" };
+            return RedirectUnavailableLink();
+        }
+
+        if (!LoadCollections())
+        {
             return Page();
         }
 
@@ -90,7 +93,7 @@ public sealed class MoveModel : LinkManagementPageModel
             cancellationToken);
         if (!currentResult.IsSuccess || currentResult.Value is null)
         {
-            if (currentResult.Errors.Any(error => error.Category == Linkubator.Application.Enums.ApplicationErrorCategory.ResourceNotAccessible))
+            if (currentResult.Errors.Any(error => error.Code == ApplicationConstants.LinkErrors.LinkNotAccessible().Code))
             {
                 return RedirectUnavailableLink();
             }

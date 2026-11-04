@@ -7,4 +7,8 @@
     {
         <p>@Model.Description</p>
     }
+    @if (!string.IsNullOrWhiteSpace(Model.ActionUrl) && !string.IsNullOrWhiteSpace(Model.ActionText))
+    {
+        <p><a class="secondary-button" href="@Model.ActionUrl">@Model.ActionText</a></p>
+    }
 </div>

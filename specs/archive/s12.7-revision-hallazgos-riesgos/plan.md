@@ -41,9 +41,9 @@
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
 | Mantener la revisión como trabajo humano, sin cambios productivos ni repetición de la auditoría. | Confirmado | [spec.md → «Alcance»](spec.md#alcance) | La evidencia consiste en decisiones trazables sobre el informe existente, no en nuevas pruebas técnicas. |
-| Consolidar las disposiciones y su evidencia en las tareas S12.7, sin crear un informe independiente por ahora. | Propuesta | Convención de [sdd-writer](../../skills/sdd-writer/SKILL.md) | Confirmar al aprobar las tareas; separar un informe solo si el volumen de evidencia lo requiere. |
+| Consolidar las disposiciones y su evidencia en las tareas S12.7, sin crear un informe independiente por ahora. | Propuesta | Convención de [sdd-writer](../../../skills/sdd-writer/SKILL.md) | Confirmar al aprobar las tareas; separar un informe solo si el volumen de evidencia lo requiere. |
 | La decisión sobre los riesgos preventivos de logging y validación del hash aún no está tomada. | Pendiente | [Informe de auditoría S12.3](../s12.3-auditoria-invariantes-criticas/tasks.md#informe-de-auditoría) | Debe decidirse cada riesgo por separado; no asumir aceptación ni implementar mitigaciones como parte de S12.7. |
-| La aceptación previa del riesgo de identidad de desarrollo debe revisarse sin atribuirle una nueva aprobación. | Pendiente | [decisions.md → «Identidad de desarrollo»](../../context/decisions.md#identidad-de-desarrollo) | Registrar si se mantiene la disposición previa o si se solicita seguimiento adicional. |
+| La aceptación previa del riesgo de identidad de desarrollo debe revisarse sin atribuirle una nueva aprobación. | Pendiente | [decisions.md → «Identidad de desarrollo»](../../../context/decisions.md#identidad-de-desarrollo) | Registrar si se mantiene la disposición previa o si se solicita seguimiento adicional. |
 
 ## Estrategia de validación
 

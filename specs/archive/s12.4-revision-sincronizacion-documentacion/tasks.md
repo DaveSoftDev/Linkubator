@@ -45,14 +45,14 @@ Un resultado no disponible o fallido seguirá pendiente o bloqueado; no se regis
 
 Estado: coherente con observaciones.
 
-Fuentes revisadas: [AGENTS.md](../../AGENTS.md), los seis documentos de [context/](../../context/), la skill [requirements-review](../../skills/requirements-review/SKILL.md) y los 18 diagramas de [context/diagrams/](../../context/diagrams/). Se contrastaron responsabilidades documentales, terminología, alcance, identidad y autenticación, propiedad, privacidad, cuenta y seguridad, URLs, búsqueda y listados, páginas públicas, persistencia, scraping, decisiones y roadmap. No se detectaron contradicciones ni deriva de alcance. La comprobación de enlaces locales y anclas encontró 0 errores en 528 referencias.
+Fuentes revisadas: [AGENTS.md](../../../AGENTS.md), los seis documentos de [context/](../../../context), la skill [requirements-review](../../../skills/requirements-review/SKILL.md) y los 18 diagramas de [context/diagrams/](../../../context/diagrams). Se contrastaron responsabilidades documentales, terminología, alcance, identidad y autenticación, propiedad, privacidad, cuenta y seguridad, URLs, búsqueda y listados, páginas públicas, persistencia, scraping, decisiones y roadmap. No se detectaron contradicciones ni deriva de alcance. La comprobación de enlaces locales y anclas encontró 0 errores en 528 referencias.
 
 Hallazgos, por prioridad:
 
-1. **Prioridad 6 — Duplicado:** el nombre exacto de la colección predeterminada aparece fuera de su fuente propietaria en [requirements.md:13](../../context/requirements.md), [requirements.md:41](../../context/requirements.md), [decisions.md:22](../../context/decisions.md), [domain-model.md:41](../../context/domain-model.md), [architecture.md:185](../../context/architecture.md), [roadmap.md:97](../../context/roadmap.md) y [account-onboarding-sequence.md:58](../../context/diagrams/account-onboarding-sequence.md). Destino: [specifications.md → «Completar el registro»](../../context/specifications.md#completar-el-registro) y [«Generación de slugs»](../../context/specifications.md#generación-de-slugs). Recomendación: referirse a la colección predeterminada y enlazar su especificación.
-2. **Prioridad 6 — Duplicado:** la decisión de idioma reproduce el segmento exacto de las rutas públicas en [decisions.md:22](../../context/decisions.md). Destino: [specifications.md → «Rutas públicas»](../../context/specifications.md#rutas-públicas). Recomendación: conservar la justificación y enlazar la regla, sin copiar el valor.
-3. **Prioridad 6 — Duplicado:** la checklist del roadmap enumera detalles, ejemplos y valores de reglas propietarias, en particular en [roadmap.md:198](../../context/roadmap.md), [roadmap.md:200](../../context/roadmap.md) y [roadmap.md:225](../../context/roadmap.md)–[roadmap.md:250](../../context/roadmap.md). Destinos: las secciones enlazadas de [specifications.md](../../context/specifications.md), [domain-model.md](../../context/domain-model.md) y [architecture.md](../../context/architecture.md). Recomendación: mantener los ámbitos de prueba y remitir a las fuentes para los casos concretos, límites y valores.
-4. **Prioridad 6 — Omisión:** [requirements.md:93](../../context/requirements.md) resume el tratamiento de parámetros de URL no aplicables sin enlazar las reglas exactas. Destino: [specifications.md → «Rutas privadas»](../../context/specifications.md#rutas-privadas) y [«Paginación de las páginas públicas»](../../context/specifications.md#paginación-de-las-páginas-públicas). Recomendación: añadir ambos enlaces.
+1. **Prioridad 6 — Duplicado:** el nombre exacto de la colección predeterminada aparece fuera de su fuente propietaria en [requirements.md:13](../../../context/requirements.md), [requirements.md:41](../../../context/requirements.md), [decisions.md:22](../../../context/decisions.md), [domain-model.md:41](../../../context/domain-model.md), [architecture.md:185](../../../context/architecture.md), [roadmap.md:97](../../../context/roadmap.md) y [account-onboarding-sequence.md:58](../../../context/diagrams/account-onboarding-sequence.md). Destino: [specifications.md → «Completar el registro»](../../../context/specifications.md#completar-el-registro) y [«Generación de slugs»](../../../context/specifications.md#generación-de-slugs). Recomendación: referirse a la colección predeterminada y enlazar su especificación.
+2. **Prioridad 6 — Duplicado:** la decisión de idioma reproduce el segmento exacto de las rutas públicas en [decisions.md:22](../../../context/decisions.md). Destino: [specifications.md → «Rutas públicas»](../../../context/specifications.md#rutas-públicas). Recomendación: conservar la justificación y enlazar la regla, sin copiar el valor.
+3. **Prioridad 6 — Duplicado:** la checklist del roadmap enumera detalles, ejemplos y valores de reglas propietarias, en particular en [roadmap.md:198](../../../context/roadmap.md), [roadmap.md:200](../../../context/roadmap.md) y [roadmap.md:225](../../../context/roadmap.md)–[roadmap.md:250](../../../context/roadmap.md). Destinos: las secciones enlazadas de [specifications.md](../../../context/specifications.md), [domain-model.md](../../../context/domain-model.md) y [architecture.md](../../../context/architecture.md). Recomendación: mantener los ámbitos de prueba y remitir a las fuentes para los casos concretos, límites y valores.
+4. **Prioridad 6 — Omisión:** [requirements.md:93](../../../context/requirements.md) resume el tratamiento de parámetros de URL no aplicables sin enlazar las reglas exactas. Destino: [specifications.md → «Rutas privadas»](../../../context/specifications.md#rutas-privadas) y [«Paginación de las páginas públicas»](../../../context/specifications.md#paginación-de-las-páginas-públicas). Recomendación: añadir ambos enlaces.
 
 Decisiones necesarias: ninguna. Las sincronizaciones propuestas se respaldan en las fuentes propietarias; no se identificaron preguntas abiertas que bloqueen la implementación documental.
 
@@ -60,11 +60,11 @@ Riesgos residuales: esta revisión evalúa la documentación y sus referencias, 
 
 ### Cambios documentales aplicados
 
-- [requirements.md](../../context/requirements.md): se sustituyeron menciones literales del nombre de la colección por referencias a la especificación y se enlazó la regla de parámetros de URL.
-- [decisions.md](../../context/decisions.md): se mantuvo la razón de idioma sin repetir el nombre de la colección ni el segmento de ruta.
-- [domain-model.md](../../context/domain-model.md) y [architecture.md](../../context/architecture.md): se conservaron la invariante y el flujo de persistencia, enlazando el nombre exacto a su especificación.
-- [account-onboarding-sequence.md](../../context/diagrams/account-onboarding-sequence.md): se sustituyó el nombre literal por una descripción genérica.
-- [roadmap.md](../../context/roadmap.md): se enlazaron los detalles de rutas, parámetros y cabeceras a sus fuentes y se resumió la checklist para que conserve los ámbitos de prueba sin duplicar casos y valores exactos.
+- [requirements.md](../../../context/requirements.md): se sustituyeron menciones literales del nombre de la colección por referencias a la especificación y se enlazó la regla de parámetros de URL.
+- [decisions.md](../../../context/decisions.md): se mantuvo la razón de idioma sin repetir el nombre de la colección ni el segmento de ruta.
+- [domain-model.md](../../../context/domain-model.md) y [architecture.md](../../../context/architecture.md): se conservaron la invariante y el flujo de persistencia, enlazando el nombre exacto a su especificación.
+- [account-onboarding-sequence.md](../../../context/diagrams/account-onboarding-sequence.md): se sustituyó el nombre literal por una descripción genérica.
+- [roadmap.md](../../../context/roadmap.md): se enlazaron los detalles de rutas, parámetros y cabeceras a sus fuentes y se resumió la checklist para que conserve los ámbitos de prueba sin duplicar casos y valores exactos.
 - No se modificaron reglas propietarias, código ni pruebas. Los cambios se comprobaron contra sus fuentes y no introducen decisiones nuevas.
 
 ## Aceptación y cierre
@@ -73,7 +73,7 @@ Riesgos residuales: esta revisión evalúa la documentación y sus referencias, 
 - Criterios sin evidencia satisfactoria: ninguno.
 - Bloqueos y riesgos restantes: no quedan bloqueos de S12.4; la revisión no audita la implementación de código y el índice conserva referencias históricas ausentes documentadas arriba.
 - Aceptación humana: DLG, 31-X-2026, referencia «Acepto S12.4».
-- Archivado: no solicitado.
-- Ubicación archivada: pendiente.
-- Fecha efectiva de archivado y comprobación de enlaces: pendientes.
+- Archivado: completado por @DaveSoftDev el 04-XI-2026 («Archiva las specs activas»).
+- Ubicación archivada: `specs/archive/s12.4-revision-sincronizacion-documentacion/`.
+- Fecha efectiva de archivado y comprobación de enlaces: 04-XI-2026; carpeta, artefactos y enlaces entrantes/salientes comprobados.
 - Siguiente paso: ninguno para S12.4; S12 permanece abierta hasta completar su Definition of Done.

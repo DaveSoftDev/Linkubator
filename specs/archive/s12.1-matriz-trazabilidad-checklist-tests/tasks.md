@@ -44,7 +44,7 @@ Un resultado no disponible o fallido seguirá pendiente o bloqueado; los resulta
 - Criterios sin evidencia satisfactoria: ninguno.
 - Bloqueos y riesgos restantes: ninguno dentro del alcance de S12.1; la etapa S12 no se declara cerrada y las revisiones manuales permanecen asignadas a sus tareas propietarias.
 - Aceptación humana: DLG, 31-X-2026, referencia «Acepto S12.1».
-- Archivado: no solicitado.
-- Ubicación archivada: pendiente.
-- Fecha efectiva de archivado y comprobación de enlaces: pendientes.
+- Archivado: completado por @DaveSoftDev el 04-XI-2026 («Archiva las specs activas»).
+- Ubicación archivada: `specs/archive/s12.1-matriz-trazabilidad-checklist-tests/`.
+- Fecha efectiva de archivado y comprobación de enlaces: 04-XI-2026; carpeta, artefactos y enlaces entrantes/salientes comprobados.
 - Siguiente paso: continuar con S12 conforme al roadmap; no cerrar S12 con esta tarea.

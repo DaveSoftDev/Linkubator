@@ -12,7 +12,7 @@
 
 ### Componentes y contratos
 
-- La checklist de calidad del MVP0 en [roadmap.md](../../context/roadmap.md#checklist-de-calidad-del-mvp0) y las reglas enlazadas desde ella son la fuente del comportamiento esperado. La matriz no copiará esas reglas.
+- La checklist de calidad del MVP0 en [roadmap.md](../../../context/roadmap.md#checklist-de-calidad-del-mvp0) y las reglas enlazadas desde ella son la fuente del comportamiento esperado. La matriz no copiará esas reglas.
 - La matriz se propone como `plans/mvp0-checklist-test-matrix.md`, independiente del registro de auditoría de tests. Cada fila identificará un escenario atómico, su punto de checklist y fuente, el tipo de comprobación, el test concreto o responsable de la revisión, el estado y la evidencia.
 - La revisión automatizada se limita al proyecto existente `tests/Linkubator.Tests/` y sus tests actuales. Se reutilizan xUnit y `WebApplicationFactory`; no se añaden frameworks, dependencias ni automatización de navegador.
 - El plan existente de auditoría de tests aporta historial y clasificaciones previas, pero cada cobertura se contrasta con la implementación vigente y con la aserción del test correspondiente.
@@ -30,7 +30,7 @@
 
 - No hay cambios en base de datos, persistencia de aplicación, servicios externos ni dependencias de software.
 - El entregable de matriz propuesto es documentación versionada bajo `plans/`; las pruebas nuevas o reforzadas, si se aprueban, permanecen en el proyecto de tests existente.
-- La tarea puede mapear revisiones manuales y comprobaciones de otras tareas de S12, pero no las ejecuta ni espera su evidencia para cerrarse. Los tests específicos de eventos y logs permanecen en S12.2; las revisiones manuales y demás responsabilidades conservan las asignaciones de [mvp0-plan.md → «S12: Cierre y hardening (M)»](../../plans/mvp0-plan.md#s12-cierre-y-hardening-m).
+- La tarea puede mapear revisiones manuales y comprobaciones de otras tareas de S12, pero no las ejecuta ni espera su evidencia para cerrarse. Los tests específicos de eventos y logs permanecen en S12.2; las revisiones manuales y demás responsabilidades conservan las asignaciones de [mvp0-plan.md → «S12: Cierre y hardening (M)»](../../../plans/mvp0-plan.md#s12-cierre-y-hardening-m).
 
 ### Garantías técnicas
 
@@ -44,7 +44,7 @@
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
 | Mantener la matriz en un documento independiente dentro de `plans/`. | Confirmado | Aprobación del plan por DLG el 31-X-2026 con la referencia «Siguiente» | Facilita consultar el cruce completo sin convertir el plan de auditoría en una segunda matriz. |
-| Reconciliar evidencia histórica con el inventario de tests y la ejecución actuales. | Confirmado | [test-audit-plan.md → «Control de completitud»](../../plans/test-audit-plan.md#control-de-completitud) | Evita atribuir cobertura a casos que hayan cambiado o no se hayan revisado; repetir inventario y validación antes del cierre. |
+| Reconciliar evidencia histórica con el inventario de tests y la ejecución actuales. | Confirmado | [test-audit-plan.md → «Control de completitud»](../../../plans/test-audit-plan.md#control-de-completitud) | Evita atribuir cobertura a casos que hayan cambiado o no se hayan revisado; repetir inventario y validación antes del cierre. |
 | Un fallo que indique comportamiento contrario a una regla puede requerir un cambio de producción fuera del alcance de una matriz de tests. | Pendiente | [spec.md → «Alcance»](spec.md#alcance) | Registrar el hallazgo y pedir confirmación de alcance antes de modificar comportamiento; no ocultar el caso como cubierto mientras el test no pase. |
 
 ## Estrategia de validación

@@ -12,19 +12,19 @@ Comprobar y registrar manualmente el comportamiento de las páginas públicas y 
 
 ## Fuentes
 
-- [mvp0-plan.md → «S12: Cierre y hardening (M)»](../../plans/mvp0-plan.md#s12-cierre-y-hardening-m)
-- [roadmap.md → «Checklist de calidad del MVP0»](../../context/roadmap.md#checklist-de-calidad-del-mvp0)
-- [mvp0-checklist-test-matrix.md, A12](../../plans/mvp0-checklist-test-matrix.md)
-- [requirements.md → «Colecciones»](../../context/requirements.md#colecciones)
-- [requirements.md → «Enlaces»](../../context/requirements.md#enlaces)
-- [requirements.md → «Búsqueda y filtros»](../../context/requirements.md#búsqueda-y-filtros)
-- [requirements.md → «Páginas públicas»](../../context/requirements.md#páginas-públicas)
-- [requirements.md → «Páginas privadas»](../../context/requirements.md#páginas-privadas)
-- [specifications.md → «Búsqueda y filtros»](../../context/specifications.md#búsqueda-y-filtros)
-- [specifications.md → «Listados»](../../context/specifications.md#listados)
-- [specifications.md → «Rutas privadas»](../../context/specifications.md#rutas-privadas)
-- [specifications.md → «Páginas públicas»](../../context/specifications.md#páginas-públicas)
-- [domain-model.md → «Público y privado»](../../context/domain-model.md#público-y-privado)
+- [mvp0-plan.md → «S12: Cierre y hardening (M)»](../../../plans/mvp0-plan.md#s12-cierre-y-hardening-m)
+- [roadmap.md → «Checklist de calidad del MVP0»](../../../context/roadmap.md#checklist-de-calidad-del-mvp0)
+- [mvp0-checklist-test-matrix.md, A12](../../../plans/mvp0-checklist-test-matrix.md)
+- [requirements.md → «Colecciones»](../../../context/requirements.md#colecciones)
+- [requirements.md → «Enlaces»](../../../context/requirements.md#enlaces)
+- [requirements.md → «Búsqueda y filtros»](../../../context/requirements.md#búsqueda-y-filtros)
+- [requirements.md → «Páginas públicas»](../../../context/requirements.md#páginas-públicas)
+- [requirements.md → «Páginas privadas»](../../../context/requirements.md#páginas-privadas)
+- [specifications.md → «Búsqueda y filtros»](../../../context/specifications.md#búsqueda-y-filtros)
+- [specifications.md → «Listados»](../../../context/specifications.md#listados)
+- [specifications.md → «Rutas privadas»](../../../context/specifications.md#rutas-privadas)
+- [specifications.md → «Páginas públicas»](../../../context/specifications.md#páginas-públicas)
+- [domain-model.md → «Público y privado»](../../../context/domain-model.md#público-y-privado)
 
 ## Alcance
 
@@ -49,9 +49,9 @@ Comprobar y registrar manualmente el comportamiento de las páginas públicas y 
 
 | ID | Fuente o criterio aprobado propietario | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA01 | [roadmap.md → «Checklist de calidad del MVP0»](../../context/roadmap.md#checklist-de-calidad-del-mvp0), [requirements.md → «Páginas públicas»](../../context/requirements.md#páginas-públicas), [requirements.md → «Páginas privadas»](../../context/requirements.md#páginas-privadas), [domain-model.md → «Público y privado»](../../context/domain-model.md#público-y-privado) | Están disponibles las páginas públicas y privadas que correspondan a los escenarios de la revisión | Se recorren manualmente en los navegadores seleccionados | Se comprueba y registra el comportamiento de ambas áreas frente a sus fuentes, incluida la ausencia de exposición pública de contenido privado; los casos no verificables quedan identificados, no se presentan como satisfactorios. |
-| CA02 | [roadmap.md → «Checklist de calidad del MVP0»](../../context/roadmap.md#checklist-de-calidad-del-mvp0), [requirements.md → «Colecciones»](../../context/requirements.md#colecciones), [requirements.md → «Enlaces»](../../context/requirements.md#enlaces), [requirements.md → «Búsqueda y filtros»](../../context/requirements.md#búsqueda-y-filtros), [specifications.md → «Búsqueda y filtros»](../../context/specifications.md#búsqueda-y-filtros), [specifications.md → «Listados»](../../context/specifications.md#listados), [specifications.md → «Rutas privadas»](../../context/specifications.md#rutas-privadas) | Hay formularios, listados, mensajes de error y estados vacíos aplicables a las áreas revisadas | Se recorren manualmente sus escenarios representativos en los navegadores seleccionados | Cada categoría aplicable se contrasta con su fuente funcional y se registra su resultado; una categoría no disponible o no comprobada queda explícitamente identificada. |
-| CA03 | [mvp0-plan.md → «S12: Cierre y hardening (M)»](../../plans/mvp0-plan.md#s12-cierre-y-hardening-m), [mvp0-checklist-test-matrix.md, A12](../../plans/mvp0-checklist-test-matrix.md) | Se ha ejecutado un escenario manual o se ha determinado que no puede ejecutarse | Se consolida la evidencia de la revisión | Cada resultado identifica navegador y versión, área y escenario, observación y estado; los hallazgos y límites quedan registrados y no se declara satisfactoria una comprobación sin evidencia. |
+| CA01 | [roadmap.md → «Checklist de calidad del MVP0»](../../../context/roadmap.md#checklist-de-calidad-del-mvp0), [requirements.md → «Páginas públicas»](../../../context/requirements.md#páginas-públicas), [requirements.md → «Páginas privadas»](../../../context/requirements.md#páginas-privadas), [domain-model.md → «Público y privado»](../../../context/domain-model.md#público-y-privado) | Están disponibles las páginas públicas y privadas que correspondan a los escenarios de la revisión | Se recorren manualmente en los navegadores seleccionados | Se comprueba y registra el comportamiento de ambas áreas frente a sus fuentes, incluida la ausencia de exposición pública de contenido privado; los casos no verificables quedan identificados, no se presentan como satisfactorios. |
+| CA02 | [roadmap.md → «Checklist de calidad del MVP0»](../../../context/roadmap.md#checklist-de-calidad-del-mvp0), [requirements.md → «Colecciones»](../../../context/requirements.md#colecciones), [requirements.md → «Enlaces»](../../../context/requirements.md#enlaces), [requirements.md → «Búsqueda y filtros»](../../../context/requirements.md#búsqueda-y-filtros), [specifications.md → «Búsqueda y filtros»](../../../context/specifications.md#búsqueda-y-filtros), [specifications.md → «Listados»](../../../context/specifications.md#listados), [specifications.md → «Rutas privadas»](../../../context/specifications.md#rutas-privadas) | Hay formularios, listados, mensajes de error y estados vacíos aplicables a las áreas revisadas | Se recorren manualmente sus escenarios representativos en los navegadores seleccionados | Cada categoría aplicable se contrasta con su fuente funcional y se registra su resultado; una categoría no disponible o no comprobada queda explícitamente identificada. |
+| CA03 | [mvp0-plan.md → «S12: Cierre y hardening (M)»](../../../plans/mvp0-plan.md#s12-cierre-y-hardening-m), [mvp0-checklist-test-matrix.md, A12](../../../plans/mvp0-checklist-test-matrix.md) | Se ha ejecutado un escenario manual o se ha determinado que no puede ejecutarse | Se consolida la evidencia de la revisión | Cada resultado identifica navegador y versión, área y escenario, observación y estado; los hallazgos y límites quedan registrados y no se declara satisfactoria una comprobación sin evidencia. |
 
 ## Bloqueos y preguntas pendientes
 

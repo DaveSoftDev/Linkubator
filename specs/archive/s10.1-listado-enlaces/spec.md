@@ -42,6 +42,8 @@ Completar el listado privado de enlaces en `/app/enlaces` para presentar resulta
 | CA02 | [«Páginas privadas»](../../../context/specifications.md#páginas-privadas), [«Búsqueda y filtros»](../../../context/specifications.md#búsqueda-y-filtros), [«Accesibilidad»](../../../context/requirements.md#accesibilidad) | El resultado del listado no contiene enlaces que mostrar. | Se renderiza la primera página del resultado. | Se presenta un estado vacío comprensible y accesible; no se muestra una página de resultados como si contuviera elementos. |
 | CA03 | [S9.2 → CA03](../../s9.2-publicacion-enlaces/spec.md#criterios-de-aceptación), [«Rutas privadas»](../../../context/specifications.md#rutas-privadas), [«Errores controlados»](../../../context/specifications.md#errores-controlados) y [«Accesibilidad»](../../../context/requirements.md#accesibilidad) | El POST de creación rechazado por intentar hacer público un enlace de una colección privada ha redirigido al listado y transportado el aviso. | El usuario llega a `/app/enlaces`. | El aviso se presenta de forma perceptible y accesible para tecnologías de asistencia en el listado, sin repetir la operación, crear el enlace ni alterar su privacidad. La presentación consume o conserva el aviso conforme al mecanismo Web existente, sin revelar información adicional. |
 
+**Actualización posterior:** CA03 describe el comportamiento histórico. El rechazo de creación se presenta ahora en el formulario de enlace, de acuerdo con [«Errores controlados»](../../../context/specifications.md#errores-controlados); no se redirige el error al listado.
+
 ## Bloqueos y preguntas pendientes
 
 | Pregunta o contradicción | Fuente afectada | Criterio bloqueado | Decisión humana necesaria |

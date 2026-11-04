@@ -3,7 +3,13 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Dapper;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using CurrentUser = Linkubator.Application.Contracts.ICurrentUser;
+using DashboardDto = Linkubator.Application.Dtos.Models.DashboardDto;
+using DashboardRepository = Linkubator.Application.Contracts.IDashboardRepository;
 using LinkDto = Linkubator.Application.Dtos.Models.LinkDto;
 using SqliteConnectionFactory = Linkubator.Infrastructure.Sqlite.SqliteConnectionFactory;
 using TestHost = Microsoft.AspNetCore.Hosting;
@@ -16,7 +22,6 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
     private const string CreateRoute = "/app/enlaces/nuevo";
     private const string QuickAddRoute = "/app?handler=QuickAdd";
     private const string DemoEmail = "user@linkubator.test";
-    private const string TempDataCookieName = ".AspNetCore.Mvc.CookieTempDataProvider";
     private const string ValidArgon2idHash = "$argon2id$v=19$m=65536,t=3,p=1$42xS9y5nNCo8mABa9Y0KQw$w2hDMTrLZgBZ0Iqk7Q1m5J0C2U0xHgpiA62b0mXkVQ4";
     private const string UnsupportedUrlSchemeCode = "UrlSchemeNotAllowed";
     private const string UnsupportedUrlSchemeMessage = "Introduce una dirección que empiece por https:// o http://.";
@@ -90,7 +95,7 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.Contains("noindex, nofollow", html, StringComparison.Ordinal);
         Assert.DoesNotContain("name=\"Input.UserId\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"ru\" value=\"/app/enlaces\"", html, StringComparison.Ordinal);
-        Assert.Contains("class=\"collection-form__cancel\" href=\"/app/enlaces\"", html, StringComparison.Ordinal);
+        Assert.Contains("class=\"secondary-button\" href=\"/app/enlaces\"", html, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -140,7 +145,7 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.DoesNotContain("collectionId=", destination, StringComparison.Ordinal);
         Assert.DoesNotContain("selected=\"selected\"", GetSelect(formHtml), StringComparison.Ordinal);
         Assert.Contains($"value=\"{_collectionId}\"", GetSelect(formHtml), StringComparison.Ordinal);
-        Assert.Contains($"class=\"collection-form__cancel\" href=\"{origin}\"", WebUtility.HtmlDecode(formHtml), StringComparison.Ordinal);
+        Assert.Contains($"class=\"secondary-button\" href=\"{origin}\"", WebUtility.HtmlDecode(formHtml), StringComparison.Ordinal);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Equal(origin, response.Headers.Location?.OriginalString);
         Assert.Equal(_collectionId, created.CollectionId);
@@ -175,7 +180,7 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, form.StatusCode);
         Assert.Contains($"collectionId={collectionId}", destination, StringComparison.Ordinal);
         Assert.Contains($"value=\"{collectionId}\"", selected, StringComparison.Ordinal);
-        Assert.Contains($"class=\"collection-form__cancel\" href=\"{origin}\"", WebUtility.HtmlDecode(formHtml), StringComparison.Ordinal);
+        Assert.Contains($"class=\"secondary-button\" href=\"{origin}\"", WebUtility.HtmlDecode(formHtml), StringComparison.Ordinal);
         Assert.DoesNotContain("checked", GetInput(formHtml, "Input.IsPublic"), StringComparison.Ordinal);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Equal(origin, response.Headers.Location?.OriginalString);
@@ -243,7 +248,7 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains($"name=\"ru\" value=\"{expected}\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("name=\"ReturnUrl\"", html, StringComparison.Ordinal);
-        Assert.Contains($"class=\"collection-form__cancel\" href=\"{expected}\"", html, StringComparison.Ordinal);
+        Assert.Contains($"class=\"secondary-button\" href=\"{expected}\"", html, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -266,50 +271,8 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains($"name=\"ru\" value=\"{expected}\"", html, StringComparison.Ordinal);
-        Assert.Contains($"class=\"collection-form__cancel\" href=\"{expected}\"", html, StringComparison.Ordinal);
+        Assert.Contains($"class=\"secondary-button\" href=\"{expected}\"", html, StringComparison.Ordinal);
         Assert.Equal(0, await LinkCount());
-    }
-
-    [Theory]
-    [InlineData("/app")]
-    [InlineData("/app/colecciones")]
-    [InlineData("/app/colecciones?q=Destino&p=1")]
-    [InlineData("/app/enlaces")]
-    [InlineData("/app/enlaces?q=Destino&p=1")]
-    public async Task PostNewLink_FromSidebar_ReturnsToOriginWithOneTimeConfirmation(string origin)
-    {
-        using HttpResponseMessage source = await _client.GetAsync(origin);
-        string sourceHtml = await source.Content.ReadAsStringAsync();
-        string createLink = Regex.Match(sourceHtml, "<a\\b[^>]*class=\"primary-button sidebar-create-link\"[^>]*>").Value;
-        string destination = WebUtility.HtmlDecode(Regex.Match(createLink, "href=\"([^\"]+)\"").Groups[1].Value);
-        using HttpResponseMessage form = await _client.GetAsync(destination);
-        string formHtml = await form.Content.ReadAsStringAsync();
-        Dictionary<string, string> fields = NewFields(_collectionId);
-        fields["Input.Url"] = " example.com/path?q=uno&next=a+b#fragment ";
-        fields["ru"] = WebUtility.HtmlDecode(Regex.Match(GetInput(formHtml, "ru"), "value=\"([^\"]*)\"").Groups[1].Value);
-        fields["__RequestVerificationToken"] = WebUtility.HtmlDecode(Regex.Match(GetInput(formHtml, "__RequestVerificationToken"), "value=\"([^\"]+)\"").Groups[1].Value);
-        fields["CreatedLinkUrl"] = "javascript:alert(1)";
-
-        using HttpResponseMessage response = await _client.PostAsync(CreateRoute, new FormUrlEncodedContent(fields));
-        using HttpResponseMessage returned = await _client.GetAsync(response.Headers.Location!);
-        string html = await returned.Content.ReadAsStringAsync();
-        string notice = Regex.Match(html, "<div\\b[^>]*class=\"app-alert app-alert--success\"[^>]*>.*?</div>", RegexOptions.Singleline).Value;
-        using HttpResponseMessage reloaded = await _client.GetAsync(origin);
-        string reloadedHtml = await reloaded.Content.ReadAsStringAsync();
-
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal(origin, response.Headers.Location?.OriginalString);
-        Assert.Equal(HttpStatusCode.OK, returned.StatusCode);
-        Assert.Contains("role=\"status\"", notice, StringComparison.Ordinal);
-        Assert.Contains("Enlace creado.", notice, StringComparison.Ordinal);
-        Assert.Contains("href=\"https://example.com/path?q=uno&next=a+b#fragment\"", WebUtility.HtmlDecode(notice), StringComparison.Ordinal);
-        Assert.Contains("&amp;next=", notice, StringComparison.Ordinal);
-        Assert.Contains("target=\"_blank\" rel=\"noopener noreferrer\"", notice, StringComparison.Ordinal);
-        Assert.Contains(">Ver enlace</a>", notice, StringComparison.Ordinal);
-        Assert.DoesNotContain("javascript:alert", html, StringComparison.Ordinal);
-        Assert.DoesNotContain("Enlace creado.", reloadedHtml, StringComparison.Ordinal);
-        Assert.Equal(1, await LinkCount());
-        Assert.Equal("https://example.com/path?q=uno&next=a+b#fragment", await _keeper.ExecuteScalarAsync<string>("SELECT UrlOriginal FROM Link;"));
     }
 
     [Theory]
@@ -347,7 +310,7 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains($"name=\"ru\" value=\"{origin}\"", html, StringComparison.Ordinal);
-        Assert.Contains($"class=\"collection-form__cancel\" href=\"{origin}\"", html, StringComparison.Ordinal);
+        Assert.Contains($"class=\"secondary-button\" href=\"{origin}\"", html, StringComparison.Ordinal);
         Assert.Contains("href=\"#link-url\"", html, StringComparison.Ordinal);
         Assert.Contains("value=\"Título pendiente\"", html, StringComparison.Ordinal);
         Assert.Equal(0, await LinkCount());
@@ -364,23 +327,35 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
     [Theory]
     [InlineData("/app")]
     [InlineData("/app/colecciones?q=Destino&p=1")]
-    public async Task PostNewLink_WithPrivacyRejection_ReturnsToOriginWithErrorNotice(string origin)
+    public async Task PostNewLink_WithPrivacyRejection_KeepsFormAndOriginForRetry(string origin)
     {
         Dictionary<string, string> fields = NewFields(_collectionId);
         fields["Input.IsPublic"] = "true";
+        fields["Input.Title"] = "Título pendiente";
         fields["ru"] = origin;
 
         using HttpResponseMessage response = await Post(fields);
-        using HttpResponseMessage returned = await _client.GetAsync(response.Headers.Location!);
-        string html = await returned.Content.ReadAsStringAsync();
-        string notice = Regex.Match(html, "<div\\b[^>]*class=\"app-alert app-alert--error\"[^>]*>.*?</div>", RegexOptions.Singleline).Value;
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
-        Assert.Equal(origin, response.Headers.Location?.OriginalString);
-        Assert.Equal(HttpStatusCode.OK, returned.StatusCode);
-        Assert.Contains("role=\"status\"", notice, StringComparison.Ordinal);
-        Assert.Contains("No se puede hacer público un enlace de una colección privada.", WebUtility.HtmlDecode(notice), StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Null(response.Headers.Location);
+        Assert.Contains("id=\"link-new-form\"", html, StringComparison.Ordinal);
+        Assert.Contains($"name=\"ru\" value=\"{origin}\"", html, StringComparison.Ordinal);
+        Assert.Contains($"class=\"secondary-button\" href=\"{origin}\"", html, StringComparison.Ordinal);
+        Assert.Contains("value=\"Título pendiente\"", html, StringComparison.Ordinal);
+        Assert.Contains("No se puede hacer público un enlace de una colección privada.", html, StringComparison.Ordinal);
+        Assert.Contains("disabled", GetInput(html, "Input.IsPublic"), StringComparison.Ordinal);
+        Assert.DoesNotContain("checked", GetInput(html, "Input.IsPublic"), StringComparison.Ordinal);
         Assert.DoesNotContain("Enlace creado.", html, StringComparison.Ordinal);
         Assert.Equal(0, await LinkCount());
+
+        fields["Input.IsPublic"] = "false";
+        fields["__RequestVerificationToken"] = Regex.Match(GetInput(html, "__RequestVerificationToken"), "value=\"([^\"]+)\"").Groups[1].Value;
+        using HttpResponseMessage retry = await _client.PostAsync(CreateRoute, new FormUrlEncodedContent(fields));
+
+        Assert.Equal(HttpStatusCode.Redirect, retry.StatusCode);
+        Assert.Equal(origin, retry.Headers.Location?.OriginalString);
+        Assert.Equal(1, await LinkCount());
     }
 
     [Theory]
@@ -615,41 +590,36 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task PostNewLink_WithPublicRequestInPrivateCollection_RedirectsAndDoesNotCreateLink()
+    public async Task PostNewLink_WithPublicRequestInPrivateCollection_ReturnsFormAndDoesNotCreateLink()
     {
         Dictionary<string, string> fields = NewFields(_collectionId);
         fields["Input.IsPublic"] = "true";
 
         using HttpResponseMessage response = await Post(fields);
-        IEnumerable<string> setCookieHeaders = response.Headers.GetValues("Set-Cookie");
+        string html = await response.Content.ReadAsStringAsync();
 
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal("/app/enlaces", response.Headers.Location?.OriginalString);
-        Assert.Contains(setCookieHeaders, header => header.StartsWith(TempDataCookieName + "=", StringComparison.Ordinal));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Null(response.Headers.Location);
+        Assert.Contains("id=\"link-new-form\"", html, StringComparison.Ordinal);
         Assert.Equal(0, await LinkCount());
     }
 
     [Fact]
-    public async Task PostNewLink_WithPublicRequestInPrivateCollection_ShowsAccessibleErrorOnListing()
+    public async Task PostNewLink_WithPublicRequestInPrivateCollection_ShowsAccessibleErrorOnForm()
     {
         Dictionary<string, string> fields = NewFields(_collectionId);
         fields["Input.IsPublic"] = "true";
 
         using HttpResponseMessage response = await Post(fields);
-        IEnumerable<string> setCookieHeaders = response.Headers.GetValues("Set-Cookie");
-        string tempDataCookie = setCookieHeaders.Single(header => header.StartsWith(TempDataCookieName + "=", StringComparison.Ordinal))
-            .Split(';', 2)[0];
-        using HttpRequestMessage listingRequest = new(HttpMethod.Get, response.Headers.Location);
-        listingRequest.Headers.Add("Cookie", tempDataCookie);
-
-        using HttpResponseMessage listing = await _client.SendAsync(listingRequest);
-        string html = await listing.Content.ReadAsStringAsync();
+        string html = await response.Content.ReadAsStringAsync();
         string decodedHtml = WebUtility.HtmlDecode(html);
-        string alert = Regex.Match(html, "<div\\b(?=[^>]*class=\\\"app-alert app-alert--error\\\")(?=[^>]*role=\\\"status\\\")(?=[^>]*aria-live=\\\"polite\\\")[^>]*>.*?</div>", RegexOptions.Singleline).Value;
+        string summary = Regex.Match(decodedHtml, "<div\\b(?=[^>]*class=\"form-summary\")(?=[^>]*role=\"alert\")(?=[^>]*aria-live=\"assertive\")[^>]*>.*?</div>", RegexOptions.Singleline).Value;
+        string fieldError = Regex.Match(decodedHtml, "<span\\b(?=[^>]*data-valmsg-for=\"Input.IsPublic\")[^>]*>.*?</span>", RegexOptions.Singleline).Value;
 
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, listing.StatusCode);
-        Assert.Contains("No se puede hacer público un enlace de una colección privada", WebUtility.HtmlDecode(alert), StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("href=\"#link-public\"", summary, StringComparison.Ordinal);
+        Assert.Contains("No se puede hacer público un enlace de una colección privada.", summary, StringComparison.Ordinal);
+        Assert.Contains("No se puede hacer público un enlace de una colección privada.", fieldError, StringComparison.Ordinal);
         Assert.Equal(0, await LinkCount());
     }
 
@@ -699,6 +669,61 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         Assert.Contains("name=\"QuickUrl\"", html, StringComparison.Ordinal);
         Assert.Contains("type=\"submit\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetDashboard_WhenRecentLinksFail_ShowsErrorInRecentLinksSection()
+    {
+        await using WebApplicationFactory<Program> factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services =>
+                services.Replace(ServiceDescriptor.Scoped<DashboardRepository>(_ => new FailingDashboardRepository()))));
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+
+        using HttpResponseMessage response = await client.GetAsync("/app");
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Contains("id=\"quick-new-form\"", html, StringComparison.Ordinal);
+        Assert.Contains("id=\"dashboard-search-links\"", html, StringComparison.Ordinal);
+        Assert.Matches("(?s)<section aria-labelledby=\"recent-links-title\">.*?<h3 id=\"recent-links-title\">Enlaces recientes</h3>.*?class=\"app-alert app-alert--error\" role=\"status\" aria-live=\"polite\".*?No se han podido cargar los enlaces recientes\\. Vuelve a intentarlo\\..*?</section>", html);
+        Assert.DoesNotContain("Todavía no tienes enlaces guardados.", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("data-link-view-switch", html, StringComparison.Ordinal);
+        Assert.Contains("Destino", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PostQuickAdd_WhenRecentLinksFail_PreservesValidationErrorAndInput()
+    {
+        await using WebApplicationFactory<Program> factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services =>
+                services.Replace(ServiceDescriptor.Scoped<DashboardRepository>(_ => new FailingDashboardRepository()))));
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+        using HttpResponseMessage form = await client.GetAsync("/app");
+        string formHtml = await form.Content.ReadAsStringAsync();
+        string token = WebUtility.HtmlDecode(Regex.Match(GetInput(formHtml, "__RequestVerificationToken"), "value=\"([^\"]+)\"").Groups[1].Value);
+
+        using HttpResponseMessage response = await client.PostAsync(QuickAddRoute, new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["QuickUrl"] = "javascript:alert(1)",
+            ["__RequestVerificationToken"] = token,
+        }));
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string fieldError = Regex.Match(html, "<span\\b(?=[^>]*id=\"quick-url-error\")[^>]*>(.*?)</span>", RegexOptions.Singleline).Groups[1].Value;
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Contains("javascript:alert(1)", GetInput(html, "QuickUrl"), StringComparison.Ordinal);
+        Assert.NotEmpty(fieldError);
+        Assert.Contains("No se han podido cargar los enlaces recientes. Vuelve a intentarlo.", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Todavía no tienes enlaces guardados.", html, StringComparison.Ordinal);
+        Assert.Equal(0, await LinkCount());
     }
 
     [Fact]
@@ -794,6 +819,8 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         string value = WebUtility.HtmlDecode(Regex.Match(GetInput(html, "QuickUrl"), "value=\"([^\"]*)\"").Groups[1].Value);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Null(response.Headers.Location);
+        Assert.Contains("id=\"quick-new-form\"", html, StringComparison.Ordinal);
         string fieldError = Regex.Match(html, "<span\\b(?=[^>]*id=\"quick-url-error\")[^>]*>(.*?)</span>", RegexOptions.Singleline).Groups[1].Value;
         Assert.NotEmpty(fieldError);
         Assert.DoesNotContain("Hay errores en el formulario", html, StringComparison.Ordinal);
@@ -830,10 +857,45 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
 
         using HttpResponseMessage response = await Post(new() { ["QuickUrl"] = "https://example.com/no-collection" }, QuickAddRoute);
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string form = Regex.Match(html, "(?s)<form\\b(?=[^>]*id=\"quick-new-form\")[^>]*>.*?</form>").Value;
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("No tienes colecciones disponibles. Crea una colección para añadir enlaces.", html, StringComparison.Ordinal);
-        Assert.Contains("https://example.com/no-collection", html, StringComparison.Ordinal);
+        Assert.Contains("class=\"app-alert app-alert--error\" role=\"status\" aria-live=\"polite\"", form, StringComparison.Ordinal);
+        Assert.Contains("No tienes colecciones disponibles. Crea una colección para añadir enlaces.", form, StringComparison.Ordinal);
+        Assert.Contains("https://example.com/no-collection", form, StringComparison.Ordinal);
+        Assert.Equal(0, await LinkCount());
+    }
+
+    [Fact]
+    public async Task PostQuickAdd_WhenCollectionsFail_ShowsFormAlertAndKeepsRecentLinksErrorSeparate()
+    {
+        TestCurrentUser currentUser = new(_userId);
+        await using WebApplicationFactory<Program> factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services => services.AddScoped<CurrentUser>(_ => currentUser)));
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+        using HttpResponseMessage initial = await client.GetAsync("/app");
+        string initialHtml = await initial.Content.ReadAsStringAsync();
+        string token = WebUtility.HtmlDecode(Regex.Match(GetInput(initialHtml, "__RequestVerificationToken"), "value=\"([^\"]+)\"").Groups[1].Value);
+        currentUser.IsAuthenticated = false;
+
+        using HttpResponseMessage response = await client.PostAsync(QuickAddRoute, new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["QuickUrl"] = "https://example.com/retry",
+            ["__RequestVerificationToken"] = token,
+        }));
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string form = Regex.Match(html, "(?s)<form\\b(?=[^>]*id=\"quick-new-form\")[^>]*>.*?</form>").Value;
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Contains("class=\"app-alert app-alert--error\" role=\"status\" aria-live=\"polite\"", form, StringComparison.Ordinal);
+        Assert.Contains("No se han podido cargar las colecciones. Vuelve a intentarlo.", form, StringComparison.Ordinal);
+        Assert.Contains("https://example.com/retry", form, StringComparison.Ordinal);
+        Assert.DoesNotContain("No se han podido cargar los enlaces recientes.", form, StringComparison.Ordinal);
+        Assert.Matches("(?s)<section aria-labelledby=\"recent-links-title\">.*?No se han podido cargar los enlaces recientes\\. Vuelve a intentarlo\\..*?</section>", html);
         Assert.Equal(0, await LinkCount());
     }
 
@@ -886,11 +948,12 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
     [InlineData("/app/colecciones", "/app/colecciones")]
     [InlineData("/app/colecciones?q=Destino&p=1", "/app/colecciones?q=Destino&p=1")]
     [InlineData("/app/colecciones/nueva", "/app/enlaces")]
-    [InlineData("/app/colecciones/999999/editar", "/app/enlaces")]
-    [InlineData("/app/colecciones/999999/eliminar", "/app/enlaces")]
+    [InlineData("/app/colecciones/{id}/editar", "/app/enlaces")]
+    [InlineData("/app/colecciones/{id}/eliminar", "/app/enlaces")]
     [InlineData("/app/404", "/app/enlaces")]
     public async Task GetPrivatePage_WithSidebar_RendersAccessibleCreateLinkBeforeNavigation(string route, string expectedOrigin)
     {
+        route = route.Replace("{id}", _collectionId.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal);
         using HttpResponseMessage response = await _client.GetAsync(route);
         string html = await response.Content.ReadAsStringAsync();
         string sidebar = Regex.Match(html, "<aside\\b[^>]*id=\"app-sidebar\"[^>]*>.*?</aside>", RegexOptions.Singleline).Value;
@@ -984,6 +1047,19 @@ public sealed class LinkCreationIntegrationTests : IAsyncLifetime
         return await connection.ExecuteScalarAsync<long>(
             "INSERT INTO User (Email, Alias, SecurityStamp) VALUES (@Email, @Alias, @Stamp); SELECT last_insert_rowid();",
             new { Email = "other@linkubator.test", Alias = "other-user", Stamp = Guid.NewGuid().ToString("N") });
+    }
+
+    private sealed class TestCurrentUser(long userId) : CurrentUser
+    {
+        public long UserId { get; } = userId;
+
+        public bool IsAuthenticated { get; set; } = true;
+    }
+
+    private sealed class FailingDashboardRepository : DashboardRepository
+    {
+        public Task<DashboardDto> GetByUser(long userId, CancellationToken cancellationToken = default)
+            => Task.FromException<DashboardDto>(new Linkubator.Domain.Exceptions.NotValidInputException());
     }
 
     private sealed class ConfiguredWebApplicationFactory(string connectionString) : WebApplicationFactory<Program>

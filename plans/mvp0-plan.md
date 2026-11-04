@@ -452,7 +452,7 @@ S4.1–S4.4 pueden avanzar en paralelo con la revisión; S4.6–S4.10 no empieza
 - [x] La documentación es coherente con el código.
 - [x] El roadmap refleja el cierre del MVP0.
 
-La evidencia de revisión y ejecución se consolida en [tareas S12.8](../specs/s12.8-cierre-mvp0/tasks.md).
+La evidencia de revisión y ejecución se consolida en [tareas S12.8](../specs/archive/s12.8-cierre-mvp0/tasks.md).
 
 ## 5. Decisiones y alcance del plan
 

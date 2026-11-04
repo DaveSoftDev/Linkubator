@@ -13,7 +13,7 @@
 
 ### Componentes y contratos
 
-- No se crearán ni modificarán componentes de producto. El trabajo es un cierre humano sustentado en la [Definition of Done de S12](../../plans/mvp0-plan.md#s12-cierre-y-hardening-m) y en la evidencia que hayan registrado las tareas anteriores.
+- No se crearán ni modificarán componentes de producto. El trabajo es un cierre humano sustentado en la [Definition of Done de S12](../../../plans/mvp0-plan.md#s12-cierre-y-hardening-m) y en la evidencia que hayan registrado las tareas anteriores.
 - La evidencia final de los criterios y tareas se consolida en `tasks.md`; el contenido de la retrospectiva final se registra en `retrospectiva.md` y se enlaza desde la tarea correspondiente.
 - Los entregables son la actualización del estado del MVP0 en el roadmap, una etiqueta de versión sobre la revisión que contiene el cierre y el registro de la retrospectiva en `retrospectiva.md`.
 
@@ -52,7 +52,7 @@
 
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comando, test o revisión | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |
-| V01 | CA01 | Revisión manual de los puntos de la Definition of Done anteriores a S12.8 y sus evidencias | Evidencia de las tareas responsables disponible | Contrastar cada punto aplicable de la [Definition of Done de S12](../../plans/mvp0-plan.md#s12-cierre-y-hardening-m) con su evidencia enlazada | Todos los prerrequisitos están satisfechos; cualquier ausencia queda registrada como bloqueo y no se cierra S12.8 | Lista de puntos revisados, enlaces a evidencia y bloqueos, si los hay |
+| V01 | CA01 | Revisión manual de los puntos de la Definition of Done anteriores a S12.8 y sus evidencias | Evidencia de las tareas responsables disponible | Contrastar cada punto aplicable de la [Definition of Done de S12](../../../plans/mvp0-plan.md#s12-cierre-y-hardening-m) con su evidencia enlazada | Todos los prerrequisitos están satisfechos; cualquier ausencia queda registrada como bloqueo y no se cierra S12.8 | Lista de puntos revisados, enlaces a evidencia y bloqueos, si los hay |
 | V02 | CA02 | Revisión documental del estado final del roadmap y del plan | V01 satisfactorio | Revisar el estado de «Hecho», el bloque «Now» y el último punto de la Definition of Done en `mvp0-plan.md` | El MVP0 figura como terminado, S12 ya no aparece como etapa actual y el último punto de la Definition of Done está marcado como completado con evidencia | Referencias a las secciones actualizadas y evidencia del cierre |
 | V03 | CA03 | Verificación técnica de la etiqueta Git | Identificador acordado, aceptación previa registrada y commit que la contiene disponible | Comparar `git rev-parse --verify "<etiqueta>^{commit}"` con `git rev-parse "<revision-cierre>^{commit}"` | Ambos comandos resuelven al mismo commit, que contiene la aceptación previa del contenido del cierre | Identificador de etiqueta, commit resuelto y referencia a la aceptación previa |
 | V04 | CA04 | Revisión manual de la evidencia de retrospectiva | Retrospectiva realizada y `retrospectiva.md` disponible | Comprobar que el documento registra la retrospectiva y que `tasks.md` enlaza la evidencia con su fecha | La evidencia deja constancia de que la retrospectiva tuvo lugar | Fecha y enlace a `retrospectiva.md` registrados en `tasks.md` |

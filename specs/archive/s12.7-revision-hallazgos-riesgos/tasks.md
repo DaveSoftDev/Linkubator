@@ -34,9 +34,9 @@ Las tareas son secuenciales: T01 prepara el inventario de elementos a decidir; T
 
 | Riesgo | Disposición | Estado y evidencia |
 | --- | --- | --- |
-| Identidad de desarrollo compartida | Mantener la aceptación previa hasta LoginV0 y revaluar con la identidad autenticada. | Confirmado por DLG el 02-XI-2026; [decisions.md → «Identidad de desarrollo»](../../context/decisions.md#identidad-de-desarrollo). |
+| Identidad de desarrollo compartida | Mantener la aceptación previa hasta LoginV0 y revaluar con la identidad autenticada. | Confirmado por DLG el 02-XI-2026; [decisions.md → «Identidad de desarrollo»](../../../context/decisions.md#identidad-de-desarrollo). |
 | SQL no impone la relación entre privacidad de enlace y colección | Aceptar este límite para MVP0 con los controles actuales de aplicación. | Confirmado por DLG el 02-XI-2026; [informe S12.3 → CA02](../s12.3-auditoria-invariantes-criticas/tasks.md#ca02--público-y-privado). |
-| Logging de credenciales | Seguimiento antes de LoginV0 para verificar diagnóstico sin credenciales en claro; no se acepta registrar contraseñas ni tokens en claro. | Confirmado por DLG el 02-XI-2026; respeta [AGENTS.md → «Invariantes críticas»](../../AGENTS.md#invariantes-críticas) y [informe S12.3 → CA04](../s12.3-auditoria-invariantes-criticas/tasks.md#ca04--contraseñas-tokens-y-logs). |
+| Logging de credenciales | Seguimiento antes de LoginV0 para verificar diagnóstico sin credenciales en claro; no se acepta registrar contraseñas ni tokens en claro. | Confirmado por DLG el 02-XI-2026; respeta [AGENTS.md → «Invariantes críticas»](../../../AGENTS.md#invariantes-críticas) y [informe S12.3 → CA04](../s12.3-auditoria-invariantes-criticas/tasks.md#ca04--contraseñas-tokens-y-logs). |
 | Validación del formato del hash | Seguimiento para reevaluarlo al implementar LoginV0/MVP1, sin afirmar que dominio/SQL ya validen el formato. | Confirmado por DLG el 02-XI-2026; [informe S12.3 → CA04](../s12.3-auditoria-invariantes-criticas/tasks.md#ca04--contraseñas-tokens-y-logs). |
 
 | ID | Acción y entregable | Criterios y diseño | Depende de | Check inmediato y resultado esperado | Estado | Evidencia o bloqueo |
@@ -51,11 +51,11 @@ Las tareas son secuenciales: T01 prepara el inventario de elementos a decidir; T
 
 | Criterio | Tareas | Validación | Resultado real | Fecha y entorno o versión | Referencia a evidencia |
 | --- | --- | --- | --- | --- | --- |
-| CA01 | T01, T02, T04 | V01, V03 en [plan.md → «Estrategia de validación»](plan.md#estrategia-de-validación) | La conclusión de propiedad de datos coincide con la observación: al alterar el querystring se mantuvo la misma identidad. DLG mantiene la aceptación previa del riesgo compartido hasta LoginV0; se revaluará con la identidad autenticada. | 02-XI-2026; revisión manual | Confirmación de DLG en esta conversación; [informe S12.3 → CA01](../s12.3-auditoria-invariantes-criticas/tasks.md#ca01--propiedad-de-los-datos) y [decisions.md → «Identidad de desarrollo»](../../context/decisions.md#identidad-de-desarrollo) |
+| CA01 | T01, T02, T04 | V01, V03 en [plan.md → «Estrategia de validación»](plan.md#estrategia-de-validación) | La conclusión de propiedad de datos coincide con la observación: al alterar el querystring se mantuvo la misma identidad. DLG mantiene la aceptación previa del riesgo compartido hasta LoginV0; se revaluará con la identidad autenticada. | 02-XI-2026; revisión manual | Confirmación de DLG en esta conversación; [informe S12.3 → CA01](../s12.3-auditoria-invariantes-criticas/tasks.md#ca01--propiedad-de-los-datos) y [decisions.md → «Identidad de desarrollo»](../../../context/decisions.md#identidad-de-desarrollo) |
 | CA02 | T01, T03, T04 | V02, V03 en [plan.md → «Estrategia de validación»](plan.md#estrategia-de-validación) | La conclusión de privacidad coincide con lo revisado: no se mezclan contenidos públicos y privados en los caminos auditados. DLG acepta el límite de SQL para MVP0, con los controles actuales de aplicación. | 02-XI-2026; revisión manual | Disposición explícita de DLG en esta conversación; [informe S12.3 → CA02](../s12.3-auditoria-invariantes-criticas/tasks.md#ca02--público-y-privado) |
 | CA03 | T01, T03, T04 | V02, V03 en [plan.md → «Estrategia de validación»](plan.md#estrategia-de-validación) | Confirmada como no aplicable: DLG no conoce operaciones de cuenta implementadas; esto no acredita el cumplimiento de flujos futuros. | 02-XI-2026; revisión manual | Confirmación de DLG en esta conversación; [informe S12.3 → CA03](../s12.3-auditoria-invariantes-criticas/tasks.md#ca03--respuestas-de-operaciones-de-cuenta) |
-| CA04 | T02, T03, T04 | V01–V03 en [plan.md → «Estrategia de validación»](plan.md#estrategia-de-validación) | DLG indica que no hay riesgos activos en MVP0. Logging: seguimiento para verificar diagnóstico sin credenciales en claro antes de LoginV0. Hash: seguimiento al implementar LoginV0/MVP1. | 02-XI-2026; revisión manual | Confirmación de DLG en esta conversación; [informe S12.3 → CA04](../s12.3-auditoria-invariantes-criticas/tasks.md#ca04--contraseñas-tokens-y-logs) y [AGENTS.md → «Invariantes críticas»](../../AGENTS.md#invariantes-críticas) |
-| CA05 | T05 | V04 en [plan.md → «Estrategia de validación»](plan.md#estrategia-de-validación) | Aceptación explícita de DLG del resultado de S12.7; no implica cierre de S12 ni ejecución de los seguimientos de LoginV0/MVP1. | 02-XI-2026; revisión humana | «Acepto S12.7»; aceptación registrada en T05 y en [roadmap.md](../../context/roadmap.md). |
+| CA04 | T02, T03, T04 | V01–V03 en [plan.md → «Estrategia de validación»](plan.md#estrategia-de-validación) | DLG indica que no hay riesgos activos en MVP0. Logging: seguimiento para verificar diagnóstico sin credenciales en claro antes de LoginV0. Hash: seguimiento al implementar LoginV0/MVP1. | 02-XI-2026; revisión manual | Confirmación de DLG en esta conversación; [informe S12.3 → CA04](../s12.3-auditoria-invariantes-criticas/tasks.md#ca04--contraseñas-tokens-y-logs) y [AGENTS.md → «Invariantes críticas»](../../../AGENTS.md#invariantes-críticas) |
+| CA05 | T05 | V04 en [plan.md → «Estrategia de validación»](plan.md#estrategia-de-validación) | Aceptación explícita de DLG del resultado de S12.7; no implica cierre de S12 ni ejecución de los seguimientos de LoginV0/MVP1. | 02-XI-2026; revisión humana | «Acepto S12.7»; aceptación registrada en T05 y en [roadmap.md](../../../context/roadmap.md). |
 
 ## Aceptación y cierre
 
@@ -63,7 +63,7 @@ Las tareas son secuenciales: T01 prepara el inventario de elementos a decidir; T
 - Criterios sin evidencia satisfactoria: ninguno; CA01–CA04 cuentan con revisión y disposiciones trazables, y CA05 con aceptación humana explícita.
 - Bloqueos y riesgos restantes: seguimiento de logging seguro y validación del formato del hash al implementar LoginV0/MVP1; riesgo aceptado de identidad compartida hasta LoginV0; límite SQL aceptado para MVP0.
 - Aceptación humana: DLG, 02-XI-2026, referencia «Acepto S12.7».
-- Archivado: no solicitado.
-- Ubicación archivada: pendiente.
-- Fecha efectiva de archivado y comprobación de enlaces: pendientes.
+- Archivado: completado por @DaveSoftDev el 04-XI-2026 («Archiva las specs activas»).
+- Ubicación archivada: `specs/archive/s12.7-revision-hallazgos-riesgos/`.
+- Fecha efectiva de archivado y comprobación de enlaces: 04-XI-2026; carpeta, artefactos y enlaces entrantes/salientes comprobados.
 - Siguiente paso: ninguno para S12.7. Los seguimientos registrados conservan su propio alcance y no se consideran mitigados; la Definition of Done de S12 sigue pendiente.

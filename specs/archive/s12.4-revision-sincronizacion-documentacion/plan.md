@@ -11,8 +11,8 @@
 
 ### Componentes y contratos
 
-- La skill [requirements-review](../../skills/requirements-review/SKILL.md) define el procedimiento de revisión, las categorías de hallazgos y el formato del informe.
-- El conjunto revisado comprende las fuentes documentales identificadas en [spec.md](spec.md#fuentes), las reglas editoriales de [AGENTS.md](../../AGENTS.md) y los diagramas de [context/diagrams/](../../context/diagrams/).
+- La skill [requirements-review](../../../skills/requirements-review/SKILL.md) define el procedimiento de revisión, las categorías de hallazgos y el formato del informe.
+- El conjunto revisado comprende las fuentes documentales identificadas en [spec.md](spec.md#fuentes), las reglas editoriales de [AGENTS.md](../../../AGENTS.md) y los diagramas de [context/diagrams/](../../../context/diagrams).
 - El resultado es un informe trazable que distingue el estado general, los hallazgos, las decisiones pendientes y los cambios documentales realizados. Se consolidará como evidencia de la tarea en `tasks.md`; no se crea un artefacto adicional por defecto.
 
 ### Flujos internos
@@ -40,19 +40,19 @@
 
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
-| Seguir el flujo de `requirements-review`, incluido informar antes de editar. | confirmado | [requirements-review](../../skills/requirements-review/SKILL.md) | Mantiene los hallazgos separados de las correcciones y evita presentar propuestas como decisiones. |
-| Consolidar el informe como evidencia en `tasks.md`, sin crear otro archivo por defecto. | propuesta | [Plantilla de tareas SDD](../../skills/sdd-writer/templates/tasks-template.md) | Se confirma al aprobar las tareas; si el formato no basta para una evidencia verificable, se podrá proponer un artefacto específico antes de ejecutarlo. |
-| Un hallazgo contradictorio puede necesitar decisión humana antes de corregirlo. | confirmado | [spec.md → «Alcance»](spec.md#alcance), [requirements-review](../../skills/requirements-review/SKILL.md) | Registrar la decisión pendiente y dejar sin modificar solo el texto afectado; no impide cerrar la revisión con los hallazgos y límites documentados. |
+| Seguir el flujo de `requirements-review`, incluido informar antes de editar. | confirmado | [requirements-review](../../../skills/requirements-review/SKILL.md) | Mantiene los hallazgos separados de las correcciones y evita presentar propuestas como decisiones. |
+| Consolidar el informe como evidencia en `tasks.md`, sin crear otro archivo por defecto. | propuesta | [Plantilla de tareas SDD](../../../skills/sdd-writer/templates/tasks-template.md) | Se confirma al aprobar las tareas; si el formato no basta para una evidencia verificable, se podrá proponer un artefacto específico antes de ejecutarlo. |
+| Un hallazgo contradictorio puede necesitar decisión humana antes de corregirlo. | confirmado | [spec.md → «Alcance»](spec.md#alcance), [requirements-review](../../../skills/requirements-review/SKILL.md) | Registrar la decisión pendiente y dejar sin modificar solo el texto afectado; no impide cerrar la revisión con los hallazgos y límites documentados. |
 
 ## Estrategia de validación
 
 | ID | Criterios cubiertos | Tipo y alcance | Prerrequisitos | Comando, test o revisión | Resultado esperado | Evidencia a registrar |
 | --- | --- | --- | --- | --- | --- | --- |
-| V01 | CA01 | Revisión documental completa de las fuentes y diagramas | Fuentes accesibles en el repositorio | Ejecutar «Gather context» y «Build a consistency matrix» de [requirements-review](../../skills/requirements-review/SKILL.md); anotar el estado de cada documento, diagrama y área de consistencia | Todas las fuentes y áreas se revisaron, o cada ausencia, no aplicabilidad o límite quedó indicado explícitamente | Inventario de fuentes revisadas y cobertura por área en `tasks.md` |
+| V01 | CA01 | Revisión documental completa de las fuentes y diagramas | Fuentes accesibles en el repositorio | Ejecutar «Gather context» y «Build a consistency matrix» de [requirements-review](../../../skills/requirements-review/SKILL.md); anotar el estado de cada documento, diagrama y área de consistencia | Todas las fuentes y áreas se revisaron, o cada ausencia, no aplicabilidad o límite quedó indicado explícitamente | Inventario de fuentes revisadas y cobertura por área en `tasks.md` |
 | V02 | CA02 | Revisión técnica de clasificación y trazabilidad | V01 completada | Aplicar «Check placement», «Check single source», «Classify findings» y el orden de impacto de la skill; contrastar cada hallazgo con los documentos completos y registrar archivo y línea | Cada hallazgo tiene categoría, prioridad, ubicaciones, destino cuando aplica y recomendación; no hay propuestas presentadas como decisiones | Informe de hallazgos y decisiones necesarias en `tasks.md` |
 | V03 | CA03 | Revisión documental de los cambios sincronizados | V02 completada; fuentes confirmadas para cada cambio | Seguir «Report before editing» y «Apply synchronized documentation changes»; contrastar cada modificación con la regla propietaria o decisión confirmada | Solo se aplican cambios respaldados; las preguntas abiertas permanecen registradas y no se modifica la regla en disputa | Relación de cambios documentales y fuente que los respalda, o constancia de que no hubo cambios aplicables |
 | V04 | CA04 | Revisión técnica de referencias y contenido modificado | V03 completada | Inspeccionar enlaces Markdown y destinos relativos de los documentos y diagramas revisados; comprobar anclas contra sus títulos y revalidar responsabilidades, terminología y alcance | No quedan referencias rotas introducidas por los cambios y el contenido modificado sigue las fuentes y convenciones vigentes | Resultado de la comprobación de enlaces, anclas y sincronización en `tasks.md` |
-| V05 | CA05 | Revisión final de integridad del informe y evidencia | V01–V04 completadas | Contrastar el informe con «Expected output» de [requirements-review](../../skills/requirements-review/SKILL.md) y con las evidencias registradas | El estado general, hallazgos, decisiones, cambios aplicados o no necesarios y riesgos residuales están registrados sin atribuir resultados o aprobaciones inexistentes | Informe final y revisión de completitud en `tasks.md` |
+| V05 | CA05 | Revisión final de integridad del informe y evidencia | V01–V04 completadas | Contrastar el informe con «Expected output» de [requirements-review](../../../skills/requirements-review/SKILL.md) y con las evidencias registradas | El estado general, hallazgos, decisiones, cambios aplicados o no necesarios y riesgos residuales están registrados sin atribuir resultados o aprobaciones inexistentes | Informe final y revisión de completitud en `tasks.md` |
 
 Estas comprobaciones son revisiones documentales y no demuestran que la implementación cumpla las reglas funcionales o técnicas. La ausencia de hallazgos se registrará solo tras revisar la fuente completa, no por una búsqueda parcial.
 

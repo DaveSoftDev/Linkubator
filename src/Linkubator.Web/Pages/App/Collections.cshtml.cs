@@ -42,13 +42,11 @@ public sealed class CollectionsModel : PrivatePageModel
 
     public EmptyStateViewModel EmptyState { get; private set; } = new();
 
-    public EmptyStateViewModel ListingError { get; private set; } = new();
-
     public PageAlertViewModel Alert { get; private set; } = new();
 
-    public PageErrorSummaryViewModel ErrorSummary { get; private set; } = new();
-
     public bool HasListingError { get; private set; }
+
+    public bool HasInvalidQuery { get; private set; }
 
     [TempData]
     public string? CollectionManagementError { get; set; }
@@ -68,29 +66,23 @@ public sealed class CollectionsModel : PrivatePageModel
             Placeholder = "Buscar colecciones...",
             ButtonText = "Buscar",
             QueryInputId = "collections-search-query",
-            QueryValue = analysis.SearchText ?? string.Empty,
+            QueryValue = analysis.HasSearchError ? Request.Query["q"].FirstOrDefault() ?? string.Empty : analysis.SearchText ?? string.Empty,
+            ErrorSummary = new PageErrorSummaryViewModel
+            {
+                Items = analysis.SearchErrorMessage is null
+                    ? []
+                    : [new PageErrorSummaryItemViewModel { Message = analysis.SearchErrorMessage, FieldId = "collections-search-query" }],
+            },
         };
         EmptyState = new EmptyStateViewModel
         {
             Title = "No se han encontrado colecciones.",
             Description = "Prueba con otra búsqueda o crea una colección.",
         };
-        ListingError = new EmptyStateViewModel
-        {
-            Title = "No se ha podido cargar el listado de colecciones.",
-            Description = "Prueba de nuevo con otra búsqueda o crea una colección.",
-        };
-
         if (analysis.HasAnyError)
         {
-            ErrorSummary = new PageErrorSummaryViewModel
-            {
-                Items = new[] { analysis.SearchErrorMessage }
-                    .OfType<string>()
-                    .Select(message => new PageErrorSummaryItemViewModel { Message = message })
-                    .ToArray(),
-            };
             HasListingError = true;
+            HasInvalidQuery = true;
             return Page();
         }
 
@@ -104,7 +96,7 @@ public sealed class CollectionsModel : PrivatePageModel
             string message = hasValidationError
                 ? result.Errors.First(error => error.Category == ApplicationEnums.ApplicationErrorCategory.Validation).Message ?? ApplicationConstants.CommonErrors.PageInvalidMessage
                 : "No se ha podido cargar el listado de colecciones.";
-            Alert = new PageAlertViewModel { Message = message };
+            Alert = Alert.AppendError(message);
             HasListingError = true;
             return Page();
         }

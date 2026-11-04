@@ -6,7 +6,7 @@ La base está preparada para separar los datos por usuario, pero actualmente el 
 
 ## Estado del proyecto
 
-La gestión de colecciones y enlaces, la búsqueda y el área pública del MVP0 están implementadas. El [roadmap](context/roadmap.md) sitúa el refactor del área pública antes del cierre y hardening; no se declara el MVP0 terminado. Las reglas de producto y las invariantes de [AGENTS.md](AGENTS.md) siguen siendo obligatorias.
+La gestión de colecciones y enlaces, la búsqueda y el área pública del MVP0 están implementadas. Su cierre está completado y aceptado, con las evidencias recogidas en [roadmap.md → «Hecho»](context/roadmap.md#hecho). Las reglas de producto y las invariantes de [AGENTS.md](AGENTS.md) siguen siendo obligatorias.
 
 ## Funcionalidades principales
 
@@ -15,7 +15,7 @@ La gestión de colecciones y enlaces, la búsqueda y el área pública del MVP0 
 - Enlaces: crear desde una URL, editar título, descripción e imagen, mover entre colecciones, eliminar y decidir su publicación. La URL guardada es inmutable y se detectan duplicados por usuario.
 - Listados privados con búsqueda de texto mediante FTS5, filtro de enlaces por colección, orden y paginación.
 - Landing, página pública de usuario, listado público de colecciones y páginas de colección con sus enlaces públicos, metadatos, canonical y tratamiento de rutas no accesibles.
-- Formularios con validación, confirmación de eliminación, protección antiforgery y componentes de presentación accesible. La revisión global de calidad y accesibilidad sigue formando parte del cierre.
+- Formularios con validación, confirmación de eliminación, protección antiforgery y componentes de presentación accesible.
 - Persistencia SQLite con migraciones al arrancar, operaciones transaccionales y aprovisionamiento automático del usuario demo y su colección inicial.
 
 Los comportamientos exactos se definen en [specifications.md](context/specifications.md) y [domain-model.md](context/domain-model.md), no en este resumen.
@@ -156,6 +156,10 @@ El target `BuildTailwindCss` de [Linkubator.Web.csproj](src/Linkubator.Web/Linku
 
 El binario no se descarga automáticamente. Para regenerar estilos, instala Tailwind CLI standalone y adapta esa ruta si es necesario. Si el ejecutable no existe, el target omite la generación: la aplicación utiliza [styles.css](src/Linkubator.Web/wwwroot/css/styles.css), que está versionado, pero los cambios en los estilos fuente no se regenerarán.
 
+### CSS público y privado
+
+[Linkubator.Web.csproj](src/Linkubator.Web/Linkubator.Web.csproj) ejecuta Tailwind antes de usar esbuild para generar y minificar los bundles definidos en [private.bundle.css](src/Linkubator.Web/Styles/private.bundle.css) y [public.bundle.css](src/Linkubator.Web/Styles/public.bundle.css). Ambos incluyen la salida `styles.css` y se generan en `wwwroot/css/`, sin versionarse. En `Production` cada plantilla carga su bundle; en los demás entornos se mantienen las hojas originales.
+
 ### JavaScript privado
 
 [Linkubator.Web.csproj](src/Linkubator.Web/Linkubator.Web.csproj) utiliza esbuild para agrupar y minificar [site.js](src/Linkubator.Web/wwwroot/js/site.js) y [required-validation.js](src/Linkubator.Web/wwwroot/js/required-validation.js) en `js/private.js`. El bundle se genera al compilar y se copia a `wwwroot/js/private.js`, sin versionarse. La plantilla privada lo carga únicamente en el entorno `Production`; en los demás entornos carga los dos archivos fuente. El entorno de ejecución es independiente de la configuración de compilación `Debug` o `Release`.
@@ -231,7 +235,7 @@ Ejecuta desde la raíz:
 dotnet test Linkubator.sln --no-restore
 ```
 
-La existencia de esos tests no equivale a que la auditoría exhaustiva esté cerrada ni garantiza el resultado de una ejecución futura. El estado y las evidencias de la revisión se mantienen en [test-audit-plan.md](plans/test-audit-plan.md); no se fija aquí un número de tests que pueda quedar obsoleto.
+La existencia de esos tests no garantiza el resultado de una ejecución futura. Las evidencias de la revisión se mantienen en [test-audit-plan.md](plans/test-audit-plan.md) y el cierre en [roadmap.md → «Hecho»](context/roadmap.md#hecho); no se fija aquí un número de tests que pueda quedar obsoleto.
 
 ## Mantenimiento de la búsqueda
 
@@ -256,11 +260,11 @@ Indica la misma base configurada para la Web. La herramienta rechaza rutas de ar
 - Ramas: `feature/<id>-<descripcion>`, `fix/<id>-<descripcion>`, `docs/<id>-<descripcion>` y `chore/<id>-<descripcion>`.
 - Commits: prefijos `fea:`, `fix:`, `doc:`, `chore:` y `test:`.
 - Pull requests: resumen claro, trazabilidad con la spec o documento afectado y verificación ejecutada.
-- Backlog principal: [plans/mvp0-plan.md](plans/mvp0-plan.md).
+- Etapas futuras y backlog: [roadmap.md → «Later»](context/roadmap.md#later). El plan del MVP0 completado se conserva en [plans/mvp0-plan.md](plans/mvp0-plan.md).
 
 ## Siguientes pasos
 
-Completar el refactor del área pública y el cierre y hardening del MVP0 según [roadmap.md → «Now»](context/roadmap.md#now) y [«Next»](context/roadmap.md#next), incluyendo las comprobaciones de calidad y la revisión de tests pendientes. Las funcionalidades futuras se mantienen separadas en [«Later»](context/roadmap.md#later).
+No hay una etapa de implementación activa del MVP0, según [roadmap.md → «Now»](context/roadmap.md#now). Las etapas futuras y su orden se mantienen en [roadmap.md → «Later»](context/roadmap.md#later).
 
 Quedan mejoras de reproducibilidad en el entorno de desarrollo: eliminar la dependencia de la ubicación del ejecutable de Tailwind y alinear el origen público versionado con el perfil de ejecución. Las instrucciones anteriores permiten trabajar con la configuración actual sin presentar esas mejoras como ya implementadas.
 
@@ -271,4 +275,4 @@ Quedan mejoras de reproducibilidad en el entorno de desarrollo: eliminar la depe
 - **GitHub**: [Linkubator](https://github.com/DaveSoftDev/Linkubator)
 - **URL Producción**: [Linkubator en MonsterASP](http://linkubator.runasp.net/)
 - **Slides**: [Linkubator-DavidLafuente.pptx](https://e.pcloud.link/publink/show?code=kZ0N6X7Zr4fXtpHBRejHOyaP7Ad0bFykeYVy)
-- **Vídeo**: [](https://e.pcloud.link/publink/show?code=kZ0N6X7Zr4fXtpHBRejHOyaP7Ad0bFykeYVy)
+- **Vídeo**: [Linkubator-DavidLafuente.mp4](https://e.pcloud.link/publink/show?code=kZ0N6X7Zr4fXtpHBRejHOyaP7Ad0bFykeYVy)

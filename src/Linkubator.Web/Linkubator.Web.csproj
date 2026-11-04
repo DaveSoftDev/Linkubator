@@ -17,6 +17,8 @@
 
   <ItemGroup>
     <Content Remove="wwwroot\js\private.js" />
+    <Content Remove="wwwroot\css\private.bundle.css;wwwroot\css\public.bundle.css" />
+    <Content Include="wwwroot\css\private.bundle.css;wwwroot\css\public.bundle.css" />
     <ESBuild Include="wwwroot\js\site.js" Group="private.js" Minify="true" />
     <ESBuild Include="wwwroot\js\required-validation.js" Group="private.js" Minify="true" />
   </ItemGroup>
@@ -27,6 +29,11 @@
 
   <Target Name="BuildTailwindCss" BeforeTargets="Build">
     <Exec Command="&quot;$(MSBuildProjectDirectory)\..\..\..\..\..\Tools\TailwindCSS\tailwindcss-windows-x64.exe&quot; -c tailwind.config.js -i ./wwwroot/css/develop.css -o ./wwwroot/css/styles.css --minify" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\Tools\TailwindCSS\tailwindcss-windows-x64.exe')" />
+  </Target>
+
+  <Target Name="BuildCssBundles" BeforeTargets="AssignTargetPaths;ResolveProjectStaticWebAssets" DependsOnTargets="BuildTailwindCss">
+    <Exec Command="&quot;$(ESBuildBinaryPath)&quot; &quot;$(MSBuildProjectDirectory)\Styles\private.bundle.css&quot; --bundle --minify --outfile=&quot;$(MSBuildProjectDirectory)\wwwroot\css\private.bundle.css&quot;" />
+    <Exec Command="&quot;$(ESBuildBinaryPath)&quot; &quot;$(MSBuildProjectDirectory)\Styles\public.bundle.css&quot; --bundle --minify --outfile=&quot;$(MSBuildProjectDirectory)\wwwroot\css\public.bundle.css&quot;" />
   </Target>
 
 </Project>

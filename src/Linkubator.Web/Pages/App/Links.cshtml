@@ -13,14 +13,6 @@
         </div>
     </header>
 
-    @await Html.PartialAsync("~/Pages/Shared/_LinkCreationNotice.cshtml")
-    @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", new Linkubator.Web.Models.Presentation.PageAlertViewModel
-    {
-        Message = Model.LinkManagementError ?? string.Empty,
-        Kind = "error",
-    })
-    @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
-    @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
     @await Html.PartialAsync("~/Pages/Shared/_SearchForm.cshtml", Model.SearchForm)
 
     <section aria-labelledby="links-list-title">
@@ -40,16 +32,13 @@
                 }
             </div>
         </div>
+        @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
         <div class="main-wrapper">
-            @if (Model.HasListingError)
+            @if (Model.HasInvalidQuery)
             {
-                @await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", new Linkubator.Web.Models.Presentation.EmptyStateViewModel
-                {
-                    Title = "No se ha podido cargar el listado de enlaces.",
-                    Description = "Revisa los valores e inténtalo de nuevo.",
-                })
+                @await Html.PartialAsync("~/Pages/Shared/_InvalidListingEmptyState.cshtml", Model.HasInvalidCollectionFilter ? Url.Content("~" + Linkubator.Web.Constants.AppRoutes.Links) : string.Empty)
             }
-            else if (Model.LinkCards.Count == 0)
+            else if (!Model.HasListingError && Model.LinkCards.Count == 0)
             {
                 @await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", new Linkubator.Web.Models.Presentation.EmptyStateViewModel
                 {
@@ -57,7 +46,7 @@
                     Description = "Prueba con otra búsqueda o crea un enlace.",
                 })
             }
-            else
+            else if (!Model.HasListingError)
             {
                 <div id="saved-links" class="@(isListView ? "links-grid links-grid--list" : "links-grid")" data-link-view-container aria-label="Lista de enlaces guardados">
                     @foreach (var card in Model.LinkCards)

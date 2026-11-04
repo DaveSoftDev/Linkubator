@@ -11,9 +11,9 @@
 
 ### Componentes y contratos
 
-- La revisión es manual y cubre las páginas públicas y privadas y las comprobaciones A01–A11 definidas en la [matriz de checklist y tests](../../plans/mvp0-checklist-test-matrix.md).
+- La revisión es manual y cubre las páginas públicas y privadas y las comprobaciones A01–A11 definidas en la [matriz de checklist y tests](../../../plans/mvp0-checklist-test-matrix.md).
 - La evidencia se registra en las filas correspondientes de esa matriz. Incluirá el alcance revisado, el entorno utilizado, el resultado y, cuando proceda, los pasos para reproducir un hallazgo o el límite que impidió verificarlo.
-- Las fuentes propietarias de las reglas son [requirements.md → «Accesibilidad»](../../context/requirements.md#accesibilidad) y [roadmap.md → «Checklist de calidad del MVP0»](../../context/roadmap.md#checklist-de-calidad-del-mvp0). Este plan describe cómo comprobarlas; no introduce criterios funcionales nuevos.
+- Las fuentes propietarias de las reglas son [requirements.md → «Accesibilidad»](../../../context/requirements.md#accesibilidad) y [roadmap.md → «Checklist de calidad del MVP0»](../../../context/roadmap.md#checklist-de-calidad-del-mvp0). Este plan describe cómo comprobarlas; no introduce criterios funcionales nuevos.
 
 ### Flujos internos
 
@@ -42,7 +42,7 @@
 
 | Decisión o riesgo | Estado: confirmado / propuesta / pendiente | Fuente o aprobación | Impacto y resolución necesaria |
 | --- | --- | --- | --- |
-| Ejecutar las comprobaciones de accesibilidad manualmente y reportar evidencia en A01–A11. | confirmado | [spec.md → «Alcance»](spec.md#alcance), [matriz](../../plans/mvp0-checklist-test-matrix.md) | Mantiene la evidencia en la matriz existente y no crea un informe duplicado. |
+| Ejecutar las comprobaciones de accesibilidad manualmente y reportar evidencia en A01–A11. | confirmado | [spec.md → «Alcance»](spec.md#alcance), [matriz](../../../plans/mvp0-checklist-test-matrix.md) | Mantiene la evidencia en la matriz existente y no crea un informe duplicado. |
 | Registrar el entorno y las tecnologías de asistencia realmente usados, sin presuponer cobertura de herramientas no probadas. | confirmado | [spec.md → CA04 y CA09](spec.md#criterios-de-aceptación) | Hace explícitos los límites de la revisión. |
 | La aplicación o un estado necesario podría no estar disponible para la revisión manual. | pendiente | [spec.md → «Dependencias y prerrequisitos»](spec.md#dependencias-y-prerrequisitos) | Registrar el bloqueo y las comprobaciones afectadas; no marcar criterios como satisfactorios por falta de acceso. |
 

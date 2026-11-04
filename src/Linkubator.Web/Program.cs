@@ -13,6 +13,11 @@ using WebOptions = Linkubator.Web.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsProduction() && builder.Configuration.GetValue<bool>("EnableLocalStaticWebAssets"))
+{
+    builder.WebHost.UseStaticWebAssets();
+}
+
 string[] allowedHosts = builder.Configuration.GetValue<string>("AllowedHosts")?
     .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
     ?? ["localhost", "127.0.0.1", "[::1]"];

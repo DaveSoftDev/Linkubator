@@ -36,6 +36,41 @@
 .private-shell .main-section:focus-within { border-color: var(--private-accent-o2); }
 .private-shell .link-card:is(:hover, :focus-within) { outline: none; border-color: var(--private-accent-o7); }
 .private-shell .collection-form--danger { border-color: rgba(252, 165, 165, .3); }
+.private-shell .app-alert--error {
+  border-color: rgba(252, 165, 165, .55);
+  border-left: 4px solid #fca5a5;
+  background: rgba(127, 29, 29, .2);
+  color: #fca5a5;
+}
+
+.private-shell #main-not-found .empty-state .secondary-button {
+  margin-top: 1rem;
+}
+
+.private-shell .sidebar-collections-error {
+  color: #fca5a5;
+  margin: 0.75rem;
+}
+
+.private-shell .search-form:has(> .form-summary) {
+  flex-wrap: wrap;
+}
+
+.private-shell .search-form > .form-summary {
+  flex: 0 0 100%;
+}
+
+.private-shell .sidebar-collapsed .sidebar-collections-error {
+  text-align: center;
+}
+
+.private-shell .sidebar-collapsed .sidebar-collections-error span {
+  display: none;
+}
+
+.private-shell .sidebar-collapsed .sidebar-collections-error::before {
+  content: "!";
+}
 
 .private-shell .primary-button { box-shadow: none; }
 .private-shell .primary-button:not(.collection-form__delete) { background: var(--private-accent); }

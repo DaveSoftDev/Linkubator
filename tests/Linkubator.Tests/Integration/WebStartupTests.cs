@@ -1105,6 +1105,7 @@ public class WebStartupTests
             Assert.Contains("Demo User", html, StringComparison.Ordinal);
             Assert.Contains("my-demo-user", html, StringComparison.Ordinal);
             Assert.Contains("No se ha podido acceder al recurso solicitado dentro del área privada.", html, StringComparison.Ordinal);
+            Assert.Contains("<a class=\"secondary-button\" href=\"/app\">Volver al Inicio</a>", html, StringComparison.Ordinal);
         }
         finally
         {
@@ -1389,6 +1390,32 @@ public class WebStartupTests
             Assert.Contains("Todavía no tienes enlaces guardados.", decodedHtml, StringComparison.Ordinal);
             Assert.DoesNotContain("React Documentation", html, StringComparison.Ordinal);
             Assert.DoesNotContain("Crear etiqueta", html, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task PresentationPage_WithCollections_RendersSameSidebarDataAsDashboard()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
+            using HttpClient client = factory.CreateClient();
+            await SeedPublicUserPageContent(databasePath);
+
+            string dashboardHtml = await client.GetStringAsync("/app");
+            string presentationHtml = await client.GetStringAsync("/app/presentacion");
+            const string sidebarDataPattern = "(?s)<nav class=\"side-nav\".*?</nav>.*?</section>";
+            string dashboardSidebarData = System.Text.RegularExpressions.Regex.Match(dashboardHtml, sidebarDataPattern).Value;
+            string presentationSidebarData = System.Text.RegularExpressions.Regex.Match(presentationHtml, sidebarDataPattern).Value;
+
+            Assert.Contains("Public collection", presentationSidebarData, StringComparison.Ordinal);
+            Assert.Contains("PRIVATE_COLLECTION_NAME", presentationSidebarData, StringComparison.Ordinal);
+            Assert.Equal(dashboardSidebarData, presentationSidebarData);
         }
         finally
         {

@@ -11,13 +11,13 @@ Demostrar mediante pruebas y evidencia actual que el registro del MVP0 llega a s
 
 ## Fuentes
 
-- [roadmap.md → «Checklist de calidad del MVP0»](../../context/roadmap.md#checklist-de-calidad-del-mvp0)
-- [mvp0-plan.md → «S12: Cierre y hardening (M)»](../../plans/mvp0-plan.md#s12-cierre-y-hardening-m)
-- [mvp0-checklist-test-matrix.md](../../plans/mvp0-checklist-test-matrix.md), filas A15–A18
-- [architecture.md → «Logs»](../../context/architecture.md#logs)
-- [specifications.md → «Registro de eventos»](../../context/specifications.md#registro-de-eventos)
-- [decisions.md → «Pendiente de rutas de cuenta»](../../context/decisions.md#pendiente-de-rutas-de-cuenta)
-- [decisions.md → «Fuera de alcance del MVP0»](../../context/decisions.md#fuera-de-alcance-del-mvp0)
+- [roadmap.md → «Checklist de calidad del MVP0»](../../../context/roadmap.md#checklist-de-calidad-del-mvp0)
+- [mvp0-plan.md → «S12: Cierre y hardening (M)»](../../../plans/mvp0-plan.md#s12-cierre-y-hardening-m)
+- [mvp0-checklist-test-matrix.md](../../../plans/mvp0-checklist-test-matrix.md), filas A15–A18
+- [architecture.md → «Logs»](../../../context/architecture.md#logs)
+- [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos)
+- [decisions.md → «Pendiente de rutas de cuenta»](../../../context/decisions.md#pendiente-de-rutas-de-cuenta)
+- [decisions.md → «Fuera de alcance del MVP0»](../../../context/decisions.md#fuera-de-alcance-del-mvp0)
 
 ## Alcance
 
@@ -41,10 +41,10 @@ Demostrar mediante pruebas y evidencia actual que el registro del MVP0 llega a s
 
 | ID | Fuente o criterio aprobado propietario | Dado | Cuando | Entonces |
 | --- | --- | --- | --- | --- |
-| CA01 | [architecture.md → «Logs»](../../context/architecture.md#logs), checklist A15–A16 de [mvp0-checklist-test-matrix.md](../../plans/mvp0-checklist-test-matrix.md) | La aplicación ejecuta una operación del MVP0 que genera un log | Se inspeccionan sus salidas efectivas | El log está disponible por consola y en el archivo rotativo; la evidencia comprueba la salida real, no solo su configuración. |
-| CA02 | [specifications.md → «Registro de eventos»](../../context/specifications.md#registro-de-eventos), checklist A17 de [mvp0-checklist-test-matrix.md](../../plans/mvp0-checklist-test-matrix.md) | Se ha identificado el registro de eventos y excepciones producido por las operaciones actuales del MVP0 | Se contrasta con las reglas y se ejecutan las pruebas correspondientes | Cada comportamiento de registro aplicable a esas operaciones tiene una prueba que verifica el evento y los datos permitidos; no se atribuye cobertura por el nombre del test o por el resultado global de la suite. |
-| CA03 | [specifications.md → «Registro de eventos»](../../context/specifications.md#registro-de-eventos), [architecture.md → «Logs»](../../context/architecture.md#logs), checklist A18 de [mvp0-checklist-test-matrix.md](../../plans/mvp0-checklist-test-matrix.md) | Se ejecutan las operaciones actuales del MVP0 con valores de prueba que permiten reconocer datos prohibidos en los logs | Se inspeccionan los mensajes, las propiedades, las excepciones y los logs de peticiones generados | No aparece ningún valor prohibido en esas superficies; la comprobación no clasifica como prohibido un contenido introducido por el usuario que las reglas permiten registrar por su uso. |
-| CA04 | [specifications.md → «Registro de eventos»](../../context/specifications.md#registro-de-eventos) | Las pruebas de CA03 comprueban la ausencia de datos prohibidos | Se valida también la capacidad de detección de esas comprobaciones | Un control negativo, aislado de la ejecución normal del producto, demuestra que la comprobación detecta un valor prohibido cuando se introduce deliberadamente en una superficie de log inspeccionada. |
+| CA01 | [architecture.md → «Logs»](../../../context/architecture.md#logs), checklist A15–A16 de [mvp0-checklist-test-matrix.md](../../../plans/mvp0-checklist-test-matrix.md) | La aplicación ejecuta una operación del MVP0 que genera un log | Se inspeccionan sus salidas efectivas | El log está disponible por consola y en el archivo rotativo; la evidencia comprueba la salida real, no solo su configuración. |
+| CA02 | [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos), checklist A17 de [mvp0-checklist-test-matrix.md](../../../plans/mvp0-checklist-test-matrix.md) | Se ha identificado el registro de eventos y excepciones producido por las operaciones actuales del MVP0 | Se contrasta con las reglas y se ejecutan las pruebas correspondientes | Cada comportamiento de registro aplicable a esas operaciones tiene una prueba que verifica el evento y los datos permitidos; no se atribuye cobertura por el nombre del test o por el resultado global de la suite. |
+| CA03 | [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos), [architecture.md → «Logs»](../../../context/architecture.md#logs), checklist A18 de [mvp0-checklist-test-matrix.md](../../../plans/mvp0-checklist-test-matrix.md) | Se ejecutan las operaciones actuales del MVP0 con valores de prueba que permiten reconocer datos prohibidos en los logs | Se inspeccionan los mensajes, las propiedades, las excepciones y los logs de peticiones generados | No aparece ningún valor prohibido en esas superficies; la comprobación no clasifica como prohibido un contenido introducido por el usuario que las reglas permiten registrar por su uso. |
+| CA04 | [specifications.md → «Registro de eventos»](../../../context/specifications.md#registro-de-eventos) | Las pruebas de CA03 comprueban la ausencia de datos prohibidos | Se valida también la capacidad de detección de esas comprobaciones | Un control negativo, aislado de la ejecución normal del producto, demuestra que la comprobación detecta un valor prohibido cuando se introduce deliberadamente en una superficie de log inspeccionada. |
 
 ## Bloqueos y preguntas pendientes
 

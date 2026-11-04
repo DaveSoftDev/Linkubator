@@ -11,7 +11,7 @@ public static class AppSidebarViewModelFactory
     /// </summary>
     public static AppSidebarViewModel CreateSidebar(
         AppSidebarSelectionKind selectionKind,
-        IReadOnlyList<CollectionDto> collections,
+        IReadOnlyList<CollectionDto>? collections,
         AppSidebarUserViewModel? user = null,
         long? selectedCollectionId = null)
     {
@@ -22,7 +22,7 @@ public static class AppSidebarViewModelFactory
     private sealed class AppSidebarViewModelBuilder
     {
         private readonly AppSidebarSelectionKind _selectionKind;
-        private readonly IReadOnlyList<CollectionDto> _collections;
+        private readonly IReadOnlyList<CollectionDto>? _collections;
         private readonly AppSidebarUserViewModel _user;
         private readonly long? _selectedCollectionId;
 
@@ -31,7 +31,7 @@ public static class AppSidebarViewModelFactory
         /// </summary>
         public AppSidebarViewModelBuilder(
             AppSidebarSelectionKind selectionKind,
-            IReadOnlyList<CollectionDto> collections,
+            IReadOnlyList<CollectionDto>? collections,
             AppSidebarUserViewModel user,
             long? selectedCollectionId)
         {
@@ -46,14 +46,15 @@ public static class AppSidebarViewModelFactory
         /// </summary>
         public AppSidebarViewModel Build()
         {
-            int totalLinks = _collections.Sum(collection => collection.LinkCount);
+            int? totalLinks = _collections?.Sum(collection => collection.LinkCount);
 
             return new AppSidebarViewModel
             {
                 User = _user,
                 SidebarSearchForm = BuildSearchForm(),
-                Navigation = BuildNavigationItems(totalLinks, _collections.Count),
+                Navigation = BuildNavigationItems(totalLinks, _collections?.Count),
                 Collections = BuildCollectionItems(),
+                CollectionsUnavailable = _collections is null,
                 Selection = BuildSelection(),
                 IsCollapsed = false,
                 IsMobileOpen = false,
@@ -80,7 +81,7 @@ public static class AppSidebarViewModelFactory
         /// </summary>
         private IReadOnlyList<AppSidebarCollectionItem> BuildCollectionItems()
         {
-            return _collections.Select(collection => new AppSidebarCollectionItem
+            return _collections?.Select(collection => new AppSidebarCollectionItem
             {
                 Id = collection.Slug,
                 Name = collection.Name,
@@ -88,7 +89,7 @@ public static class AppSidebarViewModelFactory
                 LinkCount = collection.LinkCount,
                 IsPublic = collection.IsPublic,
                 IsActive = collection.Id == _selectedCollectionId,
-            }).ToList();
+            }).ToList() ?? [];
         }
 
         /// <summary>
@@ -97,12 +98,12 @@ public static class AppSidebarViewModelFactory
         private AppSidebarSelection BuildSelection()
         {
             CollectionDto? selected = _selectionKind == AppSidebarSelectionKind.Collection
-                ? _collections.FirstOrDefault(collection => collection.Id == _selectedCollectionId)
+                ? _collections?.FirstOrDefault(collection => collection.Id == _selectedCollectionId)
                 : null;
             return new AppSidebarSelection
             {
                 Kind = _selectionKind,
-                ItemId = _collections.FirstOrDefault(collection => collection.Id == _selectedCollectionId)?.Slug,
+                ItemId = _collections?.FirstOrDefault(collection => collection.Id == _selectedCollectionId)?.Slug,
                 CollectionId = selected?.Id,
             };
         }
@@ -110,7 +111,7 @@ public static class AppSidebarViewModelFactory
         /// <summary>
         /// Construye los elementos principales de navegación con sus recuentos.
         /// </summary>
-        private AppSidebarNavItem[] BuildNavigationItems(int totalLinks, int totalCollections)
+        private AppSidebarNavItem[] BuildNavigationItems(int? totalLinks, int? totalCollections)
         {
             return
             [

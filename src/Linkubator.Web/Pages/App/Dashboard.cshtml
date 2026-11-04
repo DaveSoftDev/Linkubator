@@ -14,39 +14,33 @@
         </div>
     </header>
 
-    @await Html.PartialAsync("~/Pages/Shared/_LinkCreationNotice.cshtml")
-
-    @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", new Linkubator.Web.Models.Presentation.PageAlertViewModel
-    {
-        Message = Model.LinkManagementError ?? string.Empty,
-        Kind = "error",
-    })
-
     <section class="main-section" aria-labelledby="main-section-title">
         <h3 id="main-section-title">Crear enlace rápido</h3>
-        @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.QuickAddAlert)
-        <form method="post" asp-page-handler="QuickAdd" id="quick-new-form" class="main-section__form" data-required-validation>
-            <label for="quick-url" class="main-section__label">URL</label>
-            <div class="main-section__field">
-                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 1 0-7.07-7.07L10.5 4.5"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 1 0 7.07 7.07l2.83-2.83"></path></svg>
-                <input asp-for="QuickUrl" id="quick-url" type="text" inputmode="url" autocomplete="url" required placeholder="https://ejemplo.com" aria-label="URL del nuevo enlace" data-quick-add-input aria-describedby="quick-url-error" data-required-message="@Linkubator.Application.Constants.LinkErrors.UrlRequired().Message" />
-            </div>
-            <span asp-validation-for="QuickUrl" id="quick-url-error" class="main-section__error" role="alert"></span>
+        <form method="post" asp-page-handler="QuickAdd" id="quick-new-form" data-required-validation>
+            @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.QuickAddAlert)
+            <div class="main-section__form">
+                <label for="quick-url" class="main-section__label">URL</label>
+                <div class="main-section__field">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 1 0-7.07-7.07L10.5 4.5"></path><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 1 0 7.07 7.07l2.83-2.83"></path></svg>
+                    <input asp-for="QuickUrl" id="quick-url" type="text" inputmode="url" autocomplete="url" required placeholder="https://ejemplo.com" aria-label="URL del nuevo enlace" data-quick-add-input aria-describedby="quick-url-error" data-required-message="@Linkubator.Application.Constants.LinkErrors.UrlRequired().Message" />
+                </div>
+                <span asp-validation-for="QuickUrl" id="quick-url-error" class="main-section__error" role="alert"></span>
 
-            <div class="main-section__actions">
-                <button class="primary-button quick-add__main-trigger" type="submit">
-                    <span>Añadir</span>
-                </button>
-
-                <div class="quick-add__menu-wrapper">
-                    <button class="primary-button quick-add__secondary-trigger" type="button" aria-label="Más opciones para añadir un enlace" aria-expanded="false" aria-haspopup="true" aria-controls="quick-add-menu" data-quick-add-toggle>
-                        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M7 10L12 15L17 10"></path></svg>
+                <div class="main-section__actions">
+                    <button class="primary-button quick-add__main-trigger" type="submit">
+                        <span>Añadir</span>
                     </button>
 
-                    <div class="quick-add__menu" id="quick-add-menu" hidden>
-                        <a href="@Linkubator.Web.Constants.AppRoutes.LinkNew" class="quick-add__menu-item" data-quick-add-advanced>
-                            Avanzado...
-                        </a>
+                    <div class="quick-add__menu-wrapper">
+                        <button class="primary-button quick-add__secondary-trigger" type="button" aria-label="Más opciones para añadir un enlace" aria-expanded="false" aria-haspopup="true" aria-controls="quick-add-menu" data-quick-add-toggle>
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M7 10L12 15L17 10"></path></svg>
+                        </button>
+
+                        <div class="quick-add__menu" id="quick-add-menu" hidden>
+                            <a href="@Linkubator.Web.Constants.AppRoutes.LinkNew" class="quick-add__menu-item" data-quick-add-advanced>
+                                Avanzado...
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -63,6 +57,9 @@
                 @await Html.PartialAsync("~/Pages/Shared/_LinkViewSwitch.cshtml", "dashboard-links")
             }
         </div>
+        @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.RecentLinksAlert)
+        @if (string.IsNullOrWhiteSpace(Model.RecentLinksAlert.Message))
+        {
         <div class="main-wrapper">
         @if (Model.Cards.Count == 0)
         {
@@ -78,6 +75,7 @@
             </div>
         }
         </div>
+        }
     </section>
 </main>
 

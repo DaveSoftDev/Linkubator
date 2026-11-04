@@ -2,7 +2,14 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Dapper;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
+using ApplicationDtos = Linkubator.Application.Dtos.Models;
+using ApplicationRequests = Linkubator.Application.Dtos.Requests;
+using ApplicationResults = Linkubator.Application.Results;
+using CurrentUser = Linkubator.Application.Contracts.ICurrentUser;
+using LinkService = Linkubator.Application.Contracts.ILinkService;
 using SearchTextNormalizer = Linkubator.Infrastructure.Search.SearchTextNormalizer;
 using SqliteConnectionFactory = Linkubator.Infrastructure.Sqlite.SqliteConnectionFactory;
 using TestHost = Microsoft.AspNetCore.Hosting;
@@ -47,6 +54,85 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
         _client.Dispose();
         await _factory.DisposeAsync();
         await _keeper.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task GetLinks_WhenResourceAndCollectionErrorsCoincide_ShowsBothInOneAlert()
+    {
+        TestCurrentUser currentUser = new(_userId);
+        await using WebApplicationFactory<Program> factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services => services.AddScoped<CurrentUser>(_ => currentUser)));
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+
+        using HttpResponseMessage redirect = await client.GetAsync("/app/enlaces/999999/editar");
+        currentUser.IsAuthenticated = false;
+        using HttpResponseMessage response = await client.GetAsync("/app/enlaces");
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string alert = Regex.Match(html, "<div\\b[^>]*class=\"app-alert app-alert--error\"[^>]*>.*?</div>", RegexOptions.Singleline).Value;
+
+        Assert.Equal(HttpStatusCode.Redirect, redirect.StatusCode);
+        Assert.Equal("/app/enlaces", redirect.Headers.Location?.OriginalString);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Contains("class=\"app-main\"", html, StringComparison.Ordinal);
+        Assert.Single(Regex.Matches(html, "class=\"app-alert app-alert--error\""));
+        Assert.Contains("No se ha podido acceder al elemento solicitado.", alert, StringComparison.Ordinal);
+        Assert.Contains("No se han podido cargar las colecciones. Vuelve a intentarlo.", alert, StringComparison.Ordinal);
+        Assert.True(html.IndexOf("class=\"search-form\"", StringComparison.Ordinal) < html.IndexOf(alert, StringComparison.Ordinal));
+        Assert.Matches("(?s)<section aria-labelledby=\"links-list-title\">.*?<h3 id=\"links-list-title\">Enlaces</h3>.*?class=\"app-alert app-alert--error\".*?<div class=\"main-wrapper\">", html);
+    }
+
+    [Fact]
+    public async Task GetLinks_WhenSidebarCollectionsFail_ShowsErrorWithoutFalseCounts()
+    {
+        TestCurrentUser currentUser = new(_userId) { IsAuthenticated = false };
+        await using WebApplicationFactory<Program> factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services => services.AddScoped<CurrentUser>(_ => currentUser)));
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+
+        using HttpResponseMessage response = await client.GetAsync("/app/enlaces");
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string sidebar = Regex.Match(html, "(?s)<aside id=\"app-sidebar\".*?</aside>").Value;
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Contains("No se han podido cargar las colecciones. Vuelve a intentarlo.", sidebar, StringComparison.Ordinal);
+        Assert.Contains("href=\"/app/colecciones\"", sidebar, StringComparison.Ordinal);
+        Assert.DoesNotContain("class=\"count-pill\"", sidebar, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetLinks_WhenListingFails_PreservesResourceNoticeAndAllErrorsInOneAlert()
+    {
+        await using WebApplicationFactory<Program> factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services => services.AddScoped<LinkService, FailingLinkService>()));
+        using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+
+        using HttpResponseMessage redirect = await client.GetAsync("/app/enlaces/-1/editar");
+        using HttpResponseMessage response = await client.GetAsync("/app/enlaces");
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string alert = Regex.Match(html, "<div\\b[^>]*class=\"app-alert app-alert--error\"[^>]*>.*?</div>", RegexOptions.Singleline).Value;
+
+        Assert.Equal(HttpStatusCode.Redirect, redirect.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Single(Regex.Matches(html, "class=\"app-alert app-alert--error\""));
+        Assert.Contains("No se ha podido acceder al elemento solicitado.", alert, StringComparison.Ordinal);
+        Assert.Contains("Primer error de listado.", alert, StringComparison.Ordinal);
+        Assert.Contains("SECOND_LIST_ERROR", alert, StringComparison.Ordinal);
+        Assert.Matches("(?s)<section aria-labelledby=\"links-list-title\">.*?<h3 id=\"links-list-title\">Enlaces</h3>.*?class=\"app-alert app-alert--error\"", html);
+        Assert.DoesNotContain("class=\"form-summary\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("No se pueden mostrar los resultados", html, StringComparison.Ordinal);
+        Assert.Empty(CardTitles(html));
     }
 
     [Fact]
@@ -305,7 +391,7 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
         Assert.Contains($"class=\"{expectedStyle} {buttonClass}\"", anchor, StringComparison.Ordinal);
         Assert.Contains("selected=\"selected\"", selected, StringComparison.Ordinal);
         Assert.Contains($"name=\"ru\" value=\"{origin}\"", formHtml, StringComparison.Ordinal);
-        Assert.Contains($"class=\"collection-form__cancel\" href=\"{origin}\"", formHtml, StringComparison.Ordinal);
+        Assert.Contains($"class=\"secondary-button\" href=\"{origin}\"", formHtml, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -368,7 +454,12 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("Los valores no son correctos.", html, StringComparison.Ordinal);
-        Assert.Contains("role=\"alert\"", html, StringComparison.Ordinal);
+        Assert.Matches("(?s)<section aria-labelledby=\"links-list-title\">.*?<h3 id=\"links-list-title\">Enlaces</h3>.*?<div class=\"app-alert app-alert--error\"[^>]*>.*?Los valores no son correctos\\.", html);
+        Assert.DoesNotContain("class=\"form-summary\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("No se ha podido cargar el listado de enlaces.", html, StringComparison.Ordinal);
+        Assert.Matches("(?s)<section aria-labelledby=\"links-list-title\">.*?class=\"app-alert app-alert--error\".*?<div class=\"empty-state\" role=\"status\" aria-live=\"polite\">\\s*<h2>No se pueden mostrar los resultados</h2>\\s*<p>Corrige los errores indicados para ver el listado\\.</p>", html);
+        Assert.Matches("(?s)<div class=\"empty-state\"[^>]*>.*?<a class=\"secondary-button\" href=\"/app/enlaces\">Volver al listado</a>.*?</div>", html);
+        Assert.DoesNotContain("No se han encontrado enlaces.", html, StringComparison.Ordinal);
         Assert.Empty(CardTitles(html));
         Assert.DoesNotContain("data-link-view-switch", html, StringComparison.Ordinal);
     }
@@ -417,6 +508,8 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("No se han encontrado enlaces.", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("No se pueden mostrar los resultados", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">Volver al listado</a>", html, StringComparison.Ordinal);
         Assert.Contains("value=\"inexistente\"", html, StringComparison.Ordinal);
         Assert.Contains($"name=\"c\" value=\"{_collectionId}\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Los valores no son correctos.", html, StringComparison.Ordinal);
@@ -429,13 +522,68 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
         using HttpResponseMessage control = await _client.GetAsync("/app/enlaces");
         Assert.Single(CardTitles(await control.Content.ReadAsStringAsync()));
 
-        using HttpResponseMessage response = await _client.GetAsync("/app/enlaces?p=abc&q=" + new string('a', 101));
+        string query = new('a', 101);
+        using HttpResponseMessage response = await _client.GetAsync($"/app/enlaces?c={_collectionId}&p=abc&q={query}");
         string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string form = Regex.Match(html, "(?s)<form class=\"search-form\".*?</form>").Value;
 
-        Assert.Contains("El texto de búsqueda supera la longitud máxima permitida.", html, StringComparison.Ordinal);
+        Assert.Contains("El texto de búsqueda supera la longitud máxima permitida.", form, StringComparison.Ordinal);
+        Assert.Contains("id=\"links-search-query-error\" role=\"alert\"", form, StringComparison.Ordinal);
+        Assert.Contains("href=\"#links-search-query\"", form, StringComparison.Ordinal);
+        Assert.Contains("aria-invalid=\"true\" aria-describedby=\"links-search-query-error\"", form, StringComparison.Ordinal);
+        Assert.Contains($"value=\"{query}\"", form, StringComparison.Ordinal);
+        Assert.Contains($"name=\"c\" value=\"{_collectionId}\"", form, StringComparison.Ordinal);
+        Assert.DoesNotContain("class=\"app-alert app-alert--error\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("No se ha podido cargar el listado de enlaces.", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">Volver al listado</a>", html, StringComparison.Ordinal);
+        Assert.Matches("(?s)<section aria-labelledby=\"links-list-title\">.*?<div class=\"empty-state\" role=\"status\" aria-live=\"polite\">\\s*<h2>No se pueden mostrar los resultados</h2>\\s*<p>Corrige los errores indicados para ver el listado\\.</p>", html);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Empty(CardTitles(html));
         Assert.DoesNotContain("data-link-view-switch", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetLinks_WithResourceNoticeAndInvalidFilters_ShowsSeparateSearchErrorAndCombinedAlert()
+    {
+        using HttpResponseMessage redirect = await _client.GetAsync("/app/enlaces/-1/editar");
+        string query = new('a', 101);
+        using HttpResponseMessage response = await _client.GetAsync($"/app/enlaces?c=abc&q={query}");
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string form = Regex.Match(html, "(?s)<form class=\"search-form\".*?</form>").Value;
+        string alert = Regex.Match(html, "<div\\b[^>]*class=\"app-alert app-alert--error\"[^>]*>.*?</div>", RegexOptions.Singleline).Value;
+
+        Assert.Equal(HttpStatusCode.Redirect, redirect.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Single(Regex.Matches(html, "class=\"app-alert app-alert--error\""));
+        Assert.Contains("No se ha podido acceder al elemento solicitado.", alert, StringComparison.Ordinal);
+        Assert.Contains("Los valores no son correctos.", alert, StringComparison.Ordinal);
+        Assert.DoesNotContain("El texto de búsqueda supera", alert, StringComparison.Ordinal);
+        Assert.Contains("El texto de búsqueda supera la longitud máxima permitida.", form, StringComparison.Ordinal);
+        Assert.Contains($"value=\"{query}\"", form, StringComparison.Ordinal);
+        Assert.DoesNotContain("Los valores no son correctos.", form, StringComparison.Ordinal);
+        Assert.Contains("No se pueden mostrar los resultados", html, StringComparison.Ordinal);
+        Assert.Contains("Corrige los errores indicados para ver el listado.", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/app/enlaces\">Volver al listado</a>", html, StringComparison.Ordinal);
+        Assert.Empty(CardTitles(html));
+    }
+
+    [Fact]
+    public async Task GetLinks_WithInvalidCollectionFilter_ReturnLinkClearsFiltersAndShowsLinks()
+    {
+        await AddLinks(_userId, _collectionId, 1, "Lectura");
+        string query = new('a', 101);
+        using HttpResponseMessage response = await _client.GetAsync($"/app/enlaces?c=abc&q={query}&p=3");
+        string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        string returnUrl = Regex.Match(html, "<a\\b[^>]*href=\"([^\"]+)\"[^>]*>Volver al listado</a>").Groups[1].Value;
+
+        Assert.Equal("/app/enlaces", returnUrl);
+        using HttpResponseMessage listing = await _client.GetAsync(returnUrl);
+        string listingHtml = WebUtility.HtmlDecode(await listing.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, listing.StatusCode);
+        Assert.Equal(["Lectura 01"], CardTitles(listingHtml));
+        Assert.DoesNotContain("Los valores no son correctos.", listingHtml, StringComparison.Ordinal);
+        Assert.DoesNotContain("El texto de búsqueda supera", listingHtml, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -484,7 +632,7 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, form.StatusCode);
         Assert.Contains($"name=\"ru\" value=\"{origin}\"", formHtml, StringComparison.Ordinal);
-        Assert.Contains($"class=\"collection-form__cancel\" href=\"{origin}\"", formHtml, StringComparison.Ordinal);
+        Assert.Contains($"class=\"secondary-button\" href=\"{origin}\"", formHtml, StringComparison.Ordinal);
     }
 
     private static string[] CardTitles(string html)
@@ -549,6 +697,28 @@ public sealed class LinkListingIntegrationTests : IAsyncLifetime
                   VALUES (@Id, @UserId, @Url, @Title, @CollectionName);",
                 new { Id = id, UserId = userId, Url = url, Title = SearchTextNormalizer.Normalize(title), CollectionName = SearchTextNormalizer.Normalize(name) });
         }
+    }
+
+    private sealed class FailingLinkService : LinkService
+    {
+        public Task<ApplicationResults.Result<ApplicationDtos.LinkPageDto>> ListLinksPage(string? query = null, long? collectionId = null, int page = 1, CancellationToken cancellationToken = default)
+            => Task.FromResult(ApplicationResults.Result<ApplicationDtos.LinkPageDto>.Failure(
+                ApplicationResults.ApplicationError.Domain("FIRST_LIST_ERROR", message: "Primer error de listado."),
+                ApplicationResults.ApplicationError.Domain("SECOND_LIST_ERROR")));
+
+        public Task<ApplicationResults.Result<ApplicationDtos.LinkDto>> GetLink(ApplicationRequests.LinkGetRequest? request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<ApplicationResults.Result<ApplicationDtos.LinkDto>> CreateLink(ApplicationRequests.LinkCreateRequest? request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<ApplicationResults.Result<ApplicationDtos.LinkDto>> UpdateLink(ApplicationRequests.LinkUpdateRequest? request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<ApplicationResults.Result<ApplicationDtos.LinkDto>> MoveLink(ApplicationRequests.LinkMoveRequest? request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<ApplicationResults.Result> DeleteLink(ApplicationRequests.LinkDeleteRequest? request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<ApplicationResults.Result<IReadOnlyList<ApplicationDtos.LinkDto>>> ListLinks(string? query = null, long? collectionId = null, int page = 1, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class TestCurrentUser(long userId) : CurrentUser
+    {
+        public long UserId { get; } = userId;
+
+        public bool IsAuthenticated { get; set; } = true;
     }
 
     private sealed class ConfiguredWebApplicationFactory(string connectionString) : WebApplicationFactory<Program>

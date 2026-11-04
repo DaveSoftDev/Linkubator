@@ -11,7 +11,7 @@
   - Estado: completada.
   - Inicio: 31-X-2026, solicitud de DLG «sigo viendo las tareas como pendientes».
   - Finalización: 31-X-2026; tests focalizados 150/150 y suite completa 1.851/1.851, sin omitidos.
-  - Evidencia consolidada: matriz A15–A18 y [TRX focalizado](../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-focused.trx), [TRX completo](../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-full.trx).
+  - Evidencia consolidada: matriz A15–A18 y [TRX focalizado](../../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-focused.trx), [TRX completo](../../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-full.trx).
 
 ## Descomposición
 
@@ -32,18 +32,18 @@ La línea base previa, ejecutada antes de T01–T03, pasó 148/148 tests focaliz
 
 | Criterio | Tareas | Validación | Resultado real | Fecha y entorno o versión | Referencia a evidencia |
 | --- | --- | --- | --- | --- | --- |
-| CA01 | T03–T05 | V01, V05 en [plan.md](plan.md#estrategia-de-validación) | Cumplido técnicamente | 31-X-2026; .NET 10.0.403 | [Test de sinks](../../tests/Linkubator.Tests/Integration/LoggingSinksIntegrationTests.cs), [TRX focalizado](../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-focused.trx), A15–A16 de [mvp0-checklist-test-matrix.md](../../plans/mvp0-checklist-test-matrix.md) |
-| CA02 | T01–T02, T04–T05 | V02, V05 en [plan.md](plan.md#estrategia-de-validación) | Cumplido técnicamente | 31-X-2026; .NET 10.0.403 | [LoggingTests.cs](../../tests/Linkubator.Tests/Application/LoggingTests.cs), [WebStartupTests.cs](../../tests/Linkubator.Tests/Integration/WebStartupTests.cs), [TRX focalizado](../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-focused.trx), A17 de [mvp0-checklist-test-matrix.md](../../plans/mvp0-checklist-test-matrix.md) |
-| CA03 | T01–T02, T04–T05 | V03, V05 en [plan.md](plan.md#estrategia-de-validación) | Cumplido técnicamente, dentro de los flujos actuales del MVP0 | 31-X-2026; .NET 10.0.403 | [LoggingTests.cs](../../tests/Linkubator.Tests/Application/LoggingTests.cs), [WebStartupTests.cs](../../tests/Linkubator.Tests/Integration/WebStartupTests.cs), revisión de productores en A18 de [mvp0-checklist-test-matrix.md](../../plans/mvp0-checklist-test-matrix.md), [TRX focalizado](../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-focused.trx) |
-| CA04 | T02, T04–T05 | V04, V05 en [plan.md](plan.md#estrategia-de-validación) | Cumplido técnicamente | 31-X-2026; .NET 10.0.403 | `LoggingEvidenceAssertion_WhenForbiddenValueIsEmitted_DetectsTheViolation` en [LoggingTests.cs](../../tests/Linkubator.Tests/Application/LoggingTests.cs), [TRX focalizado](../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-focused.trx) |
+| CA01 | T03–T05 | V01, V05 en [plan.md](plan.md#estrategia-de-validación) | Cumplido técnicamente | 31-X-2026; .NET 10.0.403 | [Test de sinks](../../../tests/Linkubator.Tests/Integration/LoggingSinksIntegrationTests.cs), [TRX focalizado](../../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-focused.trx), A15–A16 de [mvp0-checklist-test-matrix.md](../../../plans/mvp0-checklist-test-matrix.md) |
+| CA02 | T01–T02, T04–T05 | V02, V05 en [plan.md](plan.md#estrategia-de-validación) | Cumplido técnicamente | 31-X-2026; .NET 10.0.403 | [LoggingTests.cs](../../../tests/Linkubator.Tests/Application/LoggingTests.cs), [WebStartupTests.cs](../../../tests/Linkubator.Tests/Integration/WebStartupTests.cs), [TRX focalizado](../../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-focused.trx), A17 de [mvp0-checklist-test-matrix.md](../../../plans/mvp0-checklist-test-matrix.md) |
+| CA03 | T01–T02, T04–T05 | V03, V05 en [plan.md](plan.md#estrategia-de-validación) | Cumplido técnicamente, dentro de los flujos actuales del MVP0 | 31-X-2026; .NET 10.0.403 | [LoggingTests.cs](../../../tests/Linkubator.Tests/Application/LoggingTests.cs), [WebStartupTests.cs](../../../tests/Linkubator.Tests/Integration/WebStartupTests.cs), revisión de productores en A18 de [mvp0-checklist-test-matrix.md](../../../plans/mvp0-checklist-test-matrix.md), [TRX focalizado](../../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-focused.trx) |
+| CA04 | T02, T04–T05 | V04, V05 en [plan.md](plan.md#estrategia-de-validación) | Cumplido técnicamente | 31-X-2026; .NET 10.0.403 | `LoggingEvidenceAssertion_WhenForbiddenValueIsEmitted_DetectsTheViolation` en [LoggingTests.cs](../../../tests/Linkubator.Tests/Application/LoggingTests.cs), [TRX focalizado](../../../tests/Linkubator.Tests/TestResults/s12.2-20261031/s12.2-focused.trx) |
 
 ## Aceptación y cierre
 
 - Estado del trabajo: aceptado.
-- Criterios sin evidencia satisfactoria: ninguno en la implementación actual del MVP0; la aceptación humana sigue pendiente.
+- Criterios sin evidencia satisfactoria: ninguno en la implementación actual del MVP0.
 - Bloqueos y riesgos restantes: no se probaron flujos de cuenta fuera de alcance del MVP0 ni la eliminación por vencimiento de la retención del archivo.
 - Aceptación humana: aceptada por DLG el 31-X-2026 con la referencia «Acepto S12.2».
-- Archivado: no solicitado.
-- Ubicación archivada: pendiente.
-- Fecha efectiva de archivado y comprobación de enlaces: pendientes.
-- Siguiente paso autorizado, sin cerrar otras etapas: continuar S12 según [mvp0-plan.md → «S12: Cierre y hardening (M)»](../../plans/mvp0-plan.md#s12-cierre-y-hardening-m).
+- Archivado: completado por @DaveSoftDev el 04-XI-2026 («Archiva las specs activas»).
+- Ubicación archivada: `specs/archive/s12.2-eventos-y-logs/`.
+- Fecha efectiva de archivado y comprobación de enlaces: 04-XI-2026; carpeta, artefactos y enlaces entrantes/salientes comprobados.
+- Siguiente paso autorizado, sin cerrar otras etapas: continuar S12 según [mvp0-plan.md → «S12: Cierre y hardening (M)»](../../../plans/mvp0-plan.md#s12-cierre-y-hardening-m).

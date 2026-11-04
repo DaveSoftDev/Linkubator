@@ -26,12 +26,9 @@ public abstract class LinkManagementPageModel : PrivatePageModel
 
     protected virtual bool AllowCollectionsReturn => false;
 
-    /// <summary>
-    /// Redirige al listado cuando el enlace solicitado no está disponible.
-    /// </summary>
-    protected IActionResult RedirectUnavailableLink()
+    protected IActionResult RedirectUnavailableLink(string? message = null)
     {
-        TempData[nameof(LinksModel.LinkManagementError)] = PrivateResourceUnavailablePresenter.GenericMessage;
+        TempData[nameof(LinksModel.LinkManagementError)] = message ?? PrivateResourceUnavailablePresenter.GenericMessage;
         return LocalRedirect($"{Request.PathBase}{AppRoutes.Links}");
     }
 }

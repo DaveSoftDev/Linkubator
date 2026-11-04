@@ -51,9 +51,7 @@ public sealed class DeleteModel : PrivatePageModel
     {
         if (!TryGetCollectionId(out long collectionId))
         {
-            Sidebar = CreateSidebar(SidebarSelectionKind, []);
-            Alert = new PageAlertViewModel { Message = Linkubator.Application.Constants.CollectionErrors.CollectionIdInvalidMessage, Kind = "error" };
-            return Page();
+            return RedirectUnavailable();
         }
 
         ApplicationResults.Result<ApplicationModelDtos.CollectionDto> result = await _collectionService.GetCollection(
@@ -62,6 +60,11 @@ public sealed class DeleteModel : PrivatePageModel
 
         if (!result.IsSuccess || result.Value is null)
         {
+            if (result.Errors.Any(error => error.Category == ApplicationEnums.ApplicationErrorCategory.ResourceNotAccessible))
+            {
+                return RedirectUnavailable();
+            }
+
             ApplyErrors(result.Errors);
             return Page();
         }
@@ -75,8 +78,7 @@ public sealed class DeleteModel : PrivatePageModel
     {
         if (!TryGetCollectionId(out long collectionId))
         {
-            Alert = new PageAlertViewModel { Message = Linkubator.Application.Constants.CollectionErrors.CollectionIdInvalidMessage, Kind = "error" };
-            return Page();
+            return RedirectUnavailable();
         }
 
         ApplicationResults.Result result = await _collectionService.DeleteCollection(
@@ -87,8 +89,7 @@ public sealed class DeleteModel : PrivatePageModel
         {
             if (result.Errors.Any(error => error.Category == ApplicationEnums.ApplicationErrorCategory.ResourceNotAccessible))
             {
-                TempData[nameof(CollectionsModel.CollectionManagementError)] = DeleteNotAccessibleMessage;
-                return Redirect(CollectionListRoute);
+                return RedirectUnavailable();
             }
 
             ApplicationResults.Result<ApplicationModelDtos.CollectionDto> collectionResult = await _collectionService.GetCollection(
@@ -105,6 +106,12 @@ public sealed class DeleteModel : PrivatePageModel
         }
 
         return Redirect(CollectionListRoute);
+    }
+
+    private IActionResult RedirectUnavailable()
+    {
+        TempData[nameof(CollectionsModel.CollectionManagementError)] = DeleteNotAccessibleMessage;
+        return LocalRedirect($"{Request.PathBase}{CollectionListRoute}");
     }
 
     private bool TryGetCollectionId(out long collectionId)

@@ -68,6 +68,8 @@ nunit-*.xml
 *.sqlite
 *.sqlite3
 /src/Linkubator.Web/wwwroot/js/private.js
+/src/Linkubator.Web/wwwroot/css/private.bundle.css
+/src/Linkubator.Web/wwwroot/css/public.bundle.css
 
 # Qween3
 .qween3
