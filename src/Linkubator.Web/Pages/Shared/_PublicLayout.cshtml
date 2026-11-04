@@ -11,7 +11,9 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/public.css" asp-append-version="true" />
+    <environment exclude="Production">
+        <link rel="stylesheet" href="~/css/public.css" asp-append-version="true" />
+    </environment>
 }
 
 <a class="public-skip" href="#public-content">Saltar al contenido</a>

@@ -73,9 +73,8 @@ public abstract class PrivatePageModel : PageModel
         AppSidebarSelectionKind selectionKind,
         IEnumerable<CollectionDto>? collections = null)
     {
-        IReadOnlyList<CollectionDto> collectionItems = collections as IReadOnlyList<CollectionDto>
-            ?? collections?.ToArray()
-            ?? Array.Empty<CollectionDto>();
+        IReadOnlyList<CollectionDto>? collectionItems = collections as IReadOnlyList<CollectionDto>
+            ?? collections?.ToArray();
 
         Sidebar = AppSidebarViewModelFactory.CreateSidebar(selectionKind, collectionItems, SidebarUser);
         return Sidebar;

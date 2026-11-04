@@ -54,9 +54,7 @@ public sealed class EditModel : PrivatePageModel
     {
         if (!TryGetCollectionId(out long collectionId))
         {
-            Sidebar = CreateSidebar(SidebarSelectionKind, []);
-            Alert = new PageAlertViewModel { Message = Linkubator.Application.Constants.CollectionErrors.CollectionIdInvalidMessage, Kind = "error" };
-            return Page();
+            return RedirectUnavailable();
         }
 
         ApplicationResults.Result<ApplicationModelDtos.CollectionDto> result = await _collectionService.GetCollection(
@@ -64,6 +62,11 @@ public sealed class EditModel : PrivatePageModel
             cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
+            if (result.Errors.Any(error => error.Category == ApplicationEnums.ApplicationErrorCategory.ResourceNotAccessible))
+            {
+                return RedirectUnavailable();
+            }
+
             ApplyErrors(result.Errors);
             return Page();
         }
@@ -79,8 +82,7 @@ public sealed class EditModel : PrivatePageModel
     {
         if (!TryGetCollectionId(out long collectionId))
         {
-            Alert = new PageAlertViewModel { Message = Linkubator.Application.Constants.CollectionErrors.CollectionIdInvalidMessage, Kind = "error" };
-            return Page();
+            return RedirectUnavailable();
         }
 
         ApplicationResults.Result<ApplicationModelDtos.CollectionDto> currentResult = await _collectionService.GetCollection(
@@ -139,7 +141,7 @@ public sealed class EditModel : PrivatePageModel
     private IActionResult RedirectUnavailable()
     {
         TempData[nameof(CollectionsModel.CollectionManagementError)] = PrivateResourceUnavailablePresenter.GenericMessage;
-        return Redirect(CollectionListRoute);
+        return LocalRedirect($"{Request.PathBase}{CollectionListRoute}");
     }
 
     private bool TryGetCollectionId(out long collectionId)

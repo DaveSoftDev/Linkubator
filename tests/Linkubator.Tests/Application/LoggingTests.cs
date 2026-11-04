@@ -247,6 +247,22 @@ public sealed class LoggingTests
     }
 
     [Fact]
+    public void LoggingEvidenceAssertion_WhenForbiddenValueIsEmitted_DetectsTheViolation()
+    {
+        const string forbiddenValue = "forbidden-log-sentinel";
+        CapturingSerilogSink sink = new();
+        using Serilog.Core.Logger serilog = new Serilog.LoggerConfiguration().WriteTo.Sink(sink).CreateLogger();
+
+        serilog.Warning("Diagnostic event with credential {Credential}", forbiddenValue);
+
+        Serilog.Events.LogEvent entry = Assert.Single(sink.Events);
+        Xunit.Sdk.DoesNotContainException failure = Assert.Throws<Xunit.Sdk.DoesNotContainException>(
+            () => Assert.DoesNotContain(forbiddenValue, GetCompleteLogEvent(entry), StringComparison.Ordinal));
+
+        Assert.Contains(forbiddenValue, failure.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void SafeLogger_Log_EmitsFullUserContextToSerilog()
     {
         string url = "https://example.com/" + new string('a', 100) + "?token=external-token";
@@ -429,6 +445,9 @@ public sealed class LoggingTests
 
         public void Emit(Serilog.Events.LogEvent logEvent) => Events.Add(logEvent);
     }
+
+    private static string GetCompleteLogEvent(Serilog.Events.LogEvent logEvent)
+        => $"{logEvent.RenderMessage()} {string.Join(" ", logEvent.Properties.Values)} {logEvent.Exception}";
 
     private sealed class TestLogger<T> : ILogger<T>
     {

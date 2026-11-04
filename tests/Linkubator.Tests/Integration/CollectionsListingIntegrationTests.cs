@@ -1,7 +1,11 @@
+using System.Text.RegularExpressions;
 using Dapper;
 using Linkubator.Infrastructure.Sqlite;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
+using CurrentUser = Linkubator.Application.Contracts.ICurrentUser;
 using TestHost = Microsoft.AspNetCore.Hosting;
 
 namespace Linkubator.Tests.Integration;
@@ -11,6 +15,42 @@ public sealed class CollectionsListingIntegrationTests
 {
     private const string DemoEmail = "user@linkubator.test";
     private const string ValidArgon2idHash = "$argon2id$v=19$m=65536,t=3,p=1$42xS9y5nNCo8mABa9Y0KQw$w2hDMTrLZgBZ0Iqk7Q1m5J0C2U0xHgpiA62b0mXkVQ4";
+
+    [Fact]
+    public async Task GetCollections_WhenResourceAndListingErrorsCoincide_ShowsBothInOneErrorAlert()
+    {
+        string databasePath = NewDatabasePath();
+        try
+        {
+            TestCurrentUser currentUser = new();
+            await using ConfiguredWebApplicationFactory baseFactory = new(databasePath);
+            await using WebApplicationFactory<Program> factory = baseFactory.WithWebHostBuilder(builder =>
+                builder.ConfigureTestServices(services => services.AddScoped<CurrentUser>(_ => currentUser)));
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            await using SqliteConnection connection = new SqliteConnectionFactory($"Data Source={databasePath}").CreateOpenConnection();
+            currentUser.UserId = await connection.ExecuteScalarAsync<long>("SELECT Id FROM User WHERE Email = @Email;", new { Email = DemoEmail });
+
+            using HttpResponseMessage redirect = await client.GetAsync("/app/colecciones/999999/editar");
+            currentUser.IsAuthenticated = false;
+            using HttpResponseMessage response = await client.GetAsync("/app/colecciones");
+            string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+            string alert = System.Text.RegularExpressions.Regex.Match(html, "<div\\b[^>]*class=\"app-alert app-alert--error\"[^>]*>.*?</div>", System.Text.RegularExpressions.RegexOptions.Singleline).Value;
+
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, redirect.StatusCode);
+            Assert.Equal("/app/colecciones", redirect.Headers.Location?.OriginalString);
+            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+            Assert.Contains("class=\"app-main\"", html, StringComparison.Ordinal);
+            Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "class=\"app-alert app-alert--error\""));
+            Assert.Contains("No se ha podido acceder al elemento solicitado.", alert, StringComparison.Ordinal);
+            Assert.Contains("No se ha podido cargar el listado de colecciones.", alert, StringComparison.Ordinal);
+            Assert.DoesNotContain("No se pueden mostrar los resultados", html, StringComparison.Ordinal);
+            Assert.Matches("(?s)<section aria-labelledby=\"collections-list-title\">.*?<h3 id=\"collections-list-title\">Colecciones</h3>.*?class=\"app-alert app-alert--error\".*?<div class=\"main-wrapper\">", html);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
 
     [Theory]
     [InlineData(false, "Privada")]
@@ -65,7 +105,7 @@ public sealed class CollectionsListingIntegrationTests
             Assert.Contains("action=\"/app/colecciones\"", html, StringComparison.Ordinal);
             Assert.Contains("role=\"status\"", html, StringComparison.Ordinal);
             Assert.Contains("No se han encontrado colecciones.", System.Net.WebUtility.HtmlDecode(html), StringComparison.Ordinal);
-            Assert.Matches("<a class=\"view-switch__button toolbar-tool\" href=\"/app/colecciones/nueva\">\\s*<svg[^>]*aria-hidden=\"true\"[^>]*><path d=\"M12 5V19M5 12H19\"></path></svg>\\s*Crear colección\\s*</a>", System.Net.WebUtility.HtmlDecode(html));
+            Assert.Matches("<a class=\"view-switch__button toolbar-tool\" href=\"/app/colecciones/nueva\\?ru=[^\"]+\">\\s*<svg[^>]*aria-hidden=\"true\"[^>]*><path d=\"M12 5V19M5 12H19\"></path></svg>\\s*Crear colección\\s*</a>", System.Net.WebUtility.HtmlDecode(html));
         }
         finally
         {
@@ -241,31 +281,35 @@ public sealed class CollectionsListingIntegrationTests
         }
     }
 
-    [Fact]
-    public async Task GetCollectionOperations_WhenIdIsInvalid_ReturnsValidationWithoutExposingCollectionData()
+    [Theory]
+    [InlineData("not-an-id")]
+    [InlineData("-1")]
+    [InlineData("0")]
+    [InlineData("9223372036854775808")]
+    public async Task GetCollectionOperations_WhenIdIsInvalid_RedirectsToListingWithNotice(string invalidId)
     {
         string databasePath = NewDatabasePath();
         try
         {
             await using ConfiguredWebApplicationFactory factory = new(databasePath);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
             await SeedCollections(databasePath, DemoEmail, ["Owned collection"]);
 
-            using HttpResponseMessage editResponse = await client.GetAsync("/app/colecciones/not-an-id/editar");
-            string editHtml = System.Net.WebUtility.HtmlDecode(await editResponse.Content.ReadAsStringAsync());
-            using HttpResponseMessage deleteResponse = await client.GetAsync("/app/colecciones/not-an-id/eliminar");
-            string deleteHtml = System.Net.WebUtility.HtmlDecode(await deleteResponse.Content.ReadAsStringAsync());
+            using HttpResponseMessage editResponse = await client.GetAsync($"/app/colecciones/{invalidId}/editar");
+            using HttpResponseMessage editListing = await client.GetAsync("/app/colecciones");
+            string editHtml = System.Net.WebUtility.HtmlDecode(await editListing.Content.ReadAsStringAsync());
+            using HttpResponseMessage deleteResponse = await client.GetAsync($"/app/colecciones/{invalidId}/eliminar");
+            using HttpResponseMessage deleteListing = await client.GetAsync("/app/colecciones");
+            string deleteHtml = System.Net.WebUtility.HtmlDecode(await deleteListing.Content.ReadAsStringAsync());
 
-            Assert.Equal(System.Net.HttpStatusCode.OK, editResponse.StatusCode);
-            Assert.Equal(System.Net.HttpStatusCode.OK, deleteResponse.StatusCode);
-            Assert.Contains("La colección es obligatoria.", editHtml, StringComparison.Ordinal);
-            Assert.Contains("La colección es obligatoria.", deleteHtml, StringComparison.Ordinal);
-            Assert.Contains("href=\"/app/colecciones\">Volver al listado</a>", editHtml, StringComparison.Ordinal);
-            Assert.Contains("href=\"/app/colecciones\">Volver al listado</a>", deleteHtml, StringComparison.Ordinal);
-            Assert.DoesNotContain("name=\"Input.Name\"", editHtml, StringComparison.Ordinal);
-            Assert.DoesNotContain("class=\"collection-form collection-form--danger\"", deleteHtml, StringComparison.Ordinal);
-            Assert.DoesNotContain("Owned collection", editHtml, StringComparison.Ordinal);
-            Assert.DoesNotContain("Owned collection", deleteHtml, StringComparison.Ordinal);
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, editResponse.StatusCode);
+            Assert.Equal("/app/colecciones", editResponse.Headers.Location?.OriginalString);
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, deleteResponse.StatusCode);
+            Assert.Equal("/app/colecciones", deleteResponse.Headers.Location?.OriginalString);
+            Assert.Contains("No se ha podido acceder al elemento solicitado.", editHtml, StringComparison.Ordinal);
+            Assert.Contains("No se ha podido eliminar la colección", deleteHtml, StringComparison.Ordinal);
+            Assert.Contains("Owned collection", editHtml, StringComparison.Ordinal);
+            Assert.Contains("Owned collection", deleteHtml, StringComparison.Ordinal);
         }
         finally
         {
@@ -273,41 +317,38 @@ public sealed class CollectionsListingIntegrationTests
         }
     }
 
-    [Fact]
-    public async Task GetCollectionOperations_WhenCollectionIsMissingOrForeign_ReturnsNonDisclosingResponses()
+    [Theory]
+    [InlineData("editar", true)]
+    [InlineData("editar", false)]
+    [InlineData("eliminar", true)]
+    [InlineData("eliminar", false)]
+    public async Task GetCollectionOperations_WhenCollectionIsMissingOrForeign_ShowsNoticeOnListing(string operation, bool foreign)
     {
         string databasePath = NewDatabasePath();
         try
         {
             await using ConfiguredWebApplicationFactory factory = new(databasePath);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
             await SeedCollections(databasePath, DemoEmail, ["Owned collection"]);
             long foreignCollectionId = await SeedOtherUsersCollection(databasePath);
             long missingCollectionId = foreignCollectionId + 1000;
 
-            using HttpResponseMessage missingEditResponse = await client.GetAsync($"/app/colecciones/{missingCollectionId}/editar");
-            string missingEditHtml = System.Net.WebUtility.HtmlDecode(await missingEditResponse.Content.ReadAsStringAsync());
-            using HttpResponseMessage foreignEditResponse = await client.GetAsync($"/app/colecciones/{foreignCollectionId}/editar");
-            string foreignEditHtml = System.Net.WebUtility.HtmlDecode(await foreignEditResponse.Content.ReadAsStringAsync());
-            using HttpResponseMessage missingDeleteResponse = await client.GetAsync($"/app/colecciones/{missingCollectionId}/eliminar");
-            string missingDeleteHtml = System.Net.WebUtility.HtmlDecode(await missingDeleteResponse.Content.ReadAsStringAsync());
-            using HttpResponseMessage foreignDeleteResponse = await client.GetAsync($"/app/colecciones/{foreignCollectionId}/eliminar");
-            string foreignDeleteHtml = System.Net.WebUtility.HtmlDecode(await foreignDeleteResponse.Content.ReadAsStringAsync());
+            long targetId = foreign ? foreignCollectionId : missingCollectionId;
 
-            Assert.Equal(missingEditResponse.StatusCode, foreignEditResponse.StatusCode);
-            Assert.Equal(NormalizeAntiforgeryTokens(missingEditHtml), NormalizeAntiforgeryTokens(foreignEditHtml));
-            Assert.Contains("No se ha podido acceder al elemento solicitado.", missingEditHtml, StringComparison.Ordinal);
-            Assert.Contains("No se ha podido acceder al elemento solicitado.", foreignEditHtml, StringComparison.Ordinal);
-            Assert.DoesNotContain("Foreign collection", missingEditHtml, StringComparison.Ordinal);
-            Assert.DoesNotContain("Foreign collection", foreignEditHtml, StringComparison.Ordinal);
-            Assert.Equal(missingDeleteResponse.StatusCode, foreignDeleteResponse.StatusCode);
-            Assert.Equal(missingDeleteHtml, foreignDeleteHtml);
-            Assert.Contains("No se ha podido eliminar la colección", missingDeleteHtml, StringComparison.Ordinal);
-            Assert.Contains("No se ha podido eliminar la colección", foreignDeleteHtml, StringComparison.Ordinal);
-            Assert.Contains("href=\"/app/colecciones\"", missingDeleteHtml, StringComparison.Ordinal);
-            Assert.Contains("href=\"/app/colecciones\"", foreignDeleteHtml, StringComparison.Ordinal);
-            Assert.DoesNotContain("Foreign collection", missingDeleteHtml, StringComparison.Ordinal);
-            Assert.DoesNotContain("Foreign collection", foreignDeleteHtml, StringComparison.Ordinal);
+            using HttpResponseMessage response = await client.GetAsync($"/app/colecciones/{targetId}/{operation}");
+            using HttpResponseMessage listing = await client.GetAsync("/app/colecciones");
+            string html = System.Net.WebUtility.HtmlDecode(await listing.Content.ReadAsStringAsync());
+            using HttpResponseMessage reloaded = await client.GetAsync("/app/colecciones");
+            string reloadedHtml = System.Net.WebUtility.HtmlDecode(await reloaded.Content.ReadAsStringAsync());
+            string message = operation == "eliminar" ? "No se ha podido eliminar la colección" : "No se ha podido acceder al elemento solicitado.";
+
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal("/app/colecciones", response.Headers.Location?.OriginalString);
+            Assert.Equal(System.Net.HttpStatusCode.OK, listing.StatusCode);
+            Assert.Contains(message, html, StringComparison.Ordinal);
+            Assert.Contains("role=\"status\" aria-live=\"polite\"", html, StringComparison.Ordinal);
+            Assert.DoesNotContain(message, reloadedHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("Foreign collection", html, StringComparison.Ordinal);
         }
         finally
         {
@@ -316,7 +357,7 @@ public sealed class CollectionsListingIntegrationTests
     }
 
     [Fact]
-    public async Task DeleteCollection_WhenIdIsInvalid_ReturnsValidationAndLeavesCollectionsUnchanged()
+    public async Task DeleteCollection_WhenIdIsInvalid_RedirectsAndLeavesCollectionsUnchanged()
     {
         string databasePath = NewDatabasePath();
         try
@@ -337,14 +378,14 @@ public sealed class CollectionsListingIntegrationTests
                     ["id"] = "not-an-id",
                     ["__RequestVerificationToken"] = token,
                 }));
-            string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+            using HttpResponseMessage listing = await client.GetAsync("/app/colecciones");
+            string html = System.Net.WebUtility.HtmlDecode(await listing.Content.ReadAsStringAsync());
             long finalCount = await GetCollectionCount(databasePath, DemoEmail);
 
             Assert.Equal(before, await CollectionSnapshot(databasePath));
-            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-            Assert.Contains("La colección es obligatoria.", html, StringComparison.Ordinal);
-            Assert.Contains("href=\"/app/colecciones\">Volver al listado</a>", html, StringComparison.Ordinal);
-            Assert.DoesNotContain("class=\"collection-form collection-form--danger\"", html, StringComparison.Ordinal);
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal("/app/colecciones", response.Headers.Location?.OriginalString);
+            Assert.Contains("No se ha podido eliminar la colección", html, StringComparison.Ordinal);
             Assert.Equal(initialCount, finalCount);
         }
         finally
@@ -354,7 +395,7 @@ public sealed class CollectionsListingIntegrationTests
     }
 
     [Fact]
-    public async Task DeleteCollection_WhenIdIsMissingOrForeign_RedirectsWithSameNoticeAndDoesNotChangeData()
+    public async Task DeleteCollection_WhenIdIsMissingOrForeign_ShowsSameNoticeOnListingAndDoesNotChangeData()
     {
         string databasePath = NewDatabasePath();
         try
@@ -370,20 +411,24 @@ public sealed class CollectionsListingIntegrationTests
             string token = await GetAntiforgeryToken(client, ownedCollectionId);
 
             using HttpResponseMessage missingResponse = await PostDelete(client, missingCollectionId, token);
+            using HttpResponseMessage missingListing = await client.GetAsync("/app/colecciones");
+            string missingHtml = System.Net.WebUtility.HtmlDecode(await missingListing.Content.ReadAsStringAsync());
             using HttpResponseMessage foreignResponse = await PostDelete(client, foreignCollectionId, token);
+            using HttpResponseMessage foreignListing = await client.GetAsync("/app/colecciones");
+            string foreignHtml = System.Net.WebUtility.HtmlDecode(await foreignListing.Content.ReadAsStringAsync());
             long finalCount = await GetCollectionCount(databasePath, DemoEmail);
             long finalForeignCount = await GetCollectionCount(databasePath, "other-user@linkubator.test");
-            using HttpResponseMessage noticeResponse = await client.GetAsync("/app/colecciones");
-            string noticeHtml = System.Net.WebUtility.HtmlDecode(await noticeResponse.Content.ReadAsStringAsync());
 
             Assert.Equal(System.Net.HttpStatusCode.Redirect, missingResponse.StatusCode);
             Assert.Equal("/app/colecciones", missingResponse.Headers.Location?.OriginalString);
             Assert.Equal(missingResponse.StatusCode, foreignResponse.StatusCode);
-            Assert.Equal(missingResponse.Headers.Location?.OriginalString, foreignResponse.Headers.Location?.OriginalString);
+            Assert.Equal(missingResponse.Headers.Location, foreignResponse.Headers.Location);
+            Assert.Equal(NormalizeAntiforgeryTokens(missingHtml), NormalizeAntiforgeryTokens(foreignHtml));
+            Assert.Contains("No se ha podido eliminar la colección", missingHtml, StringComparison.Ordinal);
+            Assert.Contains("role=\"status\" aria-live=\"polite\"", missingHtml, StringComparison.Ordinal);
+            Assert.DoesNotContain("Foreign collection", foreignHtml, StringComparison.Ordinal);
             Assert.Equal(initialCount, finalCount);
             Assert.Equal(initialForeignCount, finalForeignCount);
-            Assert.Equal(System.Net.HttpStatusCode.OK, noticeResponse.StatusCode);
-            Assert.Contains("No se ha podido eliminar la colección", noticeHtml, StringComparison.Ordinal);
         }
         finally
         {
@@ -392,7 +437,7 @@ public sealed class CollectionsListingIntegrationTests
     }
 
     [Fact]
-    public async Task GetCollections_WhenQueryIsInvalid_ShowsValidationErrorWithoutEmptyState()
+    public async Task GetCollections_WhenQueryIsInvalid_ShowsValidationErrorAndInvalidQueryEmptyState()
     {
         string databasePath = NewDatabasePath();
         try
@@ -400,12 +445,23 @@ public sealed class CollectionsListingIntegrationTests
             await using ConfiguredWebApplicationFactory factory = new(databasePath);
             using HttpClient client = factory.CreateClient();
 
-            using HttpResponseMessage response = await client.GetAsync("/app/colecciones?p=abc&q=" + new string('x', 101));
+            string query = new('x', 101);
+            using HttpResponseMessage response = await client.GetAsync("/app/colecciones?p=abc&q=" + query);
             string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+            string form = Regex.Match(html, "(?s)<form class=\"search-form\".*?</form>").Value;
 
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-            Assert.Contains("El texto de búsqueda supera la longitud máxima permitida.", html, StringComparison.Ordinal);
+            Assert.Contains("El texto de búsqueda supera la longitud máxima permitida.", form, StringComparison.Ordinal);
+            Assert.Contains("id=\"collections-search-query-error\" role=\"alert\"", form, StringComparison.Ordinal);
+            Assert.Contains("href=\"#collections-search-query\"", form, StringComparison.Ordinal);
+            Assert.Contains("aria-invalid=\"true\" aria-describedby=\"collections-search-query-error\"", form, StringComparison.Ordinal);
+            Assert.Contains($"value=\"{query}\"", form, StringComparison.Ordinal);
+            Assert.DoesNotContain("class=\"app-alert app-alert--error\"", html, StringComparison.Ordinal);
+            Assert.DoesNotContain("No se ha podido cargar el listado de colecciones.", html, StringComparison.Ordinal);
             Assert.DoesNotContain("No se han encontrado colecciones.", html, StringComparison.Ordinal);
+            Assert.DoesNotContain(">Volver al listado</a>", html, StringComparison.Ordinal);
+            Assert.Matches("(?s)<section aria-labelledby=\"collections-list-title\">.*?<div class=\"empty-state\" role=\"status\" aria-live=\"polite\">\\s*<h2>No se pueden mostrar los resultados</h2>\\s*<p>Corrige los errores indicados para ver el listado\\.</p>", html);
+            Assert.DoesNotContain("id=\"saved-collections\"", html, StringComparison.Ordinal);
         }
         finally
         {
@@ -579,7 +635,7 @@ public sealed class CollectionsListingIntegrationTests
     [InlineData(false, "Updated collection")]
     [InlineData(true, "")]
     [InlineData(false, "")]
-    public async Task PostEditCollection_WhenCollectionIsMissingOrForeign_RedirectsWithNotice(bool foreign, string name)
+    public async Task PostEditCollection_WhenCollectionIsMissingOrForeign_ShowsNoticeOnListing(bool foreign, string name)
     {
         string databasePath = NewDatabasePath();
         try
@@ -602,14 +658,12 @@ public sealed class CollectionsListingIntegrationTests
                 }));
             using HttpResponseMessage listing = await client.GetAsync("/app/colecciones");
             string html = System.Net.WebUtility.HtmlDecode(await listing.Content.ReadAsStringAsync());
-            using HttpResponseMessage secondListing = await client.GetAsync("/app/colecciones");
-            string secondHtml = System.Net.WebUtility.HtmlDecode(await secondListing.Content.ReadAsStringAsync());
 
             Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
             Assert.Equal("/app/colecciones", response.Headers.Location?.OriginalString);
+            Assert.Equal(System.Net.HttpStatusCode.OK, listing.StatusCode);
             Assert.Matches("role=\"status\" aria-live=\"polite\">\\s*<p>No se ha podido acceder al elemento solicitado\\.</p>", html);
             Assert.DoesNotContain("Foreign collection", html, StringComparison.Ordinal);
-            Assert.DoesNotContain("No se ha podido acceder al elemento solicitado.", secondHtml, StringComparison.Ordinal);
             Assert.Equal(original, await GetCollectionState(databasePath, foreignId));
         }
         finally
@@ -619,7 +673,7 @@ public sealed class CollectionsListingIntegrationTests
     }
 
     [Fact]
-    public async Task PostEditCollection_WhenIdIsInvalid_ReturnsValidationWithoutChangingData()
+    public async Task PostEditCollection_WhenIdIsInvalid_RedirectsWithoutChangingData()
     {
         string databasePath = NewDatabasePath();
         try
@@ -638,12 +692,12 @@ public sealed class CollectionsListingIntegrationTests
                     ["Input.Name"] = "Updated collection",
                     ["__RequestVerificationToken"] = token,
                 }));
-            string html = System.Net.WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+            using HttpResponseMessage listing = await client.GetAsync("/app/colecciones");
+            string html = System.Net.WebUtility.HtmlDecode(await listing.Content.ReadAsStringAsync());
 
-            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-            Assert.Contains("La colección es obligatoria.", html, StringComparison.Ordinal);
-            Assert.Contains("href=\"/app/colecciones\">Volver al listado</a>", html, StringComparison.Ordinal);
-            Assert.DoesNotContain("name=\"Input.Name\"", html, StringComparison.Ordinal);
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal("/app/colecciones", response.Headers.Location?.OriginalString);
+            Assert.Contains("No se ha podido acceder al elemento solicitado.", html, StringComparison.Ordinal);
             Assert.Equal(original, await GetCollectionState(databasePath, ownedId));
         }
         finally
@@ -1464,6 +1518,13 @@ public sealed class CollectionsListingIntegrationTests
                 // SQLite can release temporary database files after the host shuts down.
             }
         }
+    }
+
+    private sealed class TestCurrentUser : CurrentUser
+    {
+        public long UserId { get; set; }
+
+        public bool IsAuthenticated { get; set; } = true;
     }
 
     private sealed class ConfiguredWebApplicationFactory(string databasePath) : WebApplicationFactory<Program>

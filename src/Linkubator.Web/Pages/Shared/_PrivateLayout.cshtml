@@ -1,6 +1,4 @@
-@using Linkubator.Web.DevelopmentIdentity
 @using Linkubator.Web.Models.AppSidebar
-@inject IWebUserProfile CurrentUser
 
 <!DOCTYPE html>
 <html lang="es">
@@ -12,26 +10,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
     <partial name="_Favicons" />
-    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/brand.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/private.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/footer.css" asp-append-version="true" />
+    <environment include="Production">
+        <link rel="stylesheet" href="~/css/private.bundle.css" asp-append-version="true" />
+    </environment>
+    <environment exclude="Production">
+        <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/brand.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/private.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/footer.css" asp-append-version="true" />
+    </environment>
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="private-shell">
+    <a class="private-skip" href="#main-content">Saltar al contenido</a>
     <div class="private-page">
         <div class="@(Context.Request.Cookies["sidebar-collapsed"] == "true" ? "app-layout sidebar-collapsed" : "app-layout")">
             @{
-                AppSidebarUserViewModel currentSidebarUser = new()
-                {
-                    Name = CurrentUser.Name,
-                    Alias = CurrentUser.Alias,
-                    Email = CurrentUser.Email,
-                };
-
                 AppSidebarViewModel sidebarModel = Model is Linkubator.Web.Pages.App.PrivatePageModel privatePageModel
                     ? privatePageModel.Sidebar
-                    : AppSidebarViewModelFactory.CreateSidebar(AppSidebarSelectionKind.Home, [], currentSidebarUser);
+                    : throw new InvalidOperationException("The private layout requires a private page model.");
             }
 
             @await Html.PartialAsync("~/Pages/Shared/_AppSidebar.cshtml", sidebarModel)
@@ -50,7 +47,13 @@
         </footer>
     </div>
 
-    <script src="~/js/site.js" defer asp-append-version="true"></script>
+    <environment include="Production">
+        <script src="~/js/private.js" defer asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Production">
+        <script src="~/js/site.js" defer asp-append-version="true"></script>
+        <script src="~/js/required-validation.js" defer asp-append-version="true"></script>
+    </environment>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

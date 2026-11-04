@@ -71,6 +71,16 @@ public class SlugPolicyTests
         Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() => DomainPolicies.SlugPolicy.Generate(aboveLimit));
     }
 
+    [Fact]
+    public void GenerateMeasuresCodePointLengthAfterRemovingCombiningMarks()
+    {
+        string withinLimit = string.Concat(Enumerable.Repeat("a\u0301", 150));
+        string aboveLimit = string.Concat(Enumerable.Repeat("a\u0301", 151));
+
+        Assert.Equal(new string('a', 150), DomainPolicies.SlugPolicy.Generate(withinLimit));
+        Assert.Throws<DomainExceptions.TextExceedsMaximumLengthException>(() => DomainPolicies.SlugPolicy.Generate(aboveLimit));
+    }
+
     [Theory]
     [InlineData("日本語")]
     [InlineData("日本語 Tokyo")]

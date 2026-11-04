@@ -5,6 +5,7 @@ using ApplicationRequestDtos = Linkubator.Application.Dtos.Requests;
 using ApplicationResults = Linkubator.Application.Results;
 using AppRoutes = Linkubator.Web.Constants.AppRoutes;
 using AppSidebarSelectionKind = Linkubator.Web.Models.AppSidebar.AppSidebarSelectionKind;
+using LinkReturnRoute = Linkubator.Web.Navigation.LinkReturnRoute;
 using PageAlertViewModel = Linkubator.Web.Models.Presentation.PageAlertViewModel;
 using PageErrorSummaryItemViewModel = Linkubator.Web.Models.Presentation.PageErrorSummaryItemViewModel;
 using PageErrorSummaryViewModel = Linkubator.Web.Models.Presentation.PageErrorSummaryViewModel;
@@ -19,8 +20,6 @@ public sealed class NewModel : PrivatePageModel
     private const string DescriptionField = "Description";
     private const string NameInputId = "collection-name";
     private const string DescriptionInputId = "collection-description";
-    private const string CollectionListRoute = AppRoutes.Collections;
-
     private readonly ApplicationContracts.ICollectionService _collectionService;
 
     public NewModel(
@@ -35,6 +34,11 @@ public sealed class NewModel : PrivatePageModel
 
     [BindProperty]
     public CollectionInput Input { get; set; } = new();
+
+    [BindProperty(Name = "ru", SupportsGet = true)]
+    public string? ReturnUrl { get; set; }
+
+    public string ReturnRoute => LinkReturnRoute.Resolve(Url, Request.PathBase, ReturnUrl, allowCollections: true, fallbackRoute: AppRoutes.Collections);
 
     public PageErrorSummaryViewModel ErrorSummary { get; private set; } = new();
 
@@ -71,7 +75,7 @@ public sealed class NewModel : PrivatePageModel
             return Page();
         }
 
-        return Redirect(CollectionListRoute);
+        return LocalRedirect(ReturnRoute);
     }
 
     private void ApplyErrors(IReadOnlyCollection<ApplicationResults.ApplicationError> errors)

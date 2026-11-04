@@ -18,5 +18,7 @@ public sealed class SearchFormViewModel
 
     public string QueryInputId { get; init; } = "search-query";
 
+    public PageErrorSummaryViewModel ErrorSummary { get; init; } = new();
+
     public IReadOnlyList<KeyValuePair<string, string>> HiddenFields { get; init; } = [];
 }

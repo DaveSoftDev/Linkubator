@@ -76,19 +76,15 @@ public sealed class EditModel : LinkManagementPageModel
 
     public Presentation.PrivateResourceUnavailableViewModel? ResourceUnavailable { get; private set; }
 
-    [TempData]
-    public string? LinkManagementError { get; set; }
-
     public async Task<IActionResult> OnGet(CancellationToken cancellationToken)
     {
-        if (!LoadCollections())
-        {
-            return Page();
-        }
-
         if (!TryGetLinkId(out long linkId))
         {
-            Alert = new Presentation.PageAlertViewModel { Message = ApplicationConstants.LinkErrors.LinkIdInvalid().Message ?? string.Empty, Kind = "error" };
+            return RedirectUnavailableLink();
+        }
+
+        if (!LoadCollections())
+        {
             return Page();
         }
 
@@ -97,6 +93,11 @@ public sealed class EditModel : LinkManagementPageModel
             cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
+            if (result.Errors.Any(error => error.Code == ApplicationConstants.LinkErrors.LinkNotAccessible().Code))
+            {
+                return RedirectUnavailableLink();
+            }
+
             ApplyErrors(result.Errors);
             return Page();
         }
@@ -107,14 +108,13 @@ public sealed class EditModel : LinkManagementPageModel
 
     public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
-        if (!LoadCollections())
-        {
-            return Page();
-        }
-
         if (!TryGetLinkId(out long linkId))
         {
-            Alert = new Presentation.PageAlertViewModel { Message = ApplicationConstants.LinkErrors.LinkIdInvalid().Message ?? string.Empty, Kind = "error" };
+            return RedirectUnavailableLink();
+        }
+
+        if (!LoadCollections())
+        {
             return Page();
         }
 
@@ -123,7 +123,7 @@ public sealed class EditModel : LinkManagementPageModel
             cancellationToken);
         if (!currentResult.IsSuccess || currentResult.Value is null)
         {
-            if (currentResult.Errors.Any(error => error.Category == Linkubator.Application.Enums.ApplicationErrorCategory.ResourceNotAccessible))
+            if (currentResult.Errors.Any(error => error.Code == ApplicationConstants.LinkErrors.LinkNotAccessible().Code))
             {
                 return RedirectUnavailableLink();
             }
@@ -186,12 +186,10 @@ public sealed class EditModel : LinkManagementPageModel
             return RedirectUnavailableLink();
         }
 
-        ApplicationResults.ApplicationError? publicInPrivateCollection = result.Errors.FirstOrDefault(
-            error => error.Code == ApplicationConstants.LinkErrors.PublicLinkInPrivateCollection().Code);
-        if (publicInPrivateCollection is not null)
+        if (result.Errors.Any(error => error.Code == ApplicationConstants.LinkErrors.PublicLinkInPrivateCollection().Code))
         {
-            LinkManagementError = publicInPrivateCollection.Message;
-            return LocalRedirect(ReturnRoute);
+            Input.IsPublic = false;
+            ModelState.SetModelValue("Input.IsPublic", false, bool.FalseString);
         }
 
         ApplyErrors(result.Errors);

@@ -1,10 +1,18 @@
 using Linkubator.Web.Models.Presentation;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using ApplicationContracts = Linkubator.Application.Contracts;
+using WebDevelopmentIdentity = Linkubator.Web.DevelopmentIdentity;
 
 namespace Linkubator.Web.Pages.App;
 
-public sealed class PresentationDemoModel : PageModel
+public sealed class PresentationDemoModel : PrivatePageModel
 {
+    public PresentationDemoModel(
+        ApplicationContracts.ICollectionService collectionService,
+        WebDevelopmentIdentity.IWebUserProfile userProfile)
+        : base(userProfile, collectionService)
+    {
+    }
+
     public PageErrorSummaryViewModel ErrorSummary { get; private set; } = new()
     {
         Title = "Hay errores en el formulario",

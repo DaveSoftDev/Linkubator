@@ -6,6 +6,7 @@ using ApplicationContracts = Linkubator.Application.Contracts;
 using ApplicationDtos = Linkubator.Application.Dtos.Models;
 using ApplicationEnums = Linkubator.Application.Enums;
 using ApplicationResults = Linkubator.Application.Results;
+using PageNumberParser = Linkubator.Web.Models.Pagination.PageNumberParser;
 using WebOptions = Linkubator.Web.Options;
 
 namespace Linkubator.Web.Pages.Public;
@@ -96,9 +97,7 @@ public sealed class CollectionModel : PageModel
 
         string? candidate = pageValues[0];
         if (string.IsNullOrEmpty(candidate)
-            || candidate.Any(character => character is < '0' or > '9')
-            || !int.TryParse(candidate, NumberStyles.None, CultureInfo.InvariantCulture, out int parsedPage)
-            || parsedPage < 1)
+            || !PageNumberParser.TryParse(candidate, out int parsedPage))
         {
             return 1;
         }

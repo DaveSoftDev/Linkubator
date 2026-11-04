@@ -55,7 +55,7 @@ sequenceDiagram
         App->>DB: BEGIN IMMEDIATE
         App->>DB: Volver a validar token y alias
         App->>DB: Fijar nombre, alias, hash y EmailConfirmedAt
-        App->>DB: Crear Bandeja de entrada privada y consumir token
+        App->>DB: Crear colección privada predeterminada y consumir token
         App->>DB: COMMIT
         App-->>Browser: Registro completado. Ir al inicio de sesión
     end

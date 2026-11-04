@@ -9,8 +9,10 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/public.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/not-found.css" asp-append-version="true" />
+    <environment exclude="Production">
+        <link rel="stylesheet" href="~/css/public.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/css/not-found.css" asp-append-version="true" />
+    </environment>
 }
 
 <a class="public-skip" href="#not-found-content">Saltar al contenido</a>

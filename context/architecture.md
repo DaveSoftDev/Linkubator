@@ -182,7 +182,7 @@ Reglas obligatorias:
 
 Operaciones que van en una sola transacción:
 
-- Completar el registro: fijar nombre, alias, contraseña y `EmailConfirmedAt`, crear la «Bandeja de entrada» y consumir el token.
+- Completar el registro: fijar nombre, alias, contraseña y `EmailConfirmedAt`, crear la colección privada predeterminada definida en [specifications.md → «Completar el registro»](specifications.md#completar-el-registro) y consumir el token.
 - El restablecimiento de contraseña, la confirmación del cambio de email, la confirmación de eliminación de cuenta, con sus efectos sobre los tokens, el bloqueo y el `SecurityStamp`. Al confirmar el cambio de email, la sustitución de `Email` y la actualización de `EmailConfirmedAt` forman parte de esa misma transacción (ver [specifications.md → «Cambio de email»](specifications.md#cambio-de-email)).
 - La eliminación de una cuenta y de todos sus datos.
 - Cualquier escritura o borrado de enlaces, colecciones y etiquetas, junto con las proyecciones FTS5 afectadas. Las operaciones de etiquetas incluyen sus relaciones `LinkTag` y actualizan las proyecciones FTS5 afectadas, y guardar el resultado de un intento de scraping (metadatos, estado e intentos) actualiza también la proyección de enlaces en la misma transacción; la descarga se hace antes, fuera de ella.

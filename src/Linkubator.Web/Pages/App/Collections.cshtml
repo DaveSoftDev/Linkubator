@@ -6,7 +6,9 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/collection-list.css" asp-append-version="true" />
+    <environment exclude="Production">
+        <link rel="stylesheet" href="~/css/collection-list.css" asp-append-version="true" />
+    </environment>
 }
 
 <main id="main-content" class="app-main" tabindex="-1">
@@ -17,30 +19,27 @@
         </div>
     </header>
 
-    @await Html.PartialAsync("~/Pages/Shared/_LinkCreationNotice.cshtml")
-
-    @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
-    @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
     @await Html.PartialAsync("~/Pages/Shared/_SearchForm.cshtml", Model.SearchForm)
 
     <section aria-labelledby="collections-list-title">
         <div class="section-toolbar section-toolbar--collections">
           <h3 id="collections-list-title">Colecciones</h3>
-          <a class="view-switch__button toolbar-tool" href="@Linkubator.Web.Constants.AppRoutes.CollectionNew">
+          <a class="view-switch__button toolbar-tool" asp-page="/App/Collections/New" asp-route-ru="@($"{Request.PathBase}{Request.Path}{Request.QueryString}")">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5V19M5 12H19"></path></svg>
             Crear colección
           </a>
         </div>
+        @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
         <div class="main-wrapper">
-        @if (Model.HasListingError)
+        @if (Model.HasInvalidQuery)
         {
-            @await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", Model.ListingError)
+            @await Html.PartialAsync("~/Pages/Shared/_InvalidListingEmptyState.cshtml", string.Empty)
         }
-        else if (Model.Collections.Count == 0)
+        else if (!Model.HasListingError && Model.Collections.Count == 0)
         {
             @await Html.PartialAsync("~/Pages/Shared/_EmptyState.cshtml", Model.EmptyState)
         }
-        else
+        else if (!Model.HasListingError)
         {
         <ul id="saved-collections" class="links-grid links-grid--list collections-list" aria-label="Colecciones existentes">
             @foreach (CollectionDto collection in Model.Collections)

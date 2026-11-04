@@ -37,9 +37,11 @@ public sealed class LinksModel : PrivatePageModel
 
     public Presentation.PageAlertViewModel Alert { get; private set; } = new();
 
-    public Presentation.PageErrorSummaryViewModel ErrorSummary { get; private set; } = new();
-
     public bool HasListingError { get; private set; }
+
+    public bool HasInvalidQuery { get; private set; }
+
+    public bool HasInvalidCollectionFilter { get; private set; }
 
     [TempData]
     public string? LinkManagementError { get; set; }
@@ -48,11 +50,17 @@ public sealed class LinksModel : PrivatePageModel
 
     public async Task<IActionResult> OnGet(CancellationToken cancellationToken)
     {
+        if (!string.IsNullOrWhiteSpace(LinkManagementError))
+        {
+            Alert = new Presentation.PageAlertViewModel { Message = LinkManagementError, Kind = "error" };
+        }
+
         ApplicationResults.Result<IReadOnlyCollection<ApplicationDtos.CollectionDto>> collectionsResult = CollectionsResult
             ?? throw new InvalidOperationException("The private page must load collections before executing its handler.");
         if (!collectionsResult.IsSuccess)
         {
-            Alert = new Presentation.PageAlertViewModel { Message = "No se han podido cargar las colecciones. Vuelve a intentarlo.", Kind = "error" };
+            const string collectionsError = "No se han podido cargar las colecciones. Vuelve a intentarlo.";
+            Alert = Alert.AppendError(collectionsError);
             HasListingError = true;
             Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             return Page();
@@ -73,19 +81,25 @@ public sealed class LinksModel : PrivatePageModel
             Label = "Buscar enlaces",
             Placeholder = "Buscar enlaces...",
             QueryInputId = "links-search-query",
-            QueryValue = analysis.SearchText ?? string.Empty,
+            QueryValue = analysis.HasSearchError ? Request.Query["q"].FirstOrDefault() ?? string.Empty : analysis.SearchText ?? string.Empty,
             HiddenFields = selected is null ? [] : [new("c", selected.Id.ToString(CultureInfo.InvariantCulture))],
+            ErrorSummary = new Presentation.PageErrorSummaryViewModel
+            {
+                Items = analysis.SearchErrorMessage is null
+                    ? []
+                    : [new Presentation.PageErrorSummaryItemViewModel { Message = analysis.SearchErrorMessage, FieldId = "links-search-query" }],
+            },
         };
 
         if (analysis.HasAnyError)
         {
-            ErrorSummary = new Presentation.PageErrorSummaryViewModel
+            if (analysis.CollectionErrorMessage is not null)
             {
-                Items = new[] { analysis.CollectionErrorMessage, analysis.SearchErrorMessage }
-                    .OfType<string>()
-                    .Select(message => new Presentation.PageErrorSummaryItemViewModel { Message = message }).ToArray(),
-            };
+                Alert = Alert.AppendError(analysis.CollectionErrorMessage);
+            }
             HasListingError = true;
+            HasInvalidQuery = true;
+            HasInvalidCollectionFilter = analysis.HasCollectionError;
             return Page();
         }
 
@@ -93,13 +107,7 @@ public sealed class LinksModel : PrivatePageModel
             analysis.SearchText, analysis.CollectionId, analysis.PageNumber, cancellationToken);
         if (!result.IsSuccess)
         {
-            ErrorSummary = new Presentation.PageErrorSummaryViewModel
-            {
-                Items = result.Errors.Select(error => new Presentation.PageErrorSummaryItemViewModel
-                {
-                    Message = error.Message ?? error.Code,
-                }).ToArray(),
-            };
+            Alert = Alert.AppendError(string.Join(" ", result.Errors.Select(error => error.Message ?? error.Code)));
             HasListingError = true;
             return Page();
         }

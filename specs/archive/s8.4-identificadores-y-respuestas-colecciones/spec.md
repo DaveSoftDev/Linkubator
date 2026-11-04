@@ -43,6 +43,8 @@ Asegurar que las páginas de edición y eliminación de colecciones procesan ide
 
 Los formatos inválidos y las respuestas de cada método se comprueban mediante las referencias fuente; esta spec no redefine códigos, mensajes ni formatos.
 
+**Actualización posterior:** CA01 y CA03 describen el tratamiento histórico de los identificadores inválidos en Web. El comportamiento actual está en [specifications.md → «Rutas privadas»](../../../context/specifications.md#rutas-privadas).
+
 ## Bloqueos y preguntas pendientes
 
 | Pregunta o contradicción | Fuente afectada | Criterio bloqueado | Decisión humana necesaria |

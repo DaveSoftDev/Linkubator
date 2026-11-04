@@ -1,5 +1,4 @@
 using System.Globalization;
-using ApplicationConstants = Linkubator.Application.Constants;
 using ApplicationContracts = Linkubator.Application.Contracts;
 using ApplicationDtos = Linkubator.Application.Dtos.Models;
 using ApplicationRequests = Linkubator.Application.Dtos.Requests;
@@ -28,9 +27,6 @@ public sealed class NewModel : LinkManagementPageModel
 
     [BindProperty]
     public LinkInput Input { get; set; } = new();
-
-    [TempData]
-    public string? LinkCreationError { get; set; }
 
     [TempData]
     public string? CreatedLinkUrl { get; set; }
@@ -68,7 +64,7 @@ public sealed class NewModel : LinkManagementPageModel
 
         if (!ModelState.IsValid)
         {
-            UpdateErrorSummary();
+            ApplyErrors();
             return Page();
         }
 
@@ -96,12 +92,6 @@ public sealed class NewModel : LinkManagementPageModel
         foreach (ApplicationResults.ApplicationError error in result.Errors)
         {
             string message = error.Message ?? error.Code;
-            if (error.Code == ApplicationConstants.LinkErrors.PublicLinkInPrivateCollection().Code)
-            {
-                LinkCreationError = message;
-                return LocalRedirect(ReturnRoute);
-            }
-
             if (GetFieldId(error.Field) is not null)
             {
                 string fieldMessage = GetFieldMessage(error, message);
@@ -114,7 +104,7 @@ public sealed class NewModel : LinkManagementPageModel
             }
         }
 
-        UpdateErrorSummary();
+        ApplyErrors();
         return Page();
     }
 
@@ -141,7 +131,7 @@ public sealed class NewModel : LinkManagementPageModel
         CanCreate = true;
     }
 
-    private void UpdateErrorSummary()
+    private void ApplyErrors()
     {
         if (!CanMakePublic)
         {

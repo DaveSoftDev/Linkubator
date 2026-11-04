@@ -3,6 +3,7 @@
 @{
     bool isCollapsed = Context.Request.Cookies["sidebar-collapsed"] == "true";
     string returnUrl = Linkubator.Web.Navigation.LinkReturnRoute.Resolve(Url, Context.Request.PathBase, $"{Context.Request.PathBase}{Context.Request.Path}{Context.Request.QueryString}", allowCollections: true);
+    string collectionReturnUrl = Linkubator.Web.Navigation.LinkReturnRoute.Resolve(Url, Context.Request.PathBase, $"{Context.Request.PathBase}{Context.Request.Path}{Context.Request.QueryString}", allowCollections: true, fallbackRoute: Linkubator.Web.Constants.AppRoutes.Collections);
 }
 
 <aside id="app-sidebar" class="app-sidebar" aria-label="Menú principal de navegación">
@@ -77,12 +78,18 @@
         }
     </nav>
 
-    @if (Model.Collections.Count > 0)
+    @if (Model.CollectionsUnavailable)
+    {
+        <p class="sidebar-collections-error" role="status" aria-label="No se han podido cargar las colecciones. Vuelve a intentarlo." title="No se han podido cargar las colecciones. Vuelve a intentarlo.">
+            <span aria-hidden="true">No se han podido cargar las colecciones. Vuelve a intentarlo.</span>
+        </p>
+    }
+    else if (Model.Collections.Count > 0)
     {
         <section class="sidebar-group" aria-labelledby="collections-title">
             <div class="sidebar-group__header">
                 <h2 id="collections-title">Colecciones</h2>
-                <a class="sidebar-create-collection brand-accent" href="@Linkubator.Web.Constants.AppRoutes.CollectionNew" aria-label="Crear nueva colección">
+                <a class="sidebar-create-collection brand-accent" asp-page="/App/Collections/New" asp-route-ru="@collectionReturnUrl" aria-label="Crear nueva colección">
                     <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 5V19M5 12H19"></path></svg>
                 </a>
             </div>

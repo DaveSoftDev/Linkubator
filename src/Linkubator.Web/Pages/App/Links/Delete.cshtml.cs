@@ -42,15 +42,11 @@ public sealed class DeleteModel : LinkManagementPageModel
 
     public Presentation.PrivateResourceUnavailableViewModel? ResourceUnavailable { get; private set; }
 
-    [TempData]
-    public string? LinkManagementError { get; set; }
-
     public async Task<IActionResult> OnGet(CancellationToken cancellationToken)
     {
         if (!TryGetLinkId(out long linkId))
         {
-            Alert = new Presentation.PageAlertViewModel { Message = ApplicationConstants.LinkErrors.LinkIdInvalid().Message ?? string.Empty, Kind = "error" };
-            return Page();
+            return RedirectUnavailableLink(LinkDeleteNotAccessibleMessage);
         }
 
         ApplicationResults.Result<ApplicationDtos.LinkDto> result = await _linkService.GetLink(
@@ -58,6 +54,11 @@ public sealed class DeleteModel : LinkManagementPageModel
             cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
+            if (result.Errors.Any(error => error.Code == ApplicationConstants.LinkErrors.LinkNotAccessible().Code))
+            {
+                return RedirectUnavailableLink(LinkDeleteNotAccessibleMessage);
+            }
+
             ApplyErrors(result.Errors);
             return Page();
         }
@@ -71,8 +72,7 @@ public sealed class DeleteModel : LinkManagementPageModel
     {
         if (!TryGetLinkId(out long linkId))
         {
-            Alert = new Presentation.PageAlertViewModel { Message = ApplicationConstants.LinkErrors.LinkIdInvalid().Message ?? string.Empty, Kind = "error" };
-            return Page();
+            return RedirectUnavailableLink(LinkDeleteNotAccessibleMessage);
         }
 
         ApplicationResults.Result result = await _linkService.DeleteLink(
@@ -85,8 +85,7 @@ public sealed class DeleteModel : LinkManagementPageModel
 
         if (result.Errors.Any(error => error.Category == Linkubator.Application.Enums.ApplicationErrorCategory.ResourceNotAccessible))
         {
-            LinkManagementError = LinkDeleteNotAccessibleMessage;
-            return LocalRedirect(ReturnRoute);
+            return RedirectUnavailableLink(LinkDeleteNotAccessibleMessage);
         }
 
         ApplicationResults.Result<ApplicationDtos.LinkDto> linkResult = await _linkService.GetLink(
@@ -121,7 +120,7 @@ public sealed class DeleteModel : LinkManagementPageModel
         {
             if (error.Category == Linkubator.Application.Enums.ApplicationErrorCategory.ResourceNotAccessible)
             {
-                ResourceUnavailable = Presentation.PrivateResourceUnavailablePresenter.Create(error, LinkListRoute);
+                ResourceUnavailable = Presentation.PrivateResourceUnavailablePresenter.Create(error, LinkListRoute, LinkDeleteNotAccessibleMessage);
             }
             else
             {

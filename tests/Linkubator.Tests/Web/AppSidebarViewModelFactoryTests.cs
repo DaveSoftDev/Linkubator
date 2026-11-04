@@ -73,4 +73,18 @@ public sealed class AppSidebarViewModelFactoryTests
         Assert.Empty(sidebar.Collections);
         Assert.Equal(0, sidebar.Navigation.First(item => item.Id == "links").Count);
     }
+
+    [Fact]
+    public void CreateSidebar_WhenCollectionsUnavailable_OmitsCounts()
+    {
+        AppSidebarViewModel sidebar = AppSidebarViewModelFactory.CreateSidebar(
+            AppSidebarSelectionKind.Collections,
+            null);
+
+        Assert.True(sidebar.CollectionsUnavailable);
+        Assert.Null(sidebar.TotalLinks);
+        Assert.Null(sidebar.TotalCollections);
+        Assert.All(sidebar.Navigation, item => Assert.Null(item.Count));
+        Assert.Equal("collections", sidebar.Navigation.Single(item => item.IsActive).Id);
+    }
 }

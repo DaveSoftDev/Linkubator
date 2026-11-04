@@ -726,7 +726,13 @@ public class WebStartupTests
     [InlineData("?p=0", "Public page link 00", "Visible link", 1, 16, "")]
     [InlineData("?p=999", "Visible link", "Public page link 00", 2, 1, "?p=2")]
     [InlineData("?p=999&p=1", "Visible link", "Public page link 00", 2, 1, "?p=2")]
-    [InlineData("?p=99999999999999999999", "Public page link 00", "Visible link", 1, 16, "")]
+    [InlineData("?p=2147483647", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=2147483648", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=99999999999999999999", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=00000000000000000002", "Visible link", "Public page link 00", 2, 1, "?p=2")]
+    [InlineData("?p=00000000000000000000", "Public page link 00", "Visible link", 1, 16, "")]
+    [InlineData("?p=99999999999999999999x", "Public page link 00", "Visible link", 1, 16, "")]
+    [InlineData("?p=99999999999999999999&p=1", "Visible link", "Public page link 00", 2, 1, "?p=2")]
     [InlineData("?p=-1", "Public page link 00", "Visible link", 1, 16, "")]
     [InlineData("?p=%202%20", "Public page link 00", "Visible link", 1, 16, "")]
     [InlineData("?p=%D9%A2", "Public page link 00", "Visible link", 1, 16, "")]
@@ -1099,6 +1105,7 @@ public class WebStartupTests
             Assert.Contains("Demo User", html, StringComparison.Ordinal);
             Assert.Contains("my-demo-user", html, StringComparison.Ordinal);
             Assert.Contains("No se ha podido acceder al recurso solicitado dentro del área privada.", html, StringComparison.Ordinal);
+            Assert.Contains("<a class=\"secondary-button\" href=\"/app\">Volver al Inicio</a>", html, StringComparison.Ordinal);
         }
         finally
         {
@@ -1391,6 +1398,32 @@ public class WebStartupTests
     }
 
     [Fact]
+    public async Task PresentationPage_WithCollections_RendersSameSidebarDataAsDashboard()
+    {
+        string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
+        try
+        {
+            await using ConfiguredWebApplicationFactory factory = new(databasePath, ValidArgon2idHash);
+            using HttpClient client = factory.CreateClient();
+            await SeedPublicUserPageContent(databasePath);
+
+            string dashboardHtml = await client.GetStringAsync("/app");
+            string presentationHtml = await client.GetStringAsync("/app/presentacion");
+            const string sidebarDataPattern = "(?s)<nav class=\"side-nav\".*?</nav>.*?</section>";
+            string dashboardSidebarData = System.Text.RegularExpressions.Regex.Match(dashboardHtml, sidebarDataPattern).Value;
+            string presentationSidebarData = System.Text.RegularExpressions.Regex.Match(presentationHtml, sidebarDataPattern).Value;
+
+            Assert.Contains("Public collection", presentationSidebarData, StringComparison.Ordinal);
+            Assert.Contains("PRIVATE_COLLECTION_NAME", presentationSidebarData, StringComparison.Ordinal);
+            Assert.Equal(dashboardSidebarData, presentationSidebarData);
+        }
+        finally
+        {
+            DeleteDatabaseFiles(databasePath);
+        }
+    }
+
+    [Fact]
     public async Task PresentationPage_RendersAccessiblePresentationComponents()
     {
         string databasePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.db");
@@ -1621,6 +1654,9 @@ public class WebStartupTests
                 Assert.Contains(DemoEmail, html, StringComparison.Ordinal);
                 Assert.Equal(originalUserId, await connection.ExecuteScalarAsync<long>("SELECT Id FROM User WHERE Email = @Email;", new { Email = DemoEmail }));
                 Assert.Equal(1L, await connection.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM User;"));
+                Assert.Equal(1L, await connection.ExecuteScalarAsync<long>(
+                    "SELECT COUNT(*) FROM Collection WHERE UserId = @UserId;",
+                    new { UserId = originalUserId }));
             }
         }
         finally

@@ -10,7 +10,7 @@ Linkubator es una aplicación web para que cada usuario guarde sus enlaces favor
 
 Con autenticación real, el usuario podrá:
 
-- Registrarse con solo su email. Recibe un correo con un enlace para completar el registro con su nombre, su alias y su contraseña. Al completarlo dispone de una colección privada llamada «Bandeja de entrada» para guardar sus primeros enlaces sin tener que crear una colección.
+- Registrarse con solo su email. Recibe un correo con un enlace para completar el registro con su nombre, su alias y su contraseña. Al completarlo dispone de una colección privada predeterminada ([specifications.md → «Completar el registro»](specifications.md#completar-el-registro)) para guardar sus primeros enlaces sin tener que crear una colección.
 - No podrá iniciar sesión hasta completar el registro. Si no recibe el correo, basta con registrarse de nuevo con el mismo email para que se le reenvíe.
 - Iniciar sesión, con la opción «Recordarme».
 - Cerrar sesión desde cualquier página de la zona privada.
@@ -38,7 +38,7 @@ El usuario podrá:
 - Buscar colecciones.
 - Eliminar una colección solo si no tiene enlaces y no es la última que le queda.
 
-La colección «Bandeja de entrada» es una colección normal como cualquier otra, aunque sea creada por la aplicación. El usuario puede realizar sobre ella las mismas operaciones que sobre las demás colecciones —editarla, eliminarla y asignarle enlaces—, sujetas a las mismas restricciones.
+La colección privada que se crea por defecto ([specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs)) es una colección normal como cualquier otra, aunque sea creada por la aplicación. El usuario puede realizar sobre ella las mismas operaciones que sobre las demás colecciones —editarla, eliminarla y asignarle enlaces—, sujetas a las mismas restricciones.
 
 No puede haber dos colecciones del mismo usuario cuyos nombres Linkubator considere equivalentes según [specifications.md → «Generación de slugs»](specifications.md#generación-de-slugs). Si el nombre no es válido o equivale al de otra colección suya, se rechaza indicándole con cuál coincide, y debe elegir otro.
 
@@ -90,7 +90,7 @@ El usuario podrá:
 
 Cada listado busca únicamente su propia entidad: buscar en el listado de enlaces solo devuelve enlaces, en el de colecciones solo colecciones y en el de etiquetas solo etiquetas, sin mezclarlos. Una búsqueda nunca devuelve elementos de otro usuario. Las reglas exactas, el orden y la paginación están en [specifications.md → «Búsqueda y filtros»](specifications.md#búsqueda-y-filtros) y [«Listados»](specifications.md#listados).
 
-Cualquier página (Pública o privada) que reciba un parámetro de URL que no le corresponde, debe hacer caso omiso a su valor.
+Cualquier página (Pública o privada) que reciba un parámetro de URL que no le corresponde debe hacer caso omiso a su valor, conforme a [specifications.md → «Rutas privadas»](specifications.md#rutas-privadas) y [«Paginación de las páginas públicas»](specifications.md#paginación-de-las-páginas-públicas).
 
 ## Páginas públicas
 

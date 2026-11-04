@@ -18,6 +18,18 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "https-Local-Prod": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:7263;http://localhost:5228",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Production",
+        "AllowedHosts": "localhost;127.0.0.1;[::1]",
+        "PublicOrigin": "https://localhost:7263",
+        "EnableLocalStaticWebAssets": "true"
+      }
     }
   }
 }

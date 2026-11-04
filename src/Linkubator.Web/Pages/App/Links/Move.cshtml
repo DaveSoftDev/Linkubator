@@ -24,7 +24,7 @@
     }
     else
     {
-        <form method="post" class="collection-form">
+        <form method="post" id="link-move-form" class="collection-form" data-required-validation>
             <input type="hidden" name="ru" value="@Model.ReturnRoute" />
             <div class="collection-form__heading">
                 <span class="collection-form__icon" aria-hidden="true">
@@ -32,7 +32,7 @@
                 </span>
                 <h3>Elegir colección de destino</h3>
             </div>
-            <div class="collection-form__heading">
+            <div class="collection-form__heading" data-validation-summary data-validation-summary-title="@Model.ErrorSummary.Title">
                 @await Html.PartialAsync("~/Pages/Shared/_ErrorSummary.cshtml", Model.ErrorSummary)
                 @await Html.PartialAsync("~/Pages/Shared/_PageAlert.cshtml", Model.Alert)
             </div>
@@ -42,7 +42,7 @@
                     <p class="collection-form__confirmation">Mover <strong>@Model.LinkLabel</strong> a:</p>
                     <div class="collection-form__field">
                         <label asp-for="Input.DestinationCollectionId" for="link-collection">Colección</label>
-                        <select asp-for="Input.DestinationCollectionId" id="link-collection" class="collection-form__collection-picker" required aria-describedby="link-collection-error">
+                        <select asp-for="Input.DestinationCollectionId" id="link-collection" class="collection-form__collection-picker" autofocus required aria-describedby="link-collection-error" data-required-message="@Linkubator.Application.Constants.LinkErrors.DestinationCollectionIdInvalid().Message">
                             <option value="">Selecciona una colección</option>
                             @foreach (var collection in Model.Collections)
                             {
@@ -54,7 +54,7 @@
                 </div>
             }
             <div class="collection-form__actions">
-                <a class="collection-form__cancel" href="@Model.ReturnRoute">Cancelar</a>
+                <a class="secondary-button" href="@Model.ReturnRoute">Cancelar</a>
                 @if (Model.HasLoadedLink)
                 {
                     <button class="primary-button" type="submit">Mover enlace</button>
