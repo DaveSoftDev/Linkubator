@@ -175,7 +175,7 @@ Copy-Item .\wwwroot\css\private.bundle.min.css .\wwwroot\css\private.bundle.css 
 Copy-Item .\wwwroot\css\public.bundle.min.css .\wwwroot\css\public.bundle.css -Force
 ```
 
-Git no actualiza MonsterASP automáticamente: después de generar y subir los archivos al repositorio, publica la aplicación localmente y despliega ese resultado en MonsterASP, o sube allí los bundles actualizados. No descargues los bundles existentes desde el hosting esperando que incorporen cambios nuevos.
+El despliegue de producción probado en MonsterASP obtiene del repositorio los bundles ya generados y versionados. Después de hacer commit y enviar los cambios a Git, ejecuta Git Deploy desde el panel de MonsterASP (o deja que se ejecute automáticamente si así está configurado). El servidor publica los bundles sin ejecutar la herramienta de bundling.
 
 ## Arranque rápido
 
@@ -287,5 +287,5 @@ Quedan mejoras de reproducibilidad en el entorno de desarrollo: eliminar la depe
 - **email**: david.lafuente@redarbor.net
 - **GitHub**: [Linkubator](https://github.com/DaveSoftDev/Linkubator)
 - **URL Producción**: [Linkubator en MonsterASP](http://linkubator.runasp.net/)
-- **Slides**: [Linkubator-DavidLafuente.pptx](https://e.pcloud.link/publink/show?code=kZ0N6X7Zr4fXtpHBRejHOyaP7Ad0bFykeYVy)
+- **Slides**: [Linkubator-DavidLafuente.pptx](doc: Updated deploy)
 - **Vídeo**: [Linkubator-DavidLafuente.mp4](https://e.pcloud.link/publink/show?code=kZ0N6X7Zr4fXtpHBRejHOyaP7Ad0bFykeYVy)
